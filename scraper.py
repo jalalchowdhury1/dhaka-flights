@@ -59,7 +59,7 @@ def scrape_route(origin: str, dest: str, depart: str, ret: str) -> list:
     results = []
     try:
         _run("browse stop")
-        time.sleep(0.5)
+        time.sleep(1)
         _run("browse env local")
         _run("browse open https://www.google.com/travel/flights?hl=en&curr=USD&gl=us")
         time.sleep(4)
@@ -73,6 +73,21 @@ def scrape_route(origin: str, dest: str, depart: str, ret: str) -> list:
                 time.sleep(1)
                 snap = _snap()
                 break
+
+        # If we ended up on the Explore map, click the Flights nav link
+        current_url_raw = _run("browse get url")
+        try:
+            current_url = json.loads(current_url_raw).get("url", current_url_raw)
+        except Exception:
+            current_url = current_url_raw
+        if "explore" in current_url or "Where from" not in _get_tree(snap):
+            flights_ref = _find_ref(snap, "link: Flights")
+            if flights_ref:
+                _run(f"browse click {flights_ref}")
+            else:
+                _run("browse open https://www.google.com/travel/flights?hl=en&curr=USD&gl=us")
+            time.sleep(4)
+            snap = _snap()
 
         # --- Passengers: set to 3 adults ---
         print("  Setting 3 passengers...")
