@@ -28,16 +28,24 @@ def build_rows(flights: list) -> list:
     return rows
 
 
-def write_to_sheet(flights: list) -> None:
+def _get_or_create_tab(spreadsheet, tab_name: str):
+    """Return the worksheet with tab_name, creating it if it doesn't exist."""
+    try:
+        return spreadsheet.worksheet(tab_name)
+    except gspread.exceptions.WorksheetNotFound:
+        return spreadsheet.add_worksheet(title=tab_name, rows=200, cols=10)
+
+
+def write_to_sheet(flights: list, tab_name: str = "Google Flights") -> None:
     creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_PATH, scopes=SCOPES)
     try:
         client = gspread.Client(auth=creds)
-        sheet = client.open_by_key(SPREADSHEET_ID).worksheet("Sheet1")
+        spreadsheet = client.open_by_key(SPREADSHEET_ID)
+        sheet = _get_or_create_tab(spreadsheet, tab_name)
         sheet.clear()
         rows = build_rows(flights)
-        # Write everything as USER_ENTERED so =HYPERLINK() formulas are evaluated
         sheet.update("A1", rows, value_input_option="USER_ENTERED")
-        print(f"Wrote {len(flights)} flights to Google Sheet.")
+        print(f"Wrote {len(flights)} flights to tab '{tab_name}'.")
     except FileNotFoundError:
         print(f"ERROR: Service account file not found at {SERVICE_ACCOUNT_PATH}")
         raise

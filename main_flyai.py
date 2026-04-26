@@ -18,7 +18,7 @@ def main():
     flights.sort(key=sort_key)
 
     print(f"\nFound {len(flights)} total flights. Writing to Google Sheet...")
-    write_to_sheet(flights)
+    write_to_sheet(flights, tab_name="Fliggy (FlyAI)")
 
     print("\n--- Top 5 Cheapest (USD) ---")
     for f in flights[:5]:
