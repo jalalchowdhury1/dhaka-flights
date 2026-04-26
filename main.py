@@ -3,7 +3,7 @@ from sheet_writer import write_to_sheet
 
 def main():
     print("Starting flight search: BOS → DAC and BOS → BKK")
-    print("Dates: Jan 3, 2027 → Jan 28, 2027 | 3 adults\n")
+    print("Depart: Jan 3–6, 2027  |  Return: Jan 25–28, 2027  |  3 adults\n")
 
     flights = scrape_all()
 
@@ -26,9 +26,8 @@ def main():
     print("\n--- Top 5 Cheapest ---")
     for f in flights[:5]:
         p = f["price_per_person"]
-        total = p * 3 if isinstance(p, (int, float)) else "N/A"
-        print(f"  {f['route']} | {f['airline']} | {f['stops']} | "
-              f"${p}/person | ${total} total | Baggage: {f['baggage']}")
+        print(f"  {f['route']} | {f['depart']} → {f['return_date']} | "
+              f"{f['airline']} | {f['stops']} | ${p}")
 
     print("\nDone! Open your Google Sheet to see all results.")
 

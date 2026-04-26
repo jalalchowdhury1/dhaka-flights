@@ -4,8 +4,8 @@ import time
 import json
 from typing import Union
 
-DEPART_DATE = "2027-01-03"
-RETURN_DATE = "2027-01-28"
+DEPART_DATES = ["January 3, 2027", "January 4, 2027", "January 5, 2027", "January 6, 2027"]
+RETURN_DATES = ["January 25, 2027", "January 26, 2027", "January 27, 2027", "January 28, 2027"]
 ADULTS = 3
 MAX_RESULTS = 10
 
@@ -54,7 +54,8 @@ def _snap() -> str:
     return _run("browse snapshot")
 
 
-def scrape_route(origin: str, dest: str) -> list:
+def scrape_route(origin: str, dest: str, depart: str, ret: str) -> list:
+    """depart and ret are human-readable e.g. 'January 3, 2027'"""
     results = []
     try:
         _run("browse stop")
@@ -128,22 +129,21 @@ def scrape_route(origin: str, dest: str) -> list:
         snap = _snap()
 
         # --- Departure date ---
-        print("  Filling departure date...")
+        print(f"  Filling departure date: {depart}...")
         dep_ref = _find_ref(snap, "textbox: Departure")
         _run(f"browse click {dep_ref}"); time.sleep(0.5)
-        _run('browse type "January 3, 2027"'); time.sleep(0.8)
+        _run(f'browse type "{depart}"'); time.sleep(0.8)
         snap = _snap()
-        # Click the calendar Done button to confirm
         done_ref = _find_ref(snap, "button: Done")
         if done_ref:
             _run(f"browse click {done_ref}"); time.sleep(0.8)
         snap = _snap()
 
         # --- Return date ---
-        print("  Filling return date...")
+        print(f"  Filling return date: {ret}...")
         ret_ref = _find_ref(snap, "textbox: Return")
         _run(f"browse click {ret_ref}"); time.sleep(0.5)
-        _run('browse type "January 28, 2027"'); time.sleep(0.8)
+        _run(f'browse type "{ret}"'); time.sleep(0.8)
         snap = _snap()
         done_ref = _find_ref(snap, "button: Done")
         if done_ref:
@@ -168,7 +168,7 @@ def scrape_route(origin: str, dest: str) -> list:
         tree = _get_tree(snap)
 
         # --- Parse results from accessibility tree ---
-        results = _parse_results(tree, origin, dest, result_url)
+        results = _parse_results(tree, origin, dest, result_url, depart, ret)
         print(f"  Parsed {len(results)} flights")
 
     except Exception as e:
@@ -179,7 +179,7 @@ def scrape_route(origin: str, dest: str) -> list:
     return results
 
 
-def _parse_results(tree: str, origin: str, dest: str, url: str) -> list:
+def _parse_results(tree: str, origin: str, dest: str, url: str, depart: str = "", ret: str = "") -> list:
     """
     Parse flights from the accessibility tree.
     Each flight is a listitem containing a link whose text has all the info:
@@ -232,8 +232,8 @@ def _parse_results(tree: str, origin: str, dest: str, url: str) -> list:
         price = parse_price(price_raw)
         results.append({
             "route": f"{origin}→{dest}",
-            "depart": "Jan 3, 2027",
-            "return_date": "Jan 28, 2027",
+            "depart": depart,
+            "return_date": ret,
             "airline": airline,
             "stops": stops,
             "duration": duration,
@@ -247,15 +247,17 @@ def _parse_results(tree: str, origin: str, dest: str, url: str) -> list:
 
 def scrape_all() -> list:
     all_results = []
+    routes = [("BOS", "DAC"), ("BOS", "BKK")]
+    total = len(routes) * len(DEPART_DATES) * len(RETURN_DATES)
+    n = 0
 
-    print("Scraping BOS → DAC...")
-    dac = scrape_route("BOS", "DAC")
-    all_results += dac
-    print(f"  Got {len(dac)} results")
-
-    print("Scraping BOS → BKK...")
-    bkk = scrape_route("BOS", "BKK")
-    all_results += bkk
-    print(f"  Got {len(bkk)} results")
+    for origin, dest in routes:
+        for depart in DEPART_DATES:
+            for ret in RETURN_DATES:
+                n += 1
+                print(f"[{n}/{total}] {origin}→{dest}  {depart} → {ret}")
+                results = scrape_route(origin, dest, depart, ret)
+                all_results += results
+                print(f"  Got {len(results)} results")
 
     return all_results
