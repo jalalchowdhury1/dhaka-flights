@@ -25,7 +25,7 @@ def build_rows(flights: list) -> list:
             price,
             total,
             f.get("baggage", "N/A"),
-            f.get("link", "N/A"),
+            f'=HYPERLINK("{f.get("link", "")}", "View flights")' if f.get("link") else "N/A",
         ])
     return rows
 
