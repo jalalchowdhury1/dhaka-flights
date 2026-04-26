@@ -159,7 +159,11 @@ def scrape_route(origin: str, dest: str) -> list:
             _run("browse press Enter")
         time.sleep(10)
 
-        result_url = _run("browse get url")
+        raw_url = _run("browse get url")
+        try:
+            result_url = json.loads(raw_url).get("url", raw_url)
+        except Exception:
+            result_url = raw_url
         snap = _snap()
         tree = _get_tree(snap)
 
