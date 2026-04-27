@@ -11,22 +11,22 @@ Chrome will open, search all date combos, update the Google Sheet, and send you 
 
 ---
 
-## Stop the daily 3am cron job
+## Stop the daily 3am job
 
 ```bash
-crontab -l | grep -v "run_daily.py" | crontab -
+launchctl unload ~/Library/LaunchAgents/com.jalal.dhaka-flights.plist
 ```
 
 To turn it back on:
 
 ```bash
-(crontab -l 2>/dev/null; echo '0 8 * * * cd "/Users/jalalchowdhury/PycharmProjects/Dhaka flights" && /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/bin/python3 run_daily.py >> "/Users/jalalchowdhury/PycharmProjects/Dhaka flights/cron.log" 2>&1') | crontab -
+launchctl load ~/Library/LaunchAgents/com.jalal.dhaka-flights.plist
 ```
 
 To check if it's currently active:
 
 ```bash
-crontab -l
+launchctl list | grep dhaka
 ```
 
 ---
