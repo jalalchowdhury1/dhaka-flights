@@ -5,6 +5,7 @@ writes results to Google Sheet, then sends cheapest prices to Telegram.
 Run via cron at 3am EST.
 """
 import os
+import datetime
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
@@ -13,8 +14,28 @@ from scraper import scrape_all
 from sheet_writer import write_to_sheet
 from notify_telegram import notify_cheapest
 
+STAMP_FILE = os.path.join(os.path.dirname(__file__), ".last_run_date")
+
+
+def already_ran_today():
+    today = datetime.date.today().isoformat()
+    try:
+        with open(STAMP_FILE) as f:
+            return f.read().strip() == today
+    except FileNotFoundError:
+        return False
+
+
+def mark_ran_today():
+    with open(STAMP_FILE, "w") as f:
+        f.write(datetime.date.today().isoformat())
+
 
 def main():
+    if already_ran_today():
+        print("=== Already ran today, skipping ===")
+        return
+
     print("=== Daily flight search starting ===")
 
     flights = scrape_all()
@@ -32,6 +53,7 @@ def main():
 
     write_to_sheet(flights, tab_name="Google Flights")
     notify_cheapest(flights)
+    mark_ran_today()
     print("=== Done ===")
 
 
