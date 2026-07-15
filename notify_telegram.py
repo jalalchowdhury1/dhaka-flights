@@ -3,8 +3,12 @@ import urllib.request
 import urllib.parse
 import json
 
+from combo import best_combos, cheapest_by_leg
+
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
+
+LEG_EMOJI = {"BOS→DAC": "🇧🇩", "DAC→DPS": "🌴", "DPS→BOS": "🏠"}
 
 
 def send_message(text: str) -> bool:
@@ -24,45 +28,51 @@ def send_message(text: str) -> bool:
         return False
 
 
+def _short_date(s: str) -> str:
+    """'January 4, 2027' → 'Jan 4'"""
+    parts = s.replace(",", "").split()
+    return f"{parts[0][:3]} {parts[1]}" if len(parts) >= 2 else s
+
+
+def _leg_line(f: dict) -> str:
+    return (f"{LEG_EMOJI.get(f['route'], '✈️')} {f['route']} · {_short_date(f['depart'])} · "
+            f"{f['airline']} · {f['stops']}"
+            f"{' (' + f['layovers'] + ')' if f.get('layovers') not in ('N/A', 'none', None) else ''}"
+            f" · ${f['price_total']:,} · [book]({f['link']})")
+
+
+def build_message(all_flights: list) -> str:
+    lines = ["✈️ *BOS → Dhaka → Bali → BOS* (2 adults + 1 child)\n"]
+
+    combos = best_combos(all_flights, top_n=1)
+    if combos:
+        c = combos[0]
+        home = c["home"].strftime("%b %-d") if c["home"] else "?"
+        lines.append(f"💰 *Best full trip: ${c['total']:,} total*")
+        lines.append(f"_Dhaka {c['dhaka_days']} days · Bali {c['bali_nights']} nights · home {home}_")
+        for f in c["legs"]:
+            lines.append(_leg_line(f))
+    else:
+        missing = [r for r in ("BOS→DAC", "DAC→DPS", "DPS→BOS")
+                   if r not in cheapest_by_leg(all_flights)]
+        if missing:
+            lines.append(f"⚠️ No valid combo — no prices for: {', '.join(missing)}")
+        else:
+            lines.append("⚠️ No combo satisfied the visa/5-night/Feb-7 rules today")
+
+    best = cheapest_by_leg(all_flights)
+    if best:
+        lines.append("\n*Cheapest per leg* (dates may not combine):")
+        for route in ("BOS→DAC", "DAC→DPS", "DPS→BOS"):
+            f = best.get(route)
+            lines.append(_leg_line(f) if f else f"{route}: no results")
+
+    lines.append("\n_Google Flights · prices are totals for all 3 travelers_")
+    return "\n".join(lines)
+
+
 def notify_cheapest(all_flights: list) -> None:
-    dac = [f for f in all_flights if "DAC" in f.get("route", "")]
-    bkk = [f for f in all_flights if "BKK" in f.get("route", "")]
-
-    def cheapest(flights):
-        valid = [f for f in flights if isinstance(f.get("price_per_person"), (int, float))]
-        return min(valid, key=lambda f: f["price_per_person"]) if valid else None
-
-    best_dac = cheapest(dac)
-    best_bkk = cheapest(bkk)
-
-    lines = ["✈️ *Daily Flight Prices — BOS Departures*\n"]
-
-    if best_dac:
-        lines.append(
-            f"🇧🇩 *Dhaka (DAC)*\n"
-            f"  ${best_dac['price_per_person']}/person · {best_dac['airline']}\n"
-            f"  {best_dac['depart']} → {best_dac['return_date']} · {best_dac['stops']}\n"
-            f"  [Book]({best_dac['link']})"
-        )
-    else:
-        lines.append("🇧🇩 *Dhaka (DAC)*\n  No results found")
-
-    lines.append("")
-
-    if best_bkk:
-        lines.append(
-            f"🇹🇭 *Bangkok (BKK)*\n"
-            f"  ${best_bkk['price_per_person']}/person · {best_bkk['airline']}\n"
-            f"  {best_bkk['depart']} → {best_bkk['return_date']} · {best_bkk['stops']}\n"
-            f"  [Book]({best_bkk['link']})"
-        )
-    else:
-        lines.append("🇹🇭 *Bangkok (BKK)*\n  No results found")
-
-    lines.append("\n_Prices from Google Flights · Jan 3–6 depart, Jan 25–28 return_")
-
-    message = "\n".join(lines)
-    ok = send_message(message)
+    ok = send_message(build_message(all_flights))
     if ok:
         print("Telegram notification sent.")
     else:

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Daily runner: scrapes Google Flights for BOS→DAC and BOS→BKK,
-writes results to Google Sheet, then sends cheapest prices to Telegram.
+Daily runner: scrapes Google Flights for the three one-way legs
+BOS→DAC, DAC→DPS, DPS→BOS (2 adults + 1 child), writes results to
+Google Sheet, then sends the cheapest valid trip combo to Telegram.
 Run via cron at 3am EST.
 """
 import os
@@ -59,7 +60,7 @@ def main():
         return
 
     def sort_key(f):
-        p = f.get("price_per_person", "N/A")
+        p = f.get("price_total", "N/A")
         return p if isinstance(p, (int, float)) else float("inf")
 
     flights.sort(key=sort_key)

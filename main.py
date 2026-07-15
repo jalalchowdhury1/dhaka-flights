@@ -1,9 +1,11 @@
 from scraper import scrape_all
 from sheet_writer import write_to_sheet
+from combo import best_combos
+
 
 def main():
-    print("Starting flight search: BOS → DAC and BOS → BKK")
-    print("Depart: Jan 3–6, 2027  |  Return: Jan 25–28, 2027  |  3 adults\n")
+    print("Starting flight search: BOS → DAC → DPS → BOS (three one-way legs)")
+    print("BOS→DAC Jan 4–6 · DAC→DPS Feb 1–3 · DPS→BOS Feb 5–7 · 2 adults + 1 child\n")
 
     flights = scrape_all()
 
@@ -12,9 +14,9 @@ def main():
         print("Try running again — the browser will be visible so you can solve any CAPTCHA.")
         return
 
-    # Sort by price per person (cheapest first), put N/A at end
+    # Sort by total price (cheapest first), put N/A at end
     def sort_key(f):
-        p = f.get("price_per_person", "N/A")
+        p = f.get("price_total", "N/A")
         return p if isinstance(p, (int, float)) else float("inf")
 
     flights.sort(key=sort_key)
@@ -22,14 +24,22 @@ def main():
     print(f"\nFound {len(flights)} total flights. Writing to Google Sheet...")
     write_to_sheet(flights, tab_name="Google Flights")
 
-    # Print terminal summary
-    print("\n--- Top 5 Cheapest ---")
+    combos = best_combos(flights, top_n=3)
+    if combos:
+        print("\n--- Best valid trip combos (visa ≤29d, Bali ~5 nights, home ≤Feb 7) ---")
+        for i, c in enumerate(combos, 1):
+            print(f"{i}. ${c['total']:,} total · Dhaka {c['dhaka_days']}d · Bali {c['bali_nights']}n")
+            for f in c["legs"]:
+                print(f"     {f['route']} {f['depart']} · {f['airline']} · {f['stops']} · ${f['price_total']:,}")
+    else:
+        print("\nNo valid 3-leg combo found — check per-leg results in the sheet.")
+
+    print("\n--- Top 5 Cheapest individual legs ---")
     for f in flights[:5]:
-        p = f["price_per_person"]
-        print(f"  {f['route']} | {f['depart']} → {f['return_date']} | "
-              f"{f['airline']} | {f['stops']} | ${p}")
+        print(f"  {f['route']} | {f['depart']} | {f['airline']} | {f['stops']} | ${f['price_total']}")
 
     print("\nDone! Open your Google Sheet to see all results.")
+
 
 if __name__ == "__main__":
     main()

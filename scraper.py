@@ -5,19 +5,30 @@ import time
 import json
 from typing import Union
 
-DEPART_DATES = ["January 3, 2027", "January 4, 2027", "January 5, 2027", "January 6, 2027"]
-RETURN_DATES = ["January 25, 2027", "January 26, 2027", "January 27, 2027", "January 28, 2027"]
-ADULTS = 3
-MAX_RESULTS = 10
+# Trip: BOS → Dhaka (≤29 days, 30-day visa) → Bali (5 nights, Marriott cert) → BOS.
+# Three ONE-WAY searches; combo.py picks the cheapest valid combination.
+LEGS = [
+    {"origin": "BOS", "dest": "DAC",
+     "dates": ["January 4, 2027", "January 5, 2027", "January 6, 2027"]},
+    {"origin": "DAC", "dest": "DPS",
+     "dates": ["February 1, 2027", "February 2, 2027", "February 3, 2027"]},
+    {"origin": "DPS", "dest": "BOS",
+     "dates": ["February 5, 2027", "February 6, 2027", "February 7, 2027"]},
+]
 
+TRIP_YEAR = 2027
 
-def build_google_flights_url(origin: str, dest: str, depart: str, return_date: str, adults: int) -> str:
-    return (
-        f"https://www.google.com/travel/flights?"
-        f"hl=en&curr=USD"
-        f"#flt={origin}.{dest}.{depart}*{dest}.{origin}.{return_date}"
-        f";c:USD;e:1;sd:1;t:f;tt:o;pax:{adults}"
-    )
+# Keywords that identify the right suggestion in the airport dropdown, tried in order.
+AIRPORT_PICK = {
+    "BOS": ["Boston Logan", "Boston"],
+    "DAC": ["Hazrat Shahjalal", "Dhaka"],
+    "DPS": ["Ngurah Rai", "Denpasar", "Bali"],
+}
+
+# 2 adults + 1 child (aged 2-11, own seat). Google Flights shows the TOTAL
+# price for all selected passengers (verified 2026-07-15: 1-pax search showed
+# $367 where the 3-pax search showed $1,099).
+MAX_RESULTS = 15
 
 
 def parse_price(raw: str) -> Union[int, str]:
@@ -73,8 +84,17 @@ def _snap() -> str:
     return _run("browse snapshot")
 
 
-def scrape_route(origin: str, dest: str, depart: str, ret: str) -> list:
-    """depart and ret are human-readable e.g. 'January 3, 2027'"""
+def _pick_airport(snap: str, code: str) -> str:
+    """Ref for the dropdown suggestion matching an airport code's keywords."""
+    for kw in AIRPORT_PICK.get(code, []) + [code]:
+        ref = _find_ref(snap, kw)
+        if ref:
+            return ref
+    return ""
+
+
+def scrape_route(origin: str, dest: str, depart: str) -> list:
+    """One-way search. depart is human-readable e.g. 'January 4, 2027'."""
     results = []
     try:
         _run("browse stop")
@@ -117,24 +137,39 @@ def scrape_route(origin: str, dest: str, depart: str, ret: str) -> list:
                   "local browser problem, NOT a Google block")
             return results
 
-        # --- Passengers: set to 3 adults ---
-        print("  Setting 3 passengers...")
-        pax_ref = _find_ref(snap, "passenger, change")
+        # --- Trip type: switch Round trip → One way ---
+        print("  Switching to one-way...")
+        tt_ref = _find_ref(snap, "Change ticket type")
+        if tt_ref:
+            _run(f"browse click {tt_ref}"); time.sleep(0.8)
+            snap = _snap()
+            ow_ref = _find_ref(snap, "option: One way")
+            if ow_ref:
+                _run(f"browse click {ow_ref}"); time.sleep(0.8)
+            snap = _snap()
+        if "Change ticket type. One way" not in _get_tree(snap):
+            print("  WARN: trip type may still be Round trip")
+
+        # --- Passengers: 2 adults + 1 child (2-11) ---
+        print("  Setting passengers: 2 adults + 1 child...")
+        pax_ref = _find_ref(snap, "passenger")
         if pax_ref:
             _run(f"browse click {pax_ref}")
             time.sleep(0.8)
             snap = _snap()
-            add_ref = _find_ref(snap, "button: Add adult")
-            if add_ref:
-                _run(f"browse click {add_ref}"); time.sleep(0.4)
-                _run(f"browse click {add_ref}"); time.sleep(0.4)
+            add_adult = _find_ref(snap, "button: Add adult")
+            if add_adult:
+                _run(f"browse click {add_adult}"); time.sleep(0.4)
+            add_child = _find_ref(snap, "button: Add child")
+            if add_child:
+                _run(f"browse click {add_child}"); time.sleep(0.4)
             snap = _snap()
             done_ref = _find_ref(snap, "button: Done")
             if done_ref:
                 _run(f"browse click {done_ref}"); time.sleep(0.8)
             snap = _snap()
 
-        # --- Origin: click → Escape → click → type → pick Boston Logan ---
+        # --- Origin: click → Escape → click → type → pick from dropdown ---
         print(f"  Filling origin: {origin}...")
         origin_ref = _find_ref(snap, "Where from")
         _run(f"browse click {origin_ref}"); time.sleep(0.6)
@@ -142,9 +177,9 @@ def scrape_route(origin: str, dest: str, depart: str, ret: str) -> list:
         _run(f"browse click {origin_ref}"); time.sleep(0.5)
         _run(f"browse type {origin}"); time.sleep(2)
         snap = _snap()
-        bos_ref = _find_ref(snap, "Boston Logan")
-        if bos_ref:
-            _run(f"browse click {bos_ref}")
+        pick = _pick_airport(snap, origin)
+        if pick:
+            _run(f"browse click {pick}")
         else:
             _run("browse press Enter")
         time.sleep(1)
@@ -156,37 +191,19 @@ def scrape_route(origin: str, dest: str, depart: str, ret: str) -> list:
         _run(f"browse click {dest_ref}"); time.sleep(0.5)
         _run(f"browse type {dest}"); time.sleep(2)
         snap = _snap()
-        # For DAC: Hazrat Shahjalal / Dhaka; for BKK: Suvarnabhumi / Bangkok
-        airport_ref = (
-            _find_ref(snap, "Hazrat Shahjalal") or
-            _find_ref(snap, "Suvarnabhumi") or
-            _find_ref(snap, "Dhaka") or
-            _find_ref(snap, "Bangkok") or
-            _find_ref(snap, dest)
-        )
-        if airport_ref:
-            _run(f"browse click {airport_ref}")
+        pick = _pick_airport(snap, dest)
+        if pick:
+            _run(f"browse click {pick}")
         else:
             _run("browse press Enter")
         time.sleep(1)
         snap = _snap()
 
-        # --- Departure date ---
+        # --- Departure date (one-way: no return box exists) ---
         print(f"  Filling departure date: {depart}...")
         dep_ref = _find_ref(snap, "textbox: Departure")
         _run(f"browse click {dep_ref}"); time.sleep(0.5)
         _run(f'browse type "{depart}"'); time.sleep(0.8)
-        snap = _snap()
-        done_ref = _find_ref(snap, "button: Done")
-        if done_ref:
-            _run(f"browse click {done_ref}"); time.sleep(0.8)
-        snap = _snap()
-
-        # --- Return date ---
-        print(f"  Filling return date: {ret}...")
-        ret_ref = _find_ref(snap, "textbox: Return")
-        _run(f"browse click {ret_ref}"); time.sleep(0.5)
-        _run(f'browse type "{ret}"'); time.sleep(0.8)
         snap = _snap()
         done_ref = _find_ref(snap, "button: Done")
         if done_ref:
@@ -208,17 +225,25 @@ def scrape_route(origin: str, dest: str, depart: str, ret: str) -> list:
         except Exception:
             result_url = raw_url
         snap = _snap()
+
+        # Google only shows a handful of "top" flights inline; the cheap ones
+        # are often behind the expander.
+        more_ref = _find_ref(snap, "View more flights")
+        if more_ref:
+            _run(f"browse click {more_ref}")
+            time.sleep(3)
+            snap = _snap()
         tree = _get_tree(snap)
 
         # --- Parse results from accessibility tree ---
-        results = _parse_results(tree, origin, dest, result_url, depart, ret)
+        results = _parse_results(tree, origin, dest, result_url, depart)
         print(f"  Parsed {len(results)} flights")
 
         if not results:
             # Keep the evidence: without this, a 0-flight run is undiagnosable
             # (the 2026-07-15 failure left nothing to inspect).
             with open(DEBUG_TREE_FILE, "w") as f:
-                f.write(f"route: {origin}->{dest} {depart} -> {ret}\nurl: {result_url}\n\n{tree}")
+                f.write(f"route: {origin}->{dest} {depart} (one-way)\nurl: {result_url}\n\n{tree}")
             print(f"  (tree saved to {DEBUG_TREE_FILE})")
 
     except Exception as e:
@@ -233,12 +258,14 @@ def scrape_route(origin: str, dest: str, depart: str, ret: str) -> list:
     return results
 
 
-def _parse_results(tree: str, origin: str, dest: str, url: str, depart: str = "", ret: str = "") -> list:
+def _parse_results(tree: str, origin: str, dest: str, url: str, depart: str = "") -> list:
     """
-    Parse flights from the accessibility tree.
-    Each flight is a listitem containing a link whose text has all the info:
-    'From 817 US dollars round trip total. 2 stops flight with Delta and Saudia.
-     Leaves Boston Logan... Total duration 31 hr 10 min. ...'
+    Parse one-way flights from the accessibility tree. Each flight is a link:
+    'From 1130 US dollars. 1 stop flight with AirAsia. Leaves Hazrat Shahjalal
+     International Airport at 10:40 PM on Monday, February 1 and arrives at
+     I Gusti Ngurah Rai International Airport at 12:15 PM on Tuesday, February 2.
+     Total duration 11 hr 35 min. Layover (1 of 1) is a 4 hr 25 min layover at ...'
+    The dollar figure is the TOTAL for all selected passengers.
     """
     results = []
     lines = tree.splitlines()
@@ -246,16 +273,16 @@ def _parse_results(tree: str, origin: str, dest: str, url: str, depart: str = ""
     for line in lines:
         if len(results) >= MAX_RESULTS:
             break
-        # Flight links always say "round trip total" and "flight with"
-        if "round trip total" not in line.lower():
+        low = line.lower()
+        if "us dollars" not in low and "from $" not in low:
             continue
-        if "flight with" not in line.lower() and "nonstop flight" not in line.lower():
+        if "flight with" not in low and "nonstop flight" not in low:
             continue
 
         # Strip the accessibility tree prefix [X-Y] link: ...
         text = re.sub(r'^\s*\[\d+-\d+\]\s*link:\s*', '', line).strip()
 
-        # Price: "From 817 US dollars" or "From $817"
+        # Price: "From 1130 US dollars" or "From $1,130"
         price_raw = "N/A"
         m = re.search(r'From\s+([\d,]+)\s+US dollars', text, re.IGNORECASE)
         if m:
@@ -265,34 +292,53 @@ def _parse_results(tree: str, origin: str, dest: str, url: str, depart: str = ""
             if m:
                 price_raw = m.group(1)
 
-        # Airline: "flight with Delta and Saudia" or "nonstop flight with Emirates"
+        # Airline: "flight with AirAsia" or "nonstop flight with Emirates"
         airline = "N/A"
         m = re.search(r'(?:stops?|nonstop) flight with (.+?)\.', text, re.IGNORECASE)
         if m:
             airline = m.group(1).strip()
 
-        # Duration: "Total duration 31 hr 10 min"
+        # Duration: "Total duration 11 hr 35 min"
         duration = "N/A"
         m = re.search(r'Total duration (.+?)\.', text, re.IGNORECASE)
         if m:
             duration = m.group(1).strip()
 
-        # Stops: "2 stops flight" or "1 stop flight" or "nonstop flight"
+        # Stops: "1 stop flight" or "2 stops flight" or "nonstop flight"
         stops = "N/A"
         m = re.search(r'(nonstop|\d+ stops?) flight', text, re.IGNORECASE)
         if m:
             stops = m.group(1).strip()
 
+        # Arrival date: "arrives at ... at 12:15 PM on Tuesday, February 2"
+        # (combo.py uses this for the visa / 5-night / home-deadline math)
+        arrive = "N/A"
+        m = re.search(r'arrives at .+? at \d{1,2}:\d{2}\s*[AP]M on \w+, (\w+ \d+)',
+                      text, re.IGNORECASE)
+        if m:
+            arrive = f"{m.group(1)}, {TRIP_YEAR}"
+
+        # Layovers: "Layover (1 of 1) is a 4 hr 25 min layover at <airport>".
+        # Airport names can contain periods ("John F. Kennedy"), so prefer
+        # matching through the word Airport before falling back to sentence end.
+        lays = re.findall(
+            r'Layover \(\d+ of \d+\) is a (.+?) (?:overnight )?layover (?:at|in) '
+            r'(.+?(?:International )?Airport(?: in [A-Za-z \-]+)?|[^.]+)',
+            text, re.IGNORECASE)
+        layovers = "; ".join(f"{dur.strip()} at {place.strip()}" for dur, place in lays)
+        if not layovers:
+            layovers = "none" if stops.lower() == "nonstop" else "N/A"
+
         price = parse_price(price_raw)
         results.append({
             "route": f"{origin}→{dest}",
             "depart": depart,
-            "return_date": ret,
+            "arrive": arrive,
             "airline": airline,
             "stops": stops,
             "duration": duration,
-            "price_per_person": price,
-            "baggage": "N/A",
+            "layovers": layovers,
+            "price_total": price,   # USD, all 3 travelers
             "link": url,
         })
 
@@ -301,36 +347,35 @@ def _parse_results(tree: str, origin: str, dest: str, url: str, depart: str = ""
 
 def scrape_all() -> list:
     all_results = []
-    routes = [("BOS", "DAC"), ("BOS", "BKK")]
-    total = len(routes) * len(DEPART_DATES) * len(RETURN_DATES)
+    total = sum(len(leg["dates"]) for leg in LEGS)
     n = 0
     consecutive_failures = 0
 
     DIAG.update(timeouts=0, blank_pages=0, aborted_early=False)
 
-    for origin, dest in routes:
-        for depart in DEPART_DATES:
-            for ret in RETURN_DATES:
-                n += 1
-                print(f"[{n}/{total}] {origin}→{dest}  {depart} → {ret}")
-                results = scrape_route(origin, dest, depart, ret)
-                if not results:
-                    # One retry after a full stop: a fresh session recovers
-                    # transient hiccups (each route already restarts the env).
-                    print("  0 results — retrying route once with a fresh session...")
-                    time.sleep(5)
-                    results = scrape_route(origin, dest, depart, ret)
-                all_results += results
-                print(f"  Got {len(results)} results")
+    for leg in LEGS:
+        origin, dest = leg["origin"], leg["dest"]
+        for depart in leg["dates"]:
+            n += 1
+            print(f"[{n}/{total}] {origin}→{dest}  {depart} (one-way)")
+            results = scrape_route(origin, dest, depart)
+            if not results:
+                # One retry after a full stop: a fresh session recovers
+                # transient hiccups (each route already restarts the env).
+                print("  0 results — retrying route once with a fresh session...")
+                time.sleep(5)
+                results = scrape_route(origin, dest, depart)
+            all_results += results
+            print(f"  Got {len(results)} results")
 
-                consecutive_failures = 0 if results else consecutive_failures + 1
-                if consecutive_failures >= 4:
-                    # 4 routes (8 attempts) in a row with nothing = the browser
-                    # side is dead; grinding through the rest just burns an hour
-                    # and produces the same nothing.
-                    DIAG["aborted_early"] = True
-                    print(f"ABORTING: {consecutive_failures} consecutive routes returned "
-                          f"0 results (timeouts={DIAG['timeouts']}, blank_pages={DIAG['blank_pages']})")
-                    return all_results
+            consecutive_failures = 0 if results else consecutive_failures + 1
+            if consecutive_failures >= 4:
+                # 4 routes (8 attempts) in a row with nothing = the browser
+                # side is dead; grinding through the rest just burns time
+                # and produces the same nothing.
+                DIAG["aborted_early"] = True
+                print(f"ABORTING: {consecutive_failures} consecutive routes returned "
+                      f"0 results (timeouts={DIAG['timeouts']}, blank_pages={DIAG['blank_pages']})")
+                return all_results
 
     return all_results
