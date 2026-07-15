@@ -1,0 +1,1388 @@
+{
+ "updated": "2026-07-15 18:51",
+ "trip": {
+  "route": "BOS \u2192 Dhaka \u2192 Bali \u2192 BOS",
+  "travelers": "2 adults + 1 child",
+  "rules": "Dhaka \u226429 days \u00b7 5 nights in Bali \u00b7 home by Feb 7, 2027"
+ },
+ "structures": [
+  {
+   "name": "open-jaw ticket + separate DAC\u2192DPS",
+   "total": 4763,
+   "valid": true,
+   "home": "Feb 7",
+   "dhaka_days": 27,
+   "bali_nights": 5,
+   "openjaw": {
+    "out_date": "January 4, 2027",
+    "ret_date": "February 6, 2027",
+    "price_total": 3423,
+    "airline": "Turkish Airlines",
+    "out_arrive": "January 6, 2027",
+    "stops": "1 stop",
+    "duration": "22 hr 50 min",
+    "layovers": "6 hr 10 min at Istanbul Airport in Istanbul",
+    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDZqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+   },
+   "legs": [
+    {
+     "route": "DAC\u2192DPS",
+     "depart": "February 1, 2027",
+     "arrive": "February 1, 2027",
+     "airline": "THAI",
+     "stops": "1 stop",
+     "duration": "10 hr 15 min",
+     "layovers": "3 hr 20 min at Suvarnabhumi Airport in Bangkok",
+     "price_total": 1340,
+     "link": "https://www.google.com/travel/flights"
+    }
+   ]
+  },
+  {
+   "name": "3 one-way tickets",
+   "total": 6229,
+   "valid": true,
+   "home": "Feb 7",
+   "dhaka_days": 27,
+   "bali_nights": 5,
+   "legs": [
+    {
+     "route": "BOS\u2192DAC",
+     "depart": "January 5, 2027",
+     "arrive": "January 6, 2027",
+     "airline": "Etihad",
+     "stops": "1 stop",
+     "duration": "17 hr 40 min",
+     "layovers": "1 hr 5 min at Zayed International Airport in Abu Dhabi",
+     "price_total": 2420,
+     "link": "https://www.google.com/travel/flights"
+    },
+    {
+     "route": "DAC\u2192DPS",
+     "depart": "February 1, 2027",
+     "arrive": "February 1, 2027",
+     "airline": "THAI",
+     "stops": "1 stop",
+     "duration": "10 hr 15 min",
+     "layovers": "3 hr 20 min at Suvarnabhumi Airport in Bangkok",
+     "price_total": 1340,
+     "link": "https://www.google.com/travel/flights"
+    },
+    {
+     "route": "DPS\u2192BOS",
+     "depart": "February 6, 2027",
+     "arrive": "February 7, 2027",
+     "airline": "Korean Air",
+     "stops": "1 stop",
+     "duration": "21 hr 50 min",
+     "layovers": "1 hr 25 min at Incheon International Airport in Seoul",
+     "price_total": 2469,
+     "link": "https://www.google.com/travel/flights"
+    }
+   ]
+  },
+  {
+   "name": "open-jaw ticket + separate DAC\u2192DPS",
+   "total": 4481,
+   "valid": false,
+   "home": "Feb 8",
+   "dhaka_days": 27,
+   "bali_nights": 5,
+   "openjaw": {
+    "out_date": "January 4, 2027",
+    "ret_date": "February 7, 2027",
+    "price_total": 3382,
+    "airline": "Turkish Airlines",
+    "out_arrive": "January 6, 2027",
+    "stops": "1 stop",
+    "duration": "22 hr 50 min",
+    "layovers": "6 hr 10 min at Istanbul Airport in Istanbul",
+    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDdqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+   },
+   "legs": [
+    {
+     "route": "DAC\u2192DPS",
+     "depart": "February 1, 2027",
+     "arrive": "February 2, 2027",
+     "airline": "AirAsia",
+     "stops": "1 stop",
+     "duration": "14 hr 15 min",
+     "layovers": "7 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+     "price_total": 1099,
+     "link": "https://www.google.com/travel/flights"
+    }
+   ]
+  }
+ ],
+ "combos": [
+  {
+   "legs": [
+    {
+     "route": "BOS\u2192DAC",
+     "depart": "January 5, 2027",
+     "arrive": "January 6, 2027",
+     "airline": "Etihad",
+     "stops": "1 stop",
+     "duration": "17 hr 40 min",
+     "layovers": "1 hr 5 min at Zayed International Airport in Abu Dhabi",
+     "price_total": 2420,
+     "link": "https://www.google.com/travel/flights"
+    },
+    {
+     "route": "DAC\u2192DPS",
+     "depart": "February 1, 2027",
+     "arrive": "February 1, 2027",
+     "airline": "THAI",
+     "stops": "1 stop",
+     "duration": "10 hr 15 min",
+     "layovers": "3 hr 20 min at Suvarnabhumi Airport in Bangkok",
+     "price_total": 1340,
+     "link": "https://www.google.com/travel/flights"
+    },
+    {
+     "route": "DPS\u2192BOS",
+     "depart": "February 6, 2027",
+     "arrive": "February 7, 2027",
+     "airline": "Korean Air",
+     "stops": "1 stop",
+     "duration": "21 hr 50 min",
+     "layovers": "1 hr 25 min at Incheon International Airport in Seoul",
+     "price_total": 2469,
+     "link": "https://www.google.com/travel/flights"
+    }
+   ],
+   "total": 6229,
+   "dhaka_days": 27,
+   "bali_nights": 5,
+   "home": "February 07, 2027"
+  },
+  {
+   "legs": [
+    {
+     "route": "BOS\u2192DAC",
+     "depart": "January 5, 2027",
+     "arrive": "January 6, 2027",
+     "airline": "Etihad",
+     "stops": "1 stop",
+     "duration": "17 hr 40 min",
+     "layovers": "1 hr 5 min at Zayed International Airport in Abu Dhabi",
+     "price_total": 2420,
+     "link": "https://www.google.com/travel/flights"
+    },
+    {
+     "route": "DAC\u2192DPS",
+     "depart": "February 1, 2027",
+     "arrive": "February 1, 2027",
+     "airline": "Batik Air",
+     "stops": "1 stop",
+     "duration": "16 hr 45 min",
+     "layovers": "9 hr 45 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+     "price_total": 1388,
+     "link": "https://www.google.com/travel/flights"
+    },
+    {
+     "route": "DPS\u2192BOS",
+     "depart": "February 6, 2027",
+     "arrive": "February 7, 2027",
+     "airline": "Korean Air",
+     "stops": "1 stop",
+     "duration": "21 hr 50 min",
+     "layovers": "1 hr 25 min at Incheon International Airport in Seoul",
+     "price_total": 2469,
+     "link": "https://www.google.com/travel/flights"
+    }
+   ],
+   "total": 6277,
+   "dhaka_days": 27,
+   "bali_nights": 5,
+   "home": "February 07, 2027"
+  },
+  {
+   "legs": [
+    {
+     "route": "BOS\u2192DAC",
+     "depart": "January 5, 2027",
+     "arrive": "January 6, 2027",
+     "airline": "Etihad",
+     "stops": "1 stop",
+     "duration": "17 hr 40 min",
+     "layovers": "1 hr 5 min at Zayed International Airport in Abu Dhabi",
+     "price_total": 2420,
+     "link": "https://www.google.com/travel/flights"
+    },
+    {
+     "route": "DAC\u2192DPS",
+     "depart": "February 1, 2027",
+     "arrive": "February 1, 2027",
+     "airline": "Batik Air",
+     "stops": "1 stop",
+     "duration": "13 hr 50 min",
+     "layovers": "7 hr at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+     "price_total": 1454,
+     "link": "https://www.google.com/travel/flights"
+    },
+    {
+     "route": "DPS\u2192BOS",
+     "depart": "February 6, 2027",
+     "arrive": "February 7, 2027",
+     "airline": "Korean Air",
+     "stops": "1 stop",
+     "duration": "21 hr 50 min",
+     "layovers": "1 hr 25 min at Incheon International Airport in Seoul",
+     "price_total": 2469,
+     "link": "https://www.google.com/travel/flights"
+    }
+   ],
+   "total": 6343,
+   "dhaka_days": 27,
+   "bali_nights": 5,
+   "home": "February 07, 2027"
+  }
+ ],
+ "cheapest_by_leg": {
+  "BOS\u2192DAC": {
+   "route": "BOS\u2192DAC",
+   "depart": "January 5, 2027",
+   "arrive": "January 6, 2027",
+   "airline": "Etihad",
+   "stops": "1 stop",
+   "duration": "17 hr 40 min",
+   "layovers": "1 hr 5 min at Zayed International Airport in Abu Dhabi",
+   "price_total": 2420,
+   "link": "https://www.google.com/travel/flights"
+  },
+  "DAC\u2192DPS": {
+   "route": "DAC\u2192DPS",
+   "depart": "February 1, 2027",
+   "arrive": "February 2, 2027",
+   "airline": "AirAsia",
+   "stops": "1 stop",
+   "duration": "14 hr 15 min",
+   "layovers": "7 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1099,
+   "link": "https://www.google.com/travel/flights"
+  },
+  "DPS\u2192BOS": {
+   "route": "DPS\u2192BOS",
+   "depart": "February 6, 2027",
+   "arrive": "February 7, 2027",
+   "airline": "Korean Air",
+   "stops": "1 stop",
+   "duration": "21 hr 50 min",
+   "layovers": "1 hr 25 min at Incheon International Airport in Seoul",
+   "price_total": 2469,
+   "link": "https://www.google.com/travel/flights"
+  }
+ },
+ "openjaws": [
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 6, 2027",
+   "price_total": 3423,
+   "airline": "Turkish Airlines",
+   "out_arrive": "January 6, 2027",
+   "stops": "1 stop",
+   "duration": "22 hr 50 min",
+   "layovers": "6 hr 10 min at Istanbul Airport in Istanbul",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDZqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 6, 2027",
+   "price_total": 3516,
+   "airline": "Qatar Airways",
+   "out_arrive": "January 6, 2027",
+   "stops": "1 stop",
+   "duration": "25 hr 35 min",
+   "layovers": "9 hr at Hamad International Airport in Doha",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDZqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 6, 2027",
+   "price_total": 4683,
+   "airline": "Emirates",
+   "out_arrive": "January 6, 2027",
+   "stops": "1 stop",
+   "duration": "23 hr 10 min",
+   "layovers": "6 hr 35 min at Dubai International Airport in Dubai",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDZqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 6, 2027",
+   "price_total": 3524,
+   "airline": "Qatar Airways",
+   "out_arrive": "January 6, 2027",
+   "stops": "1 stop",
+   "duration": "33 hr 35 min",
+   "layovers": "17 hr at Hamad International Airport in Doha",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDZqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 6, 2027",
+   "price_total": 3973,
+   "airline": "Qatar Airways",
+   "out_arrive": "January 6, 2027",
+   "stops": "1 stop",
+   "duration": "34 hr 5 min",
+   "layovers": "17 hr 30 min at Hamad International Airport in Doha",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDZqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 6, 2027",
+   "price_total": 4683,
+   "airline": "Emirates",
+   "out_arrive": "January 6, 2027",
+   "stops": "1 stop",
+   "duration": "31 hr 50 min",
+   "layovers": "15 hr 10 min at Dubai International Airport in Dubai",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDZqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 6, 2027",
+   "price_total": 5023,
+   "airline": "JetBlue and Qatar Airways",
+   "out_arrive": "January 5, 2027",
+   "stops": "2 stops",
+   "duration": "23 hr 3 min",
+   "layovers": "1 hr 56 min at John F. Kennedy International Airport in New York; 2 hr 50 min at Hamad International Airport in Doha",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDZqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 6, 2027",
+   "price_total": 5682,
+   "airline": "American and Qatar Airways",
+   "out_arrive": "January 5, 2027",
+   "stops": "2 stops",
+   "duration": "24 hr 44 min",
+   "layovers": "3 hr at John F. Kennedy International Airport in New York; 3 hr 20 min at Hamad International Airport in Doha",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDZqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 6, 2027",
+   "price_total": 19954,
+   "airline": "Air Canada and Emirates",
+   "out_arrive": "January 6, 2027",
+   "stops": "2 stops",
+   "duration": "39 hr 35 min",
+   "layovers": "13 hr 35 min at Toronto Pearson International Airport in Toronto; 6 hr 10 min at Dubai International Airport in Dubai",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDZqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 6, 2027",
+   "price_total": 19954,
+   "airline": "Air Canada and Emirates",
+   "out_arrive": "January 6, 2027",
+   "stops": "2 stops",
+   "duration": "34 hr 15 min",
+   "layovers": "8 hr 14 min at Toronto Pearson International Airport in Toronto; 6 hr 10 min at Dubai International Airport in Dubai",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDZqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 6, 2027",
+   "price_total": 19954,
+   "airline": "Air Canada and Emirates",
+   "out_arrive": "January 6, 2027",
+   "stops": "2 stops",
+   "duration": "30 hr 10 min",
+   "layovers": "4 hr 14 min at Toronto Pearson International Airport in Toronto; 6 hr 10 min at Dubai International Airport in Dubai",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDZqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 7, 2027",
+   "price_total": 3382,
+   "airline": "Turkish Airlines",
+   "out_arrive": "January 6, 2027",
+   "stops": "1 stop",
+   "duration": "22 hr 50 min",
+   "layovers": "6 hr 10 min at Istanbul Airport in Istanbul",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDdqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 7, 2027",
+   "price_total": 3516,
+   "airline": "Qatar Airways",
+   "out_arrive": "January 6, 2027",
+   "stops": "1 stop",
+   "duration": "25 hr 35 min",
+   "layovers": "9 hr at Hamad International Airport in Doha",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDdqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 7, 2027",
+   "price_total": 4381,
+   "airline": "Emirates",
+   "out_arrive": "January 6, 2027",
+   "stops": "1 stop",
+   "duration": "23 hr 10 min",
+   "layovers": "6 hr 35 min at Dubai International Airport in Dubai",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDdqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 7, 2027",
+   "price_total": 3524,
+   "airline": "Qatar Airways",
+   "out_arrive": "January 6, 2027",
+   "stops": "1 stop",
+   "duration": "33 hr 35 min",
+   "layovers": "17 hr at Hamad International Airport in Doha",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDdqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 7, 2027",
+   "price_total": 4759,
+   "airline": "Etihad",
+   "out_arrive": "January 6, 2027",
+   "stops": "1 stop",
+   "duration": "41 hr 40 min",
+   "layovers": "25 hr 5 min at Zayed International Airport in Abu Dhabi",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDdqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 7, 2027",
+   "price_total": 4787,
+   "airline": "American and Qatar Airways",
+   "out_arrive": "January 5, 2027",
+   "stops": "2 stops",
+   "duration": "24 hr 14 min",
+   "layovers": "3 hr at John F. Kennedy International Airport in New York; 2 hr 50 min at Hamad International Airport in Doha",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDdqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 7, 2027",
+   "price_total": 4787,
+   "airline": "American and Qatar Airways",
+   "out_arrive": "January 5, 2027",
+   "stops": "2 stops",
+   "duration": "24 hr 44 min",
+   "layovers": "3 hr at John F. Kennedy International Airport in New York; 3 hr 20 min at Hamad International Airport in Doha",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDdqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 7, 2027",
+   "price_total": 4838,
+   "airline": "Air Canada and Emirates",
+   "out_arrive": "January 5, 2027",
+   "stops": "2 stops",
+   "duration": "24 hr 30 min",
+   "layovers": "3 hr 45 min at Montr\u00e9al-Pierre Elliott Trudeau International Airport in Montreal; 2 hr 30 min at Dubai International Airport in Dubai",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDdqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 7, 2027",
+   "price_total": 4972,
+   "airline": "Cathay Pacific",
+   "out_arrive": "January 5, 2027",
+   "stops": "1 stop",
+   "duration": "34 hr 30 min",
+   "layovers": "14 hr 35 min at Hong Kong International Airport in Hong Kong",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDdqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 7, 2027",
+   "price_total": 5023,
+   "airline": "JetBlue and Qatar Airways",
+   "out_arrive": "January 5, 2027",
+   "stops": "2 stops",
+   "duration": "23 hr 3 min",
+   "layovers": "1 hr 56 min at John F. Kennedy International Airport in New York; 2 hr 50 min at Hamad International Airport in Doha",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDdqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 7, 2027",
+   "price_total": 7563,
+   "airline": "British Airways and Qatar Airways",
+   "out_arrive": "January 5, 2027",
+   "stops": "2 stops",
+   "duration": "22 hr 45 min",
+   "layovers": "2 hr 30 min at Heathrow Airport in London; 2 hr 15 min at Hamad International Airport in Doha",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDdqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  }
+ ],
+ "flights": [
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 1, 2027",
+   "arrive": "February 2, 2027",
+   "airline": "AirAsia",
+   "stops": "1 stop",
+   "duration": "14 hr 15 min",
+   "layovers": "7 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1099,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 1, 2027",
+   "arrive": "February 2, 2027",
+   "airline": "AirAsia",
+   "stops": "1 stop",
+   "duration": "18 hr 10 min",
+   "layovers": "11 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1099,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 1, 2027",
+   "arrive": "February 2, 2027",
+   "airline": "AirAsia",
+   "stops": "1 stop",
+   "duration": "20 hr 45 min",
+   "layovers": "13 hr 40 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1103,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 1, 2027",
+   "arrive": "February 2, 2027",
+   "airline": "AirAsia",
+   "stops": "1 stop",
+   "duration": "11 hr 35 min",
+   "layovers": "4 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1130,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 3, 2027",
+   "arrive": "February 4, 2027",
+   "airline": "AirAsia",
+   "stops": "1 stop",
+   "duration": "11 hr 35 min",
+   "layovers": "4 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1183,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 3, 2027",
+   "arrive": "February 4, 2027",
+   "airline": "AirAsia",
+   "stops": "1 stop",
+   "duration": "14 hr 15 min",
+   "layovers": "7 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1183,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 3, 2027",
+   "arrive": "February 4, 2027",
+   "airline": "AirAsia",
+   "stops": "1 stop",
+   "duration": "18 hr 10 min",
+   "layovers": "11 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1183,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 3, 2027",
+   "arrive": "February 4, 2027",
+   "airline": "AirAsia",
+   "stops": "1 stop",
+   "duration": "20 hr 45 min",
+   "layovers": "13 hr 40 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1187,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 1, 2027",
+   "arrive": "February 2, 2027",
+   "airline": "Malaysia Airlines",
+   "stops": "1 stop",
+   "duration": "14 hr 30 min",
+   "layovers": "7 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1271,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 1, 2027",
+   "arrive": "February 2, 2027",
+   "airline": "Malaysia Airlines",
+   "stops": "1 stop",
+   "duration": "17 hr 30 min",
+   "layovers": "10 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1271,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 2, 2027",
+   "arrive": "February 3, 2027",
+   "airline": "Malaysia Airlines",
+   "stops": "1 stop",
+   "duration": "14 hr 30 min",
+   "layovers": "7 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1271,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 2, 2027",
+   "arrive": "February 3, 2027",
+   "airline": "Malaysia Airlines",
+   "stops": "1 stop",
+   "duration": "17 hr 30 min",
+   "layovers": "10 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1271,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 1, 2027",
+   "arrive": "February 2, 2027",
+   "airline": "Malaysia Airlines",
+   "stops": "1 stop",
+   "duration": "11 hr 10 min",
+   "layovers": "4 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1316,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 2, 2027",
+   "arrive": "February 3, 2027",
+   "airline": "Malaysia Airlines",
+   "stops": "1 stop",
+   "duration": "11 hr 10 min",
+   "layovers": "4 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1316,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 1, 2027",
+   "arrive": "February 1, 2027",
+   "airline": "THAI",
+   "stops": "1 stop",
+   "duration": "10 hr 15 min",
+   "layovers": "3 hr 20 min at Suvarnabhumi Airport in Bangkok",
+   "price_total": 1340,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 2, 2027",
+   "arrive": "February 2, 2027",
+   "airline": "THAI",
+   "stops": "1 stop",
+   "duration": "10 hr 15 min",
+   "layovers": "3 hr 20 min at Suvarnabhumi Airport in Bangkok",
+   "price_total": 1340,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 2, 2027",
+   "arrive": "February 2, 2027",
+   "airline": "Cathay Pacific",
+   "stops": "1 stop",
+   "duration": "12 hr 15 min",
+   "layovers": "3 hr 40 min at Hong Kong International Airport in Hong Kong",
+   "price_total": 1364,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 1, 2027",
+   "arrive": "February 1, 2027",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "16 hr 45 min",
+   "layovers": "9 hr 45 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1388,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 2, 2027",
+   "arrive": "February 2, 2027",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "16 hr 45 min",
+   "layovers": "9 hr 45 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1388,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 1, 2027",
+   "arrive": "February 2, 2027",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "15 hr 50 min",
+   "layovers": "9 hr at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1394,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 1, 2027",
+   "arrive": "February 2, 2027",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "11 hr 10 min",
+   "layovers": "4 hr 20 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1400,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 2, 2027",
+   "arrive": "February 3, 2027",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "15 hr 50 min",
+   "layovers": "9 hr at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1424,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 2, 2027",
+   "arrive": "February 3, 2027",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "11 hr 10 min",
+   "layovers": "4 hr 20 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1439,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 1, 2027",
+   "arrive": "February 1, 2027",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "13 hr 50 min",
+   "layovers": "7 hr at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1454,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 2, 2027",
+   "arrive": "February 2, 2027",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "13 hr 50 min",
+   "layovers": "7 hr at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1454,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 1, 2027",
+   "arrive": "February 1, 2027",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "9 hr 10 min",
+   "layovers": "2 hr 20 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1460,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 2, 2027",
+   "arrive": "February 2, 2027",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "9 hr 10 min",
+   "layovers": "2 hr 20 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1460,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 1, 2027",
+   "arrive": "February 1, 2027",
+   "airline": "THAI",
+   "stops": "1 stop",
+   "duration": "14 hr",
+   "layovers": "7 hr 5 min at Suvarnabhumi Airport in Bangkok",
+   "price_total": 1511,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 2, 2027",
+   "arrive": "February 2, 2027",
+   "airline": "THAI",
+   "stops": "1 stop",
+   "duration": "14 hr",
+   "layovers": "7 hr 5 min at Suvarnabhumi Airport in Bangkok",
+   "price_total": 1511,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 1, 2027",
+   "arrive": "February 2, 2027",
+   "airline": "China Southern",
+   "stops": "1 stop",
+   "duration": "16 hr 20 min",
+   "layovers": "7 hr 45 min at Guangzhou Baiyun International Airport in Guangzhou",
+   "price_total": 2285,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 2, 2027",
+   "arrive": "February 3, 2027",
+   "airline": "China Southern",
+   "stops": "1 stop",
+   "duration": "16 hr 20 min",
+   "layovers": "7 hr 45 min at Guangzhou Baiyun International Airport in Guangzhou",
+   "price_total": 2285,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DAC\u2192DPS",
+   "depart": "February 2, 2027",
+   "arrive": "February 3, 2027",
+   "airline": "China Southern",
+   "stops": "1 stop",
+   "duration": "22 hr 10 min",
+   "layovers": "13 hr 20 min at Guangzhou Baiyun International Airport in Guangzhou",
+   "price_total": 2285,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 5, 2027",
+   "arrive": "January 6, 2027",
+   "airline": "Etihad",
+   "stops": "1 stop",
+   "duration": "17 hr 40 min",
+   "layovers": "1 hr 5 min at Zayed International Airport in Abu Dhabi",
+   "price_total": 2420,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DPS\u2192BOS",
+   "depart": "February 6, 2027",
+   "arrive": "February 7, 2027",
+   "airline": "Korean Air",
+   "stops": "1 stop",
+   "duration": "21 hr 50 min",
+   "layovers": "1 hr 25 min at Incheon International Airport in Seoul",
+   "price_total": 2469,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 4, 2027",
+   "arrive": "January 6, 2027",
+   "airline": "Turkish Airlines",
+   "stops": "1 stop",
+   "duration": "22 hr 50 min",
+   "layovers": "6 hr 10 min at Istanbul Airport in Istanbul",
+   "price_total": 2537,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 5, 2027",
+   "arrive": "January 7, 2027",
+   "airline": "Turkish Airlines",
+   "stops": "1 stop",
+   "duration": "22 hr 50 min",
+   "layovers": "6 hr 10 min at Istanbul Airport in Istanbul",
+   "price_total": 2537,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 6, 2027",
+   "arrive": "January 8, 2027",
+   "airline": "Turkish Airlines",
+   "stops": "1 stop",
+   "duration": "22 hr",
+   "layovers": "5 hr 5 min at Istanbul Airport in Istanbul",
+   "price_total": 2537,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DPS\u2192BOS",
+   "depart": "February 7, 2027",
+   "arrive": "February 8, 2027",
+   "airline": "Korean Air",
+   "stops": "1 stop",
+   "duration": "21 hr 50 min",
+   "layovers": "1 hr 25 min at Incheon International Airport in Seoul",
+   "price_total": 2578,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DPS\u2192BOS",
+   "depart": "February 6, 2027",
+   "arrive": "February 6, 2027",
+   "airline": "Korean Air and Delta",
+   "stops": "2 stops",
+   "duration": "27 hr 58 min",
+   "layovers": "1 hr 15 min at Incheon International Airport in Seoul; 3 hr 35 min at Hartsfield-Jackson Atlanta International Airport in Atlanta",
+   "price_total": 2595,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 4, 2027",
+   "arrive": "January 6, 2027",
+   "airline": "Qatar Airways",
+   "stops": "1 stop",
+   "duration": "33 hr 35 min",
+   "layovers": "17 hr at Hamad International Airport in Doha",
+   "price_total": 2717,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 4, 2027",
+   "arrive": "January 6, 2027",
+   "airline": "Qatar Airways",
+   "stops": "1 stop",
+   "duration": "25 hr 35 min",
+   "layovers": "9 hr at Hamad International Airport in Doha",
+   "price_total": 2769,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 6, 2027",
+   "arrive": "January 8, 2027",
+   "airline": "Qatar Airways",
+   "stops": "1 stop",
+   "duration": "25 hr 35 min",
+   "layovers": "9 hr at Hamad International Airport in Doha",
+   "price_total": 2769,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 5, 2027",
+   "arrive": "January 7, 2027",
+   "airline": "American and Qatar Airways",
+   "stops": "2 stops",
+   "duration": "30 hr 45 min",
+   "layovers": "3 hr 31 min at Philadelphia International Airport in Philadelphia; 8 hr 30 min at Hamad International Airport in Doha",
+   "price_total": 2782,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DPS\u2192BOS",
+   "depart": "February 6, 2027",
+   "arrive": "February 6, 2027",
+   "airline": "Etihad",
+   "stops": "1 stop",
+   "duration": "25 hr 40 min",
+   "layovers": "2 hr 35 min at Zayed International Airport in Abu Dhabi",
+   "price_total": 2861,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DPS\u2192BOS",
+   "depart": "February 6, 2027",
+   "arrive": "February 7, 2027",
+   "airline": "Etihad",
+   "stops": "1 stop",
+   "duration": "32 hr 25 min",
+   "layovers": "9 hr 15 min at Zayed International Airport in Abu Dhabi",
+   "price_total": 2861,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DPS\u2192BOS",
+   "depart": "February 6, 2027",
+   "arrive": "February 7, 2027",
+   "airline": "Malaysia Airlines and British Airways",
+   "stops": "2 stops",
+   "duration": "32 hr 5 min",
+   "layovers": "1 hr at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur; 6 hr 20 min at Heathrow Airport in London",
+   "price_total": 3041,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DPS\u2192BOS",
+   "depart": "February 5, 2027",
+   "arrive": "February 6, 2027",
+   "airline": "Korean Air and Delta",
+   "stops": "2 stops",
+   "duration": "26 hr 57 min",
+   "layovers": "2 hr 15 min at Incheon International Airport in Seoul; 2 hr 30 min at John F. Kennedy International Airport in New York",
+   "price_total": 3083,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DPS\u2192BOS",
+   "depart": "February 5, 2027",
+   "arrive": "February 6, 2027",
+   "airline": "Korean Air and Delta",
+   "stops": "2 stops",
+   "duration": "26 hr 59 min",
+   "layovers": "1 hr at Incheon International Airport in Seoul; 2 hr 55 min at Hartsfield-Jackson Atlanta International Airport in Atlanta",
+   "price_total": 3083,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DPS\u2192BOS",
+   "depart": "February 6, 2027",
+   "arrive": "February 7, 2027",
+   "airline": "Garuda Indonesia and Emirates",
+   "stops": "2 stops",
+   "duration": "31 hr 25 min",
+   "layovers": "3 hr 50 min at Soekarno\u2013Hatta International Airport in Jakarta; 3 hr 10 min at Dubai International Airport in Dubai",
+   "price_total": 3093,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 4, 2027",
+   "arrive": "January 5, 2027",
+   "airline": "Cathay Pacific",
+   "stops": "1 stop",
+   "duration": "34 hr 30 min",
+   "layovers": "14 hr 35 min at Hong Kong International Airport in Hong Kong",
+   "price_total": 3137,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 6, 2027",
+   "arrive": "January 7, 2027",
+   "airline": "Cathay Pacific",
+   "stops": "1 stop",
+   "duration": "34 hr 30 min",
+   "layovers": "14 hr 35 min at Hong Kong International Airport in Hong Kong",
+   "price_total": 3137,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 5, 2027",
+   "arrive": "January 6, 2027",
+   "airline": "American and Etihad",
+   "stops": "2 stops",
+   "duration": "23 hr 50 min",
+   "layovers": "2 hr 19 min at Charlotte Douglas International Airport in Charlotte; 1 hr 35 min at Zayed International Airport in Abu Dhabi",
+   "price_total": 3183,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 4, 2027",
+   "arrive": "January 5, 2027",
+   "airline": "Air Canada and Emirates",
+   "stops": "2 stops",
+   "duration": "24 hr 30 min",
+   "layovers": "3 hr 45 min at Montr\u00e9al-Pierre Elliott Trudeau International Airport in Montreal; 2 hr 30 min at Dubai International Airport in Dubai",
+   "price_total": 3196,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 5, 2027",
+   "arrive": "January 6, 2027",
+   "airline": "Air Canada and Emirates",
+   "stops": "2 stops",
+   "duration": "24 hr 30 min",
+   "layovers": "3 hr 45 min at Montr\u00e9al-Pierre Elliott Trudeau International Airport in Montreal; 2 hr 30 min at Dubai International Airport in Dubai",
+   "price_total": 3196,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 4, 2027",
+   "arrive": "January 6, 2027",
+   "airline": "Emirates",
+   "stops": "1 stop",
+   "duration": "23 hr 10 min",
+   "layovers": "6 hr 35 min at Dubai International Airport in Dubai",
+   "price_total": 3213,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 4, 2027",
+   "arrive": "January 6, 2027",
+   "airline": "Emirates and flydubai",
+   "stops": "1 stop",
+   "duration": "35 hr 20 min",
+   "layovers": "18 hr 35 min at Dubai International Airport in Dubai",
+   "price_total": 3213,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 5, 2027",
+   "arrive": "January 7, 2027",
+   "airline": "Emirates",
+   "stops": "1 stop",
+   "duration": "23 hr 10 min",
+   "layovers": "6 hr 35 min at Dubai International Airport in Dubai",
+   "price_total": 3213,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 5, 2027",
+   "arrive": "January 7, 2027",
+   "airline": "Emirates and flydubai",
+   "stops": "1 stop",
+   "duration": "35 hr 20 min",
+   "layovers": "18 hr 35 min at Dubai International Airport in Dubai",
+   "price_total": 3213,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 6, 2027",
+   "arrive": "January 8, 2027",
+   "airline": "Emirates",
+   "stops": "1 stop",
+   "duration": "23 hr 10 min",
+   "layovers": "6 hr 35 min at Dubai International Airport in Dubai",
+   "price_total": 3213,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 6, 2027",
+   "arrive": "January 8, 2027",
+   "airline": "Emirates and flydubai",
+   "stops": "1 stop",
+   "duration": "35 hr 20 min",
+   "layovers": "18 hr 35 min at Dubai International Airport in Dubai",
+   "price_total": 3213,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 4, 2027",
+   "arrive": "January 5, 2027",
+   "airline": "American and Qatar Airways",
+   "stops": "2 stops",
+   "duration": "24 hr 14 min",
+   "layovers": "3 hr at John F. Kennedy International Airport in New York; 2 hr 50 min at Hamad International Airport in Doha",
+   "price_total": 3236,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 5, 2027",
+   "arrive": "January 6, 2027",
+   "airline": "American and Qatar Airways",
+   "stops": "2 stops",
+   "duration": "24 hr 14 min",
+   "layovers": "3 hr at John F. Kennedy International Airport in New York; 2 hr 50 min at Hamad International Airport in Doha",
+   "price_total": 3236,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 6, 2027",
+   "arrive": "January 7, 2027",
+   "airline": "JetBlue and Qatar Airways",
+   "stops": "2 stops",
+   "duration": "23 hr 7 min",
+   "layovers": "2 hr at John F. Kennedy International Airport in New York; 2 hr 50 min at Hamad International Airport in Doha",
+   "price_total": 3269,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DPS\u2192BOS",
+   "depart": "February 6, 2027",
+   "arrive": "February 7, 2027",
+   "airline": "EVA Air and United",
+   "stops": "2 stops",
+   "duration": "26 hr 38 min",
+   "layovers": "1 hr 35 min at Taiwan Taoyuan International Airport in Taipei City; 2 hr 15 min at San Francisco International Airport in San Francisco",
+   "price_total": 3282,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DPS\u2192BOS",
+   "depart": "February 5, 2027",
+   "arrive": "February 5, 2027",
+   "airline": "Emirates",
+   "stops": "1 stop",
+   "duration": "26 hr 30 min",
+   "layovers": "2 hr 55 min at Dubai International Airport in Dubai",
+   "price_total": 3305,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DPS\u2192BOS",
+   "depart": "February 6, 2027",
+   "arrive": "February 6, 2027",
+   "airline": "Emirates",
+   "stops": "1 stop",
+   "duration": "26 hr 30 min",
+   "layovers": "2 hr 55 min at Dubai International Airport in Dubai",
+   "price_total": 3305,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DPS\u2192BOS",
+   "depart": "February 6, 2027",
+   "arrive": "February 7, 2027",
+   "airline": "Emirates",
+   "stops": "1 stop",
+   "duration": "31 hr 5 min",
+   "layovers": "7 hr 30 min at Dubai International Airport in Dubai",
+   "price_total": 3305,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DPS\u2192BOS",
+   "depart": "February 6, 2027",
+   "arrive": "February 7, 2027",
+   "airline": "Qatar Airways",
+   "stops": "1 stop",
+   "duration": "32 hr 40 min",
+   "layovers": "8 hr 40 min at Hamad International Airport in Doha",
+   "price_total": 3360,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 4, 2027",
+   "arrive": "January 5, 2027",
+   "airline": "JetBlue and Qatar Airways",
+   "stops": "2 stops",
+   "duration": "23 hr 3 min",
+   "layovers": "1 hr 56 min at John F. Kennedy International Airport in New York; 2 hr 50 min at Hamad International Airport in Doha",
+   "price_total": 3530,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 5, 2027",
+   "arrive": "January 6, 2027",
+   "airline": "JetBlue and Qatar Airways",
+   "stops": "2 stops",
+   "duration": "23 hr 7 min",
+   "layovers": "2 hr at John F. Kennedy International Airport in New York; 2 hr 50 min at Hamad International Airport in Doha",
+   "price_total": 3530,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 4, 2027",
+   "arrive": "January 5, 2027",
+   "airline": "American and Qatar Airways",
+   "stops": "2 stops",
+   "duration": "24 hr 44 min",
+   "layovers": "3 hr at John F. Kennedy International Airport in New York; 3 hr 20 min at Hamad International Airport in Doha",
+   "price_total": 3682,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 6, 2027",
+   "arrive": "January 7, 2027",
+   "airline": "American and Qatar Airways",
+   "stops": "2 stops",
+   "duration": "24 hr 35 min",
+   "layovers": "3 hr at John F. Kennedy International Airport in New York; 3 hr 20 min at Hamad International Airport in Doha",
+   "price_total": 3682,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 4, 2027",
+   "arrive": "January 5, 2027",
+   "airline": "British Airways and Qatar Airways",
+   "stops": "2 stops",
+   "duration": "22 hr 45 min",
+   "layovers": "2 hr 30 min at Heathrow Airport in London; 2 hr 15 min at Hamad International Airport in Doha",
+   "price_total": 4329,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 6, 2027",
+   "arrive": "January 7, 2027",
+   "airline": "British Airways and Qatar Airways",
+   "stops": "2 stops",
+   "duration": "22 hr 45 min",
+   "layovers": "2 hr 30 min at Heathrow Airport in London; 2 hr 15 min at Hamad International Airport in Doha",
+   "price_total": 4329,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 5, 2027",
+   "arrive": "January 6, 2027",
+   "airline": "United and EgyptAir",
+   "stops": "2 stops",
+   "duration": "24 hr 45 min",
+   "layovers": "4 hr 26 min at Dulles International Airport in Washington; 1 hr 40 min at Cairo International Airport in Cairo",
+   "price_total": 4463,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "DPS\u2192BOS",
+   "depart": "February 6, 2027",
+   "arrive": "February 6, 2027",
+   "airline": "Korean Air and American",
+   "stops": "2 stops",
+   "duration": "25 hr 56 min",
+   "layovers": "1 hr 20 min at Incheon International Airport in Seoul; 1 hr 55 min at Chicago O'Hare International Airport in Chicago",
+   "price_total": 5186,
+   "link": "https://www.google.com/travel/flights"
+  },
+  {
+   "route": "BOS\u2192DAC",
+   "depart": "January 5, 2027",
+   "arrive": "January 7, 2027",
+   "airline": "Lufthansa and Turkish Airlines",
+   "stops": "2 stops",
+   "duration": "22 hr 10 min",
+   "layovers": "2 hr 35 min at Munich International Airport in Munich; 2 hr 15 min at Istanbul Airport in Istanbul",
+   "price_total": 21466,
+   "link": "https://www.google.com/travel/flights"
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-07-15",
+   "best_total": 4763,
+   "best_structure": "open-jaw ticket + separate DAC\u2192DPS",
+   "oneway_combo_total": 6229,
+   "openjaw_total": 4763,
+   "openjaw_min": {
+    "February 6, 2027": 3423,
+    "February 7, 2027": 3382
+   },
+   "legs_min": {
+    "BOS\u2192DAC": 2420,
+    "DAC\u2192DPS": 1099,
+    "DPS\u2192BOS": 2469
+   }
+  }
+ ]
+}
