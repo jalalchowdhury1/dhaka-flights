@@ -53,3 +53,13 @@ silently showing nothing.
 
 Single-airline multi-city fares (e.g., Qatar BOS→DAC + DPS→BOS on one ticket) and
 budget-carrier DAC→DPS options — researched by hand today, not tracked daily.
+
+## Addendum (same day, approved in chat): open-jaw watch + Vercel dashboard
+
+- `scrape_openjaw_all()` adds 2 daily multi-city searches (BOS→DAC Jan 4 + DPS→BOS
+  Feb 6 / Feb 7, one ticket) — found ~$1.7k cheaper than separate one-ways.
+- `combo.best_structures()` ranks ticketing structures (one-ways vs open-jaw +
+  compatible DAC→DPS middle leg) under the same trip rules; Telegram leads with it.
+- `publish.py` writes `site/data.json` (results + per-day history) and pushes; the
+  static dashboard at dhaka-flights.vercel.app fetches it raw from GitHub per load,
+  so data updates need no redeploy.

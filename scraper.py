@@ -80,6 +80,19 @@ def _find_ref(snap_raw: str, *keywords) -> str:
     return ""
 
 
+def _find_refs(snap_raw: str, *keywords) -> list:
+    """All refs whose line matches all keywords, in tree order (multi-city
+    forms repeat 'Where from'/'Where to'/'Departure' once per flight row)."""
+    tree = _get_tree(snap_raw)
+    out = []
+    for line in tree.splitlines():
+        if all(kw.lower() in line.lower() for kw in keywords):
+            refs = re.findall(r'\[(\d+-\d+)\]', line)
+            if refs:
+                out.append("@" + refs[-1])
+    return out
+
+
 def _snap() -> str:
     return _run("browse snapshot")
 
@@ -343,6 +356,177 @@ def _parse_results(tree: str, origin: str, dest: str, url: str, depart: str = ""
         })
 
     return results
+
+
+# Open-jaw watch: BOS→DAC + DPS→BOS on ONE multi-city ticket (the middle
+# DAC→DPS hop is bought separately). Found 2026-07-15 to be ~$1.7k cheaper
+# than three one-ways ($3.4k vs $5.1k for the two long legs, all 3 pax).
+OPENJAW_SEARCHES = [
+    ("January 4, 2027", "February 6, 2027"),   # home Feb 7 (deadline-safe)
+    ("January 4, 2027", "February 7, 2027"),   # home Feb 8 (flagged)
+]
+
+
+def scrape_openjaw(out_date: str, ret_date: str) -> list:
+    """Multi-city search: BOS→DAC on out_date + DPS→BOS on ret_date, one ticket.
+    Returns options priced as the TOTAL for both legs, all passengers; flight
+    details (airline/times/layovers) describe the FIRST leg — Google's
+    selection page prices each first-leg choice with its cheapest completion."""
+    results = []
+    legs = [("BOS", "DAC", out_date), ("DPS", "BOS", ret_date)]
+    try:
+        _run("browse stop")
+        time.sleep(1)
+        _run("browse env local")
+        _run("browse open https://www.google.com/travel/flights?hl=en&curr=USD&gl=us")
+        time.sleep(4)
+        snap = _snap()
+
+        if "Where from" not in _get_tree(snap):
+            DIAG["blank_pages"] += 1
+            print("  ERROR: Flights page never loaded (blank/stub tree)")
+            return results
+
+        # Ticket type → Multi-city
+        tt_ref = _find_ref(snap, "Change ticket type")
+        if tt_ref:
+            _run(f"browse click {tt_ref}"); time.sleep(1)
+            snap = _snap()
+            mc_ref = _find_ref(snap, "option: Multi-city")
+            if mc_ref:
+                _run(f"browse click {mc_ref}"); time.sleep(1.5)
+            snap = _snap()
+
+        # Passengers: 2 adults + 1 child
+        pax_ref = _find_ref(snap, "passenger")
+        if pax_ref:
+            _run(f"browse click {pax_ref}"); time.sleep(0.8)
+            snap = _snap()
+            add_adult = _find_ref(snap, "button: Add adult")
+            if add_adult:
+                _run(f"browse click {add_adult}"); time.sleep(0.4)
+            snap = _snap()
+            add_child = _find_ref(snap, "button: Add child")
+            if add_child:
+                _run(f"browse click {add_child}"); time.sleep(0.4)
+            snap = _snap()
+            done_ref = _find_ref(snap, "button: Done")
+            if done_ref:
+                _run(f"browse click {done_ref}"); time.sleep(0.8)
+            snap = _snap()
+
+        for i, (o, d, dep) in enumerate(legs):
+            snap = _snap()
+            froms = _find_refs(snap, "Where from")
+            if i >= len(froms):
+                print("  ERROR: multi-city form has too few flight rows")
+                return results
+            print(f"  Row {i+1}: {o}→{d} {dep}")
+            _run(f"browse click {froms[i]}"); time.sleep(0.6)
+            _run("browse press Escape"); time.sleep(0.3)
+            _run(f"browse click {froms[i]}"); time.sleep(0.5)
+            _run(f"browse type {o}"); time.sleep(2)
+            snap = _snap()
+            pick = _pick_airport(snap, o)
+            if pick:
+                _run(f"browse click {pick}")
+            else:
+                _run("browse press Enter")
+            time.sleep(1)
+            snap = _snap()
+
+            tos = _find_refs(snap, "Where to")
+            _run(f"browse click {tos[i]}"); time.sleep(0.5)
+            _run(f"browse type {d}"); time.sleep(2)
+            snap = _snap()
+            pick = _pick_airport(snap, d)
+            if pick:
+                _run(f"browse click {pick}")
+            else:
+                _run("browse press Enter")
+            time.sleep(1)
+            snap = _snap()
+
+            deps = _find_refs(snap, "textbox: Departure")
+            _run(f"browse click {deps[i]}"); time.sleep(0.5)
+            _run(f'browse type "{dep}"'); time.sleep(0.8)
+            snap = _snap()
+            done_ref = _find_ref(snap, "button: Done")
+            if done_ref:
+                _run(f"browse click {done_ref}"); time.sleep(0.8)
+
+        snap = _snap()
+        search_ref = _find_ref(snap, "button: Search")
+        if search_ref:
+            _run(f"browse click {search_ref}")
+        else:
+            _run("browse press Enter")
+        time.sleep(12)
+
+        raw_url = _run("browse get url")
+        try:
+            result_url = json.loads(raw_url).get("url", raw_url)
+        except Exception:
+            result_url = raw_url
+        snap = _snap()
+        more_ref = _find_ref(snap, "View more flights")
+        if more_ref:
+            _run(f"browse click {more_ref}")
+            time.sleep(3)
+            snap = _snap()
+        tree = _get_tree(snap)
+
+        results = _parse_openjaw_results(tree, out_date, ret_date, result_url)
+        print(f"  Parsed {len(results)} open-jaw options")
+
+        if not results:
+            with open(DEBUG_TREE_FILE, "w") as f:
+                f.write(f"openjaw: BOS->DAC {out_date} + DPS->BOS {ret_date}\n"
+                        f"url: {result_url}\n\n{tree}")
+            print(f"  (tree saved to {DEBUG_TREE_FILE})")
+    except Exception as e:
+        print(f"  Error: {e}")
+    finally:
+        try:
+            _run("browse stop")
+        except Exception as e:
+            print(f"  WARN: browse stop failed during cleanup: {e}")
+
+    return results
+
+
+def _parse_openjaw_results(tree: str, out_date: str, ret_date: str, url: str) -> list:
+    """Multi-city first-leg selection lines read 'From 3423 US dollars total.'
+    — reuse the one-way parser and re-shape the fields."""
+    parsed = _parse_results(tree, "BOS", "DAC", url, out_date)
+    results = []
+    for f in parsed:
+        results.append({
+            "out_date": out_date,
+            "ret_date": ret_date,
+            "price_total": f["price_total"],   # BOTH legs, all 3 travelers
+            "airline": f["airline"],
+            "out_arrive": f["arrive"],
+            "stops": f["stops"],
+            "duration": f["duration"],
+            "layovers": f["layovers"],
+            "link": f["link"],
+        })
+    return results
+
+
+def scrape_openjaw_all() -> list:
+    all_results = []
+    for i, (out_date, ret_date) in enumerate(OPENJAW_SEARCHES, 1):
+        print(f"[openjaw {i}/{len(OPENJAW_SEARCHES)}] BOS→DAC {out_date} + DPS→BOS {ret_date}")
+        results = scrape_openjaw(out_date, ret_date)
+        if not results:
+            print("  0 results — retrying once with a fresh session...")
+            time.sleep(5)
+            results = scrape_openjaw(out_date, ret_date)
+        all_results += results
+        print(f"  Got {len(results)} options")
+    return all_results
 
 
 def scrape_all() -> list:

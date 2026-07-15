@@ -52,6 +52,70 @@ def cheapest_by_leg(flights) -> dict:
     return best
 
 
+def best_structures(flights, openjaws, top_n=4) -> list:
+    """Compare ticketing structures and return them cheapest-first:
+      - 'three one-ways': the classic best_combos winner
+      - 'open-jaw + separate DAC→DPS': one multi-city ticket for the two long
+        legs plus the cheapest COMPATIBLE middle leg (5 Bali nights, visa cap)
+    Each entry: name, total, valid (home ≤ Feb 7 and 5 nights), notes, legs."""
+    structures = []
+
+    combos = best_combos(flights, top_n=1)
+    if combos:
+        c = combos[0]
+        structures.append({
+            "name": "3 one-way tickets",
+            "total": c["total"],
+            "valid": c["bali_nights"] == IDEAL_BALI_NIGHTS,
+            "home": c["home"].strftime("%b %-d") if c["home"] else "?",
+            "dhaka_days": c["dhaka_days"],
+            "bali_nights": c["bali_nights"],
+            "legs": list(c["legs"]),
+        })
+
+    # Cheapest open-jaw option per return date
+    best_oj = {}
+    for oj in openjaws:
+        if not isinstance(oj.get("price_total"), (int, float)):
+            continue
+        key = (oj["out_date"], oj["ret_date"])
+        if key not in best_oj or oj["price_total"] < best_oj[key]["price_total"]:
+            best_oj[key] = oj
+
+    for oj in best_oj.values():
+        ret = _date(oj["ret_date"])
+        dac_in = _date(oj.get("out_arrive", "")) or (
+            _date(oj["out_date"]) + timedelta(days=1))
+        # Cheapest middle leg giving exactly 5 Bali nights and a legal Dhaka stay
+        candidates = []
+        for m in _priced(flights, "DAC→DPS"):
+            m_dep, m_arr = _date(m.get("depart", "")), _arrival(m)
+            if not (m_dep and m_arr):
+                continue
+            if (ret - m_arr).days != IDEAL_BALI_NIGHTS:
+                continue
+            if not 1 <= (m_dep - dac_in).days + 1 <= MAX_DHAKA_DAYS:
+                continue
+            candidates.append(m)
+        if not candidates:
+            continue
+        mid = min(candidates, key=lambda f: f["price_total"])
+        home = ret + timedelta(days=1)  # DPS→BOS lands next day (heuristic)
+        structures.append({
+            "name": f"open-jaw ticket + separate DAC→DPS",
+            "total": oj["price_total"] + mid["price_total"],
+            "valid": home <= HOME_DEADLINE,
+            "home": home.strftime("%b %-d"),
+            "dhaka_days": (_date(mid["depart"]) - dac_in).days + 1,
+            "bali_nights": IDEAL_BALI_NIGHTS,
+            "openjaw": oj,
+            "legs": [mid],
+        })
+
+    structures.sort(key=lambda s: (not s["valid"], s["total"]))
+    return structures[:top_n]
+
+
 def best_combos(flights, top_n=3) -> list:
     """Valid (leg1, leg2, leg3) triples, 5-night-Bali ones first, then by price."""
     combos = []

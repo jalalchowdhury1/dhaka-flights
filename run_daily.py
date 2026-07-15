@@ -11,9 +11,10 @@ from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
-from scraper import scrape_all
+from scraper import scrape_all, scrape_openjaw_all
 from sheet_writer import write_to_sheet
 from notify_telegram import notify_cheapest
+from publish import publish
 
 STAMP_FILE = os.path.join(os.path.dirname(__file__), ".last_run_date")
 
@@ -65,8 +66,11 @@ def main():
 
     flights.sort(key=sort_key)
 
+    openjaws = scrape_openjaw_all()
+
     write_to_sheet(flights, tab_name="Google Flights")
-    notify_cheapest(flights)
+    notify_cheapest(flights, openjaws)
+    publish(flights, openjaws)
     mark_ran_today()
     print("=== Done ===")
 

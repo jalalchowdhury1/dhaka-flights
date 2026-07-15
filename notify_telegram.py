@@ -3,7 +3,7 @@ import urllib.request
 import urllib.parse
 import json
 
-from combo import best_combos, cheapest_by_leg
+from combo import best_combos, cheapest_by_leg, best_structures
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
@@ -41,12 +41,33 @@ def _leg_line(f: dict) -> str:
             f" · ${f['price_total']:,} · [book]({f['link']})")
 
 
-def build_message(all_flights: list) -> str:
+def _openjaw_line(oj: dict) -> str:
+    return (f"🎫 BOS→DAC {_short_date(oj['out_date'])} + DPS→BOS {_short_date(oj['ret_date'])} "
+            f"(one ticket) · {oj['airline']} out · ${oj['price_total']:,} · [book]({oj['link']})")
+
+
+def build_message(all_flights: list, openjaws: list = None) -> str:
+    openjaws = openjaws or []
     lines = ["✈️ *BOS → Dhaka → Bali → BOS* (2 adults + 1 child)\n"]
 
-    combos = best_combos(all_flights, top_n=1)
-    if combos:
-        c = combos[0]
+    structures = best_structures(all_flights, openjaws)
+    if structures:
+        s = structures[0]
+        flag = "" if s["valid"] else " ⚠️ home after Feb 7"
+        lines.append(f"💰 *Best today: ${s['total']:,} total — {s['name']}*{flag}")
+        lines.append(f"_Dhaka {s['dhaka_days']} days · Bali {s['bali_nights']} nights · home {s['home']}_")
+        if "openjaw" in s:
+            lines.append(_openjaw_line(s["openjaw"]))
+        for f in s["legs"]:
+            lines.append(_leg_line(f))
+        if len(structures) > 1:
+            lines.append("")
+            lines.append("*Other structures:*")
+            for s2 in structures[1:]:
+                flag = "" if s2["valid"] else " ⚠️ home after Feb 7"
+                lines.append(f"  ${s2['total']:,} — {s2['name']} · home {s2['home']}{flag}")
+    elif best_combos(all_flights, top_n=1):
+        c = best_combos(all_flights, top_n=1)[0]
         home = c["home"].strftime("%b %-d") if c["home"] else "?"
         lines.append(f"💰 *Best full trip: ${c['total']:,} total*")
         lines.append(f"_Dhaka {c['dhaka_days']} days · Bali {c['bali_nights']} nights · home {home}_")
@@ -71,8 +92,8 @@ def build_message(all_flights: list) -> str:
     return "\n".join(lines)
 
 
-def notify_cheapest(all_flights: list) -> None:
-    ok = send_message(build_message(all_flights))
+def notify_cheapest(all_flights: list, openjaws: list = None) -> None:
+    ok = send_message(build_message(all_flights, openjaws))
     if ok:
         print("Telegram notification sent.")
     else:

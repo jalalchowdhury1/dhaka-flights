@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dhaka–Bali Trip Tracker</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface: #fcfcfb; --card: #ffffff; --border: #e5e4e0;
+    --text: #0b0b0b; --text-2: #52514e; --text-3: #8a897f;
+    --s1: #2a78d6; --s2: #1baf7a;
+    --good-bg: #e3f4e3; --good-fg: #0f5c0f;
+    --warn-bg: #fdeecd; --warn-fg: #7a5200;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --surface: #1a1a19; --card: #232322; --border: #3a3936;
+      --text: #ffffff; --text-2: #c3c2b7; --text-3: #8a897f;
+      --s1: #3987e5; --s2: #199e70;
+      --good-bg: #143d14; --good-fg: #8fd48f;
+      --warn-bg: #4a3400; --warn-fg: #f0c86a;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--surface); color: var(--text);
+         font: 16px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif;
+         max-width: 720px; margin: 0 auto; padding: 16px 14px 48px; }
+  h1 { font-size: 1.25rem; margin: 4px 0 2px; }
+  .sub { color: var(--text-2); font-size: .85rem; }
+  .card { background: var(--card); border: 1px solid var(--border);
+          border-radius: 12px; padding: 14px 16px; margin-top: 14px; }
+  .hero-num { font-size: 2.4rem; font-weight: 700; letter-spacing: -.02em; }
+  .badge { display: inline-block; font-size: .75rem; font-weight: 600;
+           padding: 2px 8px; border-radius: 99px; vertical-align: middle; }
+  .badge.good { background: var(--good-bg); color: var(--good-fg); }
+  .badge.warn { background: var(--warn-bg); color: var(--warn-fg); }
+  .leg { display: flex; gap: 8px; padding: 8px 0; border-top: 1px solid var(--border);
+         font-size: .9rem; align-items: baseline; }
+  .leg:first-of-type { border-top: none; }
+  .leg .em { flex: none; }
+  .leg .price { margin-left: auto; font-weight: 600; white-space: nowrap; }
+  .leg a { color: var(--s1); text-decoration: none; font-weight: 600; }
+  .muted { color: var(--text-2); font-size: .8rem; }
+  h2 { font-size: .95rem; margin: 22px 0 0; color: var(--text-2);
+       text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  th, td { text-align: left; padding: 6px 8px 6px 0; border-top: 1px solid var(--border); }
+  th { color: var(--text-3); font-weight: 600; border-top: none; }
+  td.num, th.num { text-align: right; padding-right: 0; }
+  .chart-wrap { overflow-x: auto; }
+  .legend { display: flex; gap: 16px; font-size: .8rem; color: var(--text-2); margin: 8px 0 2px; }
+  .legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px;
+                 margin-right: 5px; vertical-align: -1px; }
+  details { margin-top: 10px; }
+  summary { cursor: pointer; color: var(--text-2); font-size: .85rem; }
+  #err { color: var(--warn-fg); background: var(--warn-bg); border-radius: 8px;
+         padding: 10px 12px; margin-top: 16px; display: none; }
+  footer { margin-top: 28px; color: var(--text-3); font-size: .75rem; }
+</style>
+</head>
+<body>
+  <h1>✈️ Boston → Dhaka → Bali → Boston</h1>
+  <div class="sub" id="rules"></div>
+  <div class="sub" id="updated"></div>
+  <div id="err"></div>
+  <div id="app"></div>
+  <footer>Prices are Google Flights totals for all travelers. Data updates with the
+    3&nbsp;am scrape; reload to get the latest. "Home" dates for open-jaw options assume
+    a next-day arrival — confirm the exact arrival time when booking.</footer>
+<script>
+const RAW = "https://raw.githubusercontent.com/jalalchowdhury1/dhaka-flights/main/site/data.json";
+const $ = (h) => { const d = document.createElement("div"); d.innerHTML = h; return d.firstElementChild; };
+const usd = (n) => n == null ? "—" : "$" + n.toLocaleString("en-US");
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const short = (d) => { const p = String(d).replace(",", "").split(" "); return p.length >= 2 ? p[0].slice(0,3) + " " + p[1] : d; };
+const EMOJI = {"BOS→DAC":"🇧🇩","DAC→DPS":"🌴","DPS→BOS":"🏠"};
+
+async function load() {
+  let data;
+  try {
+    const r = await fetch(RAW, {cache: "no-store"});
+    if (!r.ok) throw new Error(r.status);
+    data = await r.json();
+  } catch (e) {
+    try { data = await (await fetch("./data.json", {cache: "no-store"})).json(); }
+    catch (e2) {
+      const err = document.getElementById("err");
+      err.style.display = "block";
+      err.textContent = "Couldn't load data (" + e + "). Try reloading.";
+      return;
+    }
+  }
+  render(data);
+}
+
+function legLine(f) {
+  const lay = f.layovers && f.layovers !== "N/A" && f.layovers !== "none" ? " · " + esc(f.layovers) : "";
+  return `<div class="leg"><span class="em">${EMOJI[f.route] || "✈️"}</span>
+    <span>${esc(f.route)} <b>${short(f.depart)}</b> · ${esc(f.airline)} · ${esc(f.stops)}${lay}</span>
+    <span class="price">${usd(f.price_total)}${f.link ? ` <a href="${esc(f.link)}" target="_blank" rel="noopener">book</a>` : ""}</span></div>`;
+}
+
+function ojLine(oj) {
+  return `<div class="leg"><span class="em">🎫</span>
+    <span>BOS→DAC <b>${short(oj.out_date)}</b> + DPS→BOS <b>${short(oj.ret_date)}</b> — one ticket · ${esc(oj.airline)} out · ${esc(oj.stops)}${oj.layovers && oj.layovers !== "N/A" ? " · " + esc(oj.layovers) : ""}</span>
+    <span class="price">${usd(oj.price_total)}${oj.link ? ` <a href="${esc(oj.link)}" target="_blank" rel="noopener">book</a>` : ""}</span></div>`;
+}
+
+function structureCard(s, hero) {
+  const badge = s.valid ? `<span class="badge good">home ${esc(s.home)} ✓</span>`
+                        : `<span class="badge warn">home ${esc(s.home)} — after Feb 7</span>`;
+  const num = hero ? `<div class="hero-num">${usd(s.total)}</div>` : `<b style="font-size:1.15rem">${usd(s.total)}</b>`;
+  return `<div class="card">
+    ${num}
+    <div style="margin:2px 0 8px">${esc(s.name)} ${badge}</div>
+    <div class="muted" style="margin-bottom:6px">Dhaka ${s.dhaka_days} days · Bali ${s.bali_nights} nights</div>
+    ${s.openjaw ? ojLine(s.openjaw) : ""}
+    ${(s.legs || []).map(legLine).join("")}
+  </div>`;
+}
+
+function chart(history) {
+  const pts = history.filter(h => h.oneway_combo_total || h.openjaw_total);
+  if (pts.length < 2) return `<div class="muted" style="margin-top:8px">Price history chart appears after a couple of days of data.</div>`;
+  const series = [
+    {key: "openjaw_total", label: "Open-jaw + Bali hop", color: "var(--s2)"},
+    {key: "oneway_combo_total", label: "3 one-way tickets", color: "var(--s1)"},
+  ];
+  const W = Math.max(320, Math.min(680, pts.length * 60)), H = 220,
+        L = 44, R = 76, T = 12, B = 26;
+  const vals = pts.flatMap(p => series.map(s => p[s.key]).filter(v => v != null));
+  const lo = Math.min(...vals), hi = Math.max(...vals), pad = Math.max(100, (hi - lo) * .15);
+  const y = v => T + (H - T - B) * (1 - (v - (lo - pad)) / ((hi + pad) - (lo - pad)));
+  const x = i => L + (W - L - R) * (pts.length === 1 ? .5 : i / (pts.length - 1));
+  let g = "";
+  const ticks = 4;
+  for (let t = 0; t <= ticks; t++) {
+    const v = (lo - pad) + ((hi + pad) - (lo - pad)) * t / ticks;
+    g += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--border)" stroke-width="1"/>
+          <text x="${L-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--text-3)">$${Math.round(v/100)/10}k</text>`;
+  }
+  for (const s of series) {
+    const sp = pts.map((p, i) => p[s.key] != null ? [x(i), y(p[s.key])] : null).filter(Boolean);
+    if (!sp.length) continue;
+    g += `<polyline points="${sp.map(p => p.join(",")).join(" ")}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round"/>`;
+    for (const [px, py] of sp) g += `<circle cx="${px}" cy="${py}" r="3" fill="${s.color}"/>`;
+    const last = sp[sp.length - 1];
+    const lastVal = [...pts].reverse().find(p => p[s.key] != null)[s.key];
+    g += `<text x="${last[0]+8}" y="${last[1]+4}" font-size="11" font-weight="600" fill="var(--text)">${usd(lastVal)}</text>`;
+  }
+  pts.forEach((p, i) => {
+    const lbl = p.date.slice(5).replace("-", "/");
+    if (i === 0 || i === pts.length - 1 || pts.length <= 7 || i % Math.ceil(pts.length / 6) === 0)
+      g += `<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="10" fill="var(--text-3)">${lbl}</text>`;
+    const tip = series.map(s => p[s.key] != null ? `${s.label}: ${usd(p[s.key])}` : null).filter(Boolean).join("\n");
+    g += `<rect x="${x(i)-14}" y="${T}" width="28" height="${H-T-B}" fill="transparent"><title>${p.date}\n${tip}</title></rect>`;
+  });
+  return `<div class="legend">${series.map(s => `<span><span class="dot" style="background:${s.color}"></span>${s.label}</span>`).join("")}</div>
+    <div class="chart-wrap"><svg width="${W}" height="${H}" role="img" aria-label="Price history">${g}</svg></div>`;
+}
+
+function render(d) {
+  document.getElementById("rules").textContent = `${d.trip.travelers} · ${d.trip.rules}`;
+  document.getElementById("updated").textContent = `Last scrape: ${d.updated}`;
+  const app = document.getElementById("app");
+  let html = "";
+
+  const structures = d.structures || [];
+  if (structures.length) {
+    html += `<h2>Best bookable trip today</h2>` + structureCard(structures[0], true);
+    if (structures.length > 1)
+      html += `<h2>Other structures</h2>` + structures.slice(1).map(s => structureCard(s, false)).join("");
+  } else {
+    html += `<div class="card">No valid combination found in today's data.</div>`;
+  }
+
+  html += `<h2>Price history</h2><div class="card">${chart(d.history || [])}</div>`;
+
+  const legs = d.cheapest_by_leg || {};
+  html += `<h2>Cheapest per leg (dates may not combine)</h2><div class="card">` +
+    ["BOS→DAC","DAC→DPS","DPS→BOS"].map(r => legs[r] ? legLine(legs[r]) :
+      `<div class="leg"><span class="em">${EMOJI[r]}</span><span>${r}</span><span class="price">no results</span></div>`).join("") +
+    `</div>`;
+
+  const flights = d.flights || [];
+  if (flights.length) {
+    const rows = flights.map(f => `<tr><td>${esc(f.route)}</td><td>${short(f.depart)}</td>
+      <td>${esc(f.airline)}</td><td>${esc(f.stops)}</td><td class="num">${usd(f.price_total)}</td></tr>`).join("");
+    html += `<details><summary>All ${flights.length} scraped fares (table view)</summary>
+      <div class="card"><table><tr><th>Leg</th><th>Depart</th><th>Airline</th><th>Stops</th><th class="num">Total</th></tr>${rows}</table></div></details>`;
+  }
+  app.innerHTML = html;
+}
+load();
+</script>
+</body>
+</html>
