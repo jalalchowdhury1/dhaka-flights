@@ -1,3 +1,4 @@
+import os
 import re
 import subprocess
 import time
@@ -26,8 +27,26 @@ def parse_price(raw: str) -> Union[int, str]:
     return int(cleaned) if cleaned else "N/A"
 
 
+# Diagnostics for the current scrape run, so run_daily can tell a local
+# browser-automation failure apart from a genuine "Google returned nothing".
+# (2026-07-15: the browse daemon wedged mid-run; every page after that was a
+# silent about:blank stub and the Telegram alert wrongly blamed Google.)
+DIAG = {"timeouts": 0, "blank_pages": 0, "aborted_early": False}
+
+DEBUG_TREE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "debug_last_zero.txt")
+
+
 def _run(cmd: str) -> str:
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
+    try:
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
+    except subprocess.TimeoutExpired:
+        # A wedged browse daemon times out on every command; never let that
+        # exception escape (it previously crashed the run from a finally block).
+        DIAG["timeouts"] += 1
+        print(f"  WARN: command timed out after 30s: {cmd}")
+        return ""
+    if not result.stdout.strip() and result.stderr.strip():
+        print(f"  WARN: '{cmd}' empty stdout, stderr: {result.stderr.strip()[:200]}")
     return result.stdout.strip()
 
 
@@ -88,6 +107,15 @@ def scrape_route(origin: str, dest: str, depart: str, ret: str) -> list:
                 _run("browse open https://www.google.com/travel/flights?hl=en&curr=USD&gl=us")
             time.sleep(4)
             snap = _snap()
+
+        # If the search form STILL isn't there, the page never loaded (wedged
+        # daemon → about:blank stub with exit 0). Bail now instead of "filling"
+        # a form that doesn't exist and reporting a bogus 0-flights result.
+        if "Where from" not in _get_tree(snap):
+            DIAG["blank_pages"] += 1
+            print("  ERROR: Flights page never loaded (blank/stub tree) — "
+                  "local browser problem, NOT a Google block")
+            return results
 
         # --- Passengers: set to 3 adults ---
         print("  Setting 3 passengers...")
@@ -186,10 +214,21 @@ def scrape_route(origin: str, dest: str, depart: str, ret: str) -> list:
         results = _parse_results(tree, origin, dest, result_url, depart, ret)
         print(f"  Parsed {len(results)} flights")
 
+        if not results:
+            # Keep the evidence: without this, a 0-flight run is undiagnosable
+            # (the 2026-07-15 failure left nothing to inspect).
+            with open(DEBUG_TREE_FILE, "w") as f:
+                f.write(f"route: {origin}->{dest} {depart} -> {ret}\nurl: {result_url}\n\n{tree}")
+            print(f"  (tree saved to {DEBUG_TREE_FILE})")
+
     except Exception as e:
         print(f"  Error: {e}")
     finally:
-        _run("browse stop")
+        try:
+            _run("browse stop")
+        except Exception as e:
+            # Never let cleanup kill the whole daily run (it did on 2026-07-15).
+            print(f"  WARN: browse stop failed during cleanup: {e}")
 
     return results
 
@@ -265,6 +304,9 @@ def scrape_all() -> list:
     routes = [("BOS", "DAC"), ("BOS", "BKK")]
     total = len(routes) * len(DEPART_DATES) * len(RETURN_DATES)
     n = 0
+    consecutive_failures = 0
+
+    DIAG.update(timeouts=0, blank_pages=0, aborted_early=False)
 
     for origin, dest in routes:
         for depart in DEPART_DATES:
@@ -272,7 +314,23 @@ def scrape_all() -> list:
                 n += 1
                 print(f"[{n}/{total}] {origin}→{dest}  {depart} → {ret}")
                 results = scrape_route(origin, dest, depart, ret)
+                if not results:
+                    # One retry after a full stop: a fresh session recovers
+                    # transient hiccups (each route already restarts the env).
+                    print("  0 results — retrying route once with a fresh session...")
+                    time.sleep(5)
+                    results = scrape_route(origin, dest, depart, ret)
                 all_results += results
                 print(f"  Got {len(results)} results")
+
+                consecutive_failures = 0 if results else consecutive_failures + 1
+                if consecutive_failures >= 4:
+                    # 4 routes (8 attempts) in a row with nothing = the browser
+                    # side is dead; grinding through the rest just burns an hour
+                    # and produces the same nothing.
+                    DIAG["aborted_early"] = True
+                    print(f"ABORTING: {consecutive_failures} consecutive routes returned "
+                          f"0 results (timeouts={DIAG['timeouts']}, blank_pages={DIAG['blank_pages']})")
+                    return all_results
 
     return all_results

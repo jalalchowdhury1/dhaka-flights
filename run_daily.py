@@ -42,7 +42,20 @@ def main():
 
     if not flights:
         from notify_telegram import send_message
-        send_message("⚠️ Daily flight search ran but found no results. Google may have blocked the scraper.")
+        from scraper import DIAG
+        if DIAG["timeouts"] or DIAG["blank_pages"] or DIAG["aborted_early"]:
+            send_message(
+                "⚠️ Daily flight search failed: the LOCAL browser automation broke "
+                f"(browse timeouts: {DIAG['timeouts']}, blank pages: {DIAG['blank_pages']}"
+                f"{', aborted early' if DIAG['aborted_early'] else ''}) — not a Google block. "
+                "Check cron.log and debug_last_zero.txt."
+            )
+        else:
+            send_message(
+                "⚠️ Daily flight search ran but parsed 0 flights on every search. "
+                "Pages loaded normally, so Google may have changed its results page "
+                "or blocked the scraper. Check debug_last_zero.txt for the last page tree."
+            )
         return
 
     def sort_key(f):
