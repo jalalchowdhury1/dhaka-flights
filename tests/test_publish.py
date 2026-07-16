@@ -47,3 +47,11 @@ def test_empty_scrape_day_records_nulls_but_keeps_history():
     assert len(p2["history"]) == 2
     assert p2["history"][-1]["best_total"] is None
     assert p2["history"][-1]["best_detail"] is None
+
+
+def test_stopover_total_tracked_separately_from_openjaw():
+    from tests.test_structures import STOPOVER
+    p = build_payload(FLIGHTS, OPENJAWS + [STOPOVER], [], "2026-07-15")
+    h = p["history"][-1]
+    assert h["openjaw_total"] == 3423 + 1340
+    assert h["stopover_total"] == 3688 + 1340

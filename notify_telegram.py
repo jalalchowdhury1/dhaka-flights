@@ -42,8 +42,9 @@ def _leg_line(f: dict) -> str:
 
 
 def _openjaw_line(oj: dict) -> str:
-    return (f"🎫 BOS→DAC {_short_date(oj['out_date'])} + DPS→BOS {_short_date(oj['ret_date'])} "
-            f"(one ticket) · {oj['airline']} out · ${oj['price_total']:,} · [book]({oj['link']})")
+    route = oj.get("desc") or (f"BOS→DAC {_short_date(oj['out_date'])} + "
+                               f"DPS→BOS {_short_date(oj['ret_date'])} (one ticket) · {oj['airline']} out")
+    return f"🎫 {route} · ${oj['price_total']:,} · [book]({oj['link']})"
 
 
 def build_message(all_flights: list, openjaws: list = None) -> str:

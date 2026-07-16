@@ -51,3 +51,32 @@ def test_no_openjaws_returns_oneway_structure_only():
     s = best_structures([LEG1, LEG2, LEG3], [])
     assert len(s) == 1
     assert s[0]["name"] == "3 one-way tickets"
+
+
+# Turkish stopover fixture: 3 legs on one ticket, DAC arrival Jan 7
+STOPOVER = {"kind": "stopover", "label": "Turkish + 30h Istanbul stopover (free hotel)",
+            "desc": "BOS→IST Jan 4 · 30h Istanbul · IST→DAC Jan 6 + DPS→BOS Feb 6",
+            "note": "Apply at Booker ≥72h before; N/R classes excluded.",
+            "out_date": "January 4, 2027", "ret_date": "February 6, 2027",
+            "price_total": 3688, "airline": "Turkish Airlines",
+            "out_arrive": "January 7, 2027", "stops": "nonstop",
+            "duration": "10 hr 20 min", "layovers": "none", "link": "http://tk"}
+
+
+def test_stopover_structure_named_and_priced_separately():
+    s = best_structures([MID_FEB1], [OJ_FEB6, STOPOVER])
+    names = [x["name"] for x in s]
+    assert "Turkish + 30h Istanbul stopover (free hotel)" in names
+    stop = next(x for x in s if x["kind"] == "stopover")
+    assert stop["total"] == 3688 + 1340
+    assert stop["dhaka_days"] == 26          # Jan 7 → Feb 1 incl. both ends
+    assert stop["note"].startswith("Apply")
+    oj = next(x for x in s if x["kind"] == "openjaw")
+    assert oj["total"] == 3423 + 1340
+
+
+def test_stopover_uses_configured_dac_arrival_for_visa_math():
+    # If arrival were Jan 5 (parsed IST arrival), Feb 1 departure = 28 days;
+    # with the configured Jan 7 it must be 26.
+    s = best_structures([MID_FEB1], [STOPOVER])
+    assert s[0]["dhaka_days"] == 26

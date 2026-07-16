@@ -46,7 +46,11 @@ def build_payload(flights: list, openjaws: list, history: list, today: str) -> d
         "oneway_combo_total": next(
             (s["total"] for s in structures if s["name"] == "3 one-way tickets"), None),
         "openjaw_total": next(
-            (s["total"] for s in structures if "openjaw" in s and s["valid"]), None),
+            (s["total"] for s in structures
+             if s.get("kind") == "openjaw" and s["valid"]), None),
+        "stopover_total": next(
+            (s["total"] for s in structures
+             if s.get("kind") == "stopover" and s["valid"]), None),
         "openjaw_min": oj_min,
         "legs_min": legs_min,
     }

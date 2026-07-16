@@ -21,8 +21,10 @@ Redesigned 2026-07-15 from the original round-trip BOS⇄DAC/BKK watcher; design
 launchd 3:00am (com.jalal.dhaka-flights.plist) → run_daily.sh → run_daily.py
   scraper.py   scrape_all()          9 one-way searches (LEGS: BOS→DAC Jan 4–6,
                                      DAC→DPS Feb 1–3, DPS→BOS Feb 5–7)
-               scrape_openjaw_all()  2 multi-city searches (OPENJAW_SEARCHES:
-                                     BOS→DAC Jan 4 + DPS→BOS Feb 6 / Feb 7)
+               scrape_openjaw_all()  3 multi-city searches: OPENJAW_SEARCHES
+                                     (BOS→DAC Jan 4 + DPS→BOS Feb 6 / Feb 7) +
+                                     STOPOVER_SEARCH (BOS→IST / IST→DAC / DPS→BOS,
+                                     the Turkish 30h-Istanbul free-hotel itinerary)
         │  drives real Chrome via the `browse` CLI (a11y-tree snapshots)
         ▼
   combo.py     best_combos()       cheapest valid one-way triple
@@ -59,7 +61,7 @@ launchd 3:00am (com.jalal.dhaka-flights.plist) → run_daily.sh → run_daily.py
    `DIAG`), blank-page bail, per-route retry, 4-dead-routes abort, and the Telegram
    alert distinguishes LOCAL browser failure from a real 0-result day.
    Debug a 0-day via `cron.log` + `debug_last_zero.txt`.
-3. **Multi-city result lines say "From X US dollars total."**; one-way lines say just
+3. Airport pickers must have an AIRPORT_PICK entry — the bare-code fallback substring-matches random tree lines ("IST" hit "listitem") and derails the form. **Multi-city result lines say "From X US dollars total."**; one-way lines say just
    "From X US dollars." — `_parse_results` accepts both. Flight details on the
    multi-city selection page describe the FIRST leg; the price includes its cheapest
    completion. Only ~top-10 fares show inline — the scraper clicks "View more flights".

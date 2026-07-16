@@ -23,6 +23,9 @@ AIRPORT_PICK = {
     "BOS": ["Boston Logan", "Boston"],
     "DAC": ["Hazrat Shahjalal", "Dhaka"],
     "DPS": ["Ngurah Rai", "Denpasar", "Bali"],
+    # Never fall back to the bare code here: "IST" substring-matches random
+    # tree lines ("listitem", ...) and clicks derail the whole form.
+    "IST": ["Istanbul Airport", "Istanbul"],
 }
 
 # 2 adults + 1 child (aged 2-11, own seat). Google Flights shows the TOTAL
@@ -368,12 +371,20 @@ OPENJAW_SEARCHES = [
 
 
 def scrape_openjaw(out_date: str, ret_date: str) -> list:
-    """Multi-city search: BOS→DAC on out_date + DPS→BOS on ret_date, one ticket.
-    Returns options priced as the TOTAL for both legs, all passengers; flight
-    details (airline/times/layovers) describe the FIRST leg — Google's
-    selection page prices each first-leg choice with its cheapest completion."""
-    results = []
+    """Multi-city search: BOS→DAC on out_date + DPS→BOS on ret_date, one ticket."""
     legs = [("BOS", "DAC", out_date), ("DPS", "BOS", ret_date)]
+    return _scrape_multicity(
+        legs,
+        lambda tree, url: _parse_openjaw_results(tree, out_date, ret_date, url),
+        f"openjaw: BOS->DAC {out_date} + DPS->BOS {ret_date}")
+
+
+def _scrape_multicity(legs: list, parse_fn, tag: str) -> list:
+    """Fill Google Flights' multi-city form with the given (origin, dest, date)
+    legs and parse the first-leg selection page. Prices there are the TOTAL for
+    the whole itinerary, all passengers; flight details (airline/times/layovers)
+    describe the FIRST leg — each choice is priced with its cheapest completion."""
+    results = []
     try:
         _run("browse stop")
         time.sleep(1)
@@ -414,6 +425,18 @@ def scrape_openjaw(out_date: str, ret_date: str) -> list:
             if done_ref:
                 _run(f"browse click {done_ref}"); time.sleep(0.8)
             snap = _snap()
+
+        # The multi-city form starts with 2 flight rows; add more if needed
+        snap = _snap()
+        froms = _find_refs(snap, "Where from")
+        while len(froms) < len(legs):
+            add_ref = _find_ref(snap, "Add flight")
+            if not add_ref:
+                print("  ERROR: could not add a flight row to the multi-city form")
+                return results
+            _run(f"browse click {add_ref}"); time.sleep(1)
+            snap = _snap()
+            froms = _find_refs(snap, "Where from")
 
         for i, (o, d, dep) in enumerate(legs):
             snap = _snap()
@@ -476,13 +499,12 @@ def scrape_openjaw(out_date: str, ret_date: str) -> list:
             snap = _snap()
         tree = _get_tree(snap)
 
-        results = _parse_openjaw_results(tree, out_date, ret_date, result_url)
-        print(f"  Parsed {len(results)} open-jaw options")
+        results = parse_fn(tree, result_url)
+        print(f"  Parsed {len(results)} multi-city options")
 
         if not results:
             with open(DEBUG_TREE_FILE, "w") as f:
-                f.write(f"openjaw: BOS->DAC {out_date} + DPS->BOS {ret_date}\n"
-                        f"url: {result_url}\n\n{tree}")
+                f.write(f"{tag}\nurl: {result_url}\n\n{tree}")
             print(f"  (tree saved to {DEBUG_TREE_FILE})")
     except Exception as e:
         print(f"  Error: {e}")
@@ -515,6 +537,45 @@ def _parse_openjaw_results(tree: str, out_date: str, ret_date: str, url: str) ->
     return results
 
 
+# Turkish 30h-Istanbul-stopover itinerary, verified bookable 2026-07-15 at
+# $3,688 promo (vs $3,423 plain open-jaw): the outbound is split into two
+# flights on one reservation, which qualifies for TK's free 4-star hotel
+# night (connection 20h–7d; apply via their Stopover "Booker" ≥72h before;
+# N and R fare classes are excluded from the hotel benefit).
+STOPOVER_SEARCH = {
+    "label": "Turkish + 30h Istanbul stopover (free hotel)",
+    "legs": [("BOS", "IST", "January 4, 2027"),
+             ("IST", "DAC", "January 6, 2027"),
+             ("DPS", "BOS", "February 6, 2027")],
+    "airline_filter": "Turkish",
+    "out_date": "January 4, 2027",
+    "out_arrive": "January 7, 2027",   # IST→DAC 7:30pm Jan 6 lands next morning
+    "ret_date": "February 6, 2027",
+    "desc": ("BOS→IST Jan 4 · 30h Istanbul (free TK hotel) · IST→DAC Jan 6 "
+             "+ DPS→BOS Feb 6 — one Turkish ticket"),
+    "note": ("Free 4-star hotel night: apply at Turkish's Stopover Booker ≥72h "
+             "before flying; excluded on N/R fare classes — check the booking "
+             "class letter before paying."),
+}
+
+
+def scrape_stopover() -> list:
+    cfg = STOPOVER_SEARCH
+    legs_str = " / ".join(f"{o}→{d} {dep}" for o, d, dep in cfg["legs"])
+
+    def parse(tree, url):
+        out = []
+        for f in _parse_openjaw_results(tree, cfg["out_date"], cfg["ret_date"], url):
+            if cfg["airline_filter"].lower() not in f["airline"].lower():
+                continue
+            f.update(kind="stopover", label=cfg["label"], desc=cfg["desc"],
+                     note=cfg["note"], out_arrive=cfg["out_arrive"])
+            out.append(f)
+        return out
+
+    return _scrape_multicity(cfg["legs"], parse, f"stopover: {legs_str}")
+
+
 def scrape_openjaw_all() -> list:
     all_results = []
     for i, (out_date, ret_date) in enumerate(OPENJAW_SEARCHES, 1):
@@ -526,6 +587,15 @@ def scrape_openjaw_all() -> list:
             results = scrape_openjaw(out_date, ret_date)
         all_results += results
         print(f"  Got {len(results)} options")
+
+    print(f"[stopover] {STOPOVER_SEARCH['label']}")
+    results = scrape_stopover()
+    if not results:
+        print("  0 results — retrying once with a fresh session...")
+        time.sleep(5)
+        results = scrape_stopover()
+    all_results += results
+    print(f"  Got {len(results)} options")
     return all_results
 
 

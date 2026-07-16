@@ -73,12 +73,13 @@ def best_structures(flights, openjaws, top_n=4) -> list:
             "legs": list(c["legs"]),
         })
 
-    # Cheapest open-jaw option per return date
+    # Cheapest option per multi-city variant (plain open-jaws keyed by dates;
+    # labeled variants like the Turkish stopover keyed separately)
     best_oj = {}
     for oj in openjaws:
         if not isinstance(oj.get("price_total"), (int, float)):
             continue
-        key = (oj["out_date"], oj["ret_date"])
+        key = (oj.get("label", ""), oj["out_date"], oj["ret_date"])
         if key not in best_oj or oj["price_total"] < best_oj[key]["price_total"]:
             best_oj[key] = oj
 
@@ -102,7 +103,9 @@ def best_structures(flights, openjaws, top_n=4) -> list:
         mid = min(candidates, key=lambda f: f["price_total"])
         home = ret + timedelta(days=1)  # DPS→BOS lands next day (heuristic)
         structures.append({
-            "name": f"open-jaw ticket + separate DAC→DPS",
+            "name": oj.get("label") or "open-jaw ticket + separate DAC→DPS",
+            "kind": oj.get("kind", "openjaw"),
+            "note": oj.get("note"),
             "total": oj["price_total"] + mid["price_total"],
             "valid": home <= HOME_DEADLINE,
             "home": home.strftime("%b %-d"),
