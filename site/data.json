@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-15 18:51",
+ "updated": "2026-07-15 22:37",
  "trip": {
   "route": "BOS \u2192 Dhaka \u2192 Bali \u2192 BOS",
   "travelers": "2 adults + 1 child",
@@ -1372,6 +1372,38 @@
    "date": "2026-07-15",
    "best_total": 4763,
    "best_structure": "open-jaw ticket + separate DAC\u2192DPS",
+   "best_detail": {
+    "name": "open-jaw ticket + separate DAC\u2192DPS",
+    "total": 4763,
+    "valid": true,
+    "home": "Feb 7",
+    "dhaka_days": 27,
+    "bali_nights": 5,
+    "openjaw": {
+     "out_date": "January 4, 2027",
+     "ret_date": "February 6, 2027",
+     "price_total": 3423,
+     "airline": "Turkish Airlines",
+     "out_arrive": "January 6, 2027",
+     "stops": "1 stop",
+     "duration": "22 hr 50 min",
+     "layovers": "6 hr 10 min at Istanbul Airport in Istanbul",
+     "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDZqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+    },
+    "legs": [
+     {
+      "route": "DAC\u2192DPS",
+      "depart": "February 1, 2027",
+      "arrive": "February 1, 2027",
+      "airline": "THAI",
+      "stops": "1 stop",
+      "duration": "10 hr 15 min",
+      "layovers": "3 hr 20 min at Suvarnabhumi Airport in Bangkok",
+      "price_total": 1340,
+      "link": "https://www.google.com/travel/flights"
+     }
+    ]
+   },
    "oneway_combo_total": 6229,
    "openjaw_total": 4763,
    "openjaw_min": {
