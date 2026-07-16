@@ -65,15 +65,20 @@ launchd 3:00am (com.jalal.dhaka-flights.plist) → run_daily.sh → run_daily.py
    "From X US dollars." — `_parse_results` accepts both. Flight details on the
    multi-city selection page describe the FIRST leg; the price includes its cheapest
    completion. Only ~top-10 fares show inline — the scraper clicks "View more flights".
-4. **Trip rules live in combo.py** (`MAX_DHAKA_DAYS=29` counting both end days,
+4. **Structures must NEVER be dropped silently** (2026-07-16: the exact-5-night
+   pairing rule hid a valid $3.4k open-jaw from the daily message). When no
+   5-night DAC→DPS pairing exists, `best_structures` falls back to 4/6 nights
+   and sets `flag` (shown verbatim in Telegram + site badges). The parser keeps
+   the CHEAPEST `MAX_RESULTS` fares, not the first in page order.
+5. **Trip rules live in combo.py** (`MAX_DHAKA_DAYS=29` counting both end days,
    `IDEAL_BALI_NIGHTS=5`, `HOME_DEADLINE=Feb 7`). Open-jaw "home" date is a
    +1-day heuristic (return-leg arrival isn't parsed on the selection page).
-5. **publish.py must never crash the run** — it swallows all exceptions. History is
+6. **publish.py must never crash the run** — it swallows all exceptions. History is
    append-only inside `site/data.json`, keyed by ISO date (same-day reruns overwrite
    that day's entry).
-6. The launchd job often fires twice; `.last_run_date` (written only on success)
+7. The launchd job often fires twice; `.last_run_date` (written only on success)
    makes the duplicate skip. Machine stays awake via a long-running `caffeinate`.
-7. Booking insight (2026-07-15): the open-jaw ticket was ~$1.7k cheaper than
+8. Booking insight (2026-07-15): the open-jaw ticket was ~$1.7k cheaper than
    separate one-ways ($3.4k vs $5.1k for the two long legs). Indonesia e-VOA needs
    proof of onward travel ⇒ the DPS→BOS ticket must be booked before landing in Bali.
 
