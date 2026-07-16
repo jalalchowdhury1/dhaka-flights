@@ -26,8 +26,8 @@
   * { box-sizing: border-box; margin: 0; }
   body { background: var(--surface); color: var(--text);
          font: 16px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif;
-         max-width: 720px; margin: 0 auto; padding: 16px 14px 48px; }
-  h1 { font-size: 1.25rem; margin: 4px 0 2px; }
+         max-width: 760px; margin: 0 auto; padding: 16px 14px 48px; }
+  h1 { font-size: 1.25rem; margin: 4px 0 2px; display: flex; align-items: center; gap: 8px; }
   .sub { color: var(--text-2); font-size: .85rem; }
   .card { background: var(--card); border: 1px solid var(--border);
           border-radius: 12px; padding: 14px 16px; margin-top: 14px; }
@@ -41,15 +41,15 @@
   .leg:first-of-type { border-top: none; }
   .leg .em { flex: none; }
   .leg .price { margin-left: auto; font-weight: 600; white-space: nowrap; }
-  .leg a { color: var(--s1); text-decoration: none; font-weight: 600; }
+  a { color: var(--s1); text-decoration: none; font-weight: 600; }
   .muted { color: var(--text-2); font-size: .8rem; }
   h2 { font-size: .95rem; margin: 22px 0 0; color: var(--text-2);
        text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
   table { width: 100%; border-collapse: collapse; font-size: .85rem; }
-  th, td { text-align: left; padding: 6px 8px 6px 0; border-top: 1px solid var(--border); }
+  th, td { text-align: left; padding: 6px 8px 6px 0; border-top: 1px solid var(--border); white-space: nowrap; }
   th { color: var(--text-3); font-weight: 600; border-top: none; }
-  td.num, th.num { text-align: right; padding-right: 0; }
-  .chart-wrap { overflow-x: auto; }
+  td.num, th.num { text-align: right; padding-right: 8px; }
+  .scroll-x { overflow-x: auto; }
   .legend { display: flex; gap: 16px; font-size: .8rem; color: var(--text-2); margin: 8px 0 2px; }
   .legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px;
                  margin-right: 5px; vertical-align: -1px; }
@@ -58,20 +58,90 @@
   #err { color: var(--warn-fg); background: var(--warn-bg); border-radius: 8px;
          padding: 10px 12px; margin-top: 16px; display: none; }
   footer { margin-top: 28px; color: var(--text-3); font-size: .75rem; }
+  /* tabs */
+  .tabs { display: flex; gap: 6px; margin-top: 14px; border-bottom: 1px solid var(--border); }
+  .tabs button { background: none; border: none; font: inherit; color: var(--text-2);
+                 padding: 8px 12px; cursor: pointer; border-bottom: 2px solid transparent; }
+  .tabs button.active { color: var(--text); font-weight: 600; border-bottom-color: var(--s1); }
+  /* info button + modal */
+  #infoBtn { background: none; border: 1px solid var(--border); color: var(--text-3);
+             width: 22px; height: 22px; border-radius: 50%; font-size: .75rem; font-weight: 600;
+             cursor: pointer; line-height: 1; flex: none; }
+  #infoBtn:hover { color: var(--text); border-color: var(--text-3); }
+  dialog { background: var(--card); color: var(--text); border: 1px solid var(--border);
+           border-radius: 14px; max-width: 640px; width: calc(100vw - 28px);
+           max-height: 85vh; padding: 18px 20px; }
+  dialog::backdrop { background: rgba(0,0,0,.45); }
+  dialog h3 { font-size: 1rem; margin: 14px 0 4px; }
+  dialog h3:first-of-type { margin-top: 0; }
+  dialog ul, dialog ol { padding-left: 20px; font-size: .88rem; }
+  dialog li { margin: 5px 0; }
+  dialog .close { float: right; background: none; border: none; color: var(--text-3);
+                  font-size: 1.3rem; cursor: pointer; margin: -6px -6px 0 0; }
+  /* sortable history table */
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable:hover { color: var(--text); }
+  th .arrow { font-size: .7rem; }
+  tr.detail-row td { white-space: normal; background: var(--surface); }
+  tr.clickable { cursor: pointer; }
+  ol.playbook { padding-left: 20px; font-size: .88rem; }
+  ol.playbook li { margin: 6px 0; }
 </style>
 </head>
 <body>
-  <h1>✈️ Boston → Dhaka → Bali → Boston</h1>
+  <h1>✈️ Boston → Dhaka → Bali → Boston
+    <button id="infoBtn" title="Booking, cancellation & visa info" aria-label="Trip info">i</button>
+  </h1>
   <div class="sub" id="rules"></div>
   <div class="sub" id="updated"></div>
   <div id="err"></div>
-  <div id="app"></div>
+  <div class="tabs" role="tablist">
+    <button id="tab-today" class="active" role="tab">Today</button>
+    <button id="tab-history" role="tab">History</button>
+  </div>
+  <div id="view-today"></div>
+  <div id="view-history" style="display:none"></div>
+
+  <dialog id="infoModal">
+    <button class="close" aria-label="Close">×</button>
+    <h3>📋 Book in this order</h3>
+    <ol>
+      <li><b>Passports first</b> — all 3 (child too) valid <b>6+ months past Feb 2027</b> (into Aug 2027) with 2+ blank pages each.</li>
+      <li><b>Open-jaw ticket</b> (BOS→DAC + DPS→BOS) on the <b>airline's US website/app</b> — booking there starts the federal 24-hour free-cancel window and keeps refunds simple. Avoid third-party sites.</li>
+      <li><b>Same day: Bali resort on Marriott points</b> (5 nights, 5th free). Points rates usually cancel free until a few days out — if the hotel doesn't work, cancel the flight within 24h at $0.</li>
+      <li><b>Bangladesh visas</b> — see Visas below. Do this before buying the middle leg.</li>
+      <li><b>Dhaka→Bali hop last</b> (THAI / AirAsia). It never touches the US so the 24-hour rule does <b>not</b> apply — treat it as non-refundable and buy it only once everything else is locked.</li>
+      <li><b>~1 week before Bali:</b> Indonesia e-VOA online for all 3 (needs your DPS→BOS booking as onward proof) + Bali tourist levy + the customs form ≤3 days before landing.</li>
+    </ol>
+    <h3>💳 Cancellations & refunds</h3>
+    <ul>
+      <li><b>24-hour rule (US DOT):</b> any ticket that touches the US — the open-jaw, or BOS→DAC / DPS→BOS one-ways — is fully refundable for <b>24 hours after booking</b> if departure is 7+ days away. This is the main safety valve; Turkish honors it only when booked via its own site/app.</li>
+      <li><b>After 24h on Turkish:</b> economy cancel fee roughly <b>$70–200+ per person</b>; the cheapest "EcoFly" promo fares are non-refundable. If unsure, pay the small step-up to a flexible economy fare — the exact rule shows at checkout. No cancellations in the last 12h before departure.</li>
+      <li><b>Dhaka→Bali:</b> no US protection. AirAsia is effectively non-refundable; THAI charges fare-rule fees. Assume this money is spent once booked.</li>
+      <li><b>Airline-initiated changes:</b> if the airline significantly changes or cancels any flight, you're owed a <b>full refund</b> regardless of fare type.</li>
+      <li>Card refunds must arrive within 7 business days (DOT). Pay with a credit card that has trip protection.</li>
+    </ul>
+    <h3>🛂 Visas & borders</h3>
+    <ul>
+      <li><b>Bangladesh:</b> US passports get a <b>30-day visa on arrival</b> at Dhaka — <b>$50 cash USD per person</b> (child too; carry $150 crisp), onward ticket + proof of funds (~$500), and it's granted at the officer's discretion — getting tourist visas <b>in advance</b> from the mission is the safer play. Your 29-day stay keeps a 1-day buffer: never let the Feb 1–3 departure slip past day 30.</li>
+      <li><b>Indonesia:</b> e-VOA (B1), <b>$35/person, 30 days</b>; apply online ≥48h before arrival; <b>requires onward-flight proof</b> (your DPS→BOS leg); extendable only in person now. Plus the Bali levy (IDR 150k/person, pay online) and the electronic customs declaration ≤3 days before (QR scanned at the airport).</li>
+      <li><b>Istanbul layover:</b> US citizens are <b>visa-free in Türkiye</b> (90 days/180) — you can leave the airport with the baby during a long layover, no visa needed.</li>
+      <li><b>Transit (KL / Bangkok / Doha / Seoul):</b> on a single ticket you stay airside — no visa. Only if you ever book the KL hop as two separate tickets would you clear Malaysian immigration (visa-free for US, but file the free Malaysia Digital Arrival Card ≤3 days before).</li>
+    </ul>
+    <h3>🧾 Small stuff that bites</h3>
+    <ul>
+      <li>Prices here are Google Flights <b>totals for all 3 travelers</b>; fares aren't held — book on the airline site when ready.</li>
+      <li>Check the baggage allowance on each ticket separately — the cheap DAC→DPS fares often sell bags separately.</li>
+      <li>Request bassinet/child meal at booking and re-confirm at check-in.</li>
+      <li>Carry printed copies of the onward tickets — both borders ask.</li>
+      <li>The open-jaw "home" date assumes a next-day arrival; confirm the exact landing time before buying.</li>
+    </ul>
+  </dialog>
+
   <footer>Prices are Google Flights totals for all travelers. Data updates with the
-    3&nbsp;am scrape; reload to get the latest. "Home" dates for open-jaw options assume
-    a next-day arrival — confirm the exact arrival time when booking.</footer>
+    3&nbsp;am scrape; reload to get the latest.</footer>
 <script>
 const RAW = "https://raw.githubusercontent.com/jalalchowdhury1/dhaka-flights/main/site/data.json";
-const $ = (h) => { const d = document.createElement("div"); d.innerHTML = h; return d.firstElementChild; };
 const usd = (n) => n == null ? "—" : "$" + n.toLocaleString("en-US");
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const short = (d) => { const p = String(d).replace(",", "").split(" "); return p.length >= 2 ? p[0].slice(0,3) + " " + p[1] : d; };
@@ -92,7 +162,9 @@ async function load() {
       return;
     }
   }
-  render(data);
+  renderToday(data);
+  hRows = flattenHistory(data.history);
+  renderHistory();
 }
 
 function legLine(f) {
@@ -158,23 +230,35 @@ function chart(history) {
     g += `<rect x="${x(i)-14}" y="${T}" width="28" height="${H-T-B}" fill="transparent"><title>${p.date}\n${tip}</title></rect>`;
   });
   return `<div class="legend">${series.map(s => `<span><span class="dot" style="background:${s.color}"></span>${s.label}</span>`).join("")}</div>
-    <div class="chart-wrap"><svg width="${W}" height="${H}" role="img" aria-label="Price history">${g}</svg></div>`;
+    <div class="scroll-x"><svg width="${W}" height="${H}" role="img" aria-label="Price history">${g}</svg></div>`;
 }
 
-function render(d) {
+function renderToday(d) {
   document.getElementById("rules").textContent = `${d.trip.travelers} · ${d.trip.rules}`;
   document.getElementById("updated").textContent = `Last scrape: ${d.updated}`;
-  const app = document.getElementById("app");
   let html = "";
 
   const structures = d.structures || [];
   if (structures.length) {
     html += `<h2>Best bookable trip today</h2>` + structureCard(structures[0], true);
-    if (structures.length > 1)
-      html += `<h2>Other structures</h2>` + structures.slice(1).map(s => structureCard(s, false)).join("");
   } else {
     html += `<div class="card">No valid combination found in today's data.</div>`;
   }
+
+  html += `<h2>How to book it (short version)</h2><div class="card">
+    <ol class="playbook">
+      <li>Check all 3 passports: valid into <b>Aug 2027</b>, 2+ blank pages.</li>
+      <li>Buy the <b>open-jaw ticket</b> on the airline's US site — you get a <b>24-hour full-refund window</b> (federal rule, departure 7+ days out).</li>
+      <li>Same day, lock the Bali resort on Marriott points; if it falls through, cancel the flight free inside 24h.</li>
+      <li>Sort <b>Bangladesh visas</b> (30-day VOA: $50 cash each + onward ticket — or safer, get visas in advance).</li>
+      <li>Buy the <b>Dhaka→Bali hop last</b> — it has no US refund protection; treat as non-refundable.</li>
+      <li>~1 week before Bali: Indonesia <b>e-VOA</b> for all 3 (needs the Bali→Boston booking as proof) + levy + customs form.</li>
+    </ol>
+    <div class="muted" style="margin-top:6px">Tap the ⓘ next to the title for cancellation windows, visa fine print, and gotchas.</div>
+  </div>`;
+
+  if (structures.length > 1)
+    html += `<h2>Other structures</h2>` + structures.slice(1).map(s => structureCard(s, false)).join("");
 
   html += `<h2>Price history</h2><div class="card">${chart(d.history || [])}</div>`;
 
@@ -189,10 +273,91 @@ function render(d) {
     const rows = flights.map(f => `<tr><td>${esc(f.route)}</td><td>${short(f.depart)}</td>
       <td>${esc(f.airline)}</td><td>${esc(f.stops)}</td><td class="num">${usd(f.price_total)}</td></tr>`).join("");
     html += `<details><summary>All ${flights.length} scraped fares (table view)</summary>
-      <div class="card"><table><tr><th>Leg</th><th>Depart</th><th>Airline</th><th>Stops</th><th class="num">Total</th></tr>${rows}</table></div></details>`;
+      <div class="card scroll-x"><table><tr><th>Leg</th><th>Depart</th><th>Airline</th><th>Stops</th><th class="num">Total</th></tr>${rows}</table></div></details>`;
   }
-  app.innerHTML = html;
+  document.getElementById("view-today").innerHTML = html;
 }
+
+/* ---------- History tab: sortable table of every day's best trip ---------- */
+const HCOLS = [
+  {key: "date",               label: "Date",          num: false},
+  {key: "best_total",         label: "Best $",        num: true},
+  {key: "best_structure",     label: "Structure",     num: false},
+  {key: "_home",              label: "Home",          num: false},
+  {key: "oneway_combo_total", label: "One-ways $",    num: true},
+  {key: "openjaw_total",      label: "OJ + hop $",    num: true},
+  {key: "_oj6",               label: "OJ tkt (Feb 6)",num: true},
+  {key: "_oj7",               label: "OJ tkt (Feb 7)",num: true},
+  {key: "_l1",                label: "BOS→DAC min",   num: true},
+  {key: "_l2",                label: "DAC→DPS min",   num: true},
+  {key: "_l3",                label: "DPS→BOS min",   num: true},
+];
+let hRows = [], hSort = {key: "date", dir: -1};
+
+function flattenHistory(history) {
+  return (history || []).map(h => ({
+    ...h,
+    _home: h.best_detail ? h.best_detail.home : "—",
+    _oj6: (h.openjaw_min || {})["February 6, 2027"] ?? null,
+    _oj7: (h.openjaw_min || {})["February 7, 2027"] ?? null,
+    _l1: (h.legs_min || {})["BOS→DAC"] ?? null,
+    _l2: (h.legs_min || {})["DAC→DPS"] ?? null,
+    _l3: (h.legs_min || {})["DPS→BOS"] ?? null,
+  }));
+}
+
+function detailHTML(h) {
+  const d = h.best_detail;
+  if (!d) return `<span class="muted">No valid trip found this day.</span>`;
+  return `<div class="muted" style="margin-bottom:4px">${esc(d.name)} · Dhaka ${d.dhaka_days} days · Bali ${d.bali_nights} nights · home ${esc(d.home)}</div>`
+    + (d.openjaw ? ojLine(d.openjaw) : "") + (d.legs || []).map(legLine).join("");
+}
+
+function renderHistory() {
+  const dir = hSort.dir, k = hSort.key;
+  const rows = [...hRows].sort((a, b) => {
+    const av = a[k], bv = b[k];
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    return (typeof av === "number" ? av - bv : String(av).localeCompare(String(bv))) * dir;
+  });
+  const head = HCOLS.map(c =>
+    `<th class="sortable ${c.num ? "num" : ""}" data-key="${c.key}">${c.label}` +
+    (hSort.key === c.key ? ` <span class="arrow">${dir === 1 ? "▲" : "▼"}</span>` : "") + `</th>`).join("");
+  const body = rows.map((h, i) =>
+    `<tr class="clickable" data-i="${i}" title="Tap for that day's full trip detail">` +
+    HCOLS.map(c => `<td class="${c.num ? "num" : ""}">${c.num ? usd(h[c.key]) : esc(h[c.key] ?? "—")}</td>`).join("") +
+    `</tr><tr class="detail-row" style="display:none"><td colspan="${HCOLS.length}">${detailHTML(h)}</td></tr>`).join("");
+  document.getElementById("view-history").innerHTML =
+    `<h2>Best bookable trip, day by day</h2>
+     <div class="card scroll-x"><table id="htable"><tr>${head}</tr>${body}</table>
+     <div class="muted" style="margin-top:8px">Tap a column header to sort · tap a row for that day's airlines, layovers, and booking links. Dollar figures are totals for all 3 travelers.</div></div>`;
+  document.querySelectorAll("#htable th.sortable").forEach(th => th.onclick = () => {
+    const key = th.dataset.key;
+    hSort = {key, dir: hSort.key === key ? -hSort.dir : (key === "date" ? -1 : 1)};
+    renderHistory();
+  });
+  document.querySelectorAll("#htable tr.clickable").forEach(tr => tr.onclick = () => {
+    const next = tr.nextElementSibling;
+    next.style.display = next.style.display === "none" ? "" : "none";
+  });
+}
+
+function setTab(which) {
+  document.getElementById("tab-today").classList.toggle("active", which === "today");
+  document.getElementById("tab-history").classList.toggle("active", which === "history");
+  document.getElementById("view-today").style.display = which === "today" ? "" : "none";
+  document.getElementById("view-history").style.display = which === "history" ? "" : "none";
+}
+document.getElementById("tab-today").onclick = () => setTab("today");
+document.getElementById("tab-history").onclick = () => setTab("history");
+
+const modal = document.getElementById("infoModal");
+document.getElementById("infoBtn").onclick = () => modal.showModal();
+modal.querySelector(".close").onclick = () => modal.close();
+modal.onclick = (e) => { if (e.target === modal) modal.close(); };
+
 load();
 </script>
 </body>

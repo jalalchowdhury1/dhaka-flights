@@ -40,6 +40,9 @@ def build_payload(flights: list, openjaws: list, history: list, today: str) -> d
         "date": today,
         "best_total": structures[0]["total"] if structures else None,
         "best_structure": structures[0]["name"] if structures else None,
+        # Full winning-structure snapshot so the dashboard's History tab can
+        # show airlines/legs/links for past days, not just totals.
+        "best_detail": structures[0] if structures else None,
         "oneway_combo_total": next(
             (s["total"] for s in structures if s["name"] == "3 one-way tickets"), None),
         "openjaw_total": next(
