@@ -120,6 +120,7 @@
   <div class="sub" id="rules"></div>
   <div class="sub" id="updated"></div>
   <div id="err"></div>
+  <div id="warnbox" style="display:none;color:var(--warn-fg);background:var(--warn-bg);border-radius:8px;padding:10px 12px;margin-top:12px;font-size:.85rem"></div>
   <div class="strip" id="strip"></div>
   <div class="tabs" role="tablist">
     <button id="tab-today" class="active" role="tab">Today</button>
@@ -204,6 +205,12 @@ async function load() {
       err.textContent = "Couldn't load data (" + e + "). Try reloading.";
       return;
     }
+  }
+  if (data.warnings && data.warnings.length) {
+    const wb = document.getElementById("warnbox");
+    wb.style.display = "block";
+    wb.innerHTML = "<b>🧪 Self-check found issues with today's data:</b>" +
+      data.warnings.map(w => `<div style="margin-top:4px">⚠️ ${esc(w)}</div>`).join("");
   }
   renderStrip(data);
   renderToday(data);

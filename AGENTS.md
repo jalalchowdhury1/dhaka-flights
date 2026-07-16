@@ -92,6 +92,11 @@ launchd 3:00am (com.jalal.dhaka-flights.plist) → run_daily.sh → run_daily.py
 ## 7. File map
 
 - `run_daily.sh` / `run_daily.py` — launchd entrypoint; stamp + DIAG alerting
+- `sanity.py` — self-check watchdog run before every send: every scraped variant
+  must appear in structures, every leg×date must have fares, yesterday's metrics
+  must not silently vanish, >25% swings and parser drift get flagged. Violations
+  ride along to Telegram ("🧪 Self-check") and the site's amber banner. When
+  adding a new tracked structure/search, add its invariant here too.
 - `scraper.py` — browse-CLI form driving + parsing (one-way & multi-city), LEGS config
 - `combo.py` — trip rules, `best_combos`, `best_structures`, `cheapest_by_leg`
 - `publish.py` — data.json build + git push

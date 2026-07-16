@@ -20,13 +20,20 @@ def _load_history() -> list:
         return []
 
 
+def last_history_entry() -> dict:
+    """Most recent history entry (yesterday's, or today's on a same-day rerun)."""
+    h = _load_history()
+    return h[-1] if h else None
+
+
 def _jsonable(obj):
     if isinstance(obj, datetime.datetime):
         return obj.strftime("%B %d, %Y")
     raise TypeError(f"not JSON-serializable: {type(obj)}")
 
 
-def build_payload(flights: list, openjaws: list, history: list, today: str) -> dict:
+def build_payload(flights: list, openjaws: list, history: list, today: str,
+                  warnings: list = None) -> dict:
     structures = best_structures(flights, openjaws)
     legs_min = {r: f["price_total"] for r, f in cheapest_by_leg(flights).items()}
     oj_min = {}
@@ -58,6 +65,7 @@ def build_payload(flights: list, openjaws: list, history: list, today: str) -> d
 
     return {
         "updated": datetime.datetime.now().strftime("%Y-%m-%d %H:%M %Z").strip(),
+        "warnings": warnings or [],
         "trip": {
             "route": "BOS → Dhaka → Bali → BOS",
             "travelers": "2 adults + 1 child",
@@ -72,10 +80,10 @@ def build_payload(flights: list, openjaws: list, history: list, today: str) -> d
     }
 
 
-def publish(flights: list, openjaws: list) -> None:
+def publish(flights: list, openjaws: list, warnings: list = None) -> None:
     try:
         today = datetime.date.today().isoformat()
-        payload = build_payload(flights, openjaws, _load_history(), today)
+        payload = build_payload(flights, openjaws, _load_history(), today, warnings)
         os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
         with open(DATA_FILE, "w") as f:
             json.dump(payload, f, indent=1, default=_jsonable)

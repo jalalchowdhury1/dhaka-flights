@@ -68,9 +68,19 @@ def main():
 
     openjaws = scrape_openjaw_all()
 
+    # Self-check: any invariant violation rides along to Telegram + the site,
+    # so data losses are loud instead of silent (see sanity.py).
+    from combo import best_structures
+    from sanity import self_check
+    from publish import last_history_entry
+    warnings = self_check(flights, openjaws, best_structures(flights, openjaws),
+                          last_history_entry())
+    for w in warnings:
+        print(f"SELF-CHECK WARNING: {w}")
+
     write_to_sheet(flights, tab_name="Google Flights")
-    notify_cheapest(flights, openjaws)
-    publish(flights, openjaws)
+    notify_cheapest(flights, openjaws, warnings)
+    publish(flights, openjaws, warnings)
     mark_ran_today()
     print("=== Done ===")
 

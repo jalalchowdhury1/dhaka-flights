@@ -47,9 +47,16 @@ def _openjaw_line(oj: dict) -> str:
     return f"🎫 {route} · ${oj['price_total']:,} · [book]({oj['link']})"
 
 
-def build_message(all_flights: list, openjaws: list = None) -> str:
+def build_message(all_flights: list, openjaws: list = None,
+                  warnings: list = None) -> str:
     openjaws = openjaws or []
     lines = ["✈️ *BOS → Dhaka → Bali → BOS* (2 adults + 1 child)\n"]
+
+    if warnings:
+        lines.append("🧪 *Self-check found issues:*")
+        for w in warnings:
+            lines.append(f"  ⚠️ {w}")
+        lines.append("")
 
     structures = best_structures(all_flights, openjaws)
     if structures:
@@ -93,8 +100,9 @@ def build_message(all_flights: list, openjaws: list = None) -> str:
     return "\n".join(lines)
 
 
-def notify_cheapest(all_flights: list, openjaws: list = None) -> None:
-    ok = send_message(build_message(all_flights, openjaws))
+def notify_cheapest(all_flights: list, openjaws: list = None,
+                    warnings: list = None) -> None:
+    ok = send_message(build_message(all_flights, openjaws, warnings))
     if ok:
         print("Telegram notification sent.")
     else:
