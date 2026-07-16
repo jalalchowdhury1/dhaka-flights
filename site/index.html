@@ -12,6 +12,7 @@
     --s1: #2a78d6; --s2: #1baf7a; --s3: #eda100;
     --good-bg: #e3f4e3; --good-fg: #0f5c0f;
     --warn-bg: #fdeecd; --warn-fg: #7a5200;
+    --btn-bg: #2a78d6; --btn-fg: #ffffff;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -21,6 +22,7 @@
       --s1: #3987e5; --s2: #199e70; --s3: #c98500;
       --good-bg: #143d14; --good-fg: #8fd48f;
       --warn-bg: #4a3400; --warn-fg: #f0c86a;
+      --btn-bg: #3987e5; --btn-fg: #ffffff;
     }
   }
   * { box-sizing: border-box; margin: 0; }
@@ -30,39 +32,66 @@
   h1 { font-size: 1.25rem; margin: 4px 0 2px; display: flex; align-items: center; gap: 8px; }
   .sub { color: var(--text-2); font-size: .85rem; }
   .card { background: var(--card); border: 1px solid var(--border);
-          border-radius: 12px; padding: 14px 16px; margin-top: 14px; }
+          border-radius: 12px; padding: 14px 16px; margin-top: 10px; }
   .hero-num { font-size: 2.4rem; font-weight: 700; letter-spacing: -.02em; }
   .badge { display: inline-block; font-size: .75rem; font-weight: 600;
            padding: 2px 8px; border-radius: 99px; vertical-align: middle; }
   .badge.good { background: var(--good-bg); color: var(--good-fg); }
   .badge.warn { background: var(--warn-bg); color: var(--warn-fg); }
-  .leg { display: flex; gap: 8px; padding: 8px 0; border-top: 1px solid var(--border);
-         font-size: .9rem; align-items: baseline; }
+  .leg { display: flex; gap: 8px; padding: 10px 0; border-top: 1px solid var(--border);
+         font-size: .9rem; align-items: center; }
   .leg:first-of-type { border-top: none; }
   .leg .em { flex: none; }
-  .leg .price { margin-left: auto; font-weight: 600; white-space: nowrap; }
+  .leg .price { margin-left: auto; font-weight: 600; white-space: nowrap;
+                display: flex; align-items: center; gap: 8px; }
   a { color: var(--s1); text-decoration: none; font-weight: 600; }
+  .btn { display: inline-block; background: var(--btn-bg); color: var(--btn-fg) !important;
+         border-radius: 8px; padding: 5px 12px; font-size: .8rem; font-weight: 700; }
+  .btn.big { padding: 10px 18px; font-size: .95rem; margin-top: 10px; }
   .muted { color: var(--text-2); font-size: .8rem; }
-  h2 { font-size: .95rem; margin: 22px 0 0; color: var(--text-2);
-       text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
   table { width: 100%; border-collapse: collapse; font-size: .85rem; }
   th, td { text-align: left; padding: 6px 8px 6px 0; border-top: 1px solid var(--border); white-space: nowrap; }
   th { color: var(--text-3); font-weight: 600; border-top: none; }
   td.num, th.num { text-align: right; padding-right: 8px; }
   .scroll-x { overflow-x: auto; }
-  .legend { display: flex; gap: 16px; font-size: .8rem; color: var(--text-2); margin: 8px 0 2px; }
+  .legend { display: flex; gap: 16px; font-size: .8rem; color: var(--text-2); margin: 8px 0 2px; flex-wrap: wrap; }
   .legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px;
                  margin-right: 5px; vertical-align: -1px; }
-  details { margin-top: 10px; }
-  summary { cursor: pointer; color: var(--text-2); font-size: .85rem; }
   #err { color: var(--warn-fg); background: var(--warn-bg); border-radius: 8px;
          padding: 10px 12px; margin-top: 16px; display: none; }
   footer { margin-top: 28px; color: var(--text-3); font-size: .75rem; }
+  /* stat strip */
+  .strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+  .tile { background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+          padding: 10px 12px; }
+  .tile .t-label { color: var(--text-2); font-size: .72rem; line-height: 1.25; }
+  .tile .t-num { font-size: 1.25rem; font-weight: 700; margin-top: 2px; }
+  .tile .t-delta { font-size: .72rem; font-weight: 600; margin-top: 1px; }
+  .t-delta.down { color: var(--good-fg); }
+  .t-delta.up { color: var(--warn-fg); }
+  .t-delta.flat { color: var(--text-3); font-weight: 400; }
   /* tabs */
   .tabs { display: flex; gap: 6px; margin-top: 14px; border-bottom: 1px solid var(--border); }
   .tabs button { background: none; border: none; font: inherit; color: var(--text-2);
                  padding: 8px 12px; cursor: pointer; border-bottom: 2px solid transparent; }
   .tabs button.active { color: var(--text); font-weight: 600; border-bottom-color: var(--s1); }
+  /* collapsible sections */
+  details.sec { margin-top: 16px; border: none; }
+  details.sec > summary { list-style: none; cursor: pointer; display: flex; align-items: center;
+    gap: 8px; font-size: .95rem; color: var(--text-2); text-transform: uppercase;
+    letter-spacing: .04em; font-weight: 600; padding: 6px 0; user-select: none; }
+  details.sec > summary::-webkit-details-marker { display: none; }
+  details.sec > summary::after { content: "▸"; margin-left: auto; color: var(--text-3);
+    transition: transform .15s; font-size: 1rem; }
+  details.sec[open] > summary::after { transform: rotate(90deg); }
+  details.inner { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 8px; }
+  details.inner > summary { list-style: none; cursor: pointer; font-weight: 700; font-size: .9rem;
+    display: flex; align-items: center; }
+  details.inner > summary::-webkit-details-marker { display: none; }
+  details.inner > summary::after { content: "▸"; margin-left: auto; color: var(--text-3); }
+  details.inner[open] > summary::after { content: "▾"; }
+  details.inner ul, details.inner ol { padding-left: 20px; font-size: .88rem; margin-top: 6px; }
+  details.inner li { margin: 6px 0; }
   /* info button + modal */
   #infoBtn { background: none; border: 1px solid var(--border); color: var(--text-3);
              width: 22px; height: 22px; border-radius: 50%; font-size: .75rem; font-weight: 600;
@@ -70,14 +99,10 @@
   #infoBtn:hover { color: var(--text); border-color: var(--text-3); }
   dialog { background: var(--card); color: var(--text); border: 1px solid var(--border);
            border-radius: 14px; max-width: 640px; width: calc(100vw - 28px);
-           max-height: 85vh; padding: 18px 20px; }
+           max-height: 85vh; padding: 16px 18px; }
   dialog::backdrop { background: rgba(0,0,0,.45); }
-  dialog h3 { font-size: 1rem; margin: 14px 0 4px; }
-  dialog h3:first-of-type { margin-top: 0; }
-  dialog ul, dialog ol { padding-left: 20px; font-size: .88rem; }
-  dialog li { margin: 5px 0; }
   dialog .close { float: right; background: none; border: none; color: var(--text-3);
-                  font-size: 1.3rem; cursor: pointer; margin: -6px -6px 0 0; }
+                  font-size: 1.3rem; cursor: pointer; margin: -4px -6px 0 0; }
   /* sortable history table */
   th.sortable { cursor: pointer; user-select: none; }
   th.sortable:hover { color: var(--text); }
@@ -95,6 +120,7 @@
   <div class="sub" id="rules"></div>
   <div class="sub" id="updated"></div>
   <div id="err"></div>
+  <div class="strip" id="strip"></div>
   <div class="tabs" role="tablist">
     <button id="tab-today" class="active" role="tab">Today</button>
     <button id="tab-history" role="tab">History</button>
@@ -104,43 +130,55 @@
 
   <dialog id="infoModal">
     <button class="close" aria-label="Close">×</button>
-    <h3>📋 Book in this order</h3>
-    <ol>
-      <li><b>Passports first</b> — all 3 (child too) valid <b>6+ months past Feb 2027</b> (into Aug 2027) with 2+ blank pages each.</li>
-      <li><b>Open-jaw ticket</b> (BOS→DAC + DPS→BOS) on the <b>airline's US website/app</b> — booking there starts the federal 24-hour free-cancel window and keeps refunds simple. Avoid third-party sites.</li>
-      <li><b>Same day: Bali resort on Marriott points</b> (5 nights, 5th free). Points rates usually cancel free until a few days out — if the hotel doesn't work, cancel the flight within 24h at $0.</li>
-      <li><b>Bangladesh visas</b> — see Visas below. Do this before buying the middle leg.</li>
-      <li><b>Dhaka→Bali hop last</b> (THAI / AirAsia). It never touches the US so the 24-hour rule does <b>not</b> apply — treat it as non-refundable and buy it only once everything else is locked.</li>
-      <li><b>~1 week before Bali:</b> Indonesia e-VOA online for all 3 (needs your DPS→BOS booking as onward proof) + Bali tourist levy + the customs form ≤3 days before landing.</li>
-    </ol>
-    <h3>💳 Cancellations & refunds</h3>
-    <ul>
-      <li><b>24-hour rule (US DOT):</b> any ticket that touches the US — the open-jaw, or BOS→DAC / DPS→BOS one-ways — is fully refundable for <b>24 hours after booking</b> if departure is 7+ days away. This is the main safety valve; Turkish honors it only when booked via its own site/app.</li>
-      <li><b>After 24h on Turkish:</b> economy cancel fee roughly <b>$70–200+ per person</b>; the cheapest "EcoFly" promo fares are non-refundable. If unsure, pay the small step-up to a flexible economy fare — the exact rule shows at checkout. No cancellations in the last 12h before departure.</li>
-      <li><b>Dhaka→Bali:</b> no US protection. AirAsia is effectively non-refundable; THAI charges fare-rule fees. Assume this money is spent once booked.</li>
-      <li><b>Airline-initiated changes:</b> if the airline significantly changes or cancels any flight, you're owed a <b>full refund</b> regardless of fare type.</li>
-      <li>Card refunds must arrive within 7 business days (DOT). Pay with a credit card that has trip protection.</li>
-    </ul>
-    <h3>🛂 Visas & borders</h3>
-    <ul>
-      <li><b>Bangladesh:</b> US passports get a <b>30-day visa on arrival</b> at Dhaka — <b>$50 cash USD per person</b> (child too; carry $150 crisp), onward ticket + proof of funds (~$500), and it's granted at the officer's discretion — getting tourist visas <b>in advance</b> from the mission is the safer play. Your 29-day stay keeps a 1-day buffer: never let the Feb 1–3 departure slip past day 30.</li>
-      <li><b>Indonesia:</b> e-VOA (B1), <b>$35/person, 30 days</b>; apply online ≥48h before arrival; <b>requires onward-flight proof</b> (your DPS→BOS leg); extendable only in person now. Plus the Bali levy (IDR 150k/person, pay online) and the electronic customs declaration ≤3 days before (QR scanned at the airport).</li>
-      <li><b>Istanbul layover:</b> US citizens are <b>visa-free in Türkiye</b> (90 days/180) — you can leave the airport with the baby during a long layover, no visa needed.</li>
-      <li><b>Transit (KL / Bangkok / Doha / Seoul):</b> on a single ticket you stay airside — no visa. Only if you ever book the KL hop as two separate tickets would you clear Malaysian immigration (visa-free for US, but file the free Malaysia Digital Arrival Card ≤3 days before).</li>
-    </ul>
-    <h3>😴 Long-rest layovers (12h+ with the baby)</h3>
-    <ul>
-      <li><b>Qatar via Doha (easiest):</b> when booking the open-jaw, pick the itinerary with the <b>17 hr overnight in Doha</b> (~$100 over the cheapest option). Land ~5pm, sleep in a real bed, fly on ~10:30am. Discover Qatar stopover hotels run from <b>~$14/person</b> (4-star) booked with the ticket; US passports enter Qatar visa-free.</li>
-      <li><b>Turkish via Istanbul:</b> IST→DAC flies <b>once daily</b>, so the standard connection is ~6 hr — the only longer option is a ~30 hr stopover. Upside: Turkish gives economy passengers a <b>FREE 4-star hotel night</b> when the connection is 20 hr–7 days on one reservation. Book the long connection via turkishairlines.com or their call center, then apply at their Stopover "Booker" page <b>≥72 hr before the flight</b>.</li>
-    </ul>
-    <h3>🧾 Small stuff that bites</h3>
-    <ul>
-      <li>Prices here are Google Flights <b>totals for all 3 travelers</b>; fares aren't held — book on the airline site when ready.</li>
-      <li>Check the baggage allowance on each ticket separately — the cheap DAC→DPS fares often sell bags separately.</li>
-      <li>Request bassinet/child meal at booking and re-confirm at check-in.</li>
-      <li>Carry printed copies of the onward tickets — both borders ask.</li>
-      <li>The open-jaw "home" date assumes a next-day arrival; confirm the exact landing time before buying.</li>
-    </ul>
+    <h2 style="font-size:1rem;margin:0 24px 4px 0">Trip handbook — tap a section</h2>
+    <details class="inner" open>
+      <summary>📋 Book in this order</summary>
+      <ol>
+        <li><b>Passports first</b> — all 3 (child too) valid <b>6+ months past Feb 2027</b> (into Aug 2027) with 2+ blank pages each.</li>
+        <li><b>The big ticket</b> — open-jaw (BOS→DAC + DPS→BOS) or the Turkish stopover version — on the <b>airline's US website/app</b>. Booking there starts the federal 24-hour free-cancel window and keeps refunds simple. Avoid third-party sites.</li>
+        <li><b>Same day: Bali resort on Marriott points</b> (5 nights, 5th free). Points rates usually cancel free until a few days out — if the hotel doesn't work, cancel the flight within 24h at $0.</li>
+        <li><b>Bangladesh visas</b> — see Visas below. Do this before buying the middle leg.</li>
+        <li><b>Dhaka→Bali hop last</b> (THAI / AirAsia). It never touches the US so the 24-hour rule does <b>not</b> apply — treat it as non-refundable and buy it only once everything else is locked.</li>
+        <li><b>~1 week before Bali:</b> Indonesia e-VOA online for all 3 (needs your DPS→BOS booking as onward proof) + Bali tourist levy + the customs form ≤3 days before landing.</li>
+      </ol>
+    </details>
+    <details class="inner">
+      <summary>💳 Cancellations & refunds</summary>
+      <ul>
+        <li><b>24-hour rule (US DOT):</b> any ticket that touches the US — the open-jaw, the stopover itinerary, or BOS→DAC / DPS→BOS one-ways — is fully refundable for <b>24 hours after booking</b> if departure is 7+ days away. This is the main safety valve; Turkish honors it only when booked via its own site/app.</li>
+        <li><b>After 24h on Turkish:</b> economy cancel fee roughly <b>$70–200+ per person</b>; the cheapest "EcoFly" promo fares are non-refundable. If unsure, pay the small step-up to a flexible economy fare — the exact rule shows at checkout. No cancellations in the last 12h before departure.</li>
+        <li><b>Dhaka→Bali:</b> no US protection. AirAsia is effectively non-refundable; THAI charges fare-rule fees. Assume this money is spent once booked.</li>
+        <li><b>Airline-initiated changes:</b> if the airline significantly changes or cancels any flight, you're owed a <b>full refund</b> regardless of fare type.</li>
+        <li>Card refunds must arrive within 7 business days (DOT). Pay with a credit card that has trip protection.</li>
+        <li><b>Chase UR points:</b> portal bookings get real Turkish (235-) ticket numbers, so the stopover hotel usually still works — but N/R fare classes are excluded, and changes route through Chase. Cleanest: book the airline direct with the card, spend UR on the THAI leg instead.</li>
+      </ul>
+    </details>
+    <details class="inner">
+      <summary>🛂 Visas & borders</summary>
+      <ul>
+        <li><b>Bangladesh:</b> US passports get a <b>30-day visa on arrival</b> at Dhaka — <b>$50 cash USD per person</b> (child too; carry $150 crisp), onward ticket + proof of funds (~$500), and it's granted at the officer's discretion — getting tourist visas <b>in advance</b> from the mission is the safer play. Your stay keeps a buffer: never let the Feb 1–3 departure slip past day 30.</li>
+        <li><b>Indonesia:</b> e-VOA (B1), <b>$35/person, 30 days</b>; apply online ≥48h before arrival; <b>requires onward-flight proof</b> (your DPS→BOS leg); extendable only in person now. Plus the Bali levy (IDR 150k/person, pay online) and the electronic customs declaration ≤3 days before (QR scanned at the airport).</li>
+        <li><b>Istanbul layover/stopover:</b> US citizens are <b>visa-free in Türkiye</b> (90 days/180) — leaving the airport with the baby is fine, no visa needed.</li>
+        <li><b>Transit (KL / Bangkok / Doha / Seoul):</b> on a single ticket you stay airside — no visa. Only if you ever book the KL hop as two separate tickets would you clear Malaysian immigration (visa-free for US, but file the free Malaysia Digital Arrival Card ≤3 days before).</li>
+      </ul>
+    </details>
+    <details class="inner">
+      <summary>😴 Long-rest layovers (12h+ with the baby)</summary>
+      <ul>
+        <li><b>Qatar via Doha (easiest):</b> when booking the open-jaw, pick the itinerary with the <b>17 hr overnight in Doha</b> (~$100 over the cheapest option). Land ~5pm, sleep in a real bed, fly on ~10:30am. Discover Qatar stopover hotels run from <b>~$14/person</b> (4-star) booked with the ticket; US passports enter Qatar visa-free.</li>
+        <li><b>Turkish via Istanbul:</b> IST→DAC flies <b>once daily</b>, so the standard connection is ~6 hr — the longer option is the tracked <b>~30 hr stopover itinerary</b> (see Today tab). Turkish gives economy passengers a <b>FREE 4-star hotel night</b> when the connection is 20 hr–7 days on one reservation: book it, then apply at their Stopover "Booker" page <b>≥72 hr before the flight</b>. Not valid on N/R fare classes — check the booking-class letter before paying.</li>
+      </ul>
+    </details>
+    <details class="inner">
+      <summary>🧾 Small stuff that bites</summary>
+      <ul>
+        <li>Prices here are Google Flights <b>totals for all 3 travelers</b>; fares aren't held — book on the airline site when ready.</li>
+        <li>Check the baggage allowance on each ticket separately — the cheap DAC→DPS fares often sell bags separately.</li>
+        <li>Request bassinet/child meal at booking and re-confirm at check-in.</li>
+        <li>Carry printed copies of the onward tickets — both borders ask.</li>
+        <li>The "home" date for one-ticket options assumes a next-day arrival; confirm the exact landing time before buying.</li>
+      </ul>
+    </details>
   </dialog>
 
   <footer>Prices are Google Flights totals for all travelers. Data updates with the
@@ -167,16 +205,43 @@ async function load() {
       return;
     }
   }
+  renderStrip(data);
   renderToday(data);
   hRows = flattenHistory(data.history);
   renderHistory();
+}
+
+/* ---------- glance strip with day-over-day change ---------- */
+function deltaHTML(hist, key) {
+  const withVal = hist.filter(h => h[key] != null);
+  if (withVal.length < 2) return `<div class="t-delta flat">first day tracked</div>`;
+  const d = withVal[withVal.length - 1][key] - withVal[withVal.length - 2][key];
+  if (d === 0) return `<div class="t-delta flat">= no change</div>`;
+  return d < 0 ? `<div class="t-delta down">▼ ${usd(-d)} cheaper</div>`
+               : `<div class="t-delta up">▲ ${usd(d)} pricier</div>`;
+}
+function renderStrip(d) {
+  const hist = d.history || [];
+  const last = hist[hist.length - 1] || {};
+  const tiles = [
+    {label: "Open-jaw + Bali hop", key: "openjaw_total"},
+    {label: "Turkish stopover", key: "stopover_total"},
+    {label: "3 one-way tickets", key: "oneway_combo_total"},
+  ];
+  document.getElementById("strip").innerHTML = tiles.map(t =>
+    `<div class="tile"><div class="t-label">${t.label}</div>
+     <div class="t-num">${usd(last[t.key])}</div>${deltaHTML(hist, t.key)}</div>`).join("");
+}
+
+function bookBtn(link, big) {
+  return link ? `<a class="btn${big ? " big" : ""}" href="${esc(link)}" target="_blank" rel="noopener">Book</a>` : "";
 }
 
 function legLine(f) {
   const lay = f.layovers && f.layovers !== "N/A" && f.layovers !== "none" ? " · " + esc(f.layovers) : "";
   return `<div class="leg"><span class="em">${EMOJI[f.route] || "✈️"}</span>
     <span>${esc(f.route)} <b>${short(f.depart)}</b> · ${esc(f.airline)} · ${esc(f.stops)}${lay}</span>
-    <span class="price">${usd(f.price_total)}${f.link ? ` <a href="${esc(f.link)}" target="_blank" rel="noopener">book</a>` : ""}</span></div>`;
+    <span class="price">${usd(f.price_total)} ${bookBtn(f.link)}</span></div>`;
 }
 
 function ojLine(oj) {
@@ -184,7 +249,7 @@ function ojLine(oj) {
     : `BOS→DAC <b>${short(oj.out_date)}</b> + DPS→BOS <b>${short(oj.ret_date)}</b> — one ticket · ${esc(oj.airline)} out · ${esc(oj.stops)}${oj.layovers && oj.layovers !== "N/A" ? " · " + esc(oj.layovers) : ""}`;
   return `<div class="leg"><span class="em">🎫</span>
     <span>${route}</span>
-    <span class="price">${usd(oj.price_total)}${oj.link ? ` <a href="${esc(oj.link)}" target="_blank" rel="noopener">book</a>` : ""}</span></div>`;
+    <span class="price">${usd(oj.price_total)} ${bookBtn(oj.link)}</span></div>`;
 }
 
 function structureCard(s, hero) {
@@ -202,7 +267,7 @@ function structureCard(s, hero) {
 }
 
 function chart(history) {
-  const pts = history.filter(h => h.oneway_combo_total || h.openjaw_total);
+  const pts = history.filter(h => h.oneway_combo_total || h.openjaw_total || h.stopover_total);
   if (pts.length < 2) return `<div class="muted" style="margin-top:8px">Price history chart appears after a couple of days of data.</div>`;
   const series = [
     {key: "openjaw_total", label: "Open-jaw + Bali hop", color: "var(--s2)"},
@@ -242,47 +307,58 @@ function chart(history) {
     <div class="scroll-x"><svg width="${W}" height="${H}" role="img" aria-label="Price history">${g}</svg></div>`;
 }
 
+function sec(title, body, open) {
+  return `<details class="sec"${open ? " open" : ""}><summary>${title}</summary>${body}</details>`;
+}
+
 function renderToday(d) {
+  const ago = (() => {
+    const t = Date.parse(d.updated.replace(" ", "T"));
+    if (isNaN(t)) return "";
+    const h = Math.round((Date.now() - t) / 3600000);
+    return h <= 1 ? " (just now)" : ` (${h} h ago)`;
+  })();
   document.getElementById("rules").textContent = `${d.trip.travelers} · ${d.trip.rules}`;
-  document.getElementById("updated").textContent = `Last scrape: ${d.updated}`;
+  document.getElementById("updated").textContent = `Last scrape: ${d.updated}${ago}`;
   let html = "";
 
   const structures = d.structures || [];
   if (structures.length) {
-    html += `<h2>Best bookable trip today</h2>` + structureCard(structures[0], true);
+    html += sec("🏆 Best bookable trip today", structureCard(structures[0], true), true);
   } else {
     html += `<div class="card">No valid combination found in today's data.</div>`;
   }
 
-  html += `<h2>How to book it (short version)</h2><div class="card">
+  html += sec("📋 How to book it (short version)", `<div class="card">
     <ol class="playbook">
       <li>Check all 3 passports: valid into <b>Aug 2027</b>, 2+ blank pages.</li>
-      <li>Buy the <b>open-jaw ticket</b> on the airline's US site — you get a <b>24-hour full-refund window</b> (federal rule, departure 7+ days out).</li>
+      <li>Buy the <b>big ticket</b> (open-jaw or Turkish stopover) on the airline's US site — you get a <b>24-hour full-refund window</b> (federal rule, departure 7+ days out).</li>
       <li>Same day, lock the Bali resort on Marriott points; if it falls through, cancel the flight free inside 24h.</li>
       <li>Sort <b>Bangladesh visas</b> (30-day VOA: $50 cash each + onward ticket — or safer, get visas in advance).</li>
       <li>Buy the <b>Dhaka→Bali hop last</b> — it has no US refund protection; treat as non-refundable.</li>
       <li>~1 week before Bali: Indonesia <b>e-VOA</b> for all 3 (needs the Bali→Boston booking as proof) + levy + customs form.</li>
     </ol>
-    <div class="muted" style="margin-top:6px">Tap the ⓘ next to the title for cancellation windows, visa fine print, and gotchas.</div>
-  </div>`;
+    <div class="muted" style="margin-top:6px">The ⓘ next to the title has the full handbook: cancellation windows, visa fine print, long-layover tricks.</div>
+  </div>`, false);
 
   if (structures.length > 1)
-    html += `<h2>Other structures</h2>` + structures.slice(1).map(s => structureCard(s, false)).join("");
+    html += sec(`🎛 Other structures (${structures.length - 1})`,
+      structures.slice(1).map(s => structureCard(s, false)).join(""), false);
 
-  html += `<h2>Price history</h2><div class="card">${chart(d.history || [])}</div>`;
+  html += sec("📈 Price history", `<div class="card">${chart(d.history || [])}</div>`, false);
 
   const legs = d.cheapest_by_leg || {};
-  html += `<h2>Cheapest per leg (dates may not combine)</h2><div class="card">` +
+  html += sec("🧩 Cheapest per leg (dates may not combine)", `<div class="card">` +
     ["BOS→DAC","DAC→DPS","DPS→BOS"].map(r => legs[r] ? legLine(legs[r]) :
       `<div class="leg"><span class="em">${EMOJI[r]}</span><span>${r}</span><span class="price">no results</span></div>`).join("") +
-    `</div>`;
+    `</div>`, false);
 
   const flights = d.flights || [];
   if (flights.length) {
     const rows = flights.map(f => `<tr><td>${esc(f.route)}</td><td>${short(f.depart)}</td>
       <td>${esc(f.airline)}</td><td>${esc(f.stops)}</td><td class="num">${usd(f.price_total)}</td></tr>`).join("");
-    html += `<details><summary>All ${flights.length} scraped fares (table view)</summary>
-      <div class="card scroll-x"><table><tr><th>Leg</th><th>Depart</th><th>Airline</th><th>Stops</th><th class="num">Total</th></tr>${rows}</table></div></details>`;
+    html += sec(`🗂 All ${flights.length} scraped fares`,
+      `<div class="card scroll-x"><table><tr><th>Leg</th><th>Depart</th><th>Airline</th><th>Stops</th><th class="num">Total</th></tr>${rows}</table></div>`, false);
   }
   document.getElementById("view-today").innerHTML = html;
 }
@@ -340,7 +416,7 @@ function renderHistory() {
     HCOLS.map(c => `<td class="${c.num ? "num" : ""}">${c.num ? usd(h[c.key]) : esc(h[c.key] ?? "—")}</td>`).join("") +
     `</tr><tr class="detail-row" style="display:none"><td colspan="${HCOLS.length}">${detailHTML(h)}</td></tr>`).join("");
   document.getElementById("view-history").innerHTML =
-    `<h2>Best bookable trip, day by day</h2>
+    `<h2 style="font-size:.95rem;margin:16px 0 0;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;font-weight:600">Best bookable trip, day by day</h2>
      <div class="card scroll-x"><table id="htable"><tr>${head}</tr>${body}</table>
      <div class="muted" style="margin-top:8px">Tap a column header to sort · tap a row for that day's airlines, layovers, and booking links. Dollar figures are totals for all 3 travelers.</div></div>`;
   document.querySelectorAll("#htable th.sortable").forEach(th => th.onclick = () => {
