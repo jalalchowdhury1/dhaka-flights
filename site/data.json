@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-15 22:37",
+ "updated": "2026-07-15 23:00",
  "trip": {
   "route": "BOS \u2192 Dhaka \u2192 Bali \u2192 BOS",
   "travelers": "2 adults + 1 child",
@@ -8,6 +8,8 @@
  "structures": [
   {
    "name": "open-jaw ticket + separate DAC\u2192DPS",
+   "kind": "openjaw",
+   "note": null,
    "total": 4763,
    "valid": true,
    "home": "Feb 7",
@@ -83,6 +85,8 @@
   },
   {
    "name": "open-jaw ticket + separate DAC\u2192DPS",
+   "kind": "openjaw",
+   "note": null,
    "total": 4481,
    "valid": false,
    "home": "Feb 8",
@@ -1374,6 +1378,8 @@
    "best_structure": "open-jaw ticket + separate DAC\u2192DPS",
    "best_detail": {
     "name": "open-jaw ticket + separate DAC\u2192DPS",
+    "kind": "openjaw",
+    "note": null,
     "total": 4763,
     "valid": true,
     "home": "Feb 7",
@@ -1406,6 +1412,7 @@
    },
    "oneway_combo_total": 6229,
    "openjaw_total": 4763,
+   "stopover_total": null,
    "openjaw_min": {
     "February 6, 2027": 3423,
     "February 7, 2027": 3382
