@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-15 23:00",
+ "updated": "2026-07-15 23:02",
  "trip": {
   "route": "BOS \u2192 Dhaka \u2192 Bali \u2192 BOS",
   "travelers": "2 adults + 1 child",
@@ -25,6 +25,44 @@
     "duration": "22 hr 50 min",
     "layovers": "6 hr 10 min at Istanbul Airport in Istanbul",
     "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDZqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+   },
+   "legs": [
+    {
+     "route": "DAC\u2192DPS",
+     "depart": "February 1, 2027",
+     "arrive": "February 1, 2027",
+     "airline": "THAI",
+     "stops": "1 stop",
+     "duration": "10 hr 15 min",
+     "layovers": "3 hr 20 min at Suvarnabhumi Airport in Bangkok",
+     "price_total": 1340,
+     "link": "https://www.google.com/travel/flights"
+    }
+   ]
+  },
+  {
+   "name": "Turkish + 30h Istanbul stopover (free hotel)",
+   "kind": "stopover",
+   "note": "Free 4-star hotel night: apply at Turkish's Stopover Booker \u226572h before flying; excluded on N/R fare classes \u2014 check the booking class letter before paying.",
+   "total": 5028,
+   "valid": true,
+   "home": "Feb 7",
+   "dhaka_days": 26,
+   "bali_nights": 5,
+   "openjaw": {
+    "out_date": "January 4, 2027",
+    "ret_date": "February 6, 2027",
+    "price_total": 3688,
+    "airline": "Turkish Airlines",
+    "out_arrive": "January 7, 2027",
+    "stops": "Nonstop",
+    "duration": "9 hr 20 min",
+    "layovers": "none",
+    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDSVNUGh4SCjIwMjctMDEtMDZqBwgBEgNJU1RyBwgBEgNEQUMaHhIKMjAyNy0wMi0wNmoHCAESA0RQU3IHCAESA0JPU0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
+    "kind": "stopover",
+    "label": "Turkish + 30h Istanbul stopover (free hotel)",
+    "desc": "BOS\u2192IST Jan 4 \u00b7 30h Istanbul (free TK hotel) \u00b7 IST\u2192DAC Jan 6 + DPS\u2192BOS Feb 6 \u2014 one Turkish ticket",
+    "note": "Free 4-star hotel night: apply at Turkish's Stopover Booker \u226572h before flying; excluded on N/R fare classes \u2014 check the booking class letter before paying."
    },
    "legs": [
     {
@@ -520,6 +558,36 @@
    "duration": "22 hr 45 min",
    "layovers": "2 hr 30 min at Heathrow Airport in London; 2 hr 15 min at Hamad International Airport in Doha",
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDREFDGh4SCjIwMjctMDItMDdqBwgBEgNEUFNyBwgBEgNCT1NAAUABQAJIAXABggELCP___________wGYAQM&hl=en"
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 6, 2027",
+   "price_total": 3688,
+   "airline": "Turkish Airlines",
+   "out_arrive": "January 7, 2027",
+   "stops": "Nonstop",
+   "duration": "9 hr 20 min",
+   "layovers": "none",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDSVNUGh4SCjIwMjctMDEtMDZqBwgBEgNJU1RyBwgBEgNEQUMaHhIKMjAyNy0wMi0wNmoHCAESA0RQU3IHCAESA0JPU0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
+   "kind": "stopover",
+   "label": "Turkish + 30h Istanbul stopover (free hotel)",
+   "desc": "BOS\u2192IST Jan 4 \u00b7 30h Istanbul (free TK hotel) \u00b7 IST\u2192DAC Jan 6 + DPS\u2192BOS Feb 6 \u2014 one Turkish ticket",
+   "note": "Free 4-star hotel night: apply at Turkish's Stopover Booker \u226572h before flying; excluded on N/R fare classes \u2014 check the booking class letter before paying."
+  },
+  {
+   "out_date": "January 4, 2027",
+   "ret_date": "February 6, 2027",
+   "price_total": 36501,
+   "airline": "Lufthansa and Turkish Airlines",
+   "out_arrive": "January 7, 2027",
+   "stops": "1 stop",
+   "duration": "11 hr 55 min",
+   "layovers": "1 hr 30 min at Frankfurt Airport in Frankfurt am Main",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDSVNUGh4SCjIwMjctMDEtMDZqBwgBEgNJU1RyBwgBEgNEQUMaHhIKMjAyNy0wMi0wNmoHCAESA0RQU3IHCAESA0JPU0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
+   "kind": "stopover",
+   "label": "Turkish + 30h Istanbul stopover (free hotel)",
+   "desc": "BOS\u2192IST Jan 4 \u00b7 30h Istanbul (free TK hotel) \u00b7 IST\u2192DAC Jan 6 + DPS\u2192BOS Feb 6 \u2014 one Turkish ticket",
+   "note": "Free 4-star hotel night: apply at Turkish's Stopover Booker \u226572h before flying; excluded on N/R fare classes \u2014 check the booking class letter before paying."
   }
  ],
  "flights": [
@@ -1412,7 +1480,7 @@
    },
    "oneway_combo_total": 6229,
    "openjaw_total": 4763,
-   "stopover_total": null,
+   "stopover_total": 5028,
    "openjaw_min": {
     "February 6, 2027": 3423,
     "February 7, 2027": 3382
