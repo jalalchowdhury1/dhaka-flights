@@ -63,10 +63,13 @@ def best_structures(flights, openjaws, top_n=4) -> list:
     combos = best_combos(flights, top_n=1)
     if combos:
         c = combos[0]
+        ok = c["bali_nights"] == IDEAL_BALI_NIGHTS
         structures.append({
             "name": "3 one-way tickets",
+            "kind": "oneways",
             "total": c["total"],
-            "valid": c["bali_nights"] == IDEAL_BALI_NIGHTS,
+            "valid": ok,
+            "flag": None if ok else f"only a {c['bali_nights']}-night Bali pairing today",
             "home": c["home"].strftime("%b %-d") if c["home"] else "?",
             "dhaka_days": c["dhaka_days"],
             "bali_nights": c["bali_nights"],
@@ -87,30 +90,41 @@ def best_structures(flights, openjaws, top_n=4) -> list:
         ret = _date(oj["ret_date"])
         dac_in = _date(oj.get("out_arrive", "")) or (
             _date(oj["out_date"]) + timedelta(days=1))
-        # Cheapest middle leg giving exactly 5 Bali nights and a legal Dhaka stay
-        candidates = []
+        # Cheapest middle leg with a legal Dhaka stay; prefer exactly 5 Bali
+        # nights but NEVER drop the structure when only 4/6-night pairings
+        # exist — flag the compromise instead (2026-07-16: the exact-5 rule
+        # silently hid a valid $3,423 open-jaw from the daily message).
+        exact, near = [], []
         for m in _priced(flights, "DAC→DPS"):
             m_dep, m_arr = _date(m.get("depart", "")), _arrival(m)
             if not (m_dep and m_arr):
                 continue
-            if (ret - m_arr).days != IDEAL_BALI_NIGHTS:
+            nights = (ret - m_arr).days
+            if nights not in ALLOWED_BALI_NIGHTS:
                 continue
             if not 1 <= (m_dep - dac_in).days + 1 <= MAX_DHAKA_DAYS:
                 continue
-            candidates.append(m)
-        if not candidates:
+            (exact if nights == IDEAL_BALI_NIGHTS else near).append((m, nights))
+        pool = exact or near
+        if not pool:
             continue
-        mid = min(candidates, key=lambda f: f["price_total"])
+        mid, nights = min(pool, key=lambda t: t[0]["price_total"])
         home = ret + timedelta(days=1)  # DPS→BOS lands next day (heuristic)
+        flags = []
+        if home > HOME_DEADLINE:
+            flags.append(f"home {home.strftime('%b %-d')} — after Feb 7")
+        if nights != IDEAL_BALI_NIGHTS:
+            flags.append(f"only a {nights}-night Bali pairing today")
         structures.append({
             "name": oj.get("label") or "open-jaw ticket + separate DAC→DPS",
             "kind": oj.get("kind", "openjaw"),
             "note": oj.get("note"),
             "total": oj["price_total"] + mid["price_total"],
-            "valid": home <= HOME_DEADLINE,
+            "valid": not flags,
+            "flag": " · ".join(flags) or None,
             "home": home.strftime("%b %-d"),
             "dhaka_days": (_date(mid["depart"]) - dac_in).days + 1,
-            "bali_nights": IDEAL_BALI_NIGHTS,
+            "bali_nights": nights,
             "openjaw": oj,
             "legs": [mid],
         })

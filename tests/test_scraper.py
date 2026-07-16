@@ -52,7 +52,10 @@ def test_parse_results_nonstop_without_layover():
 def test_legs_config_is_three_one_way_legs():
     assert [(l["origin"], l["dest"]) for l in LEGS] == [
         ("BOS", "DAC"), ("DAC", "DPS"), ("DPS", "BOS")]
-    assert sum(len(l["dates"]) for l in LEGS) == 9
+    # 3 + 4 + 3: DAC→DPS includes Jan 31 (overnights arrive Feb 1, the only
+    # cheap 5-night pairing for a Feb 6 return)
+    assert sum(len(l["dates"]) for l in LEGS) == 10
+    assert "January 31, 2027" in LEGS[1]["dates"]
 
 
 def test_run_timeout_returns_empty_and_counts(monkeypatch):
@@ -88,6 +91,6 @@ def test_scrape_all_retries_route_once_then_moves_on(monkeypatch):
     monkeypatch.setattr(scraper.time, "sleep", lambda s: None)
     result = scraper.scrape_all()
     assert scraper.DIAG["aborted_early"] is False
-    # 9 searches: first call empty + retry, rest succeed first try = 10 calls
-    assert calls["n"] == 10
-    assert len(result) == 9
+    # 10 searches: first call empty + retry, rest succeed first try = 11 calls
+    assert calls["n"] == 11
+    assert len(result) == 10

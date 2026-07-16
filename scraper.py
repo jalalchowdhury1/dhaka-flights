@@ -10,8 +10,11 @@ from typing import Union
 LEGS = [
     {"origin": "BOS", "dest": "DAC",
      "dates": ["January 4, 2027", "January 5, 2027", "January 6, 2027"]},
+    # Jan 31 matters: its overnight flights arrive Feb 1, the only cheap way
+    # to get exactly 5 Bali nights before a Feb 6 DPS→BOS return (2026-07-16:
+    # its absence made the combo logic drop the Feb-6 open-jaw entirely).
     {"origin": "DAC", "dest": "DPS",
-     "dates": ["February 1, 2027", "February 2, 2027", "February 3, 2027"]},
+     "dates": ["January 31, 2027", "February 1, 2027", "February 2, 2027", "February 3, 2027"]},
     {"origin": "DPS", "dest": "BOS",
      "dates": ["February 5, 2027", "February 6, 2027", "February 7, 2027"]},
 ]
@@ -287,8 +290,6 @@ def _parse_results(tree: str, origin: str, dest: str, url: str, depart: str = ""
     lines = tree.splitlines()
 
     for line in lines:
-        if len(results) >= MAX_RESULTS:
-            break
         low = line.lower()
         if "us dollars" not in low and "from $" not in low:
             continue
@@ -358,7 +359,11 @@ def _parse_results(tree: str, origin: str, dest: str, url: str, depart: str = ""
             "link": url,
         })
 
-    return results
+    # Keep the CHEAPEST options, not the first in page order — Google's "top
+    # flights" ranking buried a $1,340 THAI fare below the cap on 2026-07-16.
+    results.sort(key=lambda f: f["price_total"]
+                 if isinstance(f["price_total"], (int, float)) else float("inf"))
+    return results[:MAX_RESULTS]
 
 
 # Open-jaw watch: BOS→DAC + DPS→BOS on ONE multi-city ticket (the middle

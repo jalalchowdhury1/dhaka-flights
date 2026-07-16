@@ -54,7 +54,7 @@ def build_message(all_flights: list, openjaws: list = None) -> str:
     structures = best_structures(all_flights, openjaws)
     if structures:
         s = structures[0]
-        flag = "" if s["valid"] else " ⚠️ home after Feb 7"
+        flag = "" if s["valid"] else f" ⚠️ {s.get('flag') or 'check dates'}"
         lines.append(f"💰 *Best today: ${s['total']:,} total — {s['name']}*{flag}")
         lines.append(f"_Dhaka {s['dhaka_days']} days · Bali {s['bali_nights']} nights · home {s['home']}_")
         if "openjaw" in s:
@@ -65,7 +65,7 @@ def build_message(all_flights: list, openjaws: list = None) -> str:
             lines.append("")
             lines.append("*Other structures:*")
             for s2 in structures[1:]:
-                flag = "" if s2["valid"] else " ⚠️ home after Feb 7"
+                flag = "" if s2["valid"] else f" ⚠️ {s2.get('flag') or 'check dates'}"
                 lines.append(f"  ${s2['total']:,} — {s2['name']} · home {s2['home']}{flag}")
     elif best_combos(all_flights, top_n=1):
         c = best_combos(all_flights, top_n=1)[0]

@@ -33,11 +33,28 @@ def test_feb7_return_flagged_invalid_but_reported():
     assert s[0]["total"] == 3382 + 1099
 
 
-def test_openjaw_without_compatible_middle_leg_is_dropped():
-    # Only middle option arrives Feb 2 → 4 nights before Feb 6 return: no pair
+def test_openjaw_with_only_4_night_pairing_is_kept_but_flagged():
+    # Regression for 2026-07-16: no DAC→DPS fare arrived Feb 1, so the exact-
+    # 5-night rule silently hid the valid $3,423 Feb-6 open-jaw. It must now
+    # appear with a flag instead of vanishing.
     mid_feb2 = _f("DAC→DPS", "February 2, 2027", "February 2, 2027", 1100)
-    s = best_structures([LEG1, mid_feb2, LEG3], [OJ_FEB6])
-    assert all("openjaw" not in x for x in s)
+    s = best_structures([mid_feb2], [OJ_FEB6])
+    assert len(s) == 1
+    assert s[0]["kind"] == "openjaw"
+    assert s[0]["total"] == 3423 + 1100
+    assert s[0]["valid"] is False
+    assert s[0]["bali_nights"] == 4
+    assert "4-night" in s[0]["flag"]
+
+
+def test_five_night_pairing_beats_cheaper_four_night_for_openjaw():
+    mid_feb1 = _f("DAC→DPS", "February 1, 2027", "February 1, 2027", 1340)  # 5 nights
+    mid_feb2 = _f("DAC→DPS", "February 2, 2027", "February 2, 2027", 900)   # 4 nights, cheaper
+    s = best_structures([mid_feb1, mid_feb2], [OJ_FEB6])
+    oj = next(x for x in s if x["kind"] == "openjaw")
+    assert oj["bali_nights"] == 5
+    assert oj["valid"] is True
+    assert oj["total"] == 3423 + 1340
 
 
 def test_visa_cap_applies_to_openjaw_middle_leg():

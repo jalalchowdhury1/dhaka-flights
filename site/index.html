@@ -254,7 +254,7 @@ function ojLine(oj) {
 
 function structureCard(s, hero) {
   const badge = s.valid ? `<span class="badge good">home ${esc(s.home)} ✓</span>`
-                        : `<span class="badge warn">home ${esc(s.home)} — after Feb 7</span>`;
+                        : `<span class="badge warn">⚠️ ${esc(s.flag || "check dates")}</span>`;
   const num = hero ? `<div class="hero-num">${usd(s.total)}</div>` : `<b style="font-size:1.15rem">${usd(s.total)}</b>`;
   return `<div class="card">
     ${num}
