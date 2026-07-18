@@ -7,7 +7,7 @@
 
 Daily price tracker for one fixed family trip (2 adults + 1 child with seat):
 **BOS → Dhaka (≤29 days; 30-day visa) → Bali (5 nights; Marriott 5th-night-free)
-→ BOS, home by Feb 7, 2027.** Every day at 3am it scrapes Google Flights, ranks
+→ BOS, home by Feb 7, 2027.** Every night at midnight it scrapes Google Flights, ranks
 *ticketing structures* (three one-ways vs an open-jaw multi-city ticket + separate
 Dhaka→Bali hop), writes a Google Sheet, Telegrams the best price, and publishes
 `site/data.json` for the public dashboard at **dhaka-flights.vercel.app**.
@@ -18,7 +18,7 @@ Redesigned 2026-07-15 from the original round-trip BOS⇄DAC/BKK watcher; design
 ## 2. Architecture / data flow
 
 ```
-launchd 3:00am (com.jalal.dhaka-flights.plist) → run_daily.sh → run_daily.py
+launchd 12:00am (com.jalal.dhaka-flights.plist, parallel with com.jalal.carmax — isolated browse sessions) → run_daily.sh → run_daily.py
   scraper.py   scrape_all()          9 one-way searches (LEGS: BOS→DAC Jan 4–6,
                                      DAC→DPS Feb 1–3, DPS→BOS Feb 5–7)
                scrape_openjaw_all()  3 multi-city searches: OPENJAW_SEARCHES
