@@ -14,6 +14,16 @@ export PATH="/Users/jalalchowdhury/.nvm/versions/node/v24.15.0/bin:/usr/local/bi
 
 cd "/Users/jalalchowdhury/PycharmProjects/Dhaka flights"
 
+# Policy: never START a run after 5:30 AM — Jalal is awake and working. Catches
+# launchd wake-replays of a missed midnight/2:00 slot, which would otherwise
+# fire the moment the Mac wakes and land mid-workday. (run_daily.py's own
+# .last_run_date stamp already prevents a duplicate once one run has succeeded.)
+h=$(date +%-H); m=$(date +%-M)
+if [ "$h" -gt 5 ] || { [ "$h" -eq 5 ] && [ "$m" -ge 30 ]; }; then
+    echo "=== $(date '+%F %H:%M') past 5:30 AM — skipping (wake-replay of a missed slot) ==="
+    exit 0
+fi
+
 /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/bin/python3 run_daily.py
 rc=$?
 if [ $rc -ne 0 ]; then
