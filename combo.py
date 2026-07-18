@@ -169,3 +169,136 @@ def best_combos(flights, top_n=3) -> list:
                 })
     combos.sort(key=lambda x: (x["bali_nights"] != IDEAL_BALI_NIGHTS, x["total"]))
     return combos[:top_n]
+
+
+# ── Singapore-detour variant (2026-07-18) ──────────────────────────────────
+# Dhaka 2 nights shorter, 2 nights in Singapore en route to Bali. Kept as an
+# isolated parallel path so the direct-trip ranking above is never destabilized.
+ALLOWED_SG_NIGHTS = (1, 2, 3)
+IDEAL_SG_NIGHTS = 2
+
+
+def _sg_middles(flights, sg_tickets):
+    """Every valid Dhaka→Singapore→Bali MIDDLE, priced two ways:
+      - two one-ways: DAC→SIN + SIN→DPS
+      - one multi-city ticket: DAC→SIN→DPS (from sg_tickets)
+    Each: {cost, dhaka_out (DAC depart), bali_in (Bali arrival), sg_nights,
+    kind, legs (for display), ticket}."""
+    middles = []
+    for a in _priced(flights, "DAC→SIN"):
+        a_dep, a_arr = _date(a.get("depart", "")), _arrival(a)
+        if not (a_dep and a_arr):
+            continue
+        for b in _priced(flights, "SIN→DPS"):
+            b_dep, b_arr = _date(b.get("depart", "")), _arrival(b)
+            if not (b_dep and b_arr):
+                continue
+            sg_nights = (b_dep - a_arr).days
+            if sg_nights not in ALLOWED_SG_NIGHTS:
+                continue
+            middles.append({
+                "cost": a["price_total"] + b["price_total"],
+                "dhaka_out": a_dep, "bali_in": b_arr, "sg_nights": sg_nights,
+                "kind": "2 one-ways", "legs": [a, b], "ticket": None,
+            })
+    for t in (sg_tickets or []):
+        if not isinstance(t.get("price_total"), (int, float)):
+            continue
+        d1, d2 = _date(t.get("out_date", "")), _date(t.get("ret_date", ""))
+        if not (d1 and d2):
+            continue
+        arr = _date(t.get("out_arrive", "")) or d1  # DAC→SIN arrival (may be +1)
+        sg_nights = (d2 - arr).days
+        if sg_nights not in ALLOWED_SG_NIGHTS:
+            sg_nights = (d2 - d1).days
+        middles.append({
+            "cost": t["price_total"], "dhaka_out": d1, "bali_in": d2,
+            "sg_nights": sg_nights, "kind": "1 ticket", "legs": [], "ticket": t,
+        })
+    return middles
+
+
+def best_singapore(flights, openjaws, sg_tickets, top_n=3) -> list:
+    """Via-Singapore trip structures, cheapest-first. Long legs = two one-ways
+    (BOS→DAC + DPS→BOS) OR a direct open-jaw ticket; the Singapore middle is
+    whichever of {two one-ways, one ticket} is cheaper & valid. Entries mirror
+    best_structures shape, tagged trip='via-SIN'. Never drops a valid trip:
+    only 4/6-night Bali or 1/3 Singapore-night compromises get flagged."""
+    middles = _sg_middles(flights, sg_tickets)
+    if not middles:
+        return []
+    structures = []
+
+    def _consider(name, kind, long_cost, dac_in, ret, home, extra_legs, openjaw=None):
+        exact, near = [], []
+        for m in middles:
+            dhaka_days = (m["dhaka_out"] - dac_in).days + 1
+            if not 1 <= dhaka_days <= MAX_DHAKA_DAYS:
+                continue
+            nights = (ret - m["bali_in"]).days
+            if nights not in ALLOWED_BALI_NIGHTS:
+                continue
+            (exact if nights == IDEAL_BALI_NIGHTS else near).append((m, nights, dhaka_days))
+        pool = exact or near
+        if not pool:
+            return
+        m, nights, dhaka_days = min(pool, key=lambda t: t[0]["cost"])
+        flags = []
+        if home > HOME_DEADLINE:
+            flags.append(f"home {home.strftime('%b %-d')} — after Feb 7")
+        if nights != IDEAL_BALI_NIGHTS:
+            flags.append(f"only a {nights}-night Bali pairing today")
+        if m["sg_nights"] != IDEAL_SG_NIGHTS:
+            flags.append(f"{m['sg_nights']} Singapore night(s), wanted {IDEAL_SG_NIGHTS}")
+        structures.append({
+            "name": f"{name} · {m['kind']} middle",
+            "kind": kind, "trip": "via-SIN",
+            "total": long_cost + m["cost"],
+            "valid": not flags, "flag": " · ".join(flags) or None,
+            "home": home.strftime("%b %-d"),
+            "dhaka_days": dhaka_days, "bali_nights": nights,
+            "sg_nights": m["sg_nights"],
+            "legs": list(extra_legs) + list(m["legs"]),
+            "sg_ticket": m["ticket"],
+            **({"openjaw": openjaw} if openjaw else {}),
+        })
+
+    # Long legs as two one-ways
+    for a in _priced(flights, "BOS→DAC"):
+        dac_in = _arrival(a)
+        if not dac_in:
+            continue
+        for c in _priced(flights, "DPS→BOS"):
+            c_dep = _date(c.get("depart", ""))
+            if not c_dep:
+                continue
+            home = _arrival(c) or (c_dep + timedelta(days=1))
+            _consider("via Singapore · one-ways", "sg-oneways",
+                      a["price_total"] + c["price_total"], dac_in, c_dep, home, [a, c])
+
+    # Long legs as a direct open-jaw ticket (skip labeled variants like stopover)
+    best_oj = {}
+    for oj in openjaws:
+        if oj.get("kind") not in (None, "openjaw"):
+            continue
+        if not isinstance(oj.get("price_total"), (int, float)):
+            continue
+        key = (oj["out_date"], oj["ret_date"])
+        if key not in best_oj or oj["price_total"] < best_oj[key]["price_total"]:
+            best_oj[key] = oj
+    for oj in best_oj.values():
+        ret = _date(oj["ret_date"])
+        dac_in = _date(oj.get("out_arrive", "")) or (_date(oj["out_date"]) + timedelta(days=1))
+        if not ret:
+            continue
+        _consider("via Singapore · open-jaw", "sg-openjaw",
+                  oj["price_total"], dac_in, ret, ret + timedelta(days=1), [], openjaw=oj)
+
+    structures.sort(key=lambda s: (not s["valid"], s["total"]))
+    seen, deduped = set(), []
+    for s in structures:            # cheapest per kind → at most one per kind
+        if s["kind"] in seen:
+            continue
+        seen.add(s["kind"])
+        deduped.append(s)
+    return deduped[:top_n]

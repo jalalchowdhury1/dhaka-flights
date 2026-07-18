@@ -12,6 +12,15 @@ Daily price tracker for one fixed family trip (2 adults + 1 child with seat):
 Dhaka→Bali hop), writes a Google Sheet, Telegrams the best price, and publishes
 `site/data.json` for the public dashboard at **dhaka-flights.vercel.app**.
 
+**Singapore-detour variant (2026-07-18):** the SAME trip with Dhaka 2 nights shorter
+and 2 nights in Singapore en route to Bali (BOS→Dhaka→**Singapore**→Bali→BOS). Tracked
+**alongside** the direct trip every night so the cost of adding Singapore is visible.
+The middle (Dhaka→Singapore→Bali) is priced BOTH as two one-ways (DAC→SIN + SIN→DPS)
+and as one multi-city ticket (DAC→SIN→DPS), cheaper wins. Bali (5 nights) and the
+return are unchanged; only the Dhaka exit moves ~2 days earlier. All new logic lives
+in `combo.best_singapore` and is isolated from the direct-trip ranking. Spec:
+`docs/superpowers/specs/2026-07-18-singapore-detour-variant-design.md`.
+
 Redesigned 2026-07-15 from the original round-trip BOS⇄DAC/BKK watcher; design spec:
 `docs/superpowers/specs/2026-07-15-three-leg-trip-redesign-design.md`.
 
@@ -19,16 +28,23 @@ Redesigned 2026-07-15 from the original round-trip BOS⇄DAC/BKK watcher; design
 
 ```
 launchd 12:00am + 2:00am retry slot (com.jalal.dhaka-flights.plist, parallel with com.jalal.carmax — isolated browse sessions; retry no-ops after success via .last_run_date; run_daily.sh Telegrams on a crash exit AND refuses to START after 5:30 AM — user awake/working — so wake-replays of missed slots skip for the day) → run_daily.sh → run_daily.py
-  scraper.py   scrape_all()          9 one-way searches (LEGS: BOS→DAC Jan 4–6,
-                                     DAC→DPS Feb 1–3, DPS→BOS Feb 5–7)
+  scraper.py   scrape_all()          18 one-way searches (LEGS: BOS→DAC Jan 4–6,
+                                     DAC→DPS Jan 31–Feb 3, DPS→BOS Feb 5–7, plus
+                                     DAC→SIN Jan 29–Feb 1, SIN→DPS Jan 31–Feb 3)
                scrape_openjaw_all()  3 multi-city searches: OPENJAW_SEARCHES
                                      (BOS→DAC Jan 4 + DPS→BOS Feb 6 / Feb 7) +
                                      STOPOVER_SEARCH (BOS→IST / IST→DAC / DPS→BOS,
                                      the Turkish 30h-Istanbul free-hotel itinerary)
+               scrape_sg_tickets_all() 4 multi-city DAC→SIN→DPS tickets (SEPARATE
+                                     list, NOT mixed into openjaws — the direct
+                                     open-jaw loop would mis-pair them)
         │  drives real Chrome via the `browse` CLI (a11y-tree snapshots)
         ▼
   combo.py     best_combos()       cheapest valid one-way triple
                best_structures()   one-ways vs open-jaw+middle, cheapest first
+               best_singapore()    via-SIN trips (isolated); long legs = one-ways
+                                   or open-jaw, SG middle = cheaper of 2-one-ways
+                                   / 1-ticket; flags off-ideal Bali/Singapore nights
         ▼
   sheet_writer.py → Google Sheet tab "Google Flights" (one-ways only, replaced daily)
   notify_telegram.py → Telegram: best structure + cheapest per leg

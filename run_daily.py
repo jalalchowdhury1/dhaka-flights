@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
-from scraper import scrape_all, scrape_openjaw_all
+from scraper import scrape_all, scrape_openjaw_all, scrape_sg_tickets_all
 from sheet_writer import write_to_sheet
 from notify_telegram import notify_cheapest
 from publish import publish
@@ -67,20 +67,22 @@ def main():
     flights.sort(key=sort_key)
 
     openjaws = scrape_openjaw_all()
+    sg_tickets = scrape_sg_tickets_all()   # Singapore-detour multi-city tickets
 
     # Self-check: any invariant violation rides along to Telegram + the site,
     # so data losses are loud instead of silent (see sanity.py).
-    from combo import best_structures
+    from combo import best_structures, best_singapore
     from sanity import self_check
     from publish import last_history_entry
+    sg = best_singapore(flights, openjaws, sg_tickets)
     warnings = self_check(flights, openjaws, best_structures(flights, openjaws),
-                          last_history_entry())
+                          last_history_entry(), sg=sg, sg_tickets=sg_tickets)
     for w in warnings:
         print(f"SELF-CHECK WARNING: {w}")
 
     write_to_sheet(flights, tab_name="Google Flights")
-    notify_cheapest(flights, openjaws, warnings)
-    publish(flights, openjaws, warnings)
+    notify_cheapest(flights, openjaws, warnings, sg=sg)
+    publish(flights, openjaws, warnings, sg_tickets=sg_tickets)
     mark_ran_today()
     print("=== Done ===")
 

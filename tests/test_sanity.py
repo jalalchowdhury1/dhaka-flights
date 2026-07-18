@@ -1,6 +1,6 @@
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from combo import best_structures
+from combo import best_structures, best_singapore
 from sanity import self_check
 from tests.test_combo import LEG1, LEG2, LEG3, _f
 from tests.test_structures import OJ_FEB6, STOPOVER, MID_FEB1
@@ -24,7 +24,8 @@ def _full_coverage(flights):
 def test_clean_day_produces_no_warnings():
     flights = _full_coverage(ALL_FLIGHTS)
     ojs = [OJ_FEB6, STOPOVER]
-    w = self_check(flights, ojs, best_structures(flights, ojs))
+    sg = best_singapore(flights, ojs, [])   # padded SIN legs → a via-SIN trip exists
+    w = self_check(flights, ojs, best_structures(flights, ojs), sg=sg)
     assert w == []
 
 

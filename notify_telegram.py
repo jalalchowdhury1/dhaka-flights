@@ -3,12 +3,13 @@ import urllib.request
 import urllib.parse
 import json
 
-from combo import best_combos, cheapest_by_leg, best_structures
+from combo import best_combos, cheapest_by_leg, best_structures, best_singapore
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
-LEG_EMOJI = {"BOS→DAC": "🇧🇩", "DAC→DPS": "🌴", "DPS→BOS": "🏠"}
+LEG_EMOJI = {"BOS→DAC": "🇧🇩", "DAC→DPS": "🌴", "DPS→BOS": "🏠",
+             "DAC→SIN": "🇸🇬", "SIN→DPS": "🌴", "DAC→SIN→DPS": "🇸🇬"}
 
 
 def send_message(text: str) -> bool:
@@ -47,8 +48,13 @@ def _openjaw_line(oj: dict) -> str:
     return f"🎫 {route} · ${oj['price_total']:,} · [book]({oj['link']})"
 
 
+def _sg_ticket_line(t: dict) -> str:
+    return (f"🇸🇬 DAC→SIN→DPS · {_short_date(t['out_date'])} + {_short_date(t['ret_date'])} "
+            f"(one ticket) · {t['airline']} · ${t['price_total']:,} · [book]({t['link']})")
+
+
 def build_message(all_flights: list, openjaws: list = None,
-                  warnings: list = None) -> str:
+                  warnings: list = None, sg: list = None) -> str:
     openjaws = openjaws or []
     lines = ["✈️ *BOS → Dhaka → Bali → BOS* (2 adults + 1 child)\n"]
 
@@ -89,6 +95,29 @@ def build_message(all_flights: list, openjaws: list = None,
         else:
             lines.append("⚠️ No combo satisfied the visa/5-night/Feb-7 rules today")
 
+    # Singapore-detour variant, shown alongside for comparison.
+    if sg:
+        s = sg[0]
+        direct_total = structures[0]["total"] if structures else None
+        delta = ""
+        if isinstance(direct_total, (int, float)):
+            d = s["total"] - direct_total
+            delta = f" (+${d:,} vs direct)" if d >= 0 else f" (−${-d:,} vs direct!)"
+        flag = "" if s["valid"] else f" ⚠️ {s.get('flag') or 'check dates'}"
+        lines.append(f"\n🇸🇬 *Via Singapore: ${s['total']:,} total*{delta}{flag}")
+        lines.append(f"_Dhaka {s['dhaka_days']} days · Singapore {s['sg_nights']} nights · "
+                     f"Bali {s['bali_nights']} nights · home {s['home']}_")
+        if s.get("openjaw"):
+            lines.append(_openjaw_line(s["openjaw"]))
+        if s.get("sg_ticket"):
+            lines.append(_sg_ticket_line(s["sg_ticket"]))
+        for f in s["legs"]:
+            lines.append(_leg_line(f))
+        if len(sg) > 1:
+            for s2 in sg[1:]:
+                flag = "" if s2["valid"] else f" ⚠️ {s2.get('flag') or 'check dates'}"
+                lines.append(f"  ${s2['total']:,} — {s2['name']} · home {s2['home']}{flag}")
+
     best = cheapest_by_leg(all_flights)
     if best:
         lines.append("\n*Cheapest per leg* (dates may not combine):")
@@ -101,8 +130,8 @@ def build_message(all_flights: list, openjaws: list = None,
 
 
 def notify_cheapest(all_flights: list, openjaws: list = None,
-                    warnings: list = None) -> None:
-    ok = send_message(build_message(all_flights, openjaws, warnings))
+                    warnings: list = None, sg: list = None) -> None:
+    ok = send_message(build_message(all_flights, openjaws, warnings, sg))
     if ok:
         print("Telegram notification sent.")
     else:

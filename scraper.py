@@ -17,6 +17,14 @@ LEGS = [
      "dates": ["January 31, 2027", "February 1, 2027", "February 2, 2027", "February 3, 2027"]},
     {"origin": "DPS", "dest": "BOS",
      "dates": ["February 5, 2027", "February 6, 2027", "February 7, 2027"]},
+    # Singapore-detour variant (2026-07-18): Dhaka 2 nights shorter, 2 nights in
+    # Singapore en route to Bali. DAC→SIN is the DAC→DPS window shifted 2 days
+    # earlier; SIN→DPS (2 nights later) reuses the old DAC→DPS window. Bali (5
+    # nights) and the return are unchanged. See combo.best_singapore.
+    {"origin": "DAC", "dest": "SIN",
+     "dates": ["January 29, 2027", "January 30, 2027", "January 31, 2027", "February 1, 2027"]},
+    {"origin": "SIN", "dest": "DPS",
+     "dates": ["January 31, 2027", "February 1, 2027", "February 2, 2027", "February 3, 2027"]},
 ]
 
 TRIP_YEAR = 2027
@@ -27,8 +35,10 @@ AIRPORT_PICK = {
     "DAC": ["Hazrat Shahjalal", "Dhaka"],
     "DPS": ["Ngurah Rai", "Denpasar", "Bali"],
     # Never fall back to the bare code here: "IST" substring-matches random
-    # tree lines ("listitem", ...) and clicks derail the whole form.
+    # tree lines ("listitem", ...) and clicks derail the whole form. "SIN"
+    # would do the same ("listitem", "single"), so give it explicit picks.
     "IST": ["Istanbul Airport", "Istanbul"],
+    "SIN": ["Singapore Changi", "Changi", "Singapore"],
 }
 
 # 2 adults + 1 child (aged 2-11, own seat). Google Flights shows the TOTAL
@@ -579,6 +589,50 @@ def scrape_stopover() -> list:
         return out
 
     return _scrape_multicity(cfg["legs"], parse, f"stopover: {legs_str}")
+
+
+# Singapore-detour middle as a single multi-city ticket: DAC→SIN then SIN→DPS
+# (2 nights in Singapore). Paired so SIN→DPS departs 2 days after DAC→SIN. The
+# two-one-way version of the same middle comes from the DAC→SIN / SIN→DPS LEGS.
+SG_TICKET_SEARCHES = [
+    ("January 29, 2027", "January 31, 2027"),
+    ("January 30, 2027", "February 1, 2027"),
+    ("January 31, 2027", "February 2, 2027"),
+    ("February 1, 2027", "February 3, 2027"),
+]
+
+
+def scrape_sg_ticket(dac_sin_date: str, sin_dps_date: str) -> list:
+    """Multi-city DAC→SIN + SIN→DPS on one ticket. Returns dicts tagged
+    kind='sg-ticket' with out_date=DAC→SIN, ret_date=SIN→DPS (the SIN→DPS
+    date doubles as the Bali-arrival date; SIN→DPS is a short same-day hop)."""
+    legs = [("DAC", "SIN", dac_sin_date), ("SIN", "DPS", sin_dps_date)]
+
+    def parse(tree, url):
+        out = []
+        for f in _parse_openjaw_results(tree, dac_sin_date, sin_dps_date, url):
+            f.update(kind="sg-ticket", route="DAC→SIN→DPS")
+            out.append(f)
+        return out
+
+    return _scrape_multicity(legs, parse,
+                             f"sg-ticket: DAC->SIN {dac_sin_date} + SIN->DPS {sin_dps_date}")
+
+
+def scrape_sg_tickets_all() -> list:
+    """All Singapore-detour multi-city tickets. Kept SEPARATE from the open-jaw
+    list — the direct open-jaw pairing loop would mis-handle these."""
+    all_results = []
+    for i, (d1, d2) in enumerate(SG_TICKET_SEARCHES, 1):
+        print(f"[sg-ticket {i}/{len(SG_TICKET_SEARCHES)}] DAC→SIN {d1} + SIN→DPS {d2}")
+        results = scrape_sg_ticket(d1, d2)
+        if not results:
+            print("  0 results — retrying once with a fresh session...")
+            time.sleep(5)
+            results = scrape_sg_ticket(d1, d2)
+        all_results += results
+        print(f"  Got {len(results)} options")
+    return all_results
 
 
 def scrape_openjaw_all() -> list:

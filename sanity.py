@@ -23,9 +23,22 @@ def _short(d):
     return f"{parts[0][:3]} {parts[1]}" if len(parts) >= 2 else d
 
 
-def self_check(flights, openjaws, structures, prev_entry=None) -> list:
+def self_check(flights, openjaws, structures, prev_entry=None,
+               sg=None, sg_tickets=None) -> list:
     """Return a list of human-readable warning strings (empty = all good)."""
     warnings = []
+
+    # 0. Singapore-detour variant: if we scraped Singapore data (one-way legs
+    # priced, or a multi-city ticket priced) but built NO via-SIN structure,
+    # the whole variant vanished silently — surface it (same principle as #1).
+    sg_leg_prices = any(
+        isinstance(f.get("price_total"), (int, float))
+        for f in flights if f.get("route") in ("DAC→SIN", "SIN→DPS"))
+    sg_ticket_prices = any(
+        isinstance(t.get("price_total"), (int, float)) for t in (sg_tickets or []))
+    if (sg_leg_prices or sg_ticket_prices) and not sg:
+        warnings.append("Singapore-detour data was scraped but NO via-SIN trip "
+                        "was built — check pairing rules in combo.best_singapore")
 
     # 1. Every priced multi-city variant is represented in structures
     scraped = {}

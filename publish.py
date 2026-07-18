@@ -6,7 +6,7 @@ import json
 import os
 import subprocess
 
-from combo import best_combos, cheapest_by_leg, best_structures
+from combo import best_combos, cheapest_by_leg, best_structures, best_singapore
 
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(REPO_DIR, "site", "data.json")
@@ -33,8 +33,9 @@ def _jsonable(obj):
 
 
 def build_payload(flights: list, openjaws: list, history: list, today: str,
-                  warnings: list = None) -> dict:
+                  warnings: list = None, sg_tickets: list = None) -> dict:
     structures = best_structures(flights, openjaws)
+    singapore = best_singapore(flights, openjaws, sg_tickets or [])
     legs_min = {r: f["price_total"] for r, f in cheapest_by_leg(flights).items()}
     oj_min = {}
     for oj in openjaws:
@@ -60,6 +61,8 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
              if s.get("kind") == "stopover" and s["valid"]), None),
         "openjaw_min": oj_min,
         "legs_min": legs_min,
+        "singapore_total": next((s["total"] for s in singapore if s["valid"]),
+                                singapore[0]["total"] if singapore else None),
     }
     history = [h for h in history if h.get("date") != today] + [entry]
 
@@ -72,6 +75,7 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
             "rules": "Dhaka ≤29 days · 5 nights in Bali · home by Feb 7, 2027",
         },
         "structures": structures,
+        "singapore": singapore,
         "combos": best_combos(flights, top_n=3),
         "cheapest_by_leg": cheapest_by_leg(flights),
         "openjaws": openjaws,
@@ -80,10 +84,12 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
     }
 
 
-def publish(flights: list, openjaws: list, warnings: list = None) -> None:
+def publish(flights: list, openjaws: list, warnings: list = None,
+            sg_tickets: list = None) -> None:
     try:
         today = datetime.date.today().isoformat()
-        payload = build_payload(flights, openjaws, _load_history(), today, warnings)
+        payload = build_payload(flights, openjaws, _load_history(), today, warnings,
+                                sg_tickets)
         os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
         with open(DATA_FILE, "w") as f:
             json.dump(payload, f, indent=1, default=_jsonable)

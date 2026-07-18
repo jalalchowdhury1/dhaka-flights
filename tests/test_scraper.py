@@ -49,13 +49,17 @@ def test_parse_results_nonstop_without_layover():
     assert results[0]["layovers"] == "none"
 
 
-def test_legs_config_is_three_one_way_legs():
+def test_legs_config_has_direct_and_singapore_legs():
+    # Core direct trip (first 3) + Singapore-detour legs (DAC→SIN, SIN→DPS).
     assert [(l["origin"], l["dest"]) for l in LEGS] == [
-        ("BOS", "DAC"), ("DAC", "DPS"), ("DPS", "BOS")]
-    # 3 + 4 + 3: DAC→DPS includes Jan 31 (overnights arrive Feb 1, the only
-    # cheap 5-night pairing for a Feb 6 return)
-    assert sum(len(l["dates"]) for l in LEGS) == 10
+        ("BOS", "DAC"), ("DAC", "DPS"), ("DPS", "BOS"),
+        ("DAC", "SIN"), ("SIN", "DPS")]
+    # 3 + 4 + 3 core, + 4 + 4 Singapore = 18. DAC→DPS keeps Jan 31 (overnights
+    # arrive Feb 1, the only cheap 5-night pairing for a Feb 6 return).
+    assert sum(len(l["dates"]) for l in LEGS) == 18
     assert "January 31, 2027" in LEGS[1]["dates"]
+    # DAC→SIN is the DAC→DPS window shifted 2 days earlier (2 fewer Dhaka nights)
+    assert "January 29, 2027" in LEGS[3]["dates"]
 
 
 def test_run_timeout_returns_empty_and_counts(monkeypatch):
@@ -91,6 +95,6 @@ def test_scrape_all_retries_route_once_then_moves_on(monkeypatch):
     monkeypatch.setattr(scraper.time, "sleep", lambda s: None)
     result = scraper.scrape_all()
     assert scraper.DIAG["aborted_early"] is False
-    # 10 searches: first call empty + retry, rest succeed first try = 11 calls
-    assert calls["n"] == 11
-    assert len(result) == 10
+    # 18 searches: first call empty + retry, rest succeed first try = 19 calls
+    assert calls["n"] == 19
+    assert len(result) == 18
