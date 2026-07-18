@@ -18,7 +18,7 @@ Redesigned 2026-07-15 from the original round-trip BOS⇄DAC/BKK watcher; design
 ## 2. Architecture / data flow
 
 ```
-launchd 12:00am (com.jalal.dhaka-flights.plist, parallel with com.jalal.carmax — isolated browse sessions) → run_daily.sh → run_daily.py
+launchd 12:00am + 2:00am retry slot (com.jalal.dhaka-flights.plist, parallel with com.jalal.carmax — isolated browse sessions; the retry is a no-op after success via .last_run_date, and run_daily.sh now Telegrams on a crash exit) → run_daily.sh → run_daily.py
   scraper.py   scrape_all()          9 one-way searches (LEGS: BOS→DAC Jan 4–6,
                                      DAC→DPS Feb 1–3, DPS→BOS Feb 5–7)
                scrape_openjaw_all()  3 multi-city searches: OPENJAW_SEARCHES

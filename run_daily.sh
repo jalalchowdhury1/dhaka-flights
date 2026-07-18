@@ -15,3 +15,14 @@ export PATH="/Users/jalalchowdhury/.nvm/versions/node/v24.15.0/bin:/usr/local/bi
 cd "/Users/jalalchowdhury/PycharmProjects/Dhaka flights"
 
 /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/bin/python3 run_daily.py
+rc=$?
+if [ $rc -ne 0 ]; then
+    # A hard crash (exception) is otherwise silent — the in-script Telegram
+    # warnings only cover zero-flight runs. Same pattern as carmax-scraper.
+    set -a; source .env 2>/dev/null; set +a
+    [ -n "$TELEGRAM_TOKEN" ] && curl -fsS -m 15 "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+        --data-urlencode chat_id="${TELEGRAM_CHAT_ID}" \
+        --data-urlencode text="⚠️ Dhaka flights run CRASHED (exit $rc) at $(date '+%H:%M'). See cron.log. Auto-retries at 2:00 AM if before then." \
+        >/dev/null 2>&1 || true
+fi
+exit $rc
