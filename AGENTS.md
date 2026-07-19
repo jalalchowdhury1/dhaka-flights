@@ -12,14 +12,20 @@ Daily price tracker for one fixed family trip (2 adults + 1 child with seat):
 Dhaka→Bali hop), writes a Google Sheet, Telegrams the best price, and publishes
 `site/data.json` for the public dashboard at **dhaka-flights.vercel.app**.
 
-**Singapore-detour variant (2026-07-18):** the SAME trip with Dhaka 2 nights shorter
-and 2 nights in Singapore en route to Bali (BOS→Dhaka→**Singapore**→Bali→BOS). Tracked
-**alongside** the direct trip every night so the cost of adding Singapore is visible.
-The middle (Dhaka→Singapore→Bali) is priced BOTH as two one-ways (DAC→SIN + SIN→DPS)
-and as one multi-city ticket (DAC→SIN→DPS), cheaper wins. Bali (5 nights) and the
-return are unchanged; only the Dhaka exit moves ~2 days earlier. All new logic lives
-in `combo.best_singapore` and is isolated from the direct-trip ranking. Spec:
-`docs/superpowers/specs/2026-07-18-singapore-detour-variant-design.md`.
+**THE MAIN TRIP (since 2026-07-18 evening):** BOS → **Istanbul (2–3 nights)** →
+Dhaka → **Singapore (1–3 nights)** → **Bali (5 nights, FIXED)** → BOS. Hard rules:
+5 Bali nights, home ≤ Feb 7, Dhaka ≤ 29 days. Flexible: Istanbul & Singapore nights —
+price decides. **Airline rules:** US-Bangla EXCLUDED everywhere (filtered in
+`combo._priced`); THAI / Singapore Airlines PREFERRED on the SG legs — a preferred
+middle wins over a cheaper non-preferred one, which surfaces as `alt_note`
+("$X cheaper on <airline> if airline-flexible"), never silently chosen.
+The combined trip needs NO extra searches: it pairs the Istanbul-stopover tickets
+(long legs) with the Singapore middles inside `combo.best_singapore` — kinds
+`sg-stopover2` (= the main trip, history metric `combined_total`) and `sg-stopover`
+(TK-30h + SIN). Singapore-only variants (kinds `sg-openjaw`/`sg-oneways`,
+metric `singapore_total`) and all direct/Istanbul-only structures are still tracked
+for comparison. Spec: `docs/superpowers/specs/2026-07-18-singapore-detour-variant-design.md`
+(the combined-trip + airline-rules evolution is documented here and in git history).
 
 Redesigned 2026-07-15 from the original round-trip BOS⇄DAC/BKK watcher; design spec:
 `docs/superpowers/specs/2026-07-15-three-leg-trip-redesign-design.md`.
@@ -55,10 +61,11 @@ launchd 12:00am + 2:00am retry slot (com.jalal.dhaka-flights.plist, parallel wit
         ▼
   site/index.html (static, deployed once on Vercel) fetches data.json raw from
   GitHub on every page load — no redeploy needed for data updates. Three tabs:
-  Today · 🇸🇬 Singapore (the via-SIN variant + Δ-vs-direct tile; renders a
-  graceful empty state until data.json has a `singapore` section) · History.
-  Strip tiles + chart + History columns track openjaw / TK stopover /
-  Istanbul-2-night / one-ways / via-Singapore totals.
+  ⭐ The Trip (the MAIN combined itinerary: visual timeline chips, hero card,
+  ⚖️ option matrix comparing every variant's total/Δ-vs-main/nights) ·
+  🔀 All options (every structure card grouped: IST+SIN, SIN-only, IST-only,
+  direct) · History (columns incl. ⭐ IST+SIN). Strip tiles + chart lead with
+  combined_total. All views degrade gracefully when a section is missing.
 ```
 
 ## 3. How to run / test / deploy
