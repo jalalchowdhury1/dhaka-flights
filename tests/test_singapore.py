@@ -121,3 +121,12 @@ def test_preferred_airline_beats_cheaper_with_note():
     assert "Singapore Airlines" in s["sg_airlines"]
     assert s["total"] == 2400 + 600 + 200 + 2700   # preferred won despite +$200
     assert "cheaper on Biman" in (s["alt_note"] or "")
+
+
+def test_mixed_airline_ticket_is_not_preferred():
+    from combo import _is_preferred
+    assert _is_preferred("Singapore Airlines") is True
+    assert _is_preferred("THAI") is True
+    assert _is_preferred("Malaysia Airlines and Singapore Airlines") is False
+    assert _is_preferred("Thai Lion Air") is False
+    assert _is_preferred("THAI and Singapore Airlines") is True

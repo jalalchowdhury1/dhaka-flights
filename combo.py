@@ -9,6 +9,7 @@ Uses the arrival dates parsed from Google's result text; when a flight's
 arrival didn't parse, falls back to depart+1 day for long-haul legs
 (BOS→DAC, DPS→BOS) and same-day for DAC→DPS.
 """
+import re
 from datetime import datetime, timedelta
 
 MAX_DHAKA_DAYS = 29
@@ -29,9 +30,16 @@ def _airline_ok(f) -> bool:
 
 
 def _is_preferred(airline: str) -> bool:
-    a = (airline or "").lower()
-    # exact-ish: avoid "Thai Lion Air" / "Thai AirAsia" matching "thai"
-    return a == "thai" or "thai airways" in a or "singapore airlines" in a
+    """True only if EVERY carrier named in the string is THAI or Singapore
+    Airlines — "Malaysia Airlines and Singapore Airlines" is NOT preferred
+    (caught live 2026-07-18: substring matching paid +$1,328 for a half-MH
+    ticket). Exact-ish tokens avoid "Thai Lion Air"/"Thai AirAsia" false hits."""
+    a = (airline or "").strip().lower()
+    if not a:
+        return False
+    parts = [p.strip() for p in re.split(r",|\band\b|\+", a) if p.strip()]
+    return all(p == "thai" or "thai airways" in p or "singapore airlines" in p
+               for p in parts)
 
 _FALLBACK_ARRIVAL_LAG = {"BOS→DAC": 1, "DAC→DPS": 0, "DPS→BOS": 1}
 
