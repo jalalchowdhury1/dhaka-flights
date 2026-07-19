@@ -49,3 +49,17 @@ def test_build_rows_no_link_falls_back_to_na():
     f = {k: v for k, v in FLIGHT.items() if k != "link"}
     rows = build_rows([f])
     assert rows[1][8] == "N/A"
+
+
+def test_history_row_maps_entry_fields_in_order():
+    from sheet_writer import history_row, HISTORY_HEADERS
+    e = {"date": "2026-07-18", "combined_total": 4709, "openjaw_total": 4678,
+         "singapore_total": 4444, "istanbul2_total": 4943, "stopover_total": 4943,
+         "oneway_combo_total": 6189, "best_total": 4444,
+         "best_structure": "via Singapore"}
+    row = history_row(e)
+    assert len(row) == len(HISTORY_HEADERS)
+    assert row[0] == "2026-07-18"
+    assert row[1] == 4709 and row[7] == 4444
+    # missing keys degrade to "" not crash
+    assert history_row({"date": "x"})[1] == ""

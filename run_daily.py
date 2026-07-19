@@ -83,7 +83,23 @@ def main():
     write_to_sheet(flights, tab_name="Google Flights")
     notify_cheapest(flights, openjaws, warnings, sg=sg)
     publish(flights, openjaws, warnings, sg_tickets=sg_tickets)
-    mark_ran_today()
+
+    # Cloud-redundant history: one appended row per day in the Google Sheet,
+    # so the price history survives even if data.json/git is ever lost.
+    try:
+        from sheet_writer import append_history_row
+        from publish import last_history_entry
+        append_history_row(last_history_entry())
+    except Exception as e:                     # noqa: BLE001 — never kill the run
+        print(f"WARN: history-sheet append failed (run continues): {e}")
+
+    structures = best_structures(flights, openjaws)
+    if structures or sg:
+        mark_ran_today()
+    else:
+        # Catastrophic day (fares but zero buildable trips): DON'T stamp, so
+        # the 2:00 / 4:00 retry slots automatically try again.
+        print("NOT marking success — no trip structures built; retry slots will re-run")
     print("=== Done ===")
 
 

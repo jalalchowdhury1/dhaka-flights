@@ -4,6 +4,7 @@ without a redeploy. A publish failure must never kill the daily run."""
 import datetime
 import json
 import os
+import shutil
 import subprocess
 
 from combo import best_combos, cheapest_by_leg, best_structures, best_singapore
@@ -99,6 +100,18 @@ def publish(flights: list, openjaws: list, warnings: list = None,
         today = datetime.date.today().isoformat()
         payload = build_payload(flights, openjaws, _load_history(), today, warnings,
                                 sg_tickets)
+        # Backup yesterday's file before overwriting — 60 daily snapshots kept
+        # locally (backups/ is gitignored; git history is the second copy, the
+        # Google Sheet History tab the third).
+        try:
+            if os.path.exists(DATA_FILE):
+                bdir = os.path.join(REPO_DIR, "backups")
+                os.makedirs(bdir, exist_ok=True)
+                shutil.copy2(DATA_FILE, os.path.join(bdir, f"data-{today}.json"))
+                for old in sorted(os.listdir(bdir))[:-60]:
+                    os.remove(os.path.join(bdir, old))
+        except OSError as e:
+            print(f"WARN: data.json backup failed: {e}")
         os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
         with open(DATA_FILE, "w") as f:
             json.dump(payload, f, indent=1, default=_jsonable)

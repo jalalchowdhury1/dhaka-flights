@@ -86,6 +86,28 @@ launchd 12:00am + 2:00am retry slot (com.jalal.dhaka-flights.plist, parallel wit
 - Google service account JSON: `~/.config/mcp-google-sheets/service-account.json`.
 - git push uses the Mac's stored GitHub credentials; Vercel CLI is logged in locally.
 
+## 4b. Redundancy layers (hardened 2026-07-18 for the 6-week decision window)
+
+Jalal relies on this nightly until an early-September 2026 booking decision
+(calendar reminder set for Sep 1). Defense in depth:
+1. **Wake**: `com.jalal.keepawake` LaunchAgent runs `caffeinate -s` with
+   KeepAlive+RunAtLoad — survives reboots/terminal closes (the old ad-hoc
+   terminal caffeinate died with its window). pmset would otherwise sleep.
+2. **Slots**: launchd fires 12:00 + 2:00 + 4:00; `.last_run_date` stamp makes
+   later slots no-ops after success. Stamp is written ONLY if ≥1 trip structure
+   was built — a catastrophic zero-structure day auto-retries.
+3. **No-start-after-5:30** window guard (wake-replays skip, user is working).
+4. **Alerts**: wrapper Telegrams on crash exit; in-run Telegram warns on
+   0-flight days (browser-broken vs Google-empty distinguished via DIAG).
+5. **History in triplicate**: site/data.json (append-only, keyed by date) +
+   its full git history on GitHub (pushed nightly) + the Google Sheet
+   "History" tab (one appended row/day, `sheet_writer.append_history_row`).
+   Plus `backups/` keeps the last 60 daily local snapshots (gitignored;
+   Time Machine → T7 covers the disk).
+6. **Staleness tripwire**: the dashboard shows a red banner when data.json is
+   >36 h old — a silently dead tracker is visible on first glance.
+7. Self-check warnings on the site are COLLAPSED by default (tap to expand).
+
 ## 5. Gotchas / hard rules
 
 1. **Google shows the TOTAL price for all selected passengers** (verified 2026-07-15:
