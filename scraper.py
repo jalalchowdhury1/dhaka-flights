@@ -345,6 +345,16 @@ def _parse_results(tree: str, origin: str, dest: str, url: str, depart: str = ""
         if m:
             arrive = f"{m.group(1)}, {TRIP_YEAR}"
 
+        # Times of day (2026-07-18, for the site's Trip-plan itinerary):
+        # "Leaves <airport> at 10:40 PM on ..." / "arrives at <airport> at 12:15 PM on ..."
+        depart_time = arrive_time = ""
+        m = re.search(r'Leaves .+? at (\d{1,2}:\d{2}\s*[AP]M) on', text, re.IGNORECASE)
+        if m:
+            depart_time = m.group(1).upper().replace(" ", " ")
+        m = re.search(r'arrives at .+? at (\d{1,2}:\d{2}\s*[AP]M) on', text, re.IGNORECASE)
+        if m:
+            arrive_time = m.group(1).upper()
+
         # Layovers: "Layover (1 of 1) is a 4 hr 25 min layover at <airport>".
         # Airport names can contain periods ("John F. Kennedy"), so prefer
         # matching through the word Airport before falling back to sentence end.
@@ -361,6 +371,8 @@ def _parse_results(tree: str, origin: str, dest: str, url: str, depart: str = ""
             "route": f"{origin}→{dest}",
             "depart": depart,
             "arrive": arrive,
+            "depart_time": depart_time,
+            "arrive_time": arrive_time,
             "airline": airline,
             "stops": stops,
             "duration": duration,
@@ -544,6 +556,9 @@ def _parse_openjaw_results(tree: str, out_date: str, ret_date: str, url: str) ->
             "price_total": f["price_total"],   # BOTH legs, all 3 travelers
             "airline": f["airline"],
             "out_arrive": f["arrive"],
+            # first-leg times (multi-city selection page describes leg 1 only)
+            "out_depart_time": f.get("depart_time", ""),
+            "out_arrive_time": f.get("arrive_time", ""),
             "stops": f["stops"],
             "duration": f["duration"],
             "layovers": f["layovers"],

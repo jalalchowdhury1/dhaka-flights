@@ -29,11 +29,27 @@
   body { background: var(--surface); color: var(--text);
          font: 16px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif;
          max-width: 760px; margin: 0 auto; padding: 16px 14px 48px; }
-  h1 { font-size: 1.25rem; margin: 4px 0 2px; display: flex; align-items: center; gap: 8px; }
+  h1 { font-size: 1.3rem; margin: 4px 0 2px; display: flex; align-items: center; gap: 8px;
+       letter-spacing: -.015em; font-weight: 800; }
   .sub { color: var(--text-2); font-size: .85rem; }
   .card { background: var(--card); border: 1px solid var(--border);
           border-radius: 12px; padding: 14px 16px; margin-top: 10px; }
-  .hero-num { font-size: 2.4rem; font-weight: 700; letter-spacing: -.02em; }
+  .hero-num { font-size: 2.7rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1;
+              background: linear-gradient(100deg, var(--s1), var(--s2));
+              -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .card.hero { border: 1px solid transparent;
+    background: linear-gradient(var(--card), var(--card)) padding-box,
+                linear-gradient(120deg, var(--s1), var(--s2), var(--s3)) border-box; }
+  /* trip-plan itinerary */
+  .plan td, .plan th { white-space: normal; vertical-align: top; }
+  .plan td.when { white-space: nowrap; font-weight: 600; width: 88px; }
+  .plan tr.stay td { background: color-mix(in srgb, var(--s2) 7%, transparent); }
+  .plan .tk { display: inline-block; font-size: .68rem; font-weight: 700; border-radius: 6px;
+              padding: 1px 6px; vertical-align: 1px; }
+  .plan .tk.t1 { background: color-mix(in srgb, var(--s1) 18%, transparent); color: var(--s1); }
+  .plan .tk.t2 { background: color-mix(in srgb, var(--s3) 22%, transparent); color: var(--s3); }
+  .chip { background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+          padding: 3px 10px; font-size: .82rem; white-space: nowrap; }
   .badge { display: inline-block; font-size: .75rem; font-weight: 600;
            padding: 2px 8px; border-radius: 99px; vertical-align: middle; }
   .badge.good { background: var(--good-bg); color: var(--good-fg); }
@@ -70,11 +86,15 @@
   .t-delta.down { color: var(--good-fg); }
   .t-delta.up { color: var(--warn-fg); }
   .t-delta.flat { color: var(--text-3); font-weight: 400; }
-  /* tabs */
-  .tabs { display: flex; gap: 6px; margin-top: 14px; border-bottom: 1px solid var(--border); }
-  .tabs button { background: none; border: none; font: inherit; color: var(--text-2);
-                 padding: 8px 12px; cursor: pointer; border-bottom: 2px solid transparent; }
-  .tabs button.active { color: var(--text); font-weight: 600; border-bottom-color: var(--s1); }
+  /* tabs — pill style */
+  .tabs { display: flex; gap: 8px; margin-top: 16px; border-bottom: none; }
+  .tabs button { background: var(--card); border: 1px solid var(--border); font: inherit;
+                 color: var(--text-2); padding: 7px 14px; cursor: pointer;
+                 border-radius: 99px; font-size: .88rem; transition: all .15s; }
+  .tabs button:hover { color: var(--text); border-color: var(--text-3); }
+  .tabs button.active { color: var(--btn-fg); background: var(--btn-bg);
+                        border-color: var(--btn-bg); font-weight: 700; }
+  .tile.main { border: 1.5px solid var(--s1); box-shadow: 0 0 0 3px color-mix(in srgb, var(--s1) 12%, transparent); }
   /* collapsible sections */
   details.sec { margin-top: 16px; border: none; }
   details.sec > summary { list-style: none; cursor: pointer; display: flex; align-items: center;
@@ -250,8 +270,8 @@ function renderStrip(d) {
     {label: "🕌 Istanbul only", key: "istanbul2_total"},
     {label: "3 one-way tickets", key: "oneway_combo_total"},
   ];
-  document.getElementById("strip").innerHTML = tiles.map(t =>
-    `<div class="tile"><div class="t-label">${t.label}</div>
+  document.getElementById("strip").innerHTML = tiles.map((t, i) =>
+    `<div class="tile${i === 0 ? " main" : ""}"><div class="t-label">${t.label}</div>
      <div class="t-num">${usd(last[t.key])}</div>${deltaHTML(hist, t.key)}</div>`).join("");
 }
 
@@ -286,7 +306,7 @@ function structureCard(s, hero) {
   const num = hero ? `<div class="hero-num">${usd(s.total)}</div>` : `<b style="font-size:1.15rem">${usd(s.total)}</b>`;
   const sg = s.sg_nights != null ? ` · Singapore ${s.sg_nights} nights` : "";
   const ist = s.ist_nights != null ? `Istanbul ${s.ist_nights} nights · ` : "";
-  return `<div class="card">
+  return `<div class="card${hero ? " hero" : ""}">
     ${num}
     <div style="margin:2px 0 8px">${esc(s.name)} ${badge}</div>
     <div class="muted" style="margin-bottom:6px">${ist}Dhaka ${s.dhaka_days} days${sg} · Bali ${s.bali_nights} nights</div>
@@ -360,8 +380,78 @@ function timeline(s) {
   ];
   return `<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:10px 0 4px">` +
     chips.map(([e, name, n], i) =>
-      `${i ? '<span style="color:var(--text-3)">→</span>' : ""}<span style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:3px 10px;font-size:.82rem;white-space:nowrap">${e} <b>${name}</b>${n ? ` <span style="color:var(--text-2)">${n}</span>` : ""}</span>`
+      `${i ? '<span style="color:var(--text-3)">→</span>' : ""}<span class="chip">${e} <b>${name}</b>${n ? ` <span style="color:var(--text-2)">${n}</span>` : ""}</span>`
     ).join("") + `</div>`;
+}
+
+/* ---------- Trip plan: every flight & stay, chronologically ---------- */
+const _d = s => { const t = Date.parse(s); return isNaN(t) ? null : new Date(t); };
+const addDays = (d, n) => d ? new Date(d.getTime() + n * 86400000) : null;
+const fd = d => d ? d.toLocaleDateString("en-US", {month: "short", day: "numeric"}) : "—";
+const fr = (a, b) => a && b ? `${fd(a)}–${fd(b)}` : "—";
+
+function tripPlan(s) {
+  const oj = s.openjaw || {};
+  const t = s.sg_ticket || null;
+  const legs = s.legs || [];
+  const l1 = legs.find(f => f.route === "DAC→SIN"), l2 = legs.find(f => f.route === "SIN→DPS");
+
+  const out = _d(oj.out_date), dacIn = _d(oj.out_arrive);
+  const istIn = addDays(out, 1), istOut = addDays(dacIn, -1);
+  const sgDep = t ? _d(t.out_date) : _d(l1 && l1.depart);
+  const sgIn  = t ? _d(t.out_arrive) : _d(l1 && (l1.arrive !== "N/A" ? l1.arrive : l1.depart));
+  const dpsDep = t ? _d(t.ret_date) : _d(l2 && l2.depart);
+  const baliIn = t ? _d(t.ret_date) : _d(l2 && (l2.arrive !== "N/A" ? l2.arrive : l2.depart));
+  const ret = _d(oj.ret_date);
+
+  const tt = (dep, arr) => dep ? `${dep}${arr ? " → " + arr : ""}` : "";
+  const lay = v => v && v !== "N/A" && v !== "none" ? ` · layover ${esc(v)}` : "";
+  const dur = v => v && v !== "N/A" ? `${esc(v)}` : "times at booking";
+
+  const rows = [
+    {when: fd(out), icon: "✈️", what: "Fly Boston → Istanbul", tk: 1, link: oj.link,
+     detail: `${esc(oj.airline || "—")} · ${dur(oj.duration)}` +
+             (tt(oj.out_depart_time, "") ? ` · departs ${esc(oj.out_depart_time)}` : "") + lay(oj.layovers)},
+    {when: fr(istIn, istOut), icon: "🕌", what: `Istanbul — ${s.ist_nights ?? 2} nights`, stay: true,
+     detail: "US passports visa-free · Turkish's free-hotel stopover perk may cover night 1 (apply ≥72 h before)"},
+    {when: fd(istOut), icon: "✈️", what: "Fly Istanbul → Dhaka", tk: 1, link: oj.link,
+     detail: `evening departure, lands ${fd(dacIn)} morning · exact times shown at booking`},
+    {when: fr(dacIn, sgDep), icon: "🇧🇩", what: `Dhaka — ${s.dhaka_days} days`, stay: true,
+     detail: "30-day visa window; day count includes arrival & departure days"},
+    {when: fd(sgDep), icon: "✈️", what: "Fly Dhaka → Singapore", tk: 2, link: t ? t.link : (l1 && l1.link),
+     detail: t ? `${esc(t.airline)} · ${dur(t.duration)}` +
+                 (t.out_depart_time ? ` · departs ${esc(t.out_depart_time)}` : "") +
+                 (t.out_arrive_time ? ` → lands ${esc(t.out_arrive_time)}` : "") + lay(t.layovers)
+               : l1 ? `${esc(l1.airline)} · ${dur(l1.duration)}` +
+                      (l1.depart_time ? ` · ${tt(l1.depart_time, l1.arrive_time)}` : "") + lay(l1.layovers) : "—"},
+    {when: fr(sgIn, dpsDep), icon: "🇸🇬", what: `Singapore — ${s.sg_nights} nights`, stay: true,
+     detail: "US passports visa-free (SG Arrival Card online ≤3 days before)"},
+    {when: fd(dpsDep), icon: "✈️", what: "Fly Singapore → Bali", tk: 2, link: t ? t.link : (l2 && l2.link),
+     detail: t ? "second leg of the same ticket · ~2 hr 40 min hop · times at booking"
+               : l2 ? `${esc(l2.airline)} · ${dur(l2.duration)}` +
+                      (l2.depart_time ? ` · ${tt(l2.depart_time, l2.arrive_time)}` : "") + lay(l2.layovers) : "—"},
+    {when: fr(baliIn, ret), icon: "🌴", what: `Bali — ${s.bali_nights} nights`, stay: true,
+     detail: "Marriott 5th-night-free · e-VOA needs the Bali→Boston booking as onward proof"},
+    {when: fd(ret), icon: "✈️", what: "Fly Bali → Boston", tk: 1, link: oj.link,
+     detail: `return leg of Ticket ① · lands ${esc(s.home)} · exact times at booking`},
+    {when: esc(s.home), icon: "🏠", what: "Home in Boston", stay: true, detail: "before the Feb 7 deadline ✓"},
+  ];
+
+  const tkChip = n => n ? `<span class="tk t${n}">Ticket ${n === 1 ? "①" : "②"}</span>` : "";
+  const body = rows.map(r =>
+    `<tr${r.stay ? ' class="stay"' : ""}><td class="when">${r.when}</td>
+     <td>${r.icon} <b>${r.what}</b> ${tkChip(r.tk)}<div class="muted" style="margin-top:2px">${r.detail || ""}</div></td>
+     <td class="num">${r.link ? bookBtn(r.link) : ""}</td></tr>`).join("");
+
+  const t1total = oj.price_total, t2total = t ? t.price_total :
+    (l1 && l2 ? (l1.price_total || 0) + (l2.price_total || 0) : null);
+  return `<div class="card plan scroll-x"><table>
+    <tr><th>When</th><th>Plan</th><th></th></tr>${body}</table>
+    <div class="muted" style="margin-top:10px">Two purchases:
+      <span class="tk t1">Ticket ①</span> Boston→Istanbul→Dhaka + Bali→Boston (${usd(t1total)})
+      &nbsp;·&nbsp; <span class="tk t2">Ticket ②</span> Dhaka→Singapore→Bali (${usd(t2total)}).
+      Book ① first (24-h free cancel on the airline's US site) — full order in the ⓘ handbook.</div>
+  </div>`;
 }
 
 /* One matrix of every tracked option so the nuances sit side by side. */
@@ -413,6 +503,7 @@ function renderToday(d) {
       timeline(main) + structureCard(main, true) +
       (main.alt_note ? `<div class="muted" style="margin-top:6px">💸 ${esc(main.alt_note)}</div>` : ""),
       true);
+    html += sec("🗓 Trip plan — dates, flights, layovers & stays", tripPlan(main), true);
   } else if (structures.length) {
     html += sec("🏆 Best bookable trip today (no Istanbul+Singapore pairing built)",
       structureCard(structures[0], true), true);
