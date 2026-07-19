@@ -240,9 +240,10 @@ def _sg_middles(flights, sg_tickets):
         if not (d1 and d2):
             continue
         arr = _date(t.get("out_arrive", "")) or d1  # DAC→SIN arrival (may be +1)
+        # STRICT nights from the actual arrival date — an overnight DAC→SIN
+        # landing at 4 AM gives 1 real hotel night, not 2 (2026-07-18: the old
+        # departure-date fallback overcounted and mislabeled the trip plan).
         sg_nights = (d2 - arr).days
-        if sg_nights not in ALLOWED_SG_NIGHTS:
-            sg_nights = (d2 - d1).days
         middles.append({
             "cost": t["price_total"], "dhaka_out": d1, "bali_in": d2,
             "sg_nights": sg_nights, "kind": "1 ticket", "legs": [], "ticket": t,
