@@ -172,10 +172,11 @@ def best_combos(flights, top_n=3) -> list:
 
 
 # ── Singapore-detour variant (2026-07-18) ──────────────────────────────────
-# Dhaka 2 nights shorter, 2 nights in Singapore en route to Bali. Kept as an
-# isolated parallel path so the direct-trip ranking above is never destabilized.
+# Dhaka a few nights shorter, 1–3 nights in Singapore en route to Bali. Kept as
+# an isolated parallel path so the direct-trip ranking is never destabilized.
+# Singapore nights are FLEXIBLE — price decides, no flag (per Jalal 2026-07-18:
+# "the only constant needs to be 5 nights in Bali").
 ALLOWED_SG_NIGHTS = (1, 2, 3)
-IDEAL_SG_NIGHTS = 2
 
 
 def _sg_middles(flights, sg_tickets):
@@ -248,8 +249,7 @@ def best_singapore(flights, openjaws, sg_tickets, top_n=3) -> list:
             flags.append(f"home {home.strftime('%b %-d')} — after Feb 7")
         if nights != IDEAL_BALI_NIGHTS:
             flags.append(f"only a {nights}-night Bali pairing today")
-        if m["sg_nights"] != IDEAL_SG_NIGHTS:
-            flags.append(f"{m['sg_nights']} Singapore night(s), wanted {IDEAL_SG_NIGHTS}")
+        # Singapore nights (1–3) are deliberately NOT flagged — price decides.
         structures.append({
             "name": f"{name} · {m['kind']} middle",
             "kind": kind, "trip": "via-SIN",

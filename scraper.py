@@ -597,7 +597,21 @@ ISTANBUL2_SEARCH = {
              "night 2 is on you."),
 }
 
-STOPOVER_SEARCHES = [STOPOVER_SEARCH, ISTANBUL2_SEARCH]
+# 3-night Istanbul sibling (2026-07-18: nights in IST/SIN are flexible — price
+# decides; the ONLY hard constant is 5 Bali nights). Same kind "stopover2" so
+# history's istanbul2_total automatically tracks the cheaper of 2 vs 3 nights.
+ISTANBUL3_SEARCH = dict(
+    ISTANBUL2_SEARCH,
+    label="Istanbul 3-night stopover",
+    legs=[("BOS", "IST", "January 4, 2027"),
+          ("IST", "DAC", "January 8, 2027"),
+          ("DPS", "BOS", "February 6, 2027")],
+    out_arrive="January 9, 2027",      # IST→DAC evening Jan 8 lands next morning
+    desc=("BOS→IST Jan 4 · 3 nights Istanbul · IST→DAC Jan 8 "
+          "+ DPS→BOS Feb 6 — one ticket"),
+)
+
+STOPOVER_SEARCHES = [STOPOVER_SEARCH, ISTANBUL2_SEARCH, ISTANBUL3_SEARCH]
 
 
 def scrape_stopover(cfg=None) -> list:

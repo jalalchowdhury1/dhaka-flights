@@ -35,9 +35,9 @@ launchd 12:00am + 2:00am retry slot (com.jalal.dhaka-flights.plist, parallel wit
                                      (BOS→DAC Jan 4 + DPS→BOS Feb 6 / Feb 7) +
                                      STOPOVER_SEARCHES: the Turkish 30h-Istanbul
                                      free-hotel itinerary (kind "stopover") AND the
-                                     Istanbul 2-NIGHT variant (kind "stopover2",
-                                     IST→DAC Jan 7 → arrive DAC Jan 8, no airline
-                                     filter; history metric istanbul2_total)
+                                     Istanbul 2- AND 3-NIGHT variants (both kind "stopover2" —
+                                     istanbul2_total = cheaper of the two; IST→DAC Jan 7 or 8, no airline
+                                     filter). IST/SIN nights flex 1–3, price decides — ONLY 5 Bali nights is a hard constant
                scrape_sg_tickets_all() 4 multi-city DAC→SIN→DPS tickets (SEPARATE
                                      list, NOT mixed into openjaws — the direct
                                      open-jaw loop would mis-pair them)

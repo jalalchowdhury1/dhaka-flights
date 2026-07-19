@@ -237,7 +237,7 @@ function renderStrip(d) {
   const tiles = [
     {label: "Open-jaw + Bali hop", key: "openjaw_total"},
     {label: "Turkish stopover", key: "stopover_total"},
-    {label: "Istanbul 2 nights", key: "istanbul2_total"},
+    {label: "Istanbul 2–3 nights", key: "istanbul2_total"},
     {label: "3 one-way tickets", key: "oneway_combo_total"},
     {label: "🇸🇬 Via Singapore", key: "singapore_total"},
   ];
@@ -392,10 +392,11 @@ function renderSingapore(d) {
   const sg = d.singapore || [];
   const direct = (d.structures || [])[0];
   let html = `<div class="card" style="margin-top:14px">
-    <b>🇸🇬 Same trip, 2 nights in Singapore on the way to Bali</b>
-    <div class="muted" style="margin-top:4px">Dhaka is ~2 nights shorter; Bali (5 nights)
-    and the return are unchanged. The Dhaka→Singapore→Bali middle is priced both as two
-    one-way tickets and as one multi-city ticket — the cheaper wins each night.</div></div>`;
+    <b>🇸🇬 Same trip, 1–3 nights in Singapore on the way to Bali</b>
+    <div class="muted" style="margin-top:4px">Dhaka is a few nights shorter; Bali stays
+    5 nights and the return is unchanged — nights in Singapore flex to whatever's
+    cheapest. The Dhaka→Singapore→Bali middle is priced both as two one-way tickets
+    and as one multi-city ticket — the cheaper wins each night.</div></div>`;
 
   if (!sg.length) {
     html += `<div class="card">No via-Singapore option was built from today's data —
@@ -433,7 +434,7 @@ const HCOLS = [
   {key: "oneway_combo_total", label: "One-ways $",    num: true},
   {key: "openjaw_total",      label: "OJ + hop $",    num: true},
   {key: "stopover_total",     label: "TK stopover $", num: true},
-  {key: "istanbul2_total",    label: "IST 2n $",      num: true},
+  {key: "istanbul2_total",    label: "IST 2–3n $",    num: true},
   {key: "singapore_total",    label: "Via SIN $",     num: true},
   {key: "_oj6",               label: "OJ tkt (Feb 6)",num: true},
   {key: "_oj7",               label: "OJ tkt (Feb 7)",num: true},

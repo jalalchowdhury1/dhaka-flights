@@ -56,6 +56,18 @@ def test_no_singapore_data_returns_empty():
     assert best_singapore([LEG1, LEG3], [], []) == []
 
 
+def test_one_sg_night_is_valid_unflagged_price_decides():
+    # Nights in Singapore are flexible (1-3); ONLY 5 Bali nights is a constant.
+    # A cheaper 1-night pairing must win over a pricier 2-night one, unflagged.
+    dac_sin_late = _f("DAC→SIN", "February 1, 2027", "February 1, 2027", 300)  # 1 SG night
+    sg = best_singapore([LEG1, LEG3, DAC_SIN, SIN_DPS, dac_sin_late], [], [])
+    s = sg[0]
+    assert s["sg_nights"] == 1
+    assert s["total"] == 2400 + 300 + 200 + 2700   # cheaper than the 2-night 5900
+    assert s["valid"] is True
+    assert s["flag"] is None
+
+
 def test_offnight_bali_pairing_kept_but_flagged():
     # SIN→DPS arrives Feb 3 → only 4 Bali nights before a Feb 7 return.
     sin_dps_late = _f("SIN→DPS", "February 3, 2027", "February 3, 2027", 200)
