@@ -614,7 +614,9 @@ ISTANBUL3_SEARCH = dict(
           "+ DPS→BOS Feb 6 — one ticket"),
 )
 
-STOPOVER_SEARCHES = [STOPOVER_SEARCH, ISTANBUL2_SEARCH, ISTANBUL3_SEARCH]
+# ISTANBUL3_SEARCH retired from the nightly rotation (2026-07-18 final: exactly
+# 2 nights in Istanbul). Config kept above for easy re-adding.
+STOPOVER_SEARCHES = [STOPOVER_SEARCH, ISTANBUL2_SEARCH]
 
 
 def scrape_stopover(cfg=None) -> list:

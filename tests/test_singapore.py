@@ -56,22 +56,23 @@ def test_no_singapore_data_returns_empty():
     assert best_singapore([LEG1, LEG3], [], []) == []
 
 
-def test_one_sg_night_is_valid_unflagged_price_decides():
-    # Nights in Singapore are flexible (1-3); ONLY 5 Bali nights is a constant.
-    # A cheaper 1-night pairing must win over a pricier 2-night one, unflagged.
+def test_exactly_two_sg_nights_required():
+    # 2026-07-18 final rule: EXACTLY 2 Singapore nights. A cheaper 1-night
+    # pairing must be ignored in favor of the 2-night one.
     dac_sin_late = _f("DAC→SIN", "February 1, 2027", "February 1, 2027", 300)  # 1 SG night
     sg = best_singapore([LEG1, LEG3, DAC_SIN, SIN_DPS, dac_sin_late], [], [])
     s = sg[0]
-    assert s["sg_nights"] == 1
-    assert s["total"] == 2400 + 300 + 200 + 2700   # cheaper than the 2-night 5900
+    assert s["sg_nights"] == 2
+    assert s["total"] == 2400 + 600 + 200 + 2700   # the 2-night middle, not the $300 1-night
     assert s["valid"] is True
-    assert s["flag"] is None
 
 
 def test_offnight_bali_pairing_kept_but_flagged():
-    # SIN→DPS arrives Feb 3 → only 4 Bali nights before a Feb 7 return.
+    # 2-night SG pairing whose Bali arrival (Feb 3) leaves only 4 Bali nights
+    # before the Feb 7 return — kept but flagged.
+    dac_sin_f1 = _f("DAC→SIN", "February 1, 2027", "February 1, 2027", 600)
     sin_dps_late = _f("SIN→DPS", "February 3, 2027", "February 3, 2027", 200)
-    sg = best_singapore([LEG1, LEG3, DAC_SIN, sin_dps_late], [], [])
+    sg = best_singapore([LEG1, LEG3, dac_sin_f1, sin_dps_late], [], [])
     assert sg
     s = sg[0]
     assert s["bali_nights"] == 4
@@ -101,14 +102,17 @@ def test_combined_istanbul_plus_singapore_is_built():
     assert main["valid"] is True
 
 
-def test_us_bangla_is_excluded_everywhere():
+def test_us_bangla_is_allowed_and_wins_when_cheapest():
+    # Revised same day: US-Bangla prices are unbeatable — cheapest wins.
     usb = dict(_f("DAC→SIN", "January 31, 2027", "January 31, 2027", 100),
                airline="US-Bangla Airlines")
-    sg = best_singapore([LEG1, LEG3, usb, SIN_DPS], [], [])
-    assert sg == []                        # the only DAC→SIN fare was US-Bangla
+    sg = best_singapore([LEG1, LEG3, usb, DAC_SIN, SIN_DPS], [], [])
+    s = sg[0]
+    assert "US-Bangla" in s["sg_airlines"]
+    assert s["total"] == 2400 + 100 + 200 + 2700
 
 
-def test_preferred_airline_beats_cheaper_with_note():
+def test_cheapest_wins_with_thai_sq_upsell_note():
     cheap_other = dict(_f("DAC→SIN", "January 31, 2027", "January 31, 2027", 400),
                        airline="Biman")
     sq = dict(_f("DAC→SIN", "January 31, 2027", "January 31, 2027", 600),
@@ -117,10 +121,9 @@ def test_preferred_airline_beats_cheaper_with_note():
                airline="THAI")
     sg = best_singapore([LEG1, LEG3, cheap_other, sq, sq2], [], [])
     s = sg[0]
-    assert s["sg_preferred"] is True
-    assert "Singapore Airlines" in s["sg_airlines"]
-    assert s["total"] == 2400 + 600 + 200 + 2700   # preferred won despite +$200
-    assert "cheaper on Biman" in (s["alt_note"] or "")
+    assert s["total"] == 2400 + 400 + 200 + 2700   # cheapest (Biman) wins
+    assert s["sg_preferred"] is False
+    assert "THAI/Singapore Airlines option +$200" in (s["alt_note"] or "")
 
 
 def test_mixed_airline_ticket_is_not_preferred():

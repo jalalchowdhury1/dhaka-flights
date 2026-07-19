@@ -17,11 +17,11 @@ IDEAL_BALI_NIGHTS = 5
 ALLOWED_BALI_NIGHTS = (4, 5, 6)
 HOME_DEADLINE = datetime(2027, 2, 7)
 
-# Airline rules (Jalal 2026-07-18): US-Bangla is EXCLUDED everywhere; THAI and
-# Singapore Airlines are PREFERRED on the Singapore legs — a preferred-airline
-# middle wins even over a cheaper non-preferred one (the cheaper option is
-# surfaced as a note, never silently dropped).
-AIRLINE_EXCLUDE = ("us-bangla",)
+# Airline rules (Jalal 2026-07-18, revised same day): NOTHING is excluded —
+# "US-Bangla prices are unbeatable, keep that". CHEAPEST WINS. THAI/Singapore
+# Airlines remain a soft preference: when the cheapest pick is a different
+# airline, the THAI/SQ upgrade price is surfaced as a note (alt_note).
+AIRLINE_EXCLUDE = ()
 
 
 def _airline_ok(f) -> bool:
@@ -203,9 +203,9 @@ def best_combos(flights, top_n=3) -> list:
 # ── Singapore-detour variant (2026-07-18) ──────────────────────────────────
 # Dhaka a few nights shorter, 1–3 nights in Singapore en route to Bali. Kept as
 # an isolated parallel path so the direct-trip ranking is never destabilized.
-# Singapore nights are FLEXIBLE — price decides, no flag (per Jalal 2026-07-18:
-# "the only constant needs to be 5 nights in Bali").
-ALLOWED_SG_NIGHTS = (1, 2, 3)
+# EXACTLY 2 Singapore nights (Jalal 2026-07-18 final: "2 nights both in
+# Istanbul and Singapore"; Bali fixed at 5).
+ALLOWED_SG_NIGHTS = (2,)
 
 
 def _sg_middles(flights, sg_tickets):
@@ -277,16 +277,15 @@ def best_singapore(flights, openjaws, sg_tickets, top_n=3) -> list:
         pool = exact or near
         if not pool:
             return
-        # THAI / Singapore Airlines preferred on the SG legs: a preferred-airline
-        # middle wins; a cheaper non-preferred one becomes a note, never a switch.
-        pref = [t for t in pool if t[0]["preferred"]]
-        m, nights, dhaka_days = min(pref or pool, key=lambda t: t[0]["cost"])
+        # CHEAPEST WINS (US-Bangla and all). THAI/SQ is a soft preference: if
+        # the winner isn't THAI/SQ but such an option exists, note the upsell.
+        m, nights, dhaka_days = min(pool, key=lambda t: t[0]["cost"])
         alt_note = None
-        if pref:
-            cheapest_any, _, _ = min(pool, key=lambda t: t[0]["cost"])
-            if cheapest_any["cost"] < m["cost"]:
-                alt_note = (f"${m['cost'] - cheapest_any['cost']:,.0f} cheaper on "
-                            f"{cheapest_any['airlines']} if airline-flexible")
+        pref = [t for t in pool if t[0]["preferred"]]
+        if pref and not m["preferred"]:
+            pm, _, _ = min(pref, key=lambda t: t[0]["cost"])
+            alt_note = (f"THAI/Singapore Airlines option +${pm['cost'] - m['cost']:,.0f} "
+                        f"({pm['airlines']})")
         flags = []
         if home > HOME_DEADLINE:
             flags.append(f"home {home.strftime('%b %-d')} — after Feb 7")

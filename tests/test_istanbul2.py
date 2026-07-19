@@ -16,17 +16,13 @@ IST2 = {"kind": "stopover2", "label": "Istanbul 2-night stopover",
         "note": "n"}
 
 
-def test_search_config_has_all_stopover_variants():
+def test_search_config_has_both_stopover_variants():
     kinds = [c["kind"] for c in STOPOVER_SEARCHES]
-    # 2- and 3-night Istanbul share kind stopover2 so history's istanbul2_total
-    # tracks the cheaper of the two automatically.
-    assert kinds == ["stopover", "stopover2", "stopover2"]
+    # Final rule: EXACTLY 2 Istanbul nights — the 3-night search is retired.
+    assert kinds == ["stopover", "stopover2"]
     assert ISTANBUL2_SEARCH["airline_filter"] is None
     # 2-night version: IST→DAC on Jan 7 (vs Jan 6 for the 30h stopover)
     assert ISTANBUL2_SEARCH["legs"][1] == ("IST", "DAC", "January 7, 2027")
-    from scraper import ISTANBUL3_SEARCH
-    assert ISTANBUL3_SEARCH["legs"][1] == ("IST", "DAC", "January 8, 2027")
-    assert ISTANBUL3_SEARCH["kind"] == "stopover2"
 
 
 def test_istanbul2_builds_structure_with_shorter_dhaka():

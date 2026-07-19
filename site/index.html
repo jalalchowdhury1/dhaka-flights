@@ -296,7 +296,7 @@ function chart(history) {
     {key: "openjaw_total", label: "Open-jaw + Bali hop", color: "var(--s2)"},
     {key: "oneway_combo_total", label: "3 one-way tickets", color: "var(--s1)"},
     {key: "stopover_total", label: "TK stopover + hop", color: "var(--s3)"},
-    {key: "istanbul2_total", label: "Istanbul 2–3n", color: "#d64570"},
+    {key: "istanbul2_total", label: "Istanbul only", color: "#d64570"},
     {key: "singapore_total", label: "Singapore only", color: "#8b5cf6"},
     {key: "combined_total", label: "⭐ IST + SIN main", color: "#0ea5a3"},
   ];
@@ -457,11 +457,10 @@ function renderSingapore(d) {
   ];
   let html = `<div class="card" style="margin-top:14px">
     <b>Every ticketing structure we price nightly</b>
-    <div class="muted" style="margin-top:4px">Fixed: 5 nights in Bali, home by Feb 7,
-    Dhaka ≤29 days. Flexible: nights in Istanbul (2–3) and Singapore (1–3) — price
-    decides. US-Bangla is excluded; THAI / Singapore Airlines are preferred on the
-    Singapore legs (a cheaper non-preferred fare shows as a 💸 note instead of
-    being chosen).</div></div>`;
+    <div class="muted" style="margin-top:4px">Fixed: 5 nights in Bali · 2 nights in
+    Istanbul · 2 nights in Singapore · home by Feb 7 · Dhaka ≤29 days. The cheapest
+    airline wins (US-Bangla included) — when a THAI / Singapore Airlines option
+    exists it shows as a 💸 upgrade note.</div></div>`;
   for (const [title, list] of groups) {
     if (!list.length) continue;
     html += sec(`${title} (${list.length})`,

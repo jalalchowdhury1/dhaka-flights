@@ -12,13 +12,17 @@ Daily price tracker for one fixed family trip (2 adults + 1 child with seat):
 Dhaka→Bali hop), writes a Google Sheet, Telegrams the best price, and publishes
 `site/data.json` for the public dashboard at **dhaka-flights.vercel.app**.
 
-**THE MAIN TRIP (since 2026-07-18 evening):** BOS → **Istanbul (2–3 nights)** →
-Dhaka → **Singapore (1–3 nights)** → **Bali (5 nights, FIXED)** → BOS. Hard rules:
-5 Bali nights, home ≤ Feb 7, Dhaka ≤ 29 days. Flexible: Istanbul & Singapore nights —
-price decides. **Airline rules:** US-Bangla EXCLUDED everywhere (filtered in
-`combo._priced`); THAI / Singapore Airlines PREFERRED on the SG legs — a preferred
-middle wins over a cheaper non-preferred one, which surfaces as `alt_note`
-("$X cheaper on <airline> if airline-flexible"), never silently chosen.
+**THE MAIN TRIP (final, 2026-07-18):** BOS → **Istanbul (EXACTLY 2 nights)** →
+Dhaka → **Singapore (EXACTLY 2 nights)** → **Bali (5 nights, FIXED)** → BOS.
+Hard rules: 5 Bali nights, 2 Istanbul nights, 2 Singapore nights, home ≤ Feb 7,
+Dhaka ≤ 29 days. **Airline rules (revised same day):** NOTHING excluded —
+"US-Bangla prices are unbeatable" — the CHEAPEST airline wins. THAI / Singapore
+Airlines are a soft preference only: when the winner isn't THAI/SQ but such an
+option exists, its upgrade price surfaces as `alt_note`
+("THAI/Singapore Airlines option +$X"). `_is_preferred` requires EVERY carrier
+in a multi-airline string to be THAI/SQ (substring matching once paid +$1,328
+for a half-Malaysia-Airlines ticket). ISTANBUL3_SEARCH is retired from the
+nightly rotation (config kept in scraper.py for easy re-adding).
 The combined trip needs NO extra searches: it pairs the Istanbul-stopover tickets
 (long legs) with the Singapore middles inside `combo.best_singapore` — kinds
 `sg-stopover2` (= the main trip, history metric `combined_total`) and `sg-stopover`
