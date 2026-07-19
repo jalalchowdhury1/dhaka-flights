@@ -31,10 +31,13 @@ launchd 12:00am + 2:00am retry slot (com.jalal.dhaka-flights.plist, parallel wit
   scraper.py   scrape_all()          18 one-way searches (LEGS: BOS→DAC Jan 4–6,
                                      DAC→DPS Jan 31–Feb 3, DPS→BOS Feb 5–7, plus
                                      DAC→SIN Jan 29–Feb 1, SIN→DPS Jan 31–Feb 3)
-               scrape_openjaw_all()  3 multi-city searches: OPENJAW_SEARCHES
+               scrape_openjaw_all()  4 multi-city searches: OPENJAW_SEARCHES
                                      (BOS→DAC Jan 4 + DPS→BOS Feb 6 / Feb 7) +
-                                     STOPOVER_SEARCH (BOS→IST / IST→DAC / DPS→BOS,
-                                     the Turkish 30h-Istanbul free-hotel itinerary)
+                                     STOPOVER_SEARCHES: the Turkish 30h-Istanbul
+                                     free-hotel itinerary (kind "stopover") AND the
+                                     Istanbul 2-NIGHT variant (kind "stopover2",
+                                     IST→DAC Jan 7 → arrive DAC Jan 8, no airline
+                                     filter; history metric istanbul2_total)
                scrape_sg_tickets_all() 4 multi-city DAC→SIN→DPS tickets (SEPARATE
                                      list, NOT mixed into openjaws — the direct
                                      open-jaw loop would mis-pair them)
@@ -51,7 +54,11 @@ launchd 12:00am + 2:00am retry slot (com.jalal.dhaka-flights.plist, parallel wit
   publish.py  → site/data.json (results + appended history) → git commit+push
         ▼
   site/index.html (static, deployed once on Vercel) fetches data.json raw from
-  GitHub on every page load — no redeploy needed for data updates.
+  GitHub on every page load — no redeploy needed for data updates. Three tabs:
+  Today · 🇸🇬 Singapore (the via-SIN variant + Δ-vs-direct tile; renders a
+  graceful empty state until data.json has a `singapore` section) · History.
+  Strip tiles + chart + History columns track openjaw / TK stopover /
+  Istanbul-2-night / one-ways / via-Singapore totals.
 ```
 
 ## 3. How to run / test / deploy
@@ -104,6 +111,11 @@ launchd 12:00am + 2:00am retry slot (com.jalal.dhaka-flights.plist, parallel wit
 - `cron.log`, `debug_last_zero.txt`, `.DS_Store` are untracked local artifacts.
 - Open-jaw watch is fixed to Jan 4 out; if Jan 5/6 open-jaws get interesting, add
   pairs to `OPENJAW_SEARCHES` (each adds ~2 min to the run).
+- **Killed-run gotcha (2026-07-18):** a full run is now ~20–25 min (30 searches).
+  Never run it inside a harness/tool with a ≤10-min timeout — it gets SIGKILLed
+  mid-scrape (no stamp written, no output flushed with buffered stdout). Manual
+  runs: `nohup … python3 -u run_daily.py > log 2>&1 &` and watch the log. The
+  launchd job has no timeout and is unaffected.
 
 ## 7. File map
 
