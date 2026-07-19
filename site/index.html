@@ -114,7 +114,7 @@
 </style>
 </head>
 <body>
-  <h1>✈️ Boston → Dhaka → Bali → Boston
+  <h1>✈️ Boston → Istanbul → Dhaka → Singapore → Bali
     <button id="infoBtn" title="Booking, cancellation & visa info" aria-label="Trip info">i</button>
   </h1>
   <div class="sub" id="rules"></div>
@@ -123,8 +123,8 @@
   <div id="warnbox" style="display:none;color:var(--warn-fg);background:var(--warn-bg);border-radius:8px;padding:10px 12px;margin-top:12px;font-size:.85rem"></div>
   <div class="strip" id="strip"></div>
   <div class="tabs" role="tablist">
-    <button id="tab-today" class="active" role="tab">Today</button>
-    <button id="tab-singapore" role="tab">🇸🇬 Singapore</button>
+    <button id="tab-today" class="active" role="tab">⭐ The Trip</button>
+    <button id="tab-singapore" role="tab">🔀 All options</button>
     <button id="tab-history" role="tab">History</button>
   </div>
   <div id="view-today"></div>
@@ -235,11 +235,11 @@ function renderStrip(d) {
   const hist = d.history || [];
   const last = hist[hist.length - 1] || {};
   const tiles = [
-    {label: "Open-jaw + Bali hop", key: "openjaw_total"},
-    {label: "Turkish stopover", key: "stopover_total"},
-    {label: "Istanbul 2–3 nights", key: "istanbul2_total"},
+    {label: "⭐ IST + SIN (main)", key: "combined_total"},
+    {label: "Direct open-jaw", key: "openjaw_total"},
+    {label: "🇸🇬 Singapore only", key: "singapore_total"},
+    {label: "🕌 Istanbul only", key: "istanbul2_total"},
     {label: "3 one-way tickets", key: "oneway_combo_total"},
-    {label: "🇸🇬 Via Singapore", key: "singapore_total"},
   ];
   document.getElementById("strip").innerHTML = tiles.map(t =>
     `<div class="tile"><div class="t-label">${t.label}</div>
@@ -276,10 +276,11 @@ function structureCard(s, hero) {
                         : `<span class="badge warn">⚠️ ${esc(s.flag || "check dates")}</span>`;
   const num = hero ? `<div class="hero-num">${usd(s.total)}</div>` : `<b style="font-size:1.15rem">${usd(s.total)}</b>`;
   const sg = s.sg_nights != null ? ` · Singapore ${s.sg_nights} nights` : "";
+  const ist = s.ist_nights != null ? `Istanbul ${s.ist_nights} nights · ` : "";
   return `<div class="card">
     ${num}
     <div style="margin:2px 0 8px">${esc(s.name)} ${badge}</div>
-    <div class="muted" style="margin-bottom:6px">Dhaka ${s.dhaka_days} days${sg} · Bali ${s.bali_nights} nights</div>
+    <div class="muted" style="margin-bottom:6px">${ist}Dhaka ${s.dhaka_days} days${sg} · Bali ${s.bali_nights} nights</div>
     ${s.openjaw ? ojLine(s.openjaw) : ""}
     ${s.sg_ticket ? sgTicketLine(s.sg_ticket) : ""}
     ${(s.legs || []).map(legLine).join("")}
@@ -289,14 +290,15 @@ function structureCard(s, hero) {
 
 function chart(history) {
   const pts = history.filter(h => h.oneway_combo_total || h.openjaw_total ||
-    h.stopover_total || h.istanbul2_total || h.singapore_total);
+    h.stopover_total || h.istanbul2_total || h.singapore_total || h.combined_total);
   if (pts.length < 2) return `<div class="muted" style="margin-top:8px">Price history chart appears after a couple of days of data.</div>`;
   const series = [
     {key: "openjaw_total", label: "Open-jaw + Bali hop", color: "var(--s2)"},
     {key: "oneway_combo_total", label: "3 one-way tickets", color: "var(--s1)"},
     {key: "stopover_total", label: "TK stopover + hop", color: "var(--s3)"},
-    {key: "istanbul2_total", label: "Istanbul 2 nights", color: "#d64570"},
-    {key: "singapore_total", label: "Via Singapore", color: "#8b5cf6"},
+    {key: "istanbul2_total", label: "Istanbul 2–3n", color: "#d64570"},
+    {key: "singapore_total", label: "Singapore only", color: "#8b5cf6"},
+    {key: "combined_total", label: "⭐ IST + SIN main", color: "#0ea5a3"},
   ];
   const W = Math.max(320, Math.min(680, pts.length * 60)), H = 220,
         L = 44, R = 76, T = 12, B = 26;
@@ -335,6 +337,55 @@ function sec(title, body, open) {
   return `<details class="sec"${open ? " open" : ""}><summary>${title}</summary>${body}</details>`;
 }
 
+/* The main trip: Istanbul 2-3 nights + Dhaka + Singapore 1-3 nights + Bali 5 */
+function mainTrip(d) {
+  return (d.singapore || []).find(s => s.kind === "sg-stopover2") || null;
+}
+
+function timeline(s) {
+  const stop = n => n != null ? `${n}n` : "?";
+  const chips = [
+    ["🇺🇸", "BOS", ""], ["🕌", "Istanbul", stop(s.ist_nights ?? 2)],
+    ["🇧🇩", "Dhaka", `${s.dhaka_days}d`], ["🇸🇬", "Singapore", stop(s.sg_nights)],
+    ["🌴", "Bali", `${s.bali_nights}n`], ["🏠", `home ${esc(s.home)}`, ""],
+  ];
+  return `<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:10px 0 4px">` +
+    chips.map(([e, name, n], i) =>
+      `${i ? '<span style="color:var(--text-3)">→</span>' : ""}<span style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:3px 10px;font-size:.82rem;white-space:nowrap">${e} <b>${name}</b>${n ? ` <span style="color:var(--text-2)">${n}</span>` : ""}</span>`
+    ).join("") + `</div>`;
+}
+
+/* One matrix of every tracked option so the nuances sit side by side. */
+function optionMatrix(d) {
+  const main = mainTrip(d);
+  const rows = [];
+  const add = (s, label) => s && rows.push({label, s});
+  add(main, "⭐ Istanbul + Singapore (main)");
+  add((d.singapore || []).find(s => s.kind === "sg-stopover"), "TK 30h stopover + Singapore");
+  add((d.singapore || []).find(s => ["sg-openjaw","sg-oneways"].includes(s.kind)), "Singapore only (no Istanbul)");
+  add((d.structures || []).find(s => s.kind === "stopover2"), "Istanbul only (no Singapore)");
+  add((d.structures || []).find(s => s.kind === "stopover"), "TK 30h stopover only");
+  add((d.structures || []).find(s => s.kind === "openjaw"), "Direct (no stops)");
+  add((d.structures || []).find(s => s.kind === "oneways"), "Direct · 3 one-way tickets");
+  if (!rows.length) return "";
+  const base = main ? main.total : rows[0].s.total;
+  const body = rows.map(({label, s}) => {
+    const delta = s.total - base;
+    const dTxt = s === (main || rows[0].s) ? "—" :
+      (delta <= 0 ? `<span style="color:var(--good-fg)">−${usd(-delta).slice(1)}</span>`
+                  : `+${usd(delta).slice(1)}`);
+    const nights = `${s.ist_nights ?? "–"} / ${s.dhaka_days} / ${s.sg_nights ?? "–"} / ${s.bali_nights}`;
+    const ok = s.valid ? "✓" : `<span title="${esc(s.flag || "")}">⚠️</span>`;
+    return `<tr><td>${label}</td><td class="num"><b>${usd(s.total)}</b></td>
+      <td class="num">${dTxt}</td><td class="num" style="white-space:nowrap">${nights}</td><td>${ok}</td></tr>`;
+  }).join("");
+  return `<div class="card scroll-x"><table>
+    <tr><th>Option</th><th class="num">Total</th><th class="num">vs main</th>
+    <th class="num" title="Istanbul / Dhaka days / Singapore / Bali">IST/DAC/SIN/Bali</th><th></th></tr>
+    ${body}</table>
+    <div class="muted" style="margin-top:6px">Totals are for all 3 travelers · nights columns read Istanbul&nbsp;nights / Dhaka&nbsp;days / Singapore&nbsp;nights / Bali&nbsp;nights.</div></div>`;
+}
+
 function renderToday(d) {
   const ago = (() => {
     const t = Date.parse(d.updated.replace(" ", "T"));
@@ -346,12 +397,21 @@ function renderToday(d) {
   document.getElementById("updated").textContent = `Last scrape: ${d.updated}${ago}`;
   let html = "";
 
+  const main = mainTrip(d);
   const structures = d.structures || [];
-  if (structures.length) {
-    html += sec("🏆 Best bookable trip today", structureCard(structures[0], true), true);
+  if (main) {
+    html += sec("⭐ The trip: Istanbul + Dhaka + Singapore + Bali",
+      timeline(main) + structureCard(main, true) +
+      (main.alt_note ? `<div class="muted" style="margin-top:6px">💸 ${esc(main.alt_note)}</div>` : ""),
+      true);
+  } else if (structures.length) {
+    html += sec("🏆 Best bookable trip today (no Istanbul+Singapore pairing built)",
+      structureCard(structures[0], true), true);
   } else {
     html += `<div class="card">No valid combination found in today's data.</div>`;
   }
+
+  html += sec("⚖️ Every option, side by side", optionMatrix(d), true);
 
   html += sec("📋 How to book it (short version)", `<div class="card">
     <ol class="playbook">
@@ -365,15 +425,11 @@ function renderToday(d) {
     <div class="muted" style="margin-top:6px">The ⓘ next to the title has the full handbook: cancellation windows, visa fine print, long-layover tricks.</div>
   </div>`, false);
 
-  if (structures.length > 1)
-    html += sec(`🎛 Other structures (${structures.length - 1})`,
-      structures.slice(1).map(s => structureCard(s, false)).join(""), false);
-
   html += sec("📈 Price history", `<div class="card">${chart(d.history || [])}</div>`, false);
 
   const legs = d.cheapest_by_leg || {};
   html += sec("🧩 Cheapest per leg (dates may not combine)", `<div class="card">` +
-    ["BOS→DAC","DAC→DPS","DPS→BOS"].map(r => legs[r] ? legLine(legs[r]) :
+    ["BOS→DAC","DAC→DPS","DAC→SIN","SIN→DPS","DPS→BOS"].map(r => legs[r] ? legLine(legs[r]) :
       `<div class="leg"><span class="em">${EMOJI[r]}</span><span>${r}</span><span class="price">no results</span></div>`).join("") +
     `</div>`, false);
 
@@ -387,41 +443,32 @@ function renderToday(d) {
   document.getElementById("view-today").innerHTML = html;
 }
 
-/* ---------- Singapore tab: the via-SIN variant vs the direct trip ---------- */
+/* ---------- All-options tab: every structure in full detail ---------- */
 function renderSingapore(d) {
-  const sg = d.singapore || [];
-  const direct = (d.structures || [])[0];
+  const groups = [
+    ["🌟 With Istanbul AND Singapore",
+      (d.singapore || []).filter(s => ["sg-stopover2","sg-stopover"].includes(s.kind))],
+    ["🇸🇬 Singapore only (no Istanbul stop)",
+      (d.singapore || []).filter(s => ["sg-openjaw","sg-oneways"].includes(s.kind))],
+    ["🕌 Istanbul only (no Singapore)",
+      (d.structures || []).filter(s => ["stopover","stopover2"].includes(s.kind))],
+    ["✈️ Direct — no stops",
+      (d.structures || []).filter(s => ["openjaw","oneways"].includes(s.kind))],
+  ];
   let html = `<div class="card" style="margin-top:14px">
-    <b>🇸🇬 Same trip, 1–3 nights in Singapore on the way to Bali</b>
-    <div class="muted" style="margin-top:4px">Dhaka is a few nights shorter; Bali stays
-    5 nights and the return is unchanged — nights in Singapore flex to whatever's
-    cheapest. The Dhaka→Singapore→Bali middle is priced both as two one-way tickets
-    and as one multi-city ticket — the cheaper wins each night.</div></div>`;
-
-  if (!sg.length) {
-    html += `<div class="card">No via-Singapore option was built from today's data —
-      check the Today tab's warnings, or see tomorrow's scrape.</div>`;
-  } else {
-    if (direct && sg[0]) {
-      const delta = sg[0].total - direct.total;
-      const cls = delta <= 0 ? "down" : "up";
-      const word = delta <= 0 ? `▼ ${usd(-delta)} cheaper than the direct trip` :
-                                `▲ ${usd(delta)} more than the direct trip`;
-      html += `<div class="tile" style="margin-top:10px"><div class="t-label">Adding Singapore costs</div>
-        <div class="t-num">${delta <= 0 ? "−" : "+"}${usd(Math.abs(delta))}</div>
-        <div class="t-delta ${cls}">${word}</div></div>`;
-    }
-    html += sec("🏆 Best via-Singapore trip today", structureCard(sg[0], true), true);
-    if (sg.length > 1)
-      html += sec(`🎛 Other via-Singapore structures (${sg.length - 1})`,
-        sg.slice(1).map(s => structureCard(s, false)).join(""), false);
+    <b>Every ticketing structure we price nightly</b>
+    <div class="muted" style="margin-top:4px">Fixed: 5 nights in Bali, home by Feb 7,
+    Dhaka ≤29 days. Flexible: nights in Istanbul (2–3) and Singapore (1–3) — price
+    decides. US-Bangla is excluded; THAI / Singapore Airlines are preferred on the
+    Singapore legs (a cheaper non-preferred fare shows as a 💸 note instead of
+    being chosen).</div></div>`;
+  for (const [title, list] of groups) {
+    if (!list.length) continue;
+    html += sec(`${title} (${list.length})`,
+      list.map(s => structureCard(s, false) +
+        (s.alt_note ? `<div class="muted" style="margin:-6px 0 8px">💸 ${esc(s.alt_note)}</div>` : "")).join(""),
+      title.startsWith("🌟"));
   }
-
-  const legs = d.cheapest_by_leg || {};
-  html += sec("🧩 Cheapest Singapore legs (dates may not combine)", `<div class="card">` +
-    ["DAC→SIN","SIN→DPS"].map(r => legs[r] ? legLine(legs[r]) :
-      `<div class="leg"><span class="em">${EMOJI[r]}</span><span>${r}</span><span class="price">no results</span></div>`).join("") +
-    `</div>`, false);
   document.getElementById("view-singapore").innerHTML = html;
 }
 
@@ -434,8 +481,9 @@ const HCOLS = [
   {key: "oneway_combo_total", label: "One-ways $",    num: true},
   {key: "openjaw_total",      label: "OJ + hop $",    num: true},
   {key: "stopover_total",     label: "TK stopover $", num: true},
-  {key: "istanbul2_total",    label: "IST 2–3n $",    num: true},
-  {key: "singapore_total",    label: "Via SIN $",     num: true},
+  {key: "combined_total",     label: "⭐ IST+SIN $",  num: true},
+  {key: "istanbul2_total",    label: "IST only $",    num: true},
+  {key: "singapore_total",    label: "SIN only $",    num: true},
   {key: "_oj6",               label: "OJ tkt (Feb 6)",num: true},
   {key: "_oj7",               label: "OJ tkt (Feb 7)",num: true},
   {key: "_l1",                label: "BOS→DAC min",   num: true},

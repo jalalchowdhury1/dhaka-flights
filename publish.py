@@ -64,8 +64,12 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
              if s.get("kind") == "stopover2" and s["valid"]), None),
         "openjaw_min": oj_min,
         "legs_min": legs_min,
-        "singapore_total": next((s["total"] for s in singapore if s["valid"]),
-                                singapore[0]["total"] if singapore else None),
+        # combined = the MAIN trip (Istanbul 2-3 nights + Singapore + Bali 5)
+        "combined_total": next((s["total"] for s in singapore
+                                if s.get("kind") == "sg-stopover2" and s["valid"]), None),
+        "singapore_total": next((s["total"] for s in singapore
+                                 if s.get("kind") in ("sg-openjaw", "sg-oneways")
+                                 and s["valid"]), None),
     }
     history = [h for h in history if h.get("date") != today] + [entry]
 
@@ -73,9 +77,11 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
         "updated": datetime.datetime.now().strftime("%Y-%m-%d %H:%M %Z").strip(),
         "warnings": warnings or [],
         "trip": {
-            "route": "BOS → Dhaka → Bali → BOS",
+            "route": "BOS → Istanbul → Dhaka → Singapore → Bali → BOS",
             "travelers": "2 adults + 1 child",
-            "rules": "Dhaka ≤29 days · 5 nights in Bali · home by Feb 7, 2027",
+            "rules": ("5 nights in Bali (fixed) · Istanbul 2–3n & Singapore 1–3n flex · "
+                      "Dhaka ≤29 days · home by Feb 7, 2027 · no US-Bangla · "
+                      "THAI/Singapore Air preferred"),
         },
         "structures": structures,
         "singapore": singapore,

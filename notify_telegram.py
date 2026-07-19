@@ -56,7 +56,7 @@ def _sg_ticket_line(t: dict) -> str:
 def build_message(all_flights: list, openjaws: list = None,
                   warnings: list = None, sg: list = None) -> str:
     openjaws = openjaws or []
-    lines = ["✈️ *BOS → Dhaka → Bali → BOS* (2 adults + 1 child)\n"]
+    lines = ["✈️ *BOS → Istanbul → Dhaka → Singapore → Bali → BOS* (2 adults + 1 child)\n"]
 
     if warnings:
         lines.append("🧪 *Self-check found issues:*")
@@ -65,6 +65,25 @@ def build_message(all_flights: list, openjaws: list = None,
         lines.append("")
 
     structures = best_structures(all_flights, openjaws)
+
+    # THE MAIN TRIP (2026-07-18): Istanbul 2-3 nights + Singapore 1-3 nights,
+    # Bali fixed at 5. Headline it before everything else.
+    main = next((s for s in (sg or []) if s.get("kind") == "sg-stopover2"), None)
+    if main:
+        flag = "" if main["valid"] else f" ⚠️ {main.get('flag') or 'check dates'}"
+        lines.append(f"🌟 *MAIN TRIP: ${main['total']:,}* — Istanbul "
+                     f"{main.get('ist_nights') or '2'}n + Singapore {main['sg_nights']}n{flag}")
+        lines.append(f"_Dhaka {main['dhaka_days']} days · Bali {main['bali_nights']} nights · "
+                     f"home {main['home']} · SG legs: {main.get('sg_airlines', '?')}_")
+        if main.get("openjaw"):
+            lines.append(_openjaw_line(main["openjaw"]))
+        if main.get("sg_ticket"):
+            lines.append(_sg_ticket_line(main["sg_ticket"]))
+        for f in main["legs"]:
+            lines.append(_leg_line(f))
+        if main.get("alt_note"):
+            lines.append(f"💸 {main['alt_note']}")
+        lines.append("")
     if structures:
         s = structures[0]
         flag = "" if s["valid"] else f" ⚠️ {s.get('flag') or 'check dates'}"
@@ -95,7 +114,8 @@ def build_message(all_flights: list, openjaws: list = None,
         else:
             lines.append("⚠️ No combo satisfied the visa/5-night/Feb-7 rules today")
 
-    # Singapore-detour variant, shown alongside for comparison.
+    # Singapore-only variant (no Istanbul), shown for comparison with the main.
+    sg = [s for s in (sg or []) if s.get("kind") in ("sg-openjaw", "sg-oneways")]
     if sg:
         s = sg[0]
         direct_total = structures[0]["total"] if structures else None

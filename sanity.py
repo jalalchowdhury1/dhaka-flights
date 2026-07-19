@@ -83,12 +83,17 @@ def self_check(flights, openjaws, structures, prev_entry=None,
                 if key and key not in today:
                     today[key] = s["total"]
         for s in (sg or []):
-            if s["valid"]:
+            if not s["valid"]:
+                continue
+            if s.get("kind") == "sg-stopover2":
+                today.setdefault("combined_total", s["total"])
+            elif s.get("kind") in ("sg-openjaw", "sg-oneways"):
                 today.setdefault("singapore_total", s["total"])
         labels = {"openjaw_total": "open-jaw structure",
                   "stopover_total": "Turkish stopover structure",
                   "istanbul2_total": "Istanbul 2-night structure",
                   "singapore_total": "via-Singapore trip",
+                  "combined_total": "MAIN Istanbul+Singapore trip",
                   "oneway_combo_total": "one-way combo"}
         for key, label in labels.items():
             prev = prev_entry.get(key)

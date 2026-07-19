@@ -559,6 +559,7 @@ def _parse_openjaw_results(tree: str, out_date: str, ret_date: str, url: str) ->
 # N and R fare classes are excluded from the hotel benefit).
 STOPOVER_SEARCH = {
     "kind": "stopover",
+    "ist_nights": 1,
     "label": "Turkish + 30h Istanbul stopover (free hotel)",
     "legs": [("BOS", "IST", "January 4, 2027"),
              ("IST", "DAC", "January 6, 2027"),
@@ -581,6 +582,7 @@ STOPOVER_SEARCH = {
 # are visa-free in Türkiye; TK's free-hotel benefit needs 20h+ connection ✓.
 ISTANBUL2_SEARCH = {
     "kind": "stopover2",
+    "ist_nights": 2,
     "label": "Istanbul 2-night stopover",
     "legs": [("BOS", "IST", "January 4, 2027"),
              ("IST", "DAC", "January 7, 2027"),
@@ -602,6 +604,7 @@ ISTANBUL2_SEARCH = {
 # history's istanbul2_total automatically tracks the cheaper of 2 vs 3 nights.
 ISTANBUL3_SEARCH = dict(
     ISTANBUL2_SEARCH,
+    ist_nights=3,
     label="Istanbul 3-night stopover",
     legs=[("BOS", "IST", "January 4, 2027"),
           ("IST", "DAC", "January 8, 2027"),
@@ -625,7 +628,8 @@ def scrape_stopover(cfg=None) -> list:
             if filt and filt.lower() not in f["airline"].lower():
                 continue
             f.update(kind=cfg["kind"], label=cfg["label"], desc=cfg["desc"],
-                     note=cfg["note"], out_arrive=cfg["out_arrive"])
+                     note=cfg["note"], out_arrive=cfg["out_arrive"],
+                     ist_nights=cfg.get("ist_nights"))
             out.append(f)
         return out
 

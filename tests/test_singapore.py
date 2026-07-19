@@ -77,3 +77,47 @@ def test_offnight_bali_pairing_kept_but_flagged():
     assert s["bali_nights"] == 4
     assert s["valid"] is False
     assert "4-night" in (s["flag"] or "")
+
+
+# ── combined trip + airline rules (2026-07-18) ──────────────────────────────
+IST2_OJ = {"kind": "stopover2", "label": "Istanbul 2-night stopover", "ist_nights": 2,
+           "out_date": "January 4, 2027", "ret_date": "February 6, 2027",
+           "out_arrive": "January 8, 2027", "price_total": 3600,
+           "airline": "Turkish Airlines", "stops": "1 stop", "duration": "x",
+           "layovers": "N/A", "link": "http://ist2", "desc": "d", "note": "n"}
+
+
+def test_combined_istanbul_plus_singapore_is_built():
+    # IST2 ticket long legs (arrive DAC Jan 8) + SG middle arriving Bali Feb 1
+    # (5 nights before the Feb 6 return) = the MAIN trip.
+    dac_sin = _f("DAC→SIN", "January 30, 2027", "January 30, 2027", 600)
+    sin_dps = _f("SIN→DPS", "February 1, 2027", "February 1, 2027", 200)
+    sg = best_singapore([dac_sin, sin_dps], [IST2_OJ], [])
+    main = next(s for s in sg if s["kind"] == "sg-stopover2")
+    assert main["total"] == 3600 + 800
+    assert main["ist_nights"] == 2
+    assert main["dhaka_days"] == 23        # Jan 8 → Jan 30 incl. both ends
+    assert main["bali_nights"] == 5
+    assert main["valid"] is True
+
+
+def test_us_bangla_is_excluded_everywhere():
+    usb = dict(_f("DAC→SIN", "January 31, 2027", "January 31, 2027", 100),
+               airline="US-Bangla Airlines")
+    sg = best_singapore([LEG1, LEG3, usb, SIN_DPS], [], [])
+    assert sg == []                        # the only DAC→SIN fare was US-Bangla
+
+
+def test_preferred_airline_beats_cheaper_with_note():
+    cheap_other = dict(_f("DAC→SIN", "January 31, 2027", "January 31, 2027", 400),
+                       airline="Biman")
+    sq = dict(_f("DAC→SIN", "January 31, 2027", "January 31, 2027", 600),
+              airline="Singapore Airlines")
+    sq2 = dict(_f("SIN→DPS", "February 2, 2027", "February 2, 2027", 200),
+               airline="THAI")
+    sg = best_singapore([LEG1, LEG3, cheap_other, sq, sq2], [], [])
+    s = sg[0]
+    assert s["sg_preferred"] is True
+    assert "Singapore Airlines" in s["sg_airlines"]
+    assert s["total"] == 2400 + 600 + 200 + 2700   # preferred won despite +$200
+    assert "cheaper on Biman" in (s["alt_note"] or "")

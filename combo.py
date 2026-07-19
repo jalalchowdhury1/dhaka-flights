@@ -16,6 +16,23 @@ IDEAL_BALI_NIGHTS = 5
 ALLOWED_BALI_NIGHTS = (4, 5, 6)
 HOME_DEADLINE = datetime(2027, 2, 7)
 
+# Airline rules (Jalal 2026-07-18): US-Bangla is EXCLUDED everywhere; THAI and
+# Singapore Airlines are PREFERRED on the Singapore legs — a preferred-airline
+# middle wins even over a cheaper non-preferred one (the cheaper option is
+# surfaced as a note, never silently dropped).
+AIRLINE_EXCLUDE = ("us-bangla",)
+
+
+def _airline_ok(f) -> bool:
+    a = (f.get("airline") or "").lower()
+    return not any(x in a for x in AIRLINE_EXCLUDE)
+
+
+def _is_preferred(airline: str) -> bool:
+    a = (airline or "").lower()
+    # exact-ish: avoid "Thai Lion Air" / "Thai AirAsia" matching "thai"
+    return a == "thai" or "thai airways" in a or "singapore airlines" in a
+
 _FALLBACK_ARRIVAL_LAG = {"BOS→DAC": 1, "DAC→DPS": 0, "DPS→BOS": 1}
 
 
@@ -39,7 +56,8 @@ def _arrival(flight):
 def _priced(flights, route):
     return [f for f in flights
             if f.get("route") == route
-            and isinstance(f.get("price_total"), (int, float))]
+            and isinstance(f.get("price_total"), (int, float))
+            and _airline_ok(f)]
 
 
 def cheapest_by_leg(flights) -> dict:
@@ -204,9 +222,11 @@ def _sg_middles(flights, sg_tickets):
                 "cost": a["price_total"] + b["price_total"],
                 "dhaka_out": a_dep, "bali_in": b_arr, "sg_nights": sg_nights,
                 "kind": "2 one-ways", "legs": [a, b], "ticket": None,
+                "preferred": _is_preferred(a.get("airline")) and _is_preferred(b.get("airline")),
+                "airlines": f"{a.get('airline')} + {b.get('airline')}",
             })
     for t in (sg_tickets or []):
-        if not isinstance(t.get("price_total"), (int, float)):
+        if not isinstance(t.get("price_total"), (int, float)) or not _airline_ok(t):
             continue
         d1, d2 = _date(t.get("out_date", "")), _date(t.get("ret_date", ""))
         if not (d1 and d2):
@@ -218,6 +238,8 @@ def _sg_middles(flights, sg_tickets):
         middles.append({
             "cost": t["price_total"], "dhaka_out": d1, "bali_in": d2,
             "sg_nights": sg_nights, "kind": "1 ticket", "legs": [], "ticket": t,
+            "preferred": _is_preferred(t.get("airline")),
+            "airlines": t.get("airline", ""),
         })
     return middles
 
@@ -233,7 +255,8 @@ def best_singapore(flights, openjaws, sg_tickets, top_n=3) -> list:
         return []
     structures = []
 
-    def _consider(name, kind, long_cost, dac_in, ret, home, extra_legs, openjaw=None):
+    def _consider(name, kind, long_cost, dac_in, ret, home, extra_legs,
+                  openjaw=None, ist_nights=None):
         exact, near = [], []
         for m in middles:
             dhaka_days = (m["dhaka_out"] - dac_in).days + 1
@@ -246,7 +269,16 @@ def best_singapore(flights, openjaws, sg_tickets, top_n=3) -> list:
         pool = exact or near
         if not pool:
             return
-        m, nights, dhaka_days = min(pool, key=lambda t: t[0]["cost"])
+        # THAI / Singapore Airlines preferred on the SG legs: a preferred-airline
+        # middle wins; a cheaper non-preferred one becomes a note, never a switch.
+        pref = [t for t in pool if t[0]["preferred"]]
+        m, nights, dhaka_days = min(pref or pool, key=lambda t: t[0]["cost"])
+        alt_note = None
+        if pref:
+            cheapest_any, _, _ = min(pool, key=lambda t: t[0]["cost"])
+            if cheapest_any["cost"] < m["cost"]:
+                alt_note = (f"${m['cost'] - cheapest_any['cost']:,.0f} cheaper on "
+                            f"{cheapest_any['airlines']} if airline-flexible")
         flags = []
         if home > HOME_DEADLINE:
             flags.append(f"home {home.strftime('%b %-d')} — after Feb 7")
@@ -260,7 +292,9 @@ def best_singapore(flights, openjaws, sg_tickets, top_n=3) -> list:
             "valid": not flags, "flag": " · ".join(flags) or None,
             "home": home.strftime("%b %-d"),
             "dhaka_days": dhaka_days, "bali_nights": nights,
-            "sg_nights": m["sg_nights"],
+            "sg_nights": m["sg_nights"], "ist_nights": ist_nights,
+            "sg_preferred": m["preferred"], "sg_airlines": m["airlines"],
+            "alt_note": alt_note,
             "legs": list(extra_legs) + list(m["legs"]),
             "sg_ticket": m["ticket"],
             **({"openjaw": openjaw} if openjaw else {}),
@@ -279,14 +313,15 @@ def best_singapore(flights, openjaws, sg_tickets, top_n=3) -> list:
             _consider("via Singapore · one-ways", "sg-oneways",
                       a["price_total"] + c["price_total"], dac_in, c_dep, home, [a, c])
 
-    # Long legs as a direct open-jaw ticket (skip labeled variants like stopover)
+    # Long legs as ONE ticket: the plain open-jaw, OR an Istanbul-stopover
+    # ticket — the latter builds the COMBINED trip (Istanbul + Singapore),
+    # which is the trip Jalal mainly tracks (2026-07-18).
     best_oj = {}
     for oj in openjaws:
-        if oj.get("kind") not in (None, "openjaw"):
+        if not isinstance(oj.get("price_total"), (int, float)) or not _airline_ok(oj):
             continue
-        if not isinstance(oj.get("price_total"), (int, float)):
-            continue
-        key = (oj["out_date"], oj["ret_date"])
+        okind = oj.get("kind") or "openjaw"
+        key = (okind, oj.get("label", ""), oj["out_date"], oj["ret_date"])
         if key not in best_oj or oj["price_total"] < best_oj[key]["price_total"]:
             best_oj[key] = oj
     for oj in best_oj.values():
@@ -294,8 +329,15 @@ def best_singapore(flights, openjaws, sg_tickets, top_n=3) -> list:
         dac_in = _date(oj.get("out_arrive", "")) or (_date(oj["out_date"]) + timedelta(days=1))
         if not ret:
             continue
-        _consider("via Singapore · open-jaw", "sg-openjaw",
-                  oj["price_total"], dac_in, ret, ret + timedelta(days=1), [], openjaw=oj)
+        okind = oj.get("kind") or "openjaw"
+        if okind == "openjaw":
+            name, kind, ist_n = "via Singapore · open-jaw", "sg-openjaw", None
+        else:
+            name = f"{oj.get('label', 'stopover')} + Singapore"
+            kind = f"sg-{okind}"                       # sg-stopover / sg-stopover2
+            ist_n = oj.get("ist_nights")
+        _consider(name, kind, oj["price_total"], dac_in, ret,
+                  ret + timedelta(days=1), [], openjaw=oj, ist_nights=ist_n)
 
     structures.sort(key=lambda s: (not s["valid"], s["total"]))
     seen, deduped = set(), []
