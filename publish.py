@@ -59,6 +59,9 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
         "stopover_total": next(
             (s["total"] for s in structures
              if s.get("kind") == "stopover" and s["valid"]), None),
+        "istanbul2_total": next(
+            (s["total"] for s in structures
+             if s.get("kind") == "stopover2" and s["valid"]), None),
         "openjaw_min": oj_min,
         "legs_min": legs_min,
         "singapore_total": next((s["total"] for s in singapore if s["valid"]),

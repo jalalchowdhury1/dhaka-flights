@@ -124,9 +124,11 @@
   <div class="strip" id="strip"></div>
   <div class="tabs" role="tablist">
     <button id="tab-today" class="active" role="tab">Today</button>
+    <button id="tab-singapore" role="tab">🇸🇬 Singapore</button>
     <button id="tab-history" role="tab">History</button>
   </div>
   <div id="view-today"></div>
+  <div id="view-singapore" style="display:none"></div>
   <div id="view-history" style="display:none"></div>
 
   <dialog id="infoModal">
@@ -189,7 +191,8 @@ const RAW = "https://raw.githubusercontent.com/jalalchowdhury1/dhaka-flights/mai
 const usd = (n) => n == null ? "—" : "$" + n.toLocaleString("en-US");
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const short = (d) => { const p = String(d).replace(",", "").split(" "); return p.length >= 2 ? p[0].slice(0,3) + " " + p[1] : d; };
-const EMOJI = {"BOS→DAC":"🇧🇩","DAC→DPS":"🌴","DPS→BOS":"🏠"};
+const EMOJI = {"BOS→DAC":"🇧🇩","DAC→DPS":"🌴","DPS→BOS":"🏠",
+               "DAC→SIN":"🇸🇬","SIN→DPS":"🌴","DAC→SIN→DPS":"🇸🇬"};
 
 async function load() {
   let data;
@@ -214,6 +217,7 @@ async function load() {
   }
   renderStrip(data);
   renderToday(data);
+  renderSingapore(data);
   hRows = flattenHistory(data.history);
   renderHistory();
 }
@@ -233,7 +237,9 @@ function renderStrip(d) {
   const tiles = [
     {label: "Open-jaw + Bali hop", key: "openjaw_total"},
     {label: "Turkish stopover", key: "stopover_total"},
+    {label: "Istanbul 2 nights", key: "istanbul2_total"},
     {label: "3 one-way tickets", key: "oneway_combo_total"},
+    {label: "🇸🇬 Via Singapore", key: "singapore_total"},
   ];
   document.getElementById("strip").innerHTML = tiles.map(t =>
     `<div class="tile"><div class="t-label">${t.label}</div>
@@ -259,27 +265,38 @@ function ojLine(oj) {
     <span class="price">${usd(oj.price_total)} ${bookBtn(oj.link)}</span></div>`;
 }
 
+function sgTicketLine(t) {
+  return `<div class="leg"><span class="em">🇸🇬</span>
+    <span>DAC→SIN→DPS <b>${short(t.out_date)}</b> + <b>${short(t.ret_date)}</b> — one ticket · ${esc(t.airline)}</span>
+    <span class="price">${usd(t.price_total)} ${bookBtn(t.link)}</span></div>`;
+}
+
 function structureCard(s, hero) {
   const badge = s.valid ? `<span class="badge good">home ${esc(s.home)} ✓</span>`
                         : `<span class="badge warn">⚠️ ${esc(s.flag || "check dates")}</span>`;
   const num = hero ? `<div class="hero-num">${usd(s.total)}</div>` : `<b style="font-size:1.15rem">${usd(s.total)}</b>`;
+  const sg = s.sg_nights != null ? ` · Singapore ${s.sg_nights} nights` : "";
   return `<div class="card">
     ${num}
     <div style="margin:2px 0 8px">${esc(s.name)} ${badge}</div>
-    <div class="muted" style="margin-bottom:6px">Dhaka ${s.dhaka_days} days · Bali ${s.bali_nights} nights</div>
+    <div class="muted" style="margin-bottom:6px">Dhaka ${s.dhaka_days} days${sg} · Bali ${s.bali_nights} nights</div>
     ${s.openjaw ? ojLine(s.openjaw) : ""}
+    ${s.sg_ticket ? sgTicketLine(s.sg_ticket) : ""}
     ${(s.legs || []).map(legLine).join("")}
     ${s.note ? `<div class="muted" style="margin-top:8px">💡 ${esc(s.note)}</div>` : ""}
   </div>`;
 }
 
 function chart(history) {
-  const pts = history.filter(h => h.oneway_combo_total || h.openjaw_total || h.stopover_total);
+  const pts = history.filter(h => h.oneway_combo_total || h.openjaw_total ||
+    h.stopover_total || h.istanbul2_total || h.singapore_total);
   if (pts.length < 2) return `<div class="muted" style="margin-top:8px">Price history chart appears after a couple of days of data.</div>`;
   const series = [
     {key: "openjaw_total", label: "Open-jaw + Bali hop", color: "var(--s2)"},
     {key: "oneway_combo_total", label: "3 one-way tickets", color: "var(--s1)"},
     {key: "stopover_total", label: "TK stopover + hop", color: "var(--s3)"},
+    {key: "istanbul2_total", label: "Istanbul 2 nights", color: "#d64570"},
+    {key: "singapore_total", label: "Via Singapore", color: "#8b5cf6"},
   ];
   const W = Math.max(320, Math.min(680, pts.length * 60)), H = 220,
         L = 44, R = 76, T = 12, B = 26;
@@ -370,6 +387,43 @@ function renderToday(d) {
   document.getElementById("view-today").innerHTML = html;
 }
 
+/* ---------- Singapore tab: the via-SIN variant vs the direct trip ---------- */
+function renderSingapore(d) {
+  const sg = d.singapore || [];
+  const direct = (d.structures || [])[0];
+  let html = `<div class="card" style="margin-top:14px">
+    <b>🇸🇬 Same trip, 2 nights in Singapore on the way to Bali</b>
+    <div class="muted" style="margin-top:4px">Dhaka is ~2 nights shorter; Bali (5 nights)
+    and the return are unchanged. The Dhaka→Singapore→Bali middle is priced both as two
+    one-way tickets and as one multi-city ticket — the cheaper wins each night.</div></div>`;
+
+  if (!sg.length) {
+    html += `<div class="card">No via-Singapore option was built from today's data —
+      check the Today tab's warnings, or see tomorrow's scrape.</div>`;
+  } else {
+    if (direct && sg[0]) {
+      const delta = sg[0].total - direct.total;
+      const cls = delta <= 0 ? "down" : "up";
+      const word = delta <= 0 ? `▼ ${usd(-delta)} cheaper than the direct trip` :
+                                `▲ ${usd(delta)} more than the direct trip`;
+      html += `<div class="tile" style="margin-top:10px"><div class="t-label">Adding Singapore costs</div>
+        <div class="t-num">${delta <= 0 ? "−" : "+"}${usd(Math.abs(delta))}</div>
+        <div class="t-delta ${cls}">${word}</div></div>`;
+    }
+    html += sec("🏆 Best via-Singapore trip today", structureCard(sg[0], true), true);
+    if (sg.length > 1)
+      html += sec(`🎛 Other via-Singapore structures (${sg.length - 1})`,
+        sg.slice(1).map(s => structureCard(s, false)).join(""), false);
+  }
+
+  const legs = d.cheapest_by_leg || {};
+  html += sec("🧩 Cheapest Singapore legs (dates may not combine)", `<div class="card">` +
+    ["DAC→SIN","SIN→DPS"].map(r => legs[r] ? legLine(legs[r]) :
+      `<div class="leg"><span class="em">${EMOJI[r]}</span><span>${r}</span><span class="price">no results</span></div>`).join("") +
+    `</div>`, false);
+  document.getElementById("view-singapore").innerHTML = html;
+}
+
 /* ---------- History tab: sortable table of every day's best trip ---------- */
 const HCOLS = [
   {key: "date",               label: "Date",          num: false},
@@ -379,6 +433,8 @@ const HCOLS = [
   {key: "oneway_combo_total", label: "One-ways $",    num: true},
   {key: "openjaw_total",      label: "OJ + hop $",    num: true},
   {key: "stopover_total",     label: "TK stopover $", num: true},
+  {key: "istanbul2_total",    label: "IST 2n $",      num: true},
+  {key: "singapore_total",    label: "Via SIN $",     num: true},
   {key: "_oj6",               label: "OJ tkt (Feb 6)",num: true},
   {key: "_oj7",               label: "OJ tkt (Feb 7)",num: true},
   {key: "_l1",                label: "BOS→DAC min",   num: true},
@@ -438,12 +494,13 @@ function renderHistory() {
 }
 
 function setTab(which) {
-  document.getElementById("tab-today").classList.toggle("active", which === "today");
-  document.getElementById("tab-history").classList.toggle("active", which === "history");
-  document.getElementById("view-today").style.display = which === "today" ? "" : "none";
-  document.getElementById("view-history").style.display = which === "history" ? "" : "none";
+  for (const t of ["today", "singapore", "history"]) {
+    document.getElementById("tab-" + t).classList.toggle("active", which === t);
+    document.getElementById("view-" + t).style.display = which === t ? "" : "none";
+  }
 }
 document.getElementById("tab-today").onclick = () => setTab("today");
+document.getElementById("tab-singapore").onclick = () => setTab("singapore");
 document.getElementById("tab-history").onclick = () => setTab("history");
 
 const modal = document.getElementById("infoModal");

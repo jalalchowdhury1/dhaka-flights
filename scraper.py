@@ -558,6 +558,7 @@ def _parse_openjaw_results(tree: str, out_date: str, ret_date: str, url: str) ->
 # night (connection 20h–7d; apply via their Stopover "Booker" ≥72h before;
 # N and R fare classes are excluded from the hotel benefit).
 STOPOVER_SEARCH = {
+    "kind": "stopover",
     "label": "Turkish + 30h Istanbul stopover (free hotel)",
     "legs": [("BOS", "IST", "January 4, 2027"),
              ("IST", "DAC", "January 6, 2027"),
@@ -573,22 +574,48 @@ STOPOVER_SEARCH = {
              "class letter before paying."),
 }
 
+# Istanbul 2-NIGHT variant (2026-07-18): same 3-leg one-ticket shape, IST→DAC
+# pushed to Jan 7 → land IST Jan 5 morning, 2 full nights in Istanbul, arrive
+# Dhaka Jan 8 (overnight flight). Any airline (in practice Turkish — IST→DAC is
+# TK-only — but unfiltered so codeshares/partners aren't dropped). US passports
+# are visa-free in Türkiye; TK's free-hotel benefit needs 20h+ connection ✓.
+ISTANBUL2_SEARCH = {
+    "kind": "stopover2",
+    "label": "Istanbul 2-night stopover",
+    "legs": [("BOS", "IST", "January 4, 2027"),
+             ("IST", "DAC", "January 7, 2027"),
+             ("DPS", "BOS", "February 6, 2027")],
+    "airline_filter": None,
+    "out_date": "January 4, 2027",
+    "out_arrive": "January 8, 2027",   # IST→DAC evening Jan 7 lands next morning
+    "ret_date": "February 6, 2027",
+    "desc": ("BOS→IST Jan 4 · 2 nights Istanbul · IST→DAC Jan 7 "
+             "+ DPS→BOS Feb 6 — one ticket"),
+    "note": ("2 full Istanbul nights (US passports visa-free). On Turkish, the "
+             "20h–7d connection still qualifies for ONE free 4-star hotel night "
+             "via their Stopover Booker (≥72h before; not on N/R fares) — "
+             "night 2 is on you."),
+}
 
-def scrape_stopover() -> list:
-    cfg = STOPOVER_SEARCH
+STOPOVER_SEARCHES = [STOPOVER_SEARCH, ISTANBUL2_SEARCH]
+
+
+def scrape_stopover(cfg=None) -> list:
+    cfg = cfg or STOPOVER_SEARCH
     legs_str = " / ".join(f"{o}→{d} {dep}" for o, d, dep in cfg["legs"])
 
     def parse(tree, url):
         out = []
         for f in _parse_openjaw_results(tree, cfg["out_date"], cfg["ret_date"], url):
-            if cfg["airline_filter"].lower() not in f["airline"].lower():
+            filt = cfg.get("airline_filter")
+            if filt and filt.lower() not in f["airline"].lower():
                 continue
-            f.update(kind="stopover", label=cfg["label"], desc=cfg["desc"],
+            f.update(kind=cfg["kind"], label=cfg["label"], desc=cfg["desc"],
                      note=cfg["note"], out_arrive=cfg["out_arrive"])
             out.append(f)
         return out
 
-    return _scrape_multicity(cfg["legs"], parse, f"stopover: {legs_str}")
+    return _scrape_multicity(cfg["legs"], parse, f"{cfg['kind']}: {legs_str}")
 
 
 # Singapore-detour middle as a single multi-city ticket: DAC→SIN then SIN→DPS
@@ -647,14 +674,15 @@ def scrape_openjaw_all() -> list:
         all_results += results
         print(f"  Got {len(results)} options")
 
-    print(f"[stopover] {STOPOVER_SEARCH['label']}")
-    results = scrape_stopover()
-    if not results:
-        print("  0 results — retrying once with a fresh session...")
-        time.sleep(5)
-        results = scrape_stopover()
-    all_results += results
-    print(f"  Got {len(results)} options")
+    for cfg in STOPOVER_SEARCHES:
+        print(f"[{cfg['kind']}] {cfg['label']}")
+        results = scrape_stopover(cfg)
+        if not results:
+            print("  0 results — retrying once with a fresh session...")
+            time.sleep(5)
+            results = scrape_stopover(cfg)
+        all_results += results
+        print(f"  Got {len(results)} options")
     return all_results
 
 
