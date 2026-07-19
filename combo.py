@@ -52,7 +52,10 @@ def cheapest_by_leg(flights) -> dict:
     return best
 
 
-def best_structures(flights, openjaws, top_n=4) -> list:
+def best_structures(flights, openjaws, top_n=8) -> list:
+    # top_n must exceed the number of scraped variants (oneways + 2 open-jaws +
+    # 3 stopover variants = 6 today) or a flagged variant silently truncates off
+    # the end and sanity invariant #1 fires (seen live 2026-07-18 at top_n=4).
     """Compare ticketing structures and return them cheapest-first:
       - 'three one-ways': the classic best_combos winner
       - 'open-jaw + separate DAC→DPS': one multi-city ticket for the two long
