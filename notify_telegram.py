@@ -101,9 +101,22 @@ def _alternatives_block(options: list, title: str, limit: int = 4) -> list:
     return lines
 
 
-def build_message(main: dict, warnings: list = None,
-                  ticket2_options: list = None, ticket1_options: list = None) -> str:
+SITE = "[dhaka-flights.vercel.app](https://dhaka-flights.vercel.app)"
+
+
+def build_message(payload: dict) -> str:
+    """The nightly message, assembled from the published payload so Telegram
+    and the dashboard can never disagree. Order: alerts lead (buy zone / new
+    low / past-window), then the trip, what changed, baggage, alternatives,
+    countdown, link."""
+    main = payload.get("main")
+    warnings = payload.get("warnings") or []
     lines = ["✈️ *BOS → Istanbul → Dhaka → Singapore → Bali → BOS* (2 adults + 1 child)\n"]
+
+    for a in payload.get("alerts") or []:
+        lines.append(a)
+    if payload.get("alerts"):
+        lines.append("")
 
     if warnings:
         lines.append("🧪 *Self-check found issues:*")
@@ -115,10 +128,13 @@ def build_message(main: dict, warnings: list = None,
         lines.append("⚠️ *No trip could be priced today* — the Istanbul ticket or the "
                      "Singapore middle came back empty. Check cron.log; the retry "
                      "slots will try again.")
+        lines.append(f"\n{SITE}")
         return "\n".join(lines)
 
     flag = "" if main.get("valid") else f" ⚠️ {main.get('flag') or 'check dates'}"
     lines.append(f"🌟 *${main['total']:,} total*{flag}")
+    if payload.get("price_context"):
+        lines.append(f"_{payload['price_context']}_")
     lines.append(f"_Istanbul {main.get('ist_nights') or 2}n · Dhaka {main['dhaka_days']}d · "
                  f"Singapore {main.get('sg_nights')}n · Bali {main['bali_nights']}n · "
                  f"home {main['home']}_")
@@ -131,26 +147,36 @@ def build_message(main: dict, warnings: list = None,
     if main.get("alt_note"):
         lines.append(f"💸 {main['alt_note']}")
 
+    changes = payload.get("changes") or []
+    if changes:
+        lines.append("")
+        lines.append("ℹ️ *Changed since yesterday:*")
+        for c in changes:
+            lines.append(f"  {c}")
+
     lines.append("")
     lines += _baggage_block(main)
 
-    alts = _alternatives_block(ticket2_options or [], "Ticket ② alternatives")
+    alts = _alternatives_block(payload.get("ticket2_options") or [],
+                               "Ticket ② alternatives")
     if alts:
         lines.append("")
         lines += alts
-    alts1 = _alternatives_block(ticket1_options or [], "Ticket ① alternatives", limit=3)
+    alts1 = _alternatives_block(payload.get("ticket1_options") or [],
+                                "Ticket ① alternatives", limit=3)
     if alts1:
         lines.append("")
         lines += alts1
 
+    if payload.get("countdown"):
+        lines.append(f"\n{payload['countdown']}")
     lines.append("\n_Google Flights · prices are totals for all 3 travelers_")
-    lines.append("dhaka-flights.vercel.app")
+    lines.append(SITE)
     return "\n".join(lines)
 
 
-def notify_cheapest(main: dict, warnings: list = None,
-                    ticket2_options: list = None, ticket1_options: list = None) -> None:
-    ok = send_message(build_message(main, warnings, ticket2_options, ticket1_options))
+def notify_cheapest(payload: dict) -> None:
+    ok = send_message(build_message(payload))
     if ok:
         print("Telegram notification sent.")
     else:

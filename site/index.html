@@ -540,6 +540,21 @@ function renderToday(d) {
   document.getElementById("updated").textContent = `Last scrape: ${d.updated}${ago}`;
   let html = "";
 
+  // Buy-signal layer: alert lines lead the page exactly like they lead the
+  // Telegram message (the * markdown is stripped for HTML).
+  const plain = s => esc(String(s).replace(/\*/g, ""));
+  const alerts = d.alerts || [];
+  if (alerts.length) {
+    const urgent = alerts.some(a => a.includes("🚨"));
+    html += `<div class="card" style="border-color:${urgent ? "var(--warn-fg)" : "var(--good-fg)"}">
+      ${alerts.map(a => `<div style="font-weight:600">${plain(a)}</div>`).join("")}</div>`;
+  }
+  if (d.countdown) html += `<div class="sub" style="margin-top:8px">${plain(d.countdown)}</div>`;
+  if ((d.changes || []).length) {
+    html += `<div class="card"><b style="font-size:.9rem">ℹ️ Changed since yesterday</b>` +
+      d.changes.map(c => `<div class="muted" style="margin-top:4px">${plain(c)}</div>`).join("") + `</div>`;
+  }
+
   const main = d.main;
   if (main) {
     html += sec("⭐ The trip: Istanbul + Dhaka + Singapore + Bali",

@@ -147,6 +147,30 @@ scrape: every carrier entry has an official `url` and a `confidence`
   allowances — the cheap half often includes no free bag at all.
 - When a carrier's policy changes, edit `CARRIERS` and bump `CHECKED`.
 
+## 4d. Buy-signal layer (`alerts.py`, added 2026-07-25)
+
+The rule, agreed with Jalal explicitly: **before the book-by date price
+decides; after it, the date decides.** Three stages keyed off two knobs at the
+top of `alerts.py` (`BUY_BELOW = 4500`, `BOOK_BY = Sep 20 2026`,
+`WINDOW_OPENS = Sep 1`):
+
+- **watch** (→ Sep 1): message stays quiet; a context line always shows rank +
+  distance-to-low. Alerts only on 🔥 new all-time low (trip or Ticket ① alone)
+  or 🚨 buy zone (≤ $4,500).
+- **window** (Sep 1–20): + countdown line; buy-zone hit leads 🚨 BOOK NOW.
+- **past** (after Sep 20): every message leads 🚨 book-this-week and the price
+  threshold RETIRES — don't re-add it, that's the point.
+
+Also here: `changes_since()` — the diff vs yesterday's entry (ticket airlines,
+Ticket ② composition 1-ticket ⇄ 2-one-ways + dates, ≥$50 per-ticket moves,
+nights drift) with a 🧳⚠️ suffix when the change alters baggage rules. Rank /
+low comparisons only use entries from `TRIP_TRACKED_SINCE` (2026-07-18) — the
+earlier open-jaw-era totals are a different trip and must not pollute the low.
+Everything lands in the payload (`alerts`, `price_context`, `countdown`,
+`changes`) so Telegram and the site render the same facts;
+`notify_telegram.build_message(payload)` takes the whole payload for that
+reason.
+
 ## 5. Gotchas / hard rules
 
 1. **Google shows the TOTAL price for all selected passengers** (verified 2026-07-15:
@@ -207,6 +231,7 @@ scrape: every carrier entry has an official `url` and a `confidence`
 - `combo.py` — trip rules, `main_trip`, `ticket1_options`, `ticket2_options`
   (+ retired `best_structures` / `best_combos` / `cheapest_by_leg`)
 - `baggage.py` — sourced per-carrier allowance table; `annotate`, `warnings` (§4c)
+- `alerts.py` — buy-signal stages, price context, countdown, change diff (§4d)
 - `publish.py` — `build_today` → payload → `write_payload` (backup, write, push)
 - `sheet_writer.py`, `notify_telegram.py` — outputs
 - `site/` — static dashboard (index.html) + data.json (machine-written)

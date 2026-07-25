@@ -94,8 +94,7 @@ def main():
         + multicity_as_rows(sg_tickets, "② DAC→SIN→DPS")
         + flights,
         tab_name="Google Flights")
-    notify_cheapest(payload["main"], warnings,
-                    payload["ticket2_options"], payload["ticket1_options"])
+    notify_cheapest(payload)
     publish.write_payload(payload)
 
     # Cloud-redundant history: one appended row per day in the Google Sheet,

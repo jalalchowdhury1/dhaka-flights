@@ -7,6 +7,7 @@ import os
 import shutil
 import subprocess
 
+import alerts
 import baggage
 from combo import main_trip, ticket1_options, ticket2_options
 
@@ -84,10 +85,26 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
         "best_structure": main["name"] if main else None,
         "best_detail": main,
     }
-    history = [h for h in history if h.get("date") != today] + [entry]
+    prior = [h for h in history if h.get("date") != today]
+    history = prior + [entry]
+
+    # Buy-signal + diff layer: what leads the message, the perspective line,
+    # the booking-window countdown, and what changed vs yesterday.
+    try:
+        as_of = datetime.date.fromisoformat(today)
+    except ValueError:
+        as_of = datetime.date.today()
+    alert_lines = alerts.headlines(entry, history, as_of)
+    context = alerts.price_context(entry, history)
+    count = alerts.countdown(as_of)
+    changes = alerts.changes_since(prior[-1] if prior else None, entry)
 
     return {
         "updated": datetime.datetime.now().strftime("%Y-%m-%d %H:%M %Z").strip(),
+        "alerts": alert_lines,
+        "price_context": context,
+        "countdown": count,
+        "changes": changes,
         "warnings": warnings or [],
         "trip": {
             "route": "BOS → Istanbul → Dhaka → Singapore → Bali → BOS",
