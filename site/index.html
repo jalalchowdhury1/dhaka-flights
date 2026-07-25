@@ -498,7 +498,7 @@ function baggageCard(s) {
 }
 
 /* ---------- "What else could I buy, and how much more?" ---------- */
-function altTable(options, note) {
+function altTable(options, note, legRoutes) {
   if (!options || !options.length) return `<div class="card muted">No alternatives were captured for these dates tonight.</div>`;
   const body = options.map(o => {
     const d = o.delta;
@@ -508,13 +508,19 @@ function altTable(options, note) {
       d < 0 ? `<span style="color:var(--good-fg)">−${usd(-d).slice(1)}</span>` : `+${usd(d).slice(1)}`;
     const b = o.baggage || {};
     const bag = b.summary || b.checked || "";
+    // "2 tickets" = two separate purchases = two Book buttons, one per ticket.
+    const btn = (l, t) => l ? `<a class="btn" href="${esc(l)}" target="_blank" rel="noopener">${t}</a>` : "";
+    const books = o.link2 && legRoutes
+      ? btn(o.link, `Book ${legRoutes[0]}`) +
+        `<div style="margin-top:4px">${btn(o.link2, `Book ${legRoutes[1]}`)}</div>`
+      : bookBtn(o.link);
     return `<tr class="${o.chosen ? "chosen" : ""}">
       <td class="wrap">${esc(o.airline)}</td>
       <td>${esc(o.kind)}</td>
       <td class="num"><b>${usd(o.price)}</b></td>
       <td class="num">${gap}</td>
       <td class="wrap">${esc(bag)}</td>
-      <td class="num">${bookBtn(o.link)}</td></tr>`;
+      <td class="num">${books}</td></tr>`;
   }).join("");
   return `<div class="card scroll-x"><table>
     <tr><th>Airline</th><th>How</th><th class="num">Price</th><th class="num">vs chosen</th>
@@ -548,7 +554,8 @@ function renderToday(d) {
     html += sec(`🔀 Ticket ② alternatives — Dhaka→Singapore→Bali (${t2dates})`,
       altTable(t2, "Same dates, so the Singapore and Bali nights are identical — the price gap is the whole story. " +
                    "\"1 ticket\" = one multi-city booking; \"2 tickets\" = Dhaka→Singapore and Singapore→Bali bought separately " +
-                   "(sometimes cheaper, but you re-check bags in Singapore and a delay on the first leg is your problem, not the airline's)."),
+                   "(sometimes cheaper, but you re-check bags in Singapore and a delay on the first leg is your problem, not the airline's). " +
+                   "Two-ticket rows have one Book button per purchase.", ["DAC→SIN", "SIN→DPS"]),
       true);
     html += sec("🎫 Ticket ① alternatives — Boston→Istanbul→Dhaka + Bali→Boston",
       altTable(d.ticket1_options || [], "Same three flights and dates, different airline. Watch the bag column: " +

@@ -23,9 +23,9 @@ TICKET1_PRICIER = dict(TICKET1, price_total=4200, airline="Air France", link="ht
 
 # ── Ticket ②: DAC→SIN→DPS, as one ticket or as two one-ways ────────────────
 DAC_SIN = dict(_f("DAC→SIN", "January 30, 2027", "January 30, 2027", 700),
-               airline="US-Bangla Airlines")
+               airline="US-Bangla Airlines", link="http://dacsin")
 SIN_DPS = dict(_f("SIN→DPS", "February 1, 2027", "February 1, 2027", 400),
-               airline="Scoot")
+               airline="Scoot", link="http://sindps")
 TICKET2 = {"kind": "sg-ticket", "route": "DAC→SIN→DPS",
            "out_date": "January 30, 2027", "ret_date": "February 1, 2027",
            "out_arrive": "January 30, 2027", "price_total": 1000,
@@ -79,6 +79,16 @@ def test_ticket2_alternatives_carry_the_price_gap():
     assert opts["Singapore Airlines"]["delta"] == 200
     two = opts["US-Bangla Airlines + Scoot"]
     assert two["kind"] == "2 tickets" and two["price"] == 1100 and two["delta"] == 100
+
+
+def test_two_ticket_rows_carry_both_booking_links():
+    # Two separate purchases need two Book buttons — one link only buys leg 1.
+    t = main_trip(FLIGHTS, [TICKET1], SG_TICKETS)
+    opts = {o["airline"]: o for o in ticket2_options(FLIGHTS, SG_TICKETS, t)}
+    two = opts["US-Bangla Airlines + Scoot"]
+    assert two["link"] == DAC_SIN["link"] and two["link2"] == SIN_DPS["link"]
+    one = opts["US-Bangla Airlines"]
+    assert one["kind"] == "1 ticket" and "link2" not in one
 
 
 def test_ticket1_alternatives_ranked_with_gap():

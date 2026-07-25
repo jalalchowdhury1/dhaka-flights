@@ -89,8 +89,15 @@ def _alternatives_block(options: list, title: str, limit: int = 4) -> list:
                (f"+${d:,}" if d > 0 else f"−${-d:,} CHEAPER"))
         b = o.get("baggage") or {}
         bag = b.get("summary") or b.get("checked", "")
+        # "2 tickets" = two separate purchases = two book links.
+        if o.get("link2"):
+            book = f" · [book 1st]({o['link']}) [2nd]({o['link2']})"
+        elif o.get("link"):
+            book = f" · [book]({o['link']})"
+        else:
+            book = ""
         lines.append(f"  {gap} · {o['airline']} · {o['kind']}"
-                     f"{' · ' + bag if bag else ''}")
+                     f"{' · ' + bag if bag else ''}{book}")
     return lines
 
 

@@ -444,7 +444,9 @@ def ticket2_options(flights, sg_tickets, main, top_n=10) -> list:
                 "price": a["price_total"] + b["price_total"],
                 "stops": f"{a.get('stops')} / {b.get('stops')}",
                 "duration": f"{a.get('duration')} / {b.get('duration')}",
-                "layovers": None, "link": a.get("link"),
+                # Two separate purchases ⇒ two booking links (one Book button
+                # per ticket in the UI; a single button would only buy leg 1).
+                "layovers": None, "link": a.get("link"), "link2": b.get("link"),
                 "depart_time": a.get("depart_time"), "arrive_time": a.get("arrive_time"),
                 "chosen": not t and (a["price_total"] + b["price_total"]) == base,
             })
