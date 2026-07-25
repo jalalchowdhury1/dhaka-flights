@@ -625,6 +625,33 @@ function detailHTML(h) {
     + (d.legs || []).map(legLine).join("") + bags;
 }
 
+/* Which way are prices heading? Today vs first tracked day + low/high marks. */
+function trendSummary(history) {
+  const md = s => { const t = Date.parse(s + "T12:00"); return isNaN(t) ? s :
+    new Date(t).toLocaleDateString("en-US", {month: "short", day: "numeric"}); };
+  const series = [
+    {label: "⭐ Whole trip", get: mainTotal},
+    {label: "🎫 Ticket ①", get: h => h.ticket1_total ?? null},
+    {label: "🇸🇬 Ticket ②", get: h => h.ticket2_total ?? null},
+  ];
+  const rows = series.map(s => {
+    const pts = history.map(h => ({d: h.date, v: s.get(h)})).filter(p => p.v != null);
+    if (!pts.length) return "";
+    const cur = pts[pts.length - 1];
+    if (pts.length < 2)
+      return `<div style="margin-top:4px">${s.label}: <b>${usd(cur.v)}</b> <span class="muted">— first day tracked</span></div>`;
+    const first = pts[0], d = cur.v - first.v;
+    const dir = d === 0 ? `<span class="muted">flat since ${md(first.d)}</span>` :
+      d < 0 ? `<span style="color:var(--good-fg);font-weight:600">▼ ${usd(-d)} since ${md(first.d)}</span>`
+            : `<span style="color:var(--warn-fg);font-weight:600">▲ ${usd(d)} since ${md(first.d)}</span>`;
+    const lo = pts.reduce((a, b) => b.v < a.v ? b : a);
+    const hi = pts.reduce((a, b) => b.v > a.v ? b : a);
+    return `<div style="margin-top:4px">${s.label}: <b>${usd(cur.v)}</b> · ${dir}
+      <span class="muted">· low ${usd(lo.v)} (${md(lo.d)}) · high ${usd(hi.v)} (${md(hi.d)})</span></div>`;
+  }).join("");
+  return `<div style="font-size:.85rem;margin-top:10px;border-top:1px solid var(--border);padding-top:8px">${rows}</div>`;
+}
+
 function renderHistory() {
   const dir = hSort.dir, k = hSort.key;
   const rows = [...hRows].sort((a, b) => {
@@ -642,7 +669,9 @@ function renderHistory() {
     HCOLS.map(c => `<td class="${c.num ? "num" : ""}">${c.num ? usd(h[c.key]) : esc(h[c.key] ?? "—")}</td>`).join("") +
     `</tr><tr class="detail-row" style="display:none"><td colspan="${HCOLS.length}">${detailHTML(h)}</td></tr>`).join("");
   document.getElementById("view-history").innerHTML =
-    `<h2 style="font-size:.95rem;margin:16px 0 0;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;font-weight:600">The trip, day by day</h2>
+    `<h2 style="font-size:.95rem;margin:16px 0 0;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;font-weight:600">📈 Price trend</h2>
+     <div class="card">${chart(hRows)}${trendSummary(hRows)}</div>
+     <h2 style="font-size:.95rem;margin:16px 0 0;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;font-weight:600">The trip, day by day</h2>
      <div class="card scroll-x"><table id="htable"><tr>${head}</tr>${body}</table>
      <div class="muted" style="margin-top:8px">Tap a column header to sort · tap a row for that day's airlines, layovers, baggage and booking links.
      Dollar figures are totals for all 3 travelers. Days before 18 Jul 2026 predate this trip definition and show “—”;
