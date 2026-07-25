@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dhaka–Bali Trip Tracker</title>
+<title>Istanbul · Dhaka · Singapore · Bali — Trip Tracker</title>
 <style>
   :root {
     color-scheme: light;
@@ -48,6 +48,9 @@
               padding: 1px 6px; vertical-align: 1px; }
   .plan .tk.t1 { background: color-mix(in srgb, var(--s1) 18%, transparent); color: var(--s1); }
   .plan .tk.t2 { background: color-mix(in srgb, var(--s3) 22%, transparent); color: var(--s3); }
+  .bag { margin-top: 3px; font-size: .8rem; color: var(--text-2); }
+  .bag b { color: var(--text); }
+  .bag.unknown { color: var(--warn-fg); }
   .chip { background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
           padding: 3px 10px; font-size: .82rem; white-space: nowrap; }
   .badge { display: inline-block; font-size: .75rem; font-weight: 600;
@@ -69,6 +72,8 @@
   th, td { text-align: left; padding: 6px 8px 6px 0; border-top: 1px solid var(--border); white-space: nowrap; }
   th { color: var(--text-3); font-weight: 600; border-top: none; }
   td.num, th.num { text-align: right; padding-right: 8px; }
+  td.wrap { white-space: normal; }
+  tr.chosen td { background: color-mix(in srgb, var(--s2) 10%, transparent); }
   .scroll-x { overflow-x: auto; }
   .legend { display: flex; gap: 16px; font-size: .8rem; color: var(--text-2); margin: 8px 0 2px; flex-wrap: wrap; }
   .legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px;
@@ -135,7 +140,7 @@
 </head>
 <body>
   <h1>✈️ Boston → Istanbul → Dhaka → Singapore → Bali
-    <button id="infoBtn" title="Booking, cancellation & visa info" aria-label="Trip info">i</button>
+    <button id="infoBtn" title="Booking, baggage, cancellation & visa info" aria-label="Trip info">i</button>
   </h1>
   <div class="sub" id="rules"></div>
   <div class="sub" id="updated"></div>
@@ -144,11 +149,9 @@
   <div class="strip" id="strip"></div>
   <div class="tabs" role="tablist">
     <button id="tab-today" class="active" role="tab">⭐ The Trip</button>
-    <button id="tab-singapore" role="tab">🔀 All options</button>
-    <button id="tab-history" role="tab">History</button>
+    <button id="tab-history" role="tab">📈 History</button>
   </div>
   <div id="view-today"></div>
-  <div id="view-singapore" style="display:none"></div>
   <div id="view-history" style="display:none"></div>
 
   <dialog id="infoModal">
@@ -158,61 +161,76 @@
       <summary>📋 Book in this order</summary>
       <ol>
         <li><b>Passports first</b> — all 3 (child too) valid <b>6+ months past Feb 2027</b> (into Aug 2027) with 2+ blank pages each.</li>
-        <li><b>The big ticket</b> — open-jaw (BOS→DAC + DPS→BOS) or the Turkish stopover version — on the <b>airline's US website/app</b>. Booking there starts the federal 24-hour free-cancel window and keeps refunds simple. Avoid third-party sites.</li>
+        <li><b>Ticket ①</b> (Boston→Istanbul→Dhaka + Bali→Boston) on the <b>airline's US website/app</b>. Booking there starts the federal 24-hour free-cancel window and keeps refunds simple. Avoid third-party sites.</li>
         <li><b>Same day: Bali resort on Marriott points</b> (5 nights, 5th free). Points rates usually cancel free until a few days out — if the hotel doesn't work, cancel the flight within 24h at $0.</li>
-        <li><b>Bangladesh visas</b> — see Visas below. Do this before buying the middle leg.</li>
-        <li><b>Dhaka→Bali hop last</b> (THAI / AirAsia). It never touches the US so the 24-hour rule does <b>not</b> apply — treat it as non-refundable and buy it only once everything else is locked.</li>
-        <li><b>~1 week before Bali:</b> Indonesia e-VOA online for all 3 (needs your DPS→BOS booking as onward proof) + Bali tourist levy + the customs form ≤3 days before landing.</li>
+        <li><b>Bangladesh visas</b> — see Visas below. Do this before buying Ticket ②.</li>
+        <li><b>Ticket ② last</b> (Dhaka→Singapore→Bali). It never touches the US so the 24-hour rule does <b>not</b> apply — treat it as non-refundable and buy it only once everything else is locked.</li>
+        <li><b>~1 week before Bali:</b> Indonesia e-VOA online for all 3 (needs your Bali→Boston booking as onward proof) + Bali tourist levy + the customs form ≤3 days before landing.</li>
       </ol>
+    </details>
+    <details class="inner">
+      <summary>🧳 Baggage — why it's all over the place</summary>
+      <ul>
+        <li><b>Two different rulebooks.</b> Ticket ① starts in the USA, so it's counted in <b>bags</b> (piece concept) — Turkish and the Gulf carriers give 2 × 23 kg per person, most European carriers give only 1. Ticket ② never touches the US, so it's counted in <b>kilos</b>, and the number changes by airline <i>and</i> by route.</li>
+        <li><b>Nothing is through-checked between the two tickets.</b> You collect the bags in Dhaka and check them in again for Ticket ②; same again in Singapore if the middle is two separate tickets.</li>
+        <li><b>Low-cost carriers (AirAsia, Scoot, Jetstar) include no free checked bag at all</b> — the fare looks cheaper until you add 20 kg, and buying at the airport costs roughly double.</li>
+        <li><b>The child with a seat</b> normally gets the full adult allowance. Infants on a lap do not.</li>
+        <li>The figures on the Trip tab come from each airline's own baggage page. Fare brands (EcoFly, Economy Lite, Basic) can cut them — <b>the number on the checkout page is the one you actually bought</b>.</li>
+      </ul>
     </details>
     <details class="inner">
       <summary>💳 Cancellations & refunds</summary>
       <ul>
-        <li><b>24-hour rule (US DOT):</b> any ticket that touches the US — the open-jaw, the stopover itinerary, or BOS→DAC / DPS→BOS one-ways — is fully refundable for <b>24 hours after booking</b> if departure is 7+ days away. This is the main safety valve; Turkish honors it only when booked via its own site/app.</li>
+        <li><b>24-hour rule (US DOT):</b> any ticket that touches the US — Ticket ① — is fully refundable for <b>24 hours after booking</b> if departure is 7+ days away. This is the main safety valve; Turkish honors it only when booked via its own site/app.</li>
         <li><b>After 24h on Turkish:</b> economy cancel fee roughly <b>$70–200+ per person</b>; the cheapest "EcoFly" promo fares are non-refundable. If unsure, pay the small step-up to a flexible economy fare — the exact rule shows at checkout. No cancellations in the last 12h before departure.</li>
-        <li><b>Dhaka→Bali:</b> no US protection. AirAsia is effectively non-refundable; THAI charges fare-rule fees. Assume this money is spent once booked.</li>
+        <li><b>Ticket ② (Dhaka→Singapore→Bali):</b> no US protection. AirAsia/Scoot are effectively non-refundable; full-service carriers charge fare-rule fees. Assume this money is spent once booked.</li>
         <li><b>Airline-initiated changes:</b> if the airline significantly changes or cancels any flight, you're owed a <b>full refund</b> regardless of fare type.</li>
         <li>Card refunds must arrive within 7 business days (DOT). Pay with a credit card that has trip protection.</li>
-        <li><b>Chase UR points:</b> portal bookings get real Turkish (235-) ticket numbers, so the stopover hotel usually still works — but N/R fare classes are excluded, and changes route through Chase. Cleanest: book the airline direct with the card, spend UR on the THAI leg instead.</li>
+        <li><b>Chase UR points:</b> portal bookings get real Turkish (235-) ticket numbers, so the stopover hotel usually still works — but N/R fare classes are excluded, and changes route through Chase. Cleanest: book the airline direct with the card, spend UR on Ticket ② instead.</li>
       </ul>
     </details>
     <details class="inner">
       <summary>🛂 Visas & borders</summary>
       <ul>
-        <li><b>Bangladesh:</b> US passports get a <b>30-day visa on arrival</b> at Dhaka — <b>$50 cash USD per person</b> (child too; carry $150 crisp), onward ticket + proof of funds (~$500), and it's granted at the officer's discretion — getting tourist visas <b>in advance</b> from the mission is the safer play. Your stay keeps a buffer: never let the Feb 1–3 departure slip past day 30.</li>
-        <li><b>Indonesia:</b> e-VOA (B1), <b>$35/person, 30 days</b>; apply online ≥48h before arrival; <b>requires onward-flight proof</b> (your DPS→BOS leg); extendable only in person now. Plus the Bali levy (IDR 150k/person, pay online) and the electronic customs declaration ≤3 days before (QR scanned at the airport).</li>
-        <li><b>Istanbul layover/stopover:</b> US citizens are <b>visa-free in Türkiye</b> (90 days/180) — leaving the airport with the baby is fine, no visa needed.</li>
-        <li><b>Transit (KL / Bangkok / Doha / Seoul):</b> on a single ticket you stay airside — no visa. Only if you ever book the KL hop as two separate tickets would you clear Malaysian immigration (visa-free for US, but file the free Malaysia Digital Arrival Card ≤3 days before).</li>
+        <li><b>Bangladesh:</b> US passports get a <b>30-day visa on arrival</b> at Dhaka — <b>$50 cash USD per person</b> (child too; carry $150 crisp), onward ticket + proof of funds (~$500), and it's granted at the officer's discretion — getting tourist visas <b>in advance</b> from the mission is the safer play. Your stay keeps a buffer: never let the departure slip past day 30.</li>
+        <li><b>Indonesia:</b> e-VOA (B1), <b>$35/person, 30 days</b>; apply online ≥48h before arrival; <b>requires onward-flight proof</b> (your Bali→Boston leg); extendable only in person now. Plus the Bali levy (IDR 150k/person, pay online) and the electronic customs declaration ≤3 days before (QR scanned at the airport).</li>
+        <li><b>Istanbul stopover:</b> US citizens are <b>visa-free in Türkiye</b> (90 days/180) — leaving the airport for the 2 nights is fine, no visa needed.</li>
+        <li><b>Singapore:</b> visa-free for US passports; file the free <b>SG Arrival Card online ≤3 days before</b> landing.</li>
+        <li><b>Transit airside</b> on a single ticket needs no visa. Only if a hop is booked as two separate tickets would you clear immigration in the connecting country.</li>
       </ul>
     </details>
     <details class="inner">
-      <summary>😴 Long-rest layovers (12h+ with the baby)</summary>
+      <summary>🕌 The Istanbul stopover perk</summary>
       <ul>
-        <li><b>Qatar via Doha (easiest):</b> when booking the open-jaw, pick the itinerary with the <b>17 hr overnight in Doha</b> (~$100 over the cheapest option). Land ~5pm, sleep in a real bed, fly on ~10:30am. Discover Qatar stopover hotels run from <b>~$14/person</b> (4-star) booked with the ticket; US passports enter Qatar visa-free.</li>
-        <li><b>Turkish via Istanbul:</b> IST→DAC flies <b>once daily</b>, so the standard connection is ~6 hr — the longer option is the tracked <b>~30 hr stopover itinerary</b> (see Today tab). Turkish gives economy passengers a <b>FREE 4-star hotel night</b> when the connection is 20 hr–7 days on one reservation: book it, then apply at their Stopover "Booker" page <b>≥72 hr before the flight</b>. Not valid on N/R fare classes — check the booking-class letter before paying.</li>
+        <li>Turkish gives economy passengers a <b>FREE 4-star hotel night</b> when the connection is 20 hr–7 days on one reservation: book Ticket ①, then apply at their Stopover "Booker" page <b>≥72 hr before the flight</b>. Not valid on N/R fare classes — check the booking-class letter before paying. On the 2-night version, night 2 is on you.</li>
+        <li>IST→DAC flies <b>once daily</b>, which is why the Istanbul stop costs so little extra — you'd be waiting for that flight anyway.</li>
       </ul>
     </details>
     <details class="inner">
       <summary>🧾 Small stuff that bites</summary>
       <ul>
         <li>Prices here are Google Flights <b>totals for all 3 travelers</b>; fares aren't held — book on the airline site when ready.</li>
-        <li>Check the baggage allowance on each ticket separately — the cheap DAC→DPS fares often sell bags separately.</li>
         <li>Request bassinet/child meal at booking and re-confirm at check-in.</li>
         <li>Carry printed copies of the onward tickets — both borders ask.</li>
-        <li>The "home" date for one-ticket options assumes a next-day arrival; confirm the exact landing time before buying.</li>
+        <li>The "home" date assumes the Bali→Boston leg lands the next day; confirm the exact landing time before buying.</li>
       </ul>
     </details>
   </dialog>
 
   <footer>Prices are Google Flights totals for all travelers. Data updates with the
-    3&nbsp;am scrape; reload to get the latest.</footer>
+    midnight scrape; reload to get the latest.</footer>
 <script>
 const RAW = "https://raw.githubusercontent.com/jalalchowdhury1/dhaka-flights/main/site/data.json";
 const usd = (n) => n == null ? "—" : "$" + n.toLocaleString("en-US");
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const short = (d) => { const p = String(d).replace(",", "").split(" "); return p.length >= 2 ? p[0].slice(0,3) + " " + p[1] : d; };
 const EMOJI = {"BOS→DAC":"🇧🇩","DAC→DPS":"🌴","DPS→BOS":"🏠",
-               "DAC→SIN":"🇸🇬","SIN→DPS":"🌴","DAC→SIN→DPS":"🇸🇬"};
+               "DAC→SIN":"🇸🇬","SIN→DPS":"🌴","DAC→SIN→DPS":"🇸🇬",
+               "BOS→IST":"🇺🇸","IST→DAC":"🕌"};
+/* One trip is tracked (2026-07-25). `main_total` is the number; `combined_total`
+   is the same figure under its pre-rewrite name, kept so the chart and the
+   history table run continuously across the change. */
+const mainTotal = (h) => h.main_total ?? h.combined_total ?? null;
 
 async function load() {
   let data;
@@ -246,16 +264,15 @@ async function load() {
   }
   renderStrip(data);
   renderToday(data);
-  renderSingapore(data);
   hRows = flattenHistory(data.history);
   renderHistory();
 }
 
 /* ---------- glance strip with day-over-day change ---------- */
-function deltaHTML(hist, key) {
-  const withVal = hist.filter(h => h[key] != null);
-  if (withVal.length < 2) return `<div class="t-delta flat">first day tracked</div>`;
-  const d = withVal[withVal.length - 1][key] - withVal[withVal.length - 2][key];
+function deltaHTML(hist, get) {
+  const vals = hist.map(get).filter(v => v != null);
+  if (vals.length < 2) return `<div class="t-delta flat">first day tracked</div>`;
+  const d = vals[vals.length - 1] - vals[vals.length - 2];
   if (d === 0) return `<div class="t-delta flat">= no change</div>`;
   return d < 0 ? `<div class="t-delta down">▼ ${usd(-d)} cheaper</div>`
                : `<div class="t-delta up">▲ ${usd(d)} pricier</div>`;
@@ -264,15 +281,13 @@ function renderStrip(d) {
   const hist = d.history || [];
   const last = hist[hist.length - 1] || {};
   const tiles = [
-    {label: "⭐ IST + SIN (main)", key: "combined_total"},
-    {label: "Direct open-jaw", key: "openjaw_total"},
-    {label: "🇸🇬 Singapore only", key: "singapore_total"},
-    {label: "🕌 Istanbul only", key: "istanbul2_total"},
-    {label: "3 one-way tickets", key: "oneway_combo_total"},
+    {label: "⭐ Whole trip", get: mainTotal, val: mainTotal(last)},
+    {label: "🎫 Ticket ① BOS·IST·DAC + Bali·BOS", get: h => h.ticket1_total ?? null, val: last.ticket1_total},
+    {label: "🇸🇬 Ticket ② DAC·SIN·Bali", get: h => h.ticket2_total ?? null, val: last.ticket2_total},
   ];
   document.getElementById("strip").innerHTML = tiles.map((t, i) =>
     `<div class="tile${i === 0 ? " main" : ""}"><div class="t-label">${t.label}</div>
-     <div class="t-num">${usd(last[t.key])}</div>${deltaHTML(hist, t.key)}</div>`).join("");
+     <div class="t-num">${usd(t.val)}</div>${deltaHTML(hist, t.get)}</div>`).join("");
 }
 
 function bookBtn(link, big) {
@@ -318,20 +333,16 @@ function structureCard(s, hero) {
 }
 
 function chart(history) {
-  const pts = history.filter(h => h.oneway_combo_total || h.openjaw_total ||
-    h.stopover_total || h.istanbul2_total || h.singapore_total || h.combined_total);
-  if (pts.length < 2) return `<div class="muted" style="margin-top:8px">Price history chart appears after a couple of days of data.</div>`;
   const series = [
-    {key: "openjaw_total", label: "Open-jaw + Bali hop", color: "var(--s2)"},
-    {key: "oneway_combo_total", label: "3 one-way tickets", color: "var(--s1)"},
-    {key: "stopover_total", label: "TK stopover + hop", color: "var(--s3)"},
-    {key: "istanbul2_total", label: "Istanbul only", color: "#d64570"},
-    {key: "singapore_total", label: "Singapore only", color: "#8b5cf6"},
-    {key: "combined_total", label: "⭐ IST + SIN main", color: "#0ea5a3"},
+    {label: "⭐ Whole trip", color: "#0ea5a3", get: mainTotal},
+    {label: "Ticket ①", color: "var(--s1)", get: h => h.ticket1_total ?? null},
+    {label: "Ticket ②", color: "var(--s3)", get: h => h.ticket2_total ?? null},
   ];
+  const pts = history.filter(h => series.some(s => s.get(h) != null));
+  if (pts.length < 2) return `<div class="muted" style="margin-top:8px">Price history chart appears after a couple of days of data.</div>`;
   const W = Math.max(320, Math.min(680, pts.length * 60)), H = 220,
         L = 44, R = 76, T = 12, B = 26;
-  const vals = pts.flatMap(p => series.map(s => p[s.key]).filter(v => v != null));
+  const vals = pts.flatMap(p => series.map(s => s.get(p)).filter(v => v != null));
   const lo = Math.min(...vals), hi = Math.max(...vals), pad = Math.max(100, (hi - lo) * .15);
   const y = v => T + (H - T - B) * (1 - (v - (lo - pad)) / ((hi + pad) - (lo - pad)));
   const x = i => L + (W - L - R) * (pts.length === 1 ? .5 : i / (pts.length - 1));
@@ -343,32 +354,28 @@ function chart(history) {
           <text x="${L-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--text-3)">$${Math.round(v/100)/10}k</text>`;
   }
   for (const s of series) {
-    const sp = pts.map((p, i) => p[s.key] != null ? [x(i), y(p[s.key])] : null).filter(Boolean);
+    const sp = pts.map((p, i) => s.get(p) != null ? [x(i), y(s.get(p))] : null).filter(Boolean);
     if (!sp.length) continue;
     g += `<polyline points="${sp.map(p => p.join(",")).join(" ")}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round"/>`;
     for (const [px, py] of sp) g += `<circle cx="${px}" cy="${py}" r="3" fill="${s.color}"/>`;
     const last = sp[sp.length - 1];
-    const lastVal = [...pts].reverse().find(p => p[s.key] != null)[s.key];
+    const lastVal = s.get([...pts].reverse().find(p => s.get(p) != null));
     g += `<text x="${last[0]+8}" y="${last[1]+4}" font-size="11" font-weight="600" fill="var(--text)">${usd(lastVal)}</text>`;
   }
   pts.forEach((p, i) => {
     const lbl = p.date.slice(5).replace("-", "/");
     if (i === 0 || i === pts.length - 1 || pts.length <= 7 || i % Math.ceil(pts.length / 6) === 0)
       g += `<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="10" fill="var(--text-3)">${lbl}</text>`;
-    const tip = series.map(s => p[s.key] != null ? `${s.label}: ${usd(p[s.key])}` : null).filter(Boolean).join("\n");
+    const tip = series.map(s => s.get(p) != null ? `${s.label}: ${usd(s.get(p))}` : null).filter(Boolean).join("\n");
     g += `<rect x="${x(i)-14}" y="${T}" width="28" height="${H-T-B}" fill="transparent"><title>${p.date}\n${tip}</title></rect>`;
   });
   return `<div class="legend">${series.map(s => `<span><span class="dot" style="background:${s.color}"></span>${s.label}</span>`).join("")}</div>
-    <div class="scroll-x"><svg width="${W}" height="${H}" role="img" aria-label="Price history">${g}</svg></div>`;
+    <div class="scroll-x"><svg width="${W}" height="${H}" role="img" aria-label="Price history">${g}</svg></div>
+    <div class="muted" style="margin-top:6px">Ticket ① / ② lines start 25 Jul 2026, when the tracker narrowed to this one trip.</div>`;
 }
 
 function sec(title, body, open) {
   return `<details class="sec"${open ? " open" : ""}><summary>${title}</summary>${body}</details>`;
-}
-
-/* The main trip: Istanbul 2-3 nights + Dhaka + Singapore 1-3 nights + Bali 5 */
-function mainTrip(d) {
-  return (d.singapore || []).find(s => s.kind === "sg-stopover2") || null;
 }
 
 function timeline(s) {
@@ -390,11 +397,22 @@ const addDays = (d, n) => d ? new Date(d.getTime() + n * 86400000) : null;
 const fd = d => d ? d.toLocaleDateString("en-US", {month: "short", day: "numeric"}) : "—";
 const fr = (a, b) => a && b ? `${fd(a)}–${fd(b)}` : "—";
 
+/* Per-leg baggage line inside the plan — the allowance changes leg by leg and
+   that's exactly what's easy to get wrong (Jalal, 2026-07-25). */
+function bagLine(bag) {
+  if (!bag) return "";
+  const cls = bag.confidence === "unknown" ? "bag unknown" : "bag";
+  const cabin = bag.cabin && bag.cabin !== "—" ? ` · cabin ${esc(bag.cabin)}` : "";
+  return `<div class="${cls}">🧳 <b>${esc(bag.checked)}</b> — ${esc(bag.carrier)}${cabin}</div>`;
+}
+
 function tripPlan(s) {
   const oj = s.openjaw || {};
   const t = s.sg_ticket || null;
   const legs = s.legs || [];
   const l1 = legs.find(f => f.route === "DAC→SIN"), l2 = legs.find(f => f.route === "SIN→DPS");
+  const bag = {};
+  (s.baggage || []).forEach(b => { bag[b.route] = b; });
 
   const out = _d(oj.out_date), dacIn = _d(oj.out_arrive);
   const istIn = addDays(out, 1), istOut = addDays(dacIn, -1);
@@ -409,16 +427,17 @@ function tripPlan(s) {
   const dur = v => v && v !== "N/A" ? `${esc(v)}` : "times at booking";
 
   const rows = [
-    {when: fd(out), icon: "✈️", what: "Fly Boston → Istanbul", tk: 1, link: oj.link,
+    {when: fd(out), icon: "✈️", what: "Fly Boston → Istanbul", tk: 1, link: oj.link, bag: bag["BOS→IST"],
      detail: `${esc(oj.airline || "—")} · ${dur(oj.duration)}` +
              (tt(oj.out_depart_time, "") ? ` · departs ${esc(oj.out_depart_time)}` : "") + lay(oj.layovers)},
     {when: fr(istIn, istOut), icon: "🕌", what: `Istanbul — ${s.ist_nights ?? 2} nights`, stay: true,
      detail: "US passports visa-free · Turkish's free-hotel stopover perk may cover night 1 (apply ≥72 h before)"},
-    {when: fd(istOut), icon: "✈️", what: "Fly Istanbul → Dhaka", tk: 1, link: oj.link,
+    {when: fd(istOut), icon: "✈️", what: "Fly Istanbul → Dhaka", tk: 1, link: oj.link, bag: bag["IST→DAC"],
      detail: `evening departure, lands ${fd(dacIn)} morning · exact times shown at booking`},
     {when: fr(dacIn, sgDep), icon: "🇧🇩", what: `Dhaka — ${s.dhaka_days} days`, stay: true,
      detail: "30-day visa window; day count includes arrival & departure days"},
     {when: fd(sgDep), icon: "✈️", what: "Fly Dhaka → Singapore", tk: 2, link: t ? t.link : (l1 && l1.link),
+     bag: bag["DAC→SIN"],
      detail: t ? `${esc(t.airline)} · ${dur(t.duration)}` +
                  (t.out_depart_time ? ` · departs ${esc(t.out_depart_time)}` : "") +
                  (t.out_arrive_time ? ` → lands ${esc(t.out_arrive_time)}` : "") + lay(t.layovers)
@@ -427,12 +446,13 @@ function tripPlan(s) {
     {when: fr(sgIn, dpsDep), icon: "🇸🇬", what: `Singapore — ${s.sg_nights} nights`, stay: true,
      detail: "US passports visa-free (SG Arrival Card online ≤3 days before)"},
     {when: fd(dpsDep), icon: "✈️", what: "Fly Singapore → Bali", tk: 2, link: t ? t.link : (l2 && l2.link),
+     bag: bag["SIN→DPS"],
      detail: t ? "second leg of the same ticket · ~2 hr 40 min hop · times at booking"
                : l2 ? `${esc(l2.airline)} · ${dur(l2.duration)}` +
                       (l2.depart_time ? ` · ${tt(l2.depart_time, l2.arrive_time)}` : "") + lay(l2.layovers) : "—"},
     {when: fr(baliIn, ret), icon: "🌴", what: `Bali — ${s.bali_nights} nights`, stay: true,
      detail: "Marriott 5th-night-free · e-VOA needs the Bali→Boston booking as onward proof"},
-    {when: fd(ret), icon: "✈️", what: "Fly Bali → Boston", tk: 1, link: oj.link,
+    {when: fd(ret), icon: "✈️", what: "Fly Bali → Boston", tk: 1, link: oj.link, bag: bag["DPS→BOS"],
      detail: `return leg of Ticket ① · lands ${esc(s.home)} · exact times at booking`},
     {when: esc(s.home), icon: "🏠", what: "Home in Boston", stay: true, detail: "before the Feb 7 deadline ✓"},
   ];
@@ -440,7 +460,7 @@ function tripPlan(s) {
   const tkChip = n => n ? `<span class="tk t${n}">Ticket ${n === 1 ? "①" : "②"}</span>` : "";
   const body = rows.map(r =>
     `<tr${r.stay ? ' class="stay"' : ""}><td class="when">${r.when}</td>
-     <td>${r.icon} <b>${r.what}</b> ${tkChip(r.tk)}<div class="muted" style="margin-top:2px">${r.detail || ""}</div></td>
+     <td>${r.icon} <b>${r.what}</b> ${tkChip(r.tk)}<div class="muted" style="margin-top:2px">${r.detail || ""}</div>${bagLine(r.bag)}</td>
      <td class="num">${r.link ? bookBtn(r.link) : ""}</td></tr>`).join("");
 
   const t1total = oj.price_total, t2total = t ? t.price_total :
@@ -454,35 +474,52 @@ function tripPlan(s) {
   </div>`;
 }
 
-/* One matrix of every tracked option so the nuances sit side by side. */
-function optionMatrix(d) {
-  const main = mainTrip(d);
-  const rows = [];
-  const add = (s, label) => s && rows.push({label, s});
-  add(main, "⭐ Istanbul + Singapore (main)");
-  add((d.singapore || []).find(s => s.kind === "sg-stopover"), "TK 30h stopover + Singapore");
-  add((d.singapore || []).find(s => ["sg-openjaw","sg-oneways"].includes(s.kind)), "Singapore only (no Istanbul)");
-  add((d.structures || []).find(s => s.kind === "stopover2"), "Istanbul only (no Singapore)");
-  add((d.structures || []).find(s => s.kind === "stopover"), "TK 30h stopover only");
-  add((d.structures || []).find(s => s.kind === "openjaw"), "Direct (no stops)");
-  add((d.structures || []).find(s => s.kind === "oneways"), "Direct · 3 one-way tickets");
+/* ---------- Baggage: the whole picture on one card ---------- */
+function baggageCard(s) {
+  const rows = s.baggage || [];
   if (!rows.length) return "";
-  const base = main ? main.total : rows[0].s.total;
-  const body = rows.map(({label, s}) => {
-    const delta = s.total - base;
-    const dTxt = s === (main || rows[0].s) ? "—" :
-      (delta <= 0 ? `<span style="color:var(--good-fg)">−${usd(-delta).slice(1)}</span>`
-                  : `+${usd(delta).slice(1)}`);
-    const nights = `${s.ist_nights ?? "–"} / ${s.dhaka_days} / ${s.sg_nights ?? "–"} / ${s.bali_nights}`;
-    const ok = s.valid ? "✓" : `<span title="${esc(s.flag || "")}">⚠️</span>`;
-    return `<tr><td>${label}</td><td class="num"><b>${usd(s.total)}</b></td>
-      <td class="num">${dTxt}</td><td class="num" style="white-space:nowrap">${nights}</td><td>${ok}</td></tr>`;
+  const body = rows.map(r => {
+    const others = (r.others || []).map(o => `<div class="muted">${esc(o.carrier)}: ${esc(o.checked)}</div>`).join("");
+    const warn = r.confidence === "unknown" ? ' style="color:var(--warn-fg)"' : "";
+    return `<tr><td>${EMOJI[r.route] || "✈️"} ${esc(r.route)}</td>
+      <td><span class="tk t${r.ticket}">Ticket ${r.ticket === 1 ? "①" : "②"}</span></td>
+      <td class="wrap">${esc(r.carrier)}${others}</td>
+      <td class="wrap"${warn}><b>${esc(r.checked)}</b>${r.cabin && r.cabin !== "—" ? `<div class="muted">cabin ${esc(r.cabin)}</div>` : ""}</td>
+      <td>${r.url ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">rules</a>` : ""}</td></tr>`;
+  }).join("");
+  const warns = (s.baggage_warnings || []).map(w => `<div style="margin-top:6px">⚠️ ${esc(w)}</div>`).join("");
+  return `<div class="card scroll-x">
+    <table><tr><th>Leg</th><th>On</th><th>Airline</th><th>Checked, per person</th><th></th></tr>${body}</table>
+    <div style="margin-top:10px;font-size:.85rem;color:var(--warn-fg);background:var(--warn-bg);border-radius:8px;padding:10px 12px">
+      ${warns || "⚠️ Confirm every allowance on the fare page before paying."}</div>
+    <div class="muted" style="margin-top:8px">Reference figures from each airline's own baggage page (checked ${esc(s.baggage_checked || "")}).
+      Fare brands — EcoFly, Economy Lite, Basic — can cut them, and Google never shows the brand. <b>The checkout page is the authority.</b></div>
+  </div>`;
+}
+
+/* ---------- "What else could I buy, and how much more?" ---------- */
+function altTable(options, note) {
+  if (!options || !options.length) return `<div class="card muted">No alternatives were captured for these dates tonight.</div>`;
+  const body = options.map(o => {
+    const d = o.delta;
+    const gap = o.chosen ? `<span class="badge good">chosen</span>` :
+      d == null ? "—" :
+      d === 0 ? "same price" :
+      d < 0 ? `<span style="color:var(--good-fg)">−${usd(-d).slice(1)}</span>` : `+${usd(d).slice(1)}`;
+    const b = o.baggage || {};
+    const bag = b.summary || b.checked || "";
+    return `<tr class="${o.chosen ? "chosen" : ""}">
+      <td class="wrap">${esc(o.airline)}</td>
+      <td>${esc(o.kind)}</td>
+      <td class="num"><b>${usd(o.price)}</b></td>
+      <td class="num">${gap}</td>
+      <td class="wrap">${esc(bag)}</td>
+      <td class="num">${bookBtn(o.link)}</td></tr>`;
   }).join("");
   return `<div class="card scroll-x"><table>
-    <tr><th>Option</th><th class="num">Total</th><th class="num">vs main</th>
-    <th class="num" title="Istanbul / Dhaka days / Singapore / Bali">IST/DAC/SIN/Bali</th><th></th></tr>
-    ${body}</table>
-    <div class="muted" style="margin-top:6px">Totals are for all 3 travelers · nights columns read Istanbul&nbsp;nights / Dhaka&nbsp;days / Singapore&nbsp;nights / Bali&nbsp;nights.</div></div>`;
+    <tr><th>Airline</th><th>How</th><th class="num">Price</th><th class="num">vs chosen</th>
+        <th>Checked bags</th><th></th></tr>${body}</table>
+    <div class="muted" style="margin-top:8px">${note}</div></div>`;
 }
 
 function renderToday(d) {
@@ -496,118 +533,88 @@ function renderToday(d) {
   document.getElementById("updated").textContent = `Last scrape: ${d.updated}${ago}`;
   let html = "";
 
-  const main = mainTrip(d);
-  const structures = d.structures || [];
+  const main = d.main;
   if (main) {
     html += sec("⭐ The trip: Istanbul + Dhaka + Singapore + Bali",
       timeline(main) + structureCard(main, true) +
       (main.alt_note ? `<div class="muted" style="margin-top:6px">💸 ${esc(main.alt_note)}</div>` : ""),
       true);
-    html += sec("🗓 Trip plan — dates, flights, layovers & stays", tripPlan(main), true);
-  } else if (structures.length) {
-    html += sec("🏆 Best bookable trip today (no Istanbul+Singapore pairing built)",
-      structureCard(structures[0], true), true);
-  } else {
-    html += `<div class="card">No valid combination found in today's data.</div>`;
-  }
+    html += sec("🗓 Trip plan — dates, flights, layovers, baggage & stays", tripPlan(main), true);
+    html += sec("🧳 Baggage, leg by leg", baggageCard(main), true);
 
-  html += sec("⚖️ Every option, side by side", optionMatrix(d), true);
+    const t2 = d.ticket2_options || [];
+    const t2dates = main.sg_ticket ? `${short(main.sg_ticket.out_date)} + ${short(main.sg_ticket.ret_date)}` : "the same dates";
+    html += sec(`🔀 Ticket ② alternatives — Dhaka→Singapore→Bali (${t2dates})`,
+      altTable(t2, "Same dates, so the Singapore and Bali nights are identical — the price gap is the whole story. " +
+                   "\"2 tickets\" means buying Dhaka→Singapore and Singapore→Bali separately: cheaper sometimes, " +
+                   "but you re-check bags in Singapore and a delay on the first leg is your problem, not the airline's."),
+      true);
+    html += sec("🎫 Ticket ① alternatives — Boston→Istanbul→Dhaka + Bali→Boston",
+      altTable(d.ticket1_options || [], "Same three flights and dates, different airline. Watch the bag column: " +
+               "European carriers usually give one 23 kg bag where Turkish and the Gulf carriers give two."),
+      false);
+  } else {
+    html += `<div class="card">No trip could be priced in today's data. The retry slots will try again — check the self-check notes above.</div>`;
+  }
 
   html += sec("📋 How to book it (short version)", `<div class="card">
     <ol class="playbook">
       <li>Check all 3 passports: valid into <b>Aug 2027</b>, 2+ blank pages.</li>
-      <li>Buy the <b>big ticket</b> (open-jaw or Turkish stopover) on the airline's US site — you get a <b>24-hour full-refund window</b> (federal rule, departure 7+ days out).</li>
+      <li>Buy <b>Ticket ①</b> (Boston→Istanbul→Dhaka + Bali→Boston) on the airline's US site — you get a <b>24-hour full-refund window</b> (federal rule, departure 7+ days out).</li>
       <li>Same day, lock the Bali resort on Marriott points; if it falls through, cancel the flight free inside 24h.</li>
       <li>Sort <b>Bangladesh visas</b> (30-day VOA: $50 cash each + onward ticket — or safer, get visas in advance).</li>
-      <li>Buy the <b>Dhaka→Bali hop last</b> — it has no US refund protection; treat as non-refundable.</li>
+      <li>Buy <b>Ticket ②</b> (Dhaka→Singapore→Bali) last — no US refund protection; treat as non-refundable.</li>
       <li>~1 week before Bali: Indonesia <b>e-VOA</b> for all 3 (needs the Bali→Boston booking as proof) + levy + customs form.</li>
     </ol>
-    <div class="muted" style="margin-top:6px">The ⓘ next to the title has the full handbook: cancellation windows, visa fine print, long-layover tricks.</div>
+    <div class="muted" style="margin-top:6px">The ⓘ next to the title has the full handbook: baggage rulebooks, cancellation windows, visa fine print.</div>
   </div>`, false);
 
   html += sec("📈 Price history", `<div class="card">${chart(d.history || [])}</div>`, false);
-
-  const legs = d.cheapest_by_leg || {};
-  html += sec("🧩 Cheapest per leg (dates may not combine)", `<div class="card">` +
-    ["BOS→DAC","DAC→DPS","DAC→SIN","SIN→DPS","DPS→BOS"].map(r => legs[r] ? legLine(legs[r]) :
-      `<div class="leg"><span class="em">${EMOJI[r]}</span><span>${r}</span><span class="price">no results</span></div>`).join("") +
-    `</div>`, false);
 
   const flights = d.flights || [];
   if (flights.length) {
     const rows = flights.map(f => `<tr><td>${esc(f.route)}</td><td>${short(f.depart)}</td>
       <td>${esc(f.airline)}</td><td>${esc(f.stops)}</td><td class="num">${usd(f.price_total)}</td></tr>`).join("");
-    html += sec(`🗂 All ${flights.length} scraped fares`,
-      `<div class="card scroll-x"><table><tr><th>Leg</th><th>Depart</th><th>Airline</th><th>Stops</th><th class="num">Total</th></tr>${rows}</table></div>`, false);
+    html += sec(`🗂 All ${flights.length} one-way fares scraped tonight`,
+      `<div class="card scroll-x"><table><tr><th>Leg</th><th>Depart</th><th>Airline</th><th>Stops</th><th class="num">Total</th></tr>${rows}</table>
+       <div class="muted" style="margin-top:6px">Only the Dhaka→Singapore→Bali one-way legs are scraped as singles; the long legs are only ever priced as Ticket ①.</div></div>`, false);
   }
   document.getElementById("view-today").innerHTML = html;
 }
 
-/* ---------- All-options tab: every structure in full detail ---------- */
-function renderSingapore(d) {
-  const groups = [
-    ["🌟 With Istanbul AND Singapore",
-      (d.singapore || []).filter(s => ["sg-stopover2","sg-stopover"].includes(s.kind))],
-    ["🇸🇬 Singapore only (no Istanbul stop)",
-      (d.singapore || []).filter(s => ["sg-openjaw","sg-oneways"].includes(s.kind))],
-    ["🕌 Istanbul only (no Singapore)",
-      (d.structures || []).filter(s => ["stopover","stopover2"].includes(s.kind))],
-    ["✈️ Direct — no stops",
-      (d.structures || []).filter(s => ["openjaw","oneways"].includes(s.kind))],
-  ];
-  let html = `<div class="card" style="margin-top:14px">
-    <b>Every ticketing structure we price nightly</b>
-    <div class="muted" style="margin-top:4px">Fixed: 5 nights in Bali · 2 nights in
-    Istanbul · 2 nights in Singapore · home by Feb 7 · Dhaka ≤29 days. The cheapest
-    airline wins (US-Bangla included) — when a THAI / Singapore Airlines option
-    exists it shows as a 💸 upgrade note.</div></div>`;
-  for (const [title, list] of groups) {
-    if (!list.length) continue;
-    html += sec(`${title} (${list.length})`,
-      list.map(s => structureCard(s, false) +
-        (s.alt_note ? `<div class="muted" style="margin:-6px 0 8px">💸 ${esc(s.alt_note)}</div>` : "")).join(""),
-      title.startsWith("🌟"));
-  }
-  document.getElementById("view-singapore").innerHTML = html;
-}
-
-/* ---------- History tab: sortable table of every day's best trip ---------- */
+/* ---------- History tab: sortable table of the tracked trip ---------- */
 const HCOLS = [
-  {key: "date",               label: "Date",          num: false},
-  {key: "best_total",         label: "Best $",        num: true},
-  {key: "best_structure",     label: "Structure",     num: false},
-  {key: "_home",              label: "Home",          num: false},
-  {key: "oneway_combo_total", label: "One-ways $",    num: true},
-  {key: "openjaw_total",      label: "OJ + hop $",    num: true},
-  {key: "stopover_total",     label: "TK stopover $", num: true},
-  {key: "combined_total",     label: "⭐ IST+SIN $",  num: true},
-  {key: "istanbul2_total",    label: "IST only $",    num: true},
-  {key: "singapore_total",    label: "SIN only $",    num: true},
-  {key: "_oj6",               label: "OJ tkt (Feb 6)",num: true},
-  {key: "_oj7",               label: "OJ tkt (Feb 7)",num: true},
-  {key: "_l1",                label: "BOS→DAC min",   num: true},
-  {key: "_l2",                label: "DAC→DPS min",   num: true},
-  {key: "_l3",                label: "DPS→BOS min",   num: true},
+  {key: "date",            label: "Date",            num: false},
+  {key: "_main",           label: "⭐ Trip $",        num: true},
+  {key: "ticket1_total",   label: "Ticket ① $",      num: true},
+  {key: "ticket2_total",   label: "Ticket ② $",      num: true},
+  {key: "ticket1_airline", label: "① airline",       num: false},
+  {key: "ticket2_airline", label: "② airline",       num: false},
+  {key: "_nights",         label: "IST/DAC/SIN/Bali",num: false},
+  {key: "_home",           label: "Home",            num: false},
 ];
 let hRows = [], hSort = {key: "date", dir: -1};
 
 function flattenHistory(history) {
   return (history || []).map(h => ({
     ...h,
-    _home: h.best_detail ? h.best_detail.home : "—",
-    _oj6: (h.openjaw_min || {})["February 6, 2027"] ?? null,
-    _oj7: (h.openjaw_min || {})["February 7, 2027"] ?? null,
-    _l1: (h.legs_min || {})["BOS→DAC"] ?? null,
-    _l2: (h.legs_min || {})["DAC→DPS"] ?? null,
-    _l3: (h.legs_min || {})["DPS→BOS"] ?? null,
+    _main: mainTotal(h),
+    _home: h.home ?? (h.best_detail ? h.best_detail.home : null) ?? "—",
+    _nights: [h.ist_nights, h.dhaka_days, h.sg_nights, h.bali_nights]
+      .every(v => v == null) ? "—"
+      : [h.ist_nights, h.dhaka_days, h.sg_nights, h.bali_nights]
+          .map(v => v == null ? "–" : v).join("/"),
   }));
 }
 
 function detailHTML(h) {
   const d = h.best_detail;
-  if (!d) return `<span class="muted">No valid trip found this day.</span>`;
-  return `<div class="muted" style="margin-bottom:4px">${esc(d.name)} · Dhaka ${d.dhaka_days} days · Bali ${d.bali_nights} nights · home ${esc(d.home)}</div>`
-    + (d.openjaw ? ojLine(d.openjaw) : "") + (d.legs || []).map(legLine).join("");
+  if (!d) return `<span class="muted">No trip was priced this day.</span>`;
+  const bags = (d.baggage || []).map(b =>
+    `<div class="muted">🧳 ${esc(b.route)} · ${esc(b.carrier)}: ${esc(b.checked)}</div>`).join("");
+  return `<div class="muted" style="margin-bottom:4px">${esc(d.name)} · Istanbul ${d.ist_nights ?? "–"} nights · Dhaka ${d.dhaka_days} days · Singapore ${d.sg_nights ?? "–"} nights · Bali ${d.bali_nights} nights · home ${esc(d.home)}</div>`
+    + (d.openjaw ? ojLine(d.openjaw) : "") + (d.sg_ticket ? sgTicketLine(d.sg_ticket) : "")
+    + (d.legs || []).map(legLine).join("") + bags;
 }
 
 function renderHistory() {
@@ -627,9 +634,11 @@ function renderHistory() {
     HCOLS.map(c => `<td class="${c.num ? "num" : ""}">${c.num ? usd(h[c.key]) : esc(h[c.key] ?? "—")}</td>`).join("") +
     `</tr><tr class="detail-row" style="display:none"><td colspan="${HCOLS.length}">${detailHTML(h)}</td></tr>`).join("");
   document.getElementById("view-history").innerHTML =
-    `<h2 style="font-size:.95rem;margin:16px 0 0;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;font-weight:600">Best bookable trip, day by day</h2>
+    `<h2 style="font-size:.95rem;margin:16px 0 0;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;font-weight:600">The trip, day by day</h2>
      <div class="card scroll-x"><table id="htable"><tr>${head}</tr>${body}</table>
-     <div class="muted" style="margin-top:8px">Tap a column header to sort · tap a row for that day's airlines, layovers, and booking links. Dollar figures are totals for all 3 travelers.</div></div>`;
+     <div class="muted" style="margin-top:8px">Tap a column header to sort · tap a row for that day's airlines, layovers, baggage and booking links.
+     Dollar figures are totals for all 3 travelers. Days before 18 Jul 2026 predate this trip definition and show “—”;
+     the Ticket ① / ② split starts 25 Jul 2026.</div></div>`;
   document.querySelectorAll("#htable th.sortable").forEach(th => th.onclick = () => {
     const key = th.dataset.key;
     hSort = {key, dir: hSort.key === key ? -hSort.dir : (key === "date" ? -1 : 1)};
@@ -642,13 +651,12 @@ function renderHistory() {
 }
 
 function setTab(which) {
-  for (const t of ["today", "singapore", "history"]) {
+  for (const t of ["today", "history"]) {
     document.getElementById("tab-" + t).classList.toggle("active", which === t);
     document.getElementById("view-" + t).style.display = which === t ? "" : "none";
   }
 }
 document.getElementById("tab-today").onclick = () => setTab("today");
-document.getElementById("tab-singapore").onclick = () => setTab("singapore");
 document.getElementById("tab-history").onclick = () => setTab("history");
 
 const modal = document.getElementById("infoModal");

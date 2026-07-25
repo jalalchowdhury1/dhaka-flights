@@ -5,22 +5,21 @@ import time
 import json
 from typing import Union
 
-# Trip: BOS → Dhaka (≤29 days, 30-day visa) → Bali (5 nights, Marriott cert) → BOS.
-# Three ONE-WAY searches; combo.py picks the cheapest valid combination.
+# ONE TRIP ONLY (Jalal, 2026-07-25: "i only need the main trip … you just need
+# to track this one and not the others"): BOS → Istanbul 2n → Dhaka →
+# Singapore → Bali 5n → BOS. Ticket ① (the two long legs + Istanbul) is one
+# multi-city search; the DAC→SIN→DPS middle is Ticket ②.
+#
+# RETIRED 2026-07-25 — the direct BOS→DAC / DAC→DPS / DPS→BOS one-ways and the
+# plain open-jaw watch. They priced the alternative trips Jalal no longer wants,
+# and dropping them takes the nightly run from 30 searches (~25 min) to 13
+# (~11 min), which also means far fewer chances to hit a Google throttle.
+# Restoring them = put the legs back in LEGS and OPENJAW_SEARCHES back in
+# scrape_tickets_all(); combo.best_structures()/best_combos() still work.
 LEGS = [
-    {"origin": "BOS", "dest": "DAC",
-     "dates": ["January 4, 2027", "January 5, 2027", "January 6, 2027"]},
-    # Jan 31 matters: its overnight flights arrive Feb 1, the only cheap way
-    # to get exactly 5 Bali nights before a Feb 6 DPS→BOS return (2026-07-16:
-    # its absence made the combo logic drop the Feb-6 open-jaw entirely).
-    {"origin": "DAC", "dest": "DPS",
-     "dates": ["January 31, 2027", "February 1, 2027", "February 2, 2027", "February 3, 2027"]},
-    {"origin": "DPS", "dest": "BOS",
-     "dates": ["February 5, 2027", "February 6, 2027", "February 7, 2027"]},
-    # Singapore-detour variant (2026-07-18): Dhaka 2 nights shorter, 2 nights in
-    # Singapore en route to Bali. DAC→SIN is the DAC→DPS window shifted 2 days
-    # earlier; SIN→DPS (2 nights later) reuses the old DAC→DPS window. Bali (5
-    # nights) and the return are unchanged. See combo.best_singapore.
+    # The Singapore middle, priced as two one-ways — the cheaper of {2 one-ways,
+    # 1 multi-city ticket} wins inside combo.best_singapore. Both are the SAME
+    # trip, just a different way to buy the Dhaka→Singapore→Bali hop.
     {"origin": "DAC", "dest": "SIN",
      "dates": ["January 29, 2027", "January 30, 2027", "January 31, 2027", "February 1, 2027"]},
     {"origin": "SIN", "dest": "DPS",
@@ -111,6 +110,25 @@ def _find_refs(snap_raw: str, *keywords) -> list:
 
 def _snap() -> str:
     return _run("browse snapshot")
+
+
+# Google streams its results in after the page URL changes. A FIXED sleep
+# snapshots an empty list whenever the Mac is busy — seen live 2026-07-25: the
+# search URL was right, the tree had 153 lines and zero fares, and the run
+# reported "0 results" as if Google had nothing. Poll instead: cheap on a fast
+# night, and the difference between a real empty day and a slow one.
+RESULT_WAIT_SECONDS = 40
+RESULT_POLL_SECONDS = 5
+
+
+def _wait_for_results(snap: str) -> str:
+    waited = 0
+    while ("us dollars" not in _get_tree(snap).lower()
+           and waited < RESULT_WAIT_SECONDS):
+        time.sleep(RESULT_POLL_SECONDS)
+        waited += RESULT_POLL_SECONDS
+        snap = _snap()
+    return snap
 
 
 def _pick_airport(snap: str, code: str) -> str:
@@ -246,14 +264,14 @@ def scrape_route(origin: str, dest: str, depart: str) -> list:
             _run(f"browse click {search_ref}")
         else:
             _run("browse press Enter")
-        time.sleep(10)
+        time.sleep(8)
 
         raw_url = _run("browse get url")
         try:
             result_url = json.loads(raw_url).get("url", raw_url)
         except Exception:
             result_url = raw_url
-        snap = _snap()
+        snap = _wait_for_results(_snap())
 
         # Google only shows a handful of "top" flights inline; the cheap ones
         # are often behind the expander.
@@ -391,6 +409,8 @@ def _parse_results(tree: str, origin: str, dest: str, url: str, depart: str = ""
 # Open-jaw watch: BOS→DAC + DPS→BOS on ONE multi-city ticket (the middle
 # DAC→DPS hop is bought separately). Found 2026-07-15 to be ~$1.7k cheaper
 # than three one-ways ($3.4k vs $5.1k for the two long legs, all 3 pax).
+# RETIRED from the nightly rotation 2026-07-25 (main trip only) — config kept
+# so a comparison run is one line away.
 OPENJAW_SEARCHES = [
     ("January 4, 2027", "February 6, 2027"),   # home Feb 7 (deadline-safe)
     ("January 4, 2027", "February 7, 2027"),   # home Feb 8 (flagged)
@@ -511,14 +531,14 @@ def _scrape_multicity(legs: list, parse_fn, tag: str) -> list:
             _run(f"browse click {search_ref}")
         else:
             _run("browse press Enter")
-        time.sleep(12)
+        time.sleep(10)
 
         raw_url = _run("browse get url")
         try:
             result_url = json.loads(raw_url).get("url", raw_url)
         except Exception:
             result_url = raw_url
-        snap = _snap()
+        snap = _wait_for_results(_snap())
         more_ref = _find_ref(snap, "View more flights")
         if more_ref:
             _run(f"browse click {more_ref}")
@@ -630,8 +650,15 @@ ISTANBUL3_SEARCH = dict(
 )
 
 # ISTANBUL3_SEARCH retired from the nightly rotation (2026-07-18 final: exactly
-# 2 nights in Istanbul). Config kept above for easy re-adding.
-STOPOVER_SEARCHES = [STOPOVER_SEARCH, ISTANBUL2_SEARCH]
+# 2 nights in Istanbul). STOPOVER_SEARCH (the Turkish 30h/1-night version)
+# retired 2026-07-25 — it was a DIFFERENT trip, and only the 2-night Istanbul
+# itinerary is tracked now. Both configs kept above for easy re-adding.
+STOPOVER_SEARCHES = [ISTANBUL2_SEARCH]
+
+# Ticket ① is the ONLY search that can kill the whole trip if it comes back
+# empty — nothing else can stand in for it now that the alternatives are gone —
+# so it gets more attempts than everything else.
+TICKET1_ATTEMPTS = 3
 
 
 def scrape_stopover(cfg=None) -> list:
@@ -697,28 +724,27 @@ def scrape_sg_tickets_all() -> list:
     return all_results
 
 
-def scrape_openjaw_all() -> list:
+def scrape_tickets_all() -> list:
+    """Ticket ① searches: BOS→IST + IST→DAC + DPS→BOS on one multi-city ticket.
+    (Was scrape_openjaw_all; the plain open-jaw searches retired 2026-07-25.)"""
     all_results = []
-    for i, (out_date, ret_date) in enumerate(OPENJAW_SEARCHES, 1):
-        print(f"[openjaw {i}/{len(OPENJAW_SEARCHES)}] BOS→DAC {out_date} + DPS→BOS {ret_date}")
-        results = scrape_openjaw(out_date, ret_date)
-        if not results:
-            print("  0 results — retrying once with a fresh session...")
-            time.sleep(5)
-            results = scrape_openjaw(out_date, ret_date)
-        all_results += results
-        print(f"  Got {len(results)} options")
-
     for cfg in STOPOVER_SEARCHES:
         print(f"[{cfg['kind']}] {cfg['label']}")
-        results = scrape_stopover(cfg)
-        if not results:
-            print("  0 results — retrying once with a fresh session...")
-            time.sleep(5)
+        results = []
+        for attempt in range(1, TICKET1_ATTEMPTS + 1):
             results = scrape_stopover(cfg)
+            if results:
+                break
+            print(f"  0 results (attempt {attempt}/{TICKET1_ATTEMPTS}) — "
+                  f"retrying with a fresh session...")
+            time.sleep(5)
         all_results += results
         print(f"  Got {len(results)} options")
     return all_results
+
+
+# Back-compat alias: run_daily used to call this name.
+scrape_openjaw_all = scrape_tickets_all
 
 
 def scrape_all() -> list:

@@ -1,44 +1,61 @@
-from scraper import scrape_all
-from sheet_writer import write_to_sheet
-from combo import best_combos
+"""Manual run: scrape the tracked trip, write the Sheet, print a summary.
+No Telegram, no publish, no git push — safe to run any time.
+The full nightly pipeline is run_daily.py.
+"""
+from scraper import scrape_all, scrape_tickets_all, scrape_sg_tickets_all
+from sheet_writer import write_to_sheet, multicity_as_rows
+from combo import main_trip, ticket2_options
 
 
 def main():
-    print("Starting flight search: BOS → DAC → DPS → BOS (three one-way legs)")
-    print("BOS→DAC Jan 4–6 · DAC→DPS Feb 1–3 · DPS→BOS Feb 5–7 · 2 adults + 1 child\n")
+    print("Trip: BOS → Istanbul 2n → Dhaka → Singapore 2n → Bali 5n → BOS "
+          "(2 adults + 1 child)")
+    print("Ticket ① BOS→IST + IST→DAC + DPS→BOS · Ticket ② DAC→SIN→DPS\n")
 
+    tickets1 = scrape_tickets_all()
+    sg_tickets = scrape_sg_tickets_all()
     flights = scrape_all()
 
-    if not flights:
-        print("No flights found. Google may have blocked the scraper.")
-        print("Try running again — the browser will be visible so you can solve any CAPTCHA.")
+    if not (tickets1 or sg_tickets or flights):
+        print("Nothing scraped. Check the browse daemon (see AGENTS.md §5.2).")
         return
 
-    # Sort by total price (cheapest first), put N/A at end
     def sort_key(f):
         p = f.get("price_total", "N/A")
         return p if isinstance(p, (int, float)) else float("inf")
 
     flights.sort(key=sort_key)
+    write_to_sheet(
+        multicity_as_rows(tickets1, "① BOS→IST→DAC + DPS→BOS")
+        + multicity_as_rows(sg_tickets, "② DAC→SIN→DPS")
+        + flights,
+        tab_name="Google Flights")
 
-    print(f"\nFound {len(flights)} total flights. Writing to Google Sheet...")
-    write_to_sheet(flights, tab_name="Google Flights")
+    trip = main_trip(flights, tickets1, sg_tickets)
+    if not trip:
+        print("\nNo valid trip built — check the pairing rules in combo.py.")
+        return
 
-    combos = best_combos(flights, top_n=3)
-    if combos:
-        print("\n--- Best valid trip combos (visa ≤29d, Bali ~5 nights, home ≤Feb 7) ---")
-        for i, c in enumerate(combos, 1):
-            print(f"{i}. ${c['total']:,} total · Dhaka {c['dhaka_days']}d · Bali {c['bali_nights']}n")
-            for f in c["legs"]:
-                print(f"     {f['route']} {f['depart']} · {f['airline']} · {f['stops']} · ${f['price_total']:,}")
-    else:
-        print("\nNo valid 3-leg combo found — check per-leg results in the sheet.")
+    print(f"\n--- THE TRIP: ${trip['total']:,} total ---")
+    print(f"Istanbul {trip.get('ist_nights')}n · Dhaka {trip['dhaka_days']}d · "
+          f"Singapore {trip.get('sg_nights')}n · Bali {trip['bali_nights']}n · "
+          f"home {trip['home']}")
+    if trip.get("openjaw"):
+        oj = trip["openjaw"]
+        print(f"  ① {oj['airline']} · ${oj['price_total']:,}")
+    if trip.get("sg_ticket"):
+        t = trip["sg_ticket"]
+        print(f"  ② {t['airline']} · ${t['price_total']:,}")
+    for f in trip.get("legs", []):
+        print(f"  ② {f['route']} {f['depart']} · {f['airline']} · ${f['price_total']:,}")
 
-    print("\n--- Top 5 Cheapest individual legs ---")
-    for f in flights[:5]:
-        print(f"  {f['route']} | {f['depart']} | {f['airline']} | {f['stops']} | ${f['price_total']}")
-
-    print("\nDone! Open your Google Sheet to see all results.")
+    alts = [o for o in ticket2_options(flights, sg_tickets, trip) if not o.get("chosen")]
+    if alts:
+        print("\n--- Ticket ② alternatives (same dates) ---")
+        for o in alts[:6]:
+            d = o.get("delta")
+            gap = "same" if not d else (f"+${d:,}" if d > 0 else f"-${-d:,}")
+            print(f"  {gap:>8}  {o['airline']} ({o['kind']}) ${o['price']:,}")
 
 
 if __name__ == "__main__":

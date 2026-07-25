@@ -3,19 +3,26 @@ user-visible warnings (Telegram + dashboard banner).
 
 Born 2026-07-16, after the exact-5-night pairing rule silently hid a valid
 $3,423 open-jaw from the daily message. The scraper had the data; the output
-lost it; nothing complained. Every invariant here exists to make that class
-of failure impossible to miss:
-  1. every scraped multi-city variant must appear as a structure
-  2. every leg×date search should have produced at least one fare
-  3. a metric that had a value yesterday must not silently become None
-  4. big day-over-day swings get called out for a human sanity look
-  5. the arrival-date parser must still be parsing (Google phrasing drift)
+lost it; nothing complained.
+
+Rewritten 2026-07-25 when the tracker narrowed to ONE trip. That narrowing
+removed the safety net of "some other structure will still be there", so these
+invariants matter more than before:
+  1. Ticket ① priced but no trip built  → pairing rules ate the trip
+  2. Ticket ① not priced at all         → the run has nothing to say
+  3. every leg×date and every Ticket ② date pair produced a fare
+  4. a metric that had a value yesterday must not silently become None
+  5. big day-over-day swings get called out for a human sanity look
+  6. the arrival-date parser must still be parsing (Google phrasing drift)
+  7. the trip's shape (2 IST / 2 SG / 5 Bali nights) is what was asked for
 """
-from scraper import LEGS
+from scraper import LEGS, SG_TICKET_SEARCHES
 
-
-def _variant_key(oj):
-    return (oj.get("label", ""), oj["out_date"], oj["ret_date"])
+TRACKED = {
+    "main_total": "MAIN trip total",
+    "ticket1_total": "Ticket ① (Boston–Istanbul–Dhaka + Bali–Boston)",
+    "ticket2_total": "Ticket ② (Dhaka–Singapore–Bali)",
+}
 
 
 def _short(d):
@@ -23,47 +30,33 @@ def _short(d):
     return f"{parts[0][:3]} {parts[1]}" if len(parts) >= 2 else d
 
 
-def self_check(flights, openjaws, structures, prev_entry=None,
-               sg=None, sg_tickets=None) -> list:
+def _priced(items):
+    return [x for x in items if isinstance(x.get("price_total"), (int, float))]
+
+
+def self_check(flights, openjaws, main, prev_entry=None, sg_tickets=None) -> list:
     """Return a list of human-readable warning strings (empty = all good)."""
     warnings = []
+    tickets1 = _priced([o for o in (openjaws or []) if o.get("kind") == "stopover2"])
+    tickets2 = _priced(sg_tickets or [])
+    sg_legs = _priced([f for f in flights
+                       if f.get("route") in ("DAC→SIN", "SIN→DPS")])
 
-    # 0. Singapore-detour variant: if we scraped Singapore data (one-way legs
-    # priced, or a multi-city ticket priced) but built NO via-SIN structure,
-    # the whole variant vanished silently — surface it (same principle as #1).
-    sg_leg_prices = any(
-        isinstance(f.get("price_total"), (int, float))
-        for f in flights if f.get("route") in ("DAC→SIN", "SIN→DPS"))
-    sg_ticket_prices = any(
-        isinstance(t.get("price_total"), (int, float)) for t in (sg_tickets or []))
-    if (sg_leg_prices or sg_ticket_prices) and not sg:
-        warnings.append("Singapore-detour data was scraped but NO via-SIN trip "
-                        "was built — check pairing rules in combo.best_singapore")
+    # 1 + 2. The trip itself
+    if not tickets1:
+        warnings.append("Ticket ① (BOS→IST→DAC + DPS→BOS) returned NO fares — "
+                        "the trip can't be priced today; check cron.log and "
+                        "debug_last_zero.txt")
+    elif not main:
+        cheapest = min(t["price_total"] for t in tickets1)
+        warnings.append(f"Ticket ① was scraped from ${cheapest:,} but NO trip was "
+                        f"built — a pairing rule dropped it, investigate "
+                        f"combo.best_singapore")
+    if (tickets2 or sg_legs) and not main:
+        warnings.append("Dhaka→Singapore→Bali fares exist but no trip used them "
+                        "— check the Bali-night / visa-window pairing rules")
 
-    # 1. Every priced multi-city variant is represented in structures
-    scraped = {}
-    for oj in openjaws:
-        if isinstance(oj.get("price_total"), (int, float)):
-            k = _variant_key(oj)
-            if k not in scraped or oj["price_total"] < scraped[k]["price_total"]:
-                scraped[k] = oj
-    present = {_variant_key(s["openjaw"]) for s in structures if s.get("openjaw")}
-    for k, oj in scraped.items():
-        if k not in present:
-            name = oj.get("label") or (f"open-jaw {_short(oj['out_date'])} + "
-                                       f"{_short(oj['ret_date'])}")
-            warnings.append(
-                f"{name} was scraped at ${oj['price_total']:,} but shows in NO "
-                f"structure — pairing rules dropped it, investigate combo.py")
-
-    routes_with_fares = {f["route"] for f in flights
-                         if isinstance(f.get("price_total"), (int, float))}
-    if len(routes_with_fares) == 3 and not any(
-            s.get("kind") == "oneways" for s in structures):
-        warnings.append("all 3 legs have fares but no one-way combo was built "
-                        "— check date/visa pairing in combo.py")
-
-    # 2. Every leg×date search produced at least one fare
+    # 3. Coverage: every one-way leg×date and every Ticket ② date pair
     seen = {(f["route"], f["depart"]) for f in flights}
     for leg in LEGS:
         route = f"{leg['origin']}→{leg['dest']}"
@@ -71,51 +64,54 @@ def self_check(flights, openjaws, structures, prev_entry=None,
             if (route, date) not in seen:
                 warnings.append(f"no fares captured for {route} {_short(date)} "
                                 f"— search failed or parsed 0")
+    seen_pairs = {(t.get("out_date"), t.get("ret_date")) for t in (sg_tickets or [])}
+    for d1, d2 in SG_TICKET_SEARCHES:
+        if (d1, d2) not in seen_pairs:
+            warnings.append(f"no Ticket ② fares for {_short(d1)} + {_short(d2)} "
+                            f"— search failed or parsed 0")
 
-    # 3 + 4. Compare tracked totals against yesterday's history entry
+    # 4 + 5. Compare today's tracked totals against yesterday's history entry
     if prev_entry:
-        today = {}
-        for s in structures:
-            if s["valid"]:
-                key = {"openjaw": "openjaw_total", "stopover": "stopover_total",
-                       "stopover2": "istanbul2_total",
-                       "oneways": "oneway_combo_total"}.get(s.get("kind"))
-                if key and key not in today:
-                    today[key] = s["total"]
-        for s in (sg or []):
-            if not s["valid"]:
-                continue
-            if s.get("kind") == "sg-stopover2":
-                today.setdefault("combined_total", s["total"])
-            elif s.get("kind") in ("sg-openjaw", "sg-oneways"):
-                today.setdefault("singapore_total", s["total"])
-        labels = {"openjaw_total": "open-jaw structure",
-                  "stopover_total": "Turkish stopover structure",
-                  "istanbul2_total": "Istanbul 2-night structure",
-                  "singapore_total": "via-Singapore trip",
-                  "combined_total": "MAIN Istanbul+Singapore trip",
-                  "oneway_combo_total": "one-way combo"}
-        for key, label in labels.items():
+        today = {
+            "main_total": main.get("total") if main else None,
+            "ticket1_total": ((main or {}).get("openjaw") or {}).get("price_total"),
+            "ticket2_total": ((main or {}).get("sg_ticket") or {}).get("price_total"),
+        }
+        if main and today["ticket2_total"] is None:
+            today["ticket2_total"] = sum(
+                f.get("price_total", 0) for f in main.get("legs", [])) or None
+        for key, label in TRACKED.items():
             prev = prev_entry.get(key)
+            if prev is None and key == "main_total":
+                prev = prev_entry.get("combined_total")   # pre-2026-07-25 name
             cur = today.get(key)
             if isinstance(prev, (int, float)) and cur is None:
-                warnings.append(f"{label} was ${prev:,} yesterday but is "
-                                f"MISSING today — check the flagged structures "
-                                f"and cron.log")
+                warnings.append(f"{label} was ${prev:,} yesterday but is MISSING "
+                                f"today — check cron.log")
             elif isinstance(prev, (int, float)) and isinstance(cur, (int, float)):
                 if prev and abs(cur - prev) / prev > 0.25:
                     warnings.append(f"{label} moved {(cur - prev) / prev:+.0%} "
                                     f"(${prev:,} → ${cur:,}) — big swing, "
                                     f"double-check before acting")
 
-    # 5. Parser drift: arrival dates should parse for most fares
-    priced = [f for f in flights if isinstance(f.get("price_total"), (int, float))]
+    # 6. Parser drift: arrival dates should parse for most fares
+    priced = _priced(flights)
     if priced:
         missing = sum(1 for f in priced if f.get("arrive") in (None, "", "N/A"))
         if missing / len(priced) > 0.3:
             warnings.append(f"arrival date failed to parse on {missing}/"
-                            f"{len(priced)} fares — Google may have changed "
-                            f"its wording; combo math is falling back to "
-                            f"estimates")
+                            f"{len(priced)} fares — Google may have changed its "
+                            f"wording; combo math is falling back to estimates")
+
+    # 7. Shape drift — the trip Jalal asked for is 2 / 2 / 5 nights. Cheapest
+    # still wins (a 1-night Singapore ticket is allowed to be the answer), but
+    # he should never discover it at the airport.
+    if main:
+        for got, want, what in ((main.get("ist_nights"), 2, "Istanbul"),
+                                (main.get("sg_nights"), 2, "Singapore"),
+                                (main.get("bali_nights"), 5, "Bali")):
+            if isinstance(got, int) and got != want:
+                warnings.append(f"today's cheapest trip gives {got} {what} "
+                                f"night{'s' if got != 1 else ''}, not {want}")
 
     return warnings

@@ -7,7 +7,8 @@ import os
 import shutil
 import subprocess
 
-from combo import best_combos, cheapest_by_leg, best_structures, best_singapore
+import baggage
+from combo import main_trip, ticket1_options, ticket2_options
 
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(REPO_DIR, "site", "data.json")
@@ -33,44 +34,55 @@ def _jsonable(obj):
     raise TypeError(f"not JSON-serializable: {type(obj)}")
 
 
+def _with_baggage(options: list, ticket_type: str, route: str) -> list:
+    for o in options:
+        o["baggage"] = baggage.for_leg(o.get("airline", ""), ticket_type, route)
+    return options
+
+
 def build_payload(flights: list, openjaws: list, history: list, today: str,
                   warnings: list = None, sg_tickets: list = None) -> dict:
-    structures = best_structures(flights, openjaws)
-    singapore = best_singapore(flights, openjaws, sg_tickets or [])
-    legs_min = {r: f["price_total"] for r, f in cheapest_by_leg(flights).items()}
-    oj_min = {}
-    for oj in openjaws:
-        if isinstance(oj.get("price_total"), (int, float)):
-            key = oj["ret_date"]
-            if key not in oj_min or oj["price_total"] < oj_min[key]:
-                oj_min[key] = oj["price_total"]
+    """One trip, one payload (2026-07-25). The alternative trips — direct
+    open-jaw, three one-ways, Istanbul-only, Singapore-only — are no longer
+    scraped, tracked, or charted; `main` IS the product now."""
+    main = main_trip(flights, openjaws, sg_tickets or [])
+    if main:
+        # Baggage rides inside the trip so history keeps the rules that applied
+        # on the day, not just the price.
+        main = dict(main,
+                    baggage=baggage.annotate(main),
+                    baggage_warnings=baggage.warnings(main),
+                    baggage_checked=baggage.CHECKED)
+
+    t1 = (main or {}).get("openjaw") or None
+    t2 = (main or {}).get("sg_ticket") or None
+    t1_total = t1.get("price_total") if t1 else None
+    t2_total = (t2.get("price_total") if t2 else
+                sum(f.get("price_total", 0) for f in (main or {}).get("legs", []))
+                if main else None)
 
     entry = {
         "date": today,
-        "best_total": structures[0]["total"] if structures else None,
-        "best_structure": structures[0]["name"] if structures else None,
-        # Full winning-structure snapshot so the dashboard's History tab can
-        # show airlines/legs/links for past days, not just totals.
-        "best_detail": structures[0] if structures else None,
-        "oneway_combo_total": next(
-            (s["total"] for s in structures if s["name"] == "3 one-way tickets"), None),
-        "openjaw_total": next(
-            (s["total"] for s in structures
-             if s.get("kind") == "openjaw" and s["valid"]), None),
-        "stopover_total": next(
-            (s["total"] for s in structures
-             if s.get("kind") == "stopover" and s["valid"]), None),
-        "istanbul2_total": next(
-            (s["total"] for s in structures
-             if s.get("kind") == "stopover2" and s["valid"]), None),
-        "openjaw_min": oj_min,
-        "legs_min": legs_min,
-        # combined = the MAIN trip (Istanbul 2-3 nights + Singapore + Bali 5)
-        "combined_total": next((s["total"] for s in singapore
-                                if s.get("kind") == "sg-stopover2" and s["valid"]), None),
-        "singapore_total": next((s["total"] for s in singapore
-                                 if s.get("kind") in ("sg-openjaw", "sg-oneways")
-                                 and s["valid"]), None),
+        # main_total is the number that matters; combined_total is written too
+        # so the 8 days of pre-2026-07-25 history and the Sheet's ⭐ column stay
+        # one continuous series.
+        "main_total": main["total"] if main else None,
+        "combined_total": main["total"] if main else None,
+        "ticket1_total": t1_total,
+        "ticket2_total": t2_total if main else None,
+        "ticket1_airline": t1.get("airline") if t1 else None,
+        "ticket2_airline": (main or {}).get("sg_airlines"),
+        "ist_nights": (main or {}).get("ist_nights"),
+        "sg_nights": (main or {}).get("sg_nights"),
+        "bali_nights": (main or {}).get("bali_nights"),
+        "dhaka_days": (main or {}).get("dhaka_days"),
+        "home": (main or {}).get("home"),
+        "valid": main.get("valid") if main else None,
+        "flag": (main or {}).get("flag"),
+        # Kept for the Sheet's existing columns + the History tab's detail row.
+        "best_total": main["total"] if main else None,
+        "best_structure": main["name"] if main else None,
+        "best_detail": main,
     }
     history = [h for h in history if h.get("date") != today] + [entry]
 
@@ -80,26 +92,35 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
         "trip": {
             "route": "BOS → Istanbul → Dhaka → Singapore → Bali → BOS",
             "travelers": "2 adults + 1 child",
-            "rules": ("5 nights Bali · 2 nights Istanbul · 2 nights Singapore · "
-                      "Dhaka ≤29 days · home by Feb 7, 2027 · cheapest airline wins "
-                      "(THAI/SQ upgrade noted when available)"),
+            "rules": ("2 nights Istanbul · Dhaka ≤29 days · 2 nights Singapore · "
+                      "5 nights Bali · home by Feb 7, 2027 · cheapest airline wins"),
         },
-        "structures": structures,
-        "singapore": singapore,
-        "combos": best_combos(flights, top_n=3),
-        "cheapest_by_leg": cheapest_by_leg(flights),
-        "openjaws": openjaws,
+        "main": main,
+        # "how much more is the non-US-Bangla option?" — with each airline's bag
+        # rule alongside, because a $60 saving that drops 40 kg isn't a saving.
+        "ticket1_options": _with_baggage(ticket1_options(openjaws, t1),
+                                         baggage.US_TICKET, "BOS→IST"),
+        "ticket2_options": _with_baggage(ticket2_options(flights, sg_tickets or [], main),
+                                         baggage.ASIA_TICKET, "DAC→SIN"),
+        "sg_tickets": sg_tickets or [],
         "flights": flights,
         "history": history,
     }
 
 
-def publish(flights: list, openjaws: list, warnings: list = None,
-            sg_tickets: list = None) -> None:
+def build_today(flights: list, openjaws: list, warnings: list = None,
+                sg_tickets: list = None) -> dict:
+    """Today's payload, history included — built BEFORE Telegram goes out so the
+    message and the dashboard can't disagree about what the trip costs."""
+    return build_payload(flights, openjaws, _load_history(),
+                         datetime.date.today().isoformat(), warnings, sg_tickets)
+
+
+def write_payload(payload: dict) -> None:
+    """Backup → write → commit → push. Never raises: a publish failure must not
+    cost the run its Telegram message or its Sheet row."""
     try:
         today = datetime.date.today().isoformat()
-        payload = build_payload(flights, openjaws, _load_history(), today, warnings,
-                                sg_tickets)
         # Backup yesterday's file before overwriting — 60 daily snapshots kept
         # locally (backups/ is gitignored; git history is the second copy, the
         # Google Sheet History tab the third).
@@ -133,3 +154,9 @@ def publish(flights: list, openjaws: list, warnings: list = None,
             print("Pushed data.json — dashboard will show it on next load.")
     except Exception as e:
         print(f"WARN: publish failed (daily run continues): {e}")
+
+
+def publish(flights: list, openjaws: list, warnings: list = None,
+            sg_tickets: list = None) -> None:
+    """Build + write in one call (kept for manual runs and older callers)."""
+    write_payload(build_today(flights, openjaws, warnings, sg_tickets))

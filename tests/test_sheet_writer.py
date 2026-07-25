@@ -53,13 +53,42 @@ def test_build_rows_no_link_falls_back_to_na():
 
 def test_history_row_maps_entry_fields_in_order():
     from sheet_writer import history_row, HISTORY_HEADERS
-    e = {"date": "2026-07-18", "combined_total": 4709, "openjaw_total": 4678,
-         "singapore_total": 4444, "istanbul2_total": 4943, "stopover_total": 4943,
-         "oneway_combo_total": 6189, "best_total": 4444,
-         "best_structure": "via Singapore"}
+    e = {"date": "2026-07-25", "main_total": 4666, "combined_total": 4666,
+         "ticket1_total": 3647, "ticket2_total": 1019,
+         "ticket1_airline": "Turkish Airlines", "ticket2_airline": "US-Bangla Airlines",
+         "ist_nights": 2, "dhaka_days": 23, "sg_nights": 2, "bali_nights": 5,
+         "best_total": 4666, "best_structure": "Istanbul 2-night stopover + Singapore"}
     row = history_row(e)
     assert len(row) == len(HISTORY_HEADERS)
-    assert row[0] == "2026-07-18"
-    assert row[1] == 4709 and row[7] == 4444
+    assert row[0] == "2026-07-25"
+    assert row[1] == 4666 and row[7] == 4666           # ⭐ column and Best $
+    assert row[9] == 3647 and row[10] == 1019          # appended Ticket ① / ②
+    assert row[11] == "Turkish Airlines"
+    assert row[13] == "2/23/2/5"
     # missing keys degrade to "" not crash
     assert history_row({"date": "x"})[1] == ""
+
+
+def test_history_row_reads_pre_rewrite_entries():
+    from sheet_writer import history_row
+    assert history_row({"date": "2026-07-24", "combined_total": 4665})[1] == 4665
+
+
+def test_retired_columns_keep_their_positions():
+    from sheet_writer import history_row, HISTORY_HEADERS
+    # Columns 2-6 belonged to the trips retired 2026-07-25; they must stay in
+    # place (blank) so the sheet's older rows keep their meaning.
+    assert HISTORY_HEADERS[2:7] == ["Direct OJ + hop", "SIN only", "IST only",
+                                    "TK 30h stopover", "3 one-ways"]
+    assert history_row({"date": "d", "main_total": 1})[2:7] == ["", "", "", "", ""]
+
+
+def test_multicity_rows_are_sheet_shaped():
+    from sheet_writer import multicity_as_rows, build_rows
+    t = {"out_date": "January 4, 2027", "out_arrive": "January 8, 2027",
+         "airline": "Turkish Airlines", "stops": "Nonstop", "duration": "9 hr",
+         "layovers": "none", "price_total": 3647, "link": "http://t"}
+    rows = build_rows(multicity_as_rows([t], "① BOS→IST→DAC + DPS→BOS"))
+    assert rows[1][0] == "① BOS→IST→DAC + DPS→BOS"
+    assert rows[1][1] == "January 4, 2027" and rows[1][7] == 3647
+    assert multicity_as_rows([], "x") == [] and multicity_as_rows(None, "x") == []

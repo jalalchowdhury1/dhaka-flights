@@ -355,3 +355,115 @@ def best_singapore(flights, openjaws, sg_tickets, top_n=3) -> list:
         seen.add(s["kind"])
         deduped.append(s)
     return deduped[:top_n]
+
+
+# ── The one tracked trip (2026-07-25) ──────────────────────────────────────
+def main_trip(flights, openjaws, sg_tickets):
+    """THE trip: BOS → Istanbul 2n → Dhaka → Singapore → Bali 5n → BOS.
+    Everything else was retired from the nightly run; this is the only
+    structure the tracker builds now (kind 'sg-stopover2')."""
+    for s in best_singapore(flights, openjaws, sg_tickets or [], top_n=5):
+        if s.get("kind") == "sg-stopover2":
+            return s
+    return None
+
+
+def ticket1_options(openjaws, chosen=None, top_n=8) -> list:
+    """Every airline that sells Ticket ① on the tracked dates, cheapest first,
+    with the price gap against the one the trip is priced on."""
+    base = (chosen or {}).get("price_total")
+    out_d = (chosen or {}).get("out_date")
+    ret_d = (chosen or {}).get("ret_date")
+    opts = []
+    for oj in openjaws or []:
+        if oj.get("kind") != "stopover2":
+            continue
+        if not isinstance(oj.get("price_total"), (int, float)):
+            continue
+        if out_d and (oj.get("out_date") != out_d or oj.get("ret_date") != ret_d):
+            continue
+        opts.append({
+            "kind": "1 ticket",
+            "airline": oj.get("airline", "?"),
+            "price": oj["price_total"],
+            "stops": oj.get("stops"), "duration": oj.get("duration"),
+            "layovers": oj.get("layovers"), "link": oj.get("link"),
+            "delta": (oj["price_total"] - base) if isinstance(base, (int, float)) else None,
+            "chosen": isinstance(base, (int, float)) and oj["price_total"] == base,
+        })
+    opts.sort(key=lambda o: o["price"])
+    return _dedupe_options(opts)[:top_n]
+
+
+def ticket2_options(flights, sg_tickets, main, top_n=10) -> list:
+    """Alternatives to whatever airline won the Dhaka→Singapore→Bali middle,
+    ON THE SAME DATES (Jalal 2026-07-25: "how much more is it").
+
+    Two shapes are comparable and both are listed:
+      · '1 ticket'  — a DAC→SIN→DPS multi-city fare
+      · '2 tickets' — DAC→SIN and SIN→DPS bought separately, same two dates
+    Same dates ⇒ the Singapore and Bali nights are identical, so the price gap
+    is the whole story."""
+    if not main:
+        return []
+    t = main.get("sg_ticket")
+    legs = {f.get("route"): f for f in (main.get("legs") or [])}
+    if t:
+        out_d, ret_d, base = t.get("out_date"), t.get("ret_date"), t.get("price_total")
+    else:
+        a, b = legs.get("DAC→SIN"), legs.get("SIN→DPS")
+        if not (a and b):
+            return []
+        out_d, ret_d = a.get("depart"), b.get("depart")
+        base = (a.get("price_total") or 0) + (b.get("price_total") or 0)
+
+    opts = []
+    for x in sg_tickets or []:
+        if not isinstance(x.get("price_total"), (int, float)):
+            continue
+        if x.get("out_date") != out_d or x.get("ret_date") != ret_d:
+            continue
+        opts.append({
+            "kind": "1 ticket", "airline": x.get("airline", "?"),
+            "price": x["price_total"], "stops": x.get("stops"),
+            "duration": x.get("duration"), "layovers": x.get("layovers"),
+            "link": x.get("link"),
+            "depart_time": x.get("out_depart_time"), "arrive_time": x.get("out_arrive_time"),
+            "chosen": bool(t) and x["price_total"] == base and x.get("airline") == t.get("airline"),
+        })
+
+    for a in _priced(flights, "DAC→SIN"):
+        if a.get("depart") != out_d:
+            continue
+        for b in _priced(flights, "SIN→DPS"):
+            if b.get("depart") != ret_d:
+                continue
+            opts.append({
+                "kind": "2 tickets",
+                "airline": f"{a.get('airline')} + {b.get('airline')}",
+                "price": a["price_total"] + b["price_total"],
+                "stops": f"{a.get('stops')} / {b.get('stops')}",
+                "duration": f"{a.get('duration')} / {b.get('duration')}",
+                "layovers": None, "link": a.get("link"),
+                "depart_time": a.get("depart_time"), "arrive_time": a.get("arrive_time"),
+                "chosen": not t and (a["price_total"] + b["price_total"]) == base,
+            })
+
+    opts.sort(key=lambda o: o["price"])
+    opts = _dedupe_options(opts)[:top_n]
+    for o in opts:
+        o["delta"] = (o["price"] - base) if isinstance(base, (int, float)) else None
+    return opts
+
+
+def _dedupe_options(opts) -> list:
+    """One row per (airline, price) — Google lists the same fare on several
+    departure times and the table shouldn't repeat it."""
+    seen, out = set(), []
+    for o in opts:
+        key = (o["kind"], o["airline"], o["price"])
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(o)
+    return out

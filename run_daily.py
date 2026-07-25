@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 """
-Daily runner: scrapes Google Flights for the three one-way legs
-BOS→DAC, DAC→DPS, DPS→BOS (2 adults + 1 child), writes results to
-Google Sheet, then sends the cheapest valid trip combo to Telegram.
-Run via cron at 3am EST.
+Daily runner for ONE trip (2026-07-25):
+BOS → Istanbul 2n → Dhaka → Singapore 2n → Bali 5n → BOS, 2 adults + 1 child.
+
+  Ticket ①  BOS→IST + IST→DAC + DPS→BOS, one multi-city ticket
+  Ticket ②  DAC→SIN→DPS, one ticket or two one-ways (whichever is cheaper)
+
+Scrapes both, prices the trip, self-checks, writes the Sheet, Telegrams the
+result with per-leg baggage + same-date alternatives, and publishes data.json.
+Runs from launchd at 12:00am with 2:00/4:00 retry slots.
 """
 import os
 import datetime
@@ -11,10 +16,10 @@ from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
-from scraper import scrape_all, scrape_openjaw_all, scrape_sg_tickets_all
-from sheet_writer import write_to_sheet
+from scraper import scrape_all, scrape_tickets_all, scrape_sg_tickets_all
+from sheet_writer import write_to_sheet, multicity_as_rows
 from notify_telegram import notify_cheapest
-from publish import publish
+import publish
 
 STAMP_FILE = os.path.join(os.path.dirname(__file__), ".last_run_date")
 
@@ -40,9 +45,13 @@ def main():
 
     print("=== Daily flight search starting ===")
 
-    flights = scrape_all()
+    # Ticket ① goes FIRST: it's the one search nothing else can substitute for,
+    # so it should run while the browser session is freshest.
+    tickets1 = scrape_tickets_all()
+    sg_tickets = scrape_sg_tickets_all()      # Ticket ② as one multi-city ticket
+    flights = scrape_all()                    # Ticket ② as two one-ways
 
-    if not flights:
+    if not (tickets1 or sg_tickets or flights):
         from notify_telegram import send_message
         from scraper import DIAG
         if DIAG["timeouts"] or DIAG["blank_pages"] or DIAG["aborted_early"]:
@@ -66,40 +75,43 @@ def main():
 
     flights.sort(key=sort_key)
 
-    openjaws = scrape_openjaw_all()
-    sg_tickets = scrape_sg_tickets_all()   # Singapore-detour multi-city tickets
-
     # Self-check: any invariant violation rides along to Telegram + the site,
     # so data losses are loud instead of silent (see sanity.py).
-    from combo import best_structures, best_singapore
+    from combo import main_trip
     from sanity import self_check
-    from publish import last_history_entry
-    sg = best_singapore(flights, openjaws, sg_tickets)
-    warnings = self_check(flights, openjaws, best_structures(flights, openjaws),
-                          last_history_entry(), sg=sg, sg_tickets=sg_tickets)
+    trip = main_trip(flights, tickets1, sg_tickets)
+    warnings = self_check(flights, tickets1, trip, publish.last_history_entry(),
+                          sg_tickets=sg_tickets)
     for w in warnings:
         print(f"SELF-CHECK WARNING: {w}")
 
-    write_to_sheet(flights, tab_name="Google Flights")
-    notify_cheapest(flights, openjaws, warnings, sg=sg)
-    publish(flights, openjaws, warnings, sg_tickets=sg_tickets)
+    # Build the payload BEFORE notifying, so Telegram and the dashboard quote
+    # the same numbers, alternatives and baggage rules.
+    payload = publish.build_today(flights, tickets1, warnings, sg_tickets)
+
+    write_to_sheet(
+        multicity_as_rows(tickets1, "① BOS→IST→DAC + DPS→BOS")
+        + multicity_as_rows(sg_tickets, "② DAC→SIN→DPS")
+        + flights,
+        tab_name="Google Flights")
+    notify_cheapest(payload["main"], warnings,
+                    payload["ticket2_options"], payload["ticket1_options"])
+    publish.write_payload(payload)
 
     # Cloud-redundant history: one appended row per day in the Google Sheet,
     # so the price history survives even if data.json/git is ever lost.
     try:
         from sheet_writer import append_history_row
-        from publish import last_history_entry
-        append_history_row(last_history_entry())
+        append_history_row(payload["history"][-1])
     except Exception as e:                     # noqa: BLE001 — never kill the run
         print(f"WARN: history-sheet append failed (run continues): {e}")
 
-    structures = best_structures(flights, openjaws)
-    if structures or sg:
+    if payload["main"]:
         mark_ran_today()
     else:
-        # Catastrophic day (fares but zero buildable trips): DON'T stamp, so
-        # the 2:00 / 4:00 retry slots automatically try again.
-        print("NOT marking success — no trip structures built; retry slots will re-run")
+        # Catastrophic day (fares but no priceable trip): DON'T stamp, so the
+        # 2:00 / 4:00 retry slots automatically try again.
+        print("NOT marking success — no trip was built; retry slots will re-run")
     print("=== Done ===")
 
 

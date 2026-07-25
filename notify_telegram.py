@@ -3,7 +3,7 @@ import urllib.request
 import urllib.parse
 import json
 
-from combo import best_combos, cheapest_by_leg, best_structures, best_singapore
+import baggage
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
@@ -31,7 +31,7 @@ def send_message(text: str) -> bool:
 
 def _short_date(s: str) -> str:
     """'January 4, 2027' → 'Jan 4'"""
-    parts = s.replace(",", "").split()
+    parts = str(s).replace(",", "").split()
     return f"{parts[0][:3]} {parts[1]}" if len(parts) >= 2 else s
 
 
@@ -42,20 +42,60 @@ def _leg_line(f: dict) -> str:
             f" · ${f['price_total']:,} · [book]({f['link']})")
 
 
-def _openjaw_line(oj: dict) -> str:
+def _ticket1_line(oj: dict) -> str:
     route = oj.get("desc") or (f"BOS→DAC {_short_date(oj['out_date'])} + "
-                               f"DPS→BOS {_short_date(oj['ret_date'])} (one ticket) · {oj['airline']} out")
-    return f"🎫 {route} · ${oj['price_total']:,} · [book]({oj['link']})"
+                               f"DPS→BOS {_short_date(oj['ret_date'])} (one ticket)")
+    return f"🎫 *Ticket ①* {route} · {oj.get('airline','?')} · ${oj['price_total']:,} · [book]({oj['link']})"
 
 
-def _sg_ticket_line(t: dict) -> str:
-    return (f"🇸🇬 DAC→SIN→DPS · {_short_date(t['out_date'])} + {_short_date(t['ret_date'])} "
-            f"(one ticket) · {t['airline']} · ${t['price_total']:,} · [book]({t['link']})")
+def _ticket2_line(t: dict) -> str:
+    return (f"🇸🇬 *Ticket ②* DAC→SIN→DPS · {_short_date(t['out_date'])} + "
+            f"{_short_date(t['ret_date'])} (one ticket) · {t.get('airline','?')} · "
+            f"${t['price_total']:,} · [book]({t['link']})")
 
 
-def build_message(all_flights: list, openjaws: list = None,
-                  warnings: list = None, sg: list = None) -> str:
-    openjaws = openjaws or []
+def _baggage_block(main: dict) -> list:
+    """Per-leg allowance — the thing that's "all over the place" (2026-07-25).
+    Reference figures only; the fare page is the authority."""
+    rows = baggage.annotate(main)
+    if not rows:
+        return []
+    lines = ["🧳 *Baggage per leg* (reference — confirm at booking):"]
+    seen = set()
+    for r in rows:
+        # Ticket ① legs share one allowance; print it once.
+        key = (r["ticket"], r["carrier"], r["checked"])
+        if key in seen:
+            continue
+        seen.add(key)
+        tick = "①" if r["ticket"] == 1 else "②"
+        legs = "/".join(x["route"] for x in rows
+                        if (x["ticket"], x["carrier"], x["checked"]) == key)
+        lines.append(f"  {tick} {legs} · {r['carrier']}: {r['checked']}")
+    for w in baggage.warnings(main)[:2]:
+        lines.append(f"  ⚠️ {w}")
+    return lines
+
+
+def _alternatives_block(options: list, title: str, limit: int = 4) -> list:
+    """What else could buy this ticket, and how much more (Jalal 2026-07-25)."""
+    others = [o for o in options if not o.get("chosen")][:limit]
+    if not others:
+        return []
+    lines = [f"🔀 *{title}* (same dates):"]
+    for o in others:
+        d = o.get("delta")
+        gap = ("same price" if not d else
+               (f"+${d:,}" if d > 0 else f"−${-d:,} CHEAPER"))
+        b = o.get("baggage") or {}
+        bag = b.get("summary") or b.get("checked", "")
+        lines.append(f"  {gap} · {o['airline']} · {o['kind']}"
+                     f"{' · ' + bag if bag else ''}")
+    return lines
+
+
+def build_message(main: dict, warnings: list = None,
+                  ticket2_options: list = None, ticket1_options: list = None) -> str:
     lines = ["✈️ *BOS → Istanbul → Dhaka → Singapore → Bali → BOS* (2 adults + 1 child)\n"]
 
     if warnings:
@@ -64,94 +104,46 @@ def build_message(all_flights: list, openjaws: list = None,
             lines.append(f"  ⚠️ {w}")
         lines.append("")
 
-    structures = best_structures(all_flights, openjaws)
+    if not main:
+        lines.append("⚠️ *No trip could be priced today* — the Istanbul ticket or the "
+                     "Singapore middle came back empty. Check cron.log; the retry "
+                     "slots will try again.")
+        return "\n".join(lines)
 
-    # THE MAIN TRIP (2026-07-18): Istanbul 2-3 nights + Singapore 1-3 nights,
-    # Bali fixed at 5. Headline it before everything else.
-    main = next((s for s in (sg or []) if s.get("kind") == "sg-stopover2"), None)
-    if main:
-        flag = "" if main["valid"] else f" ⚠️ {main.get('flag') or 'check dates'}"
-        lines.append(f"🌟 *MAIN TRIP: ${main['total']:,}* — Istanbul "
-                     f"{main.get('ist_nights') or '2'}n + Singapore {main['sg_nights']}n{flag}")
-        lines.append(f"_Dhaka {main['dhaka_days']} days · Bali {main['bali_nights']} nights · "
-                     f"home {main['home']} · SG legs: {main.get('sg_airlines', '?')}_")
-        if main.get("openjaw"):
-            lines.append(_openjaw_line(main["openjaw"]))
-        if main.get("sg_ticket"):
-            lines.append(_sg_ticket_line(main["sg_ticket"]))
-        for f in main["legs"]:
-            lines.append(_leg_line(f))
-        if main.get("alt_note"):
-            lines.append(f"💸 {main['alt_note']}")
+    flag = "" if main.get("valid") else f" ⚠️ {main.get('flag') or 'check dates'}"
+    lines.append(f"🌟 *${main['total']:,} total*{flag}")
+    lines.append(f"_Istanbul {main.get('ist_nights') or 2}n · Dhaka {main['dhaka_days']}d · "
+                 f"Singapore {main.get('sg_nights')}n · Bali {main['bali_nights']}n · "
+                 f"home {main['home']}_")
+    if main.get("openjaw"):
+        lines.append(_ticket1_line(main["openjaw"]))
+    if main.get("sg_ticket"):
+        lines.append(_ticket2_line(main["sg_ticket"]))
+    for f in main.get("legs", []):
+        lines.append(_leg_line(f))
+    if main.get("alt_note"):
+        lines.append(f"💸 {main['alt_note']}")
+
+    lines.append("")
+    lines += _baggage_block(main)
+
+    alts = _alternatives_block(ticket2_options or [], "Ticket ② alternatives")
+    if alts:
         lines.append("")
-    if structures:
-        s = structures[0]
-        flag = "" if s["valid"] else f" ⚠️ {s.get('flag') or 'check dates'}"
-        lines.append(f"💰 *Best today: ${s['total']:,} total — {s['name']}*{flag}")
-        lines.append(f"_Dhaka {s['dhaka_days']} days · Bali {s['bali_nights']} nights · home {s['home']}_")
-        if "openjaw" in s:
-            lines.append(_openjaw_line(s["openjaw"]))
-        for f in s["legs"]:
-            lines.append(_leg_line(f))
-        if len(structures) > 1:
-            lines.append("")
-            lines.append("*Other structures:*")
-            for s2 in structures[1:]:
-                flag = "" if s2["valid"] else f" ⚠️ {s2.get('flag') or 'check dates'}"
-                lines.append(f"  ${s2['total']:,} — {s2['name']} · home {s2['home']}{flag}")
-    elif best_combos(all_flights, top_n=1):
-        c = best_combos(all_flights, top_n=1)[0]
-        home = c["home"].strftime("%b %-d") if c["home"] else "?"
-        lines.append(f"💰 *Best full trip: ${c['total']:,} total*")
-        lines.append(f"_Dhaka {c['dhaka_days']} days · Bali {c['bali_nights']} nights · home {home}_")
-        for f in c["legs"]:
-            lines.append(_leg_line(f))
-    else:
-        missing = [r for r in ("BOS→DAC", "DAC→DPS", "DPS→BOS")
-                   if r not in cheapest_by_leg(all_flights)]
-        if missing:
-            lines.append(f"⚠️ No valid combo — no prices for: {', '.join(missing)}")
-        else:
-            lines.append("⚠️ No combo satisfied the visa/5-night/Feb-7 rules today")
-
-    # Singapore-only variant (no Istanbul), shown for comparison with the main.
-    sg = [s for s in (sg or []) if s.get("kind") in ("sg-openjaw", "sg-oneways")]
-    if sg:
-        s = sg[0]
-        direct_total = structures[0]["total"] if structures else None
-        delta = ""
-        if isinstance(direct_total, (int, float)):
-            d = s["total"] - direct_total
-            delta = f" (+${d:,} vs direct)" if d >= 0 else f" (−${-d:,} vs direct!)"
-        flag = "" if s["valid"] else f" ⚠️ {s.get('flag') or 'check dates'}"
-        lines.append(f"\n🇸🇬 *Via Singapore: ${s['total']:,} total*{delta}{flag}")
-        lines.append(f"_Dhaka {s['dhaka_days']} days · Singapore {s['sg_nights']} nights · "
-                     f"Bali {s['bali_nights']} nights · home {s['home']}_")
-        if s.get("openjaw"):
-            lines.append(_openjaw_line(s["openjaw"]))
-        if s.get("sg_ticket"):
-            lines.append(_sg_ticket_line(s["sg_ticket"]))
-        for f in s["legs"]:
-            lines.append(_leg_line(f))
-        if len(sg) > 1:
-            for s2 in sg[1:]:
-                flag = "" if s2["valid"] else f" ⚠️ {s2.get('flag') or 'check dates'}"
-                lines.append(f"  ${s2['total']:,} — {s2['name']} · home {s2['home']}{flag}")
-
-    best = cheapest_by_leg(all_flights)
-    if best:
-        lines.append("\n*Cheapest per leg* (dates may not combine):")
-        for route in ("BOS→DAC", "DAC→DPS", "DPS→BOS"):
-            f = best.get(route)
-            lines.append(_leg_line(f) if f else f"{route}: no results")
+        lines += alts
+    alts1 = _alternatives_block(ticket1_options or [], "Ticket ① alternatives", limit=3)
+    if alts1:
+        lines.append("")
+        lines += alts1
 
     lines.append("\n_Google Flights · prices are totals for all 3 travelers_")
+    lines.append("dhaka-flights.vercel.app")
     return "\n".join(lines)
 
 
-def notify_cheapest(all_flights: list, openjaws: list = None,
-                    warnings: list = None, sg: list = None) -> None:
-    ok = send_message(build_message(all_flights, openjaws, warnings, sg))
+def notify_cheapest(main: dict, warnings: list = None,
+                    ticket2_options: list = None, ticket1_options: list = None) -> None:
+    ok = send_message(build_message(main, warnings, ticket2_options, ticket1_options))
     if ok:
         print("Telegram notification sent.")
     else:

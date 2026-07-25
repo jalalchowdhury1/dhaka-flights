@@ -5,31 +5,43 @@
 
 ## 1. What this is
 
-Daily price tracker for one fixed family trip (2 adults + 1 child with seat):
-**BOS → Dhaka (≤29 days; 30-day visa) → Bali (5 nights; Marriott 5th-night-free)
-→ BOS, home by Feb 7, 2027.** Every night at midnight it scrapes Google Flights, ranks
-*ticketing structures* (three one-ways vs an open-jaw multi-city ticket + separate
-Dhaka→Bali hop), writes a Google Sheet, Telegrams the best price, and publishes
-`site/data.json` for the public dashboard at **dhaka-flights.vercel.app**.
+Nightly price tracker for **ONE** trip (2 adults + 1 child with seat) —
+narrowed 2026-07-25 from "price every variant" to "price the trip he's buying":
 
-**THE MAIN TRIP (final, 2026-07-18):** BOS → **Istanbul (EXACTLY 2 nights)** →
-Dhaka → **Singapore (EXACTLY 2 nights)** → **Bali (5 nights, FIXED)** → BOS.
-Hard rules: 5 Bali nights, 2 Istanbul nights, 2 Singapore nights, home ≤ Feb 7,
-Dhaka ≤ 29 days. **Airline rules (revised same day):** NOTHING excluded —
-"US-Bangla prices are unbeatable" — the CHEAPEST airline wins. THAI / Singapore
-Airlines are a soft preference only: when the winner isn't THAI/SQ but such an
-option exists, its upgrade price surfaces as `alt_note`
-("THAI/Singapore Airlines option +$X"). `_is_preferred` requires EVERY carrier
-in a multi-airline string to be THAI/SQ (substring matching once paid +$1,328
-for a half-Malaysia-Airlines ticket). ISTANBUL3_SEARCH is retired from the
-nightly rotation (config kept in scraper.py for easy re-adding).
-The combined trip needs NO extra searches: it pairs the Istanbul-stopover tickets
-(long legs) with the Singapore middles inside `combo.best_singapore` — kinds
-`sg-stopover2` (= the main trip, history metric `combined_total`) and `sg-stopover`
-(TK-30h + SIN). Singapore-only variants (kinds `sg-openjaw`/`sg-oneways`,
-metric `singapore_total`) and all direct/Istanbul-only structures are still tracked
-for comparison. Spec: `docs/superpowers/specs/2026-07-18-singapore-detour-variant-design.md`
-(the combined-trip + airline-rules evolution is documented here and in git history).
+> **BOS → Istanbul (2 nights) → Dhaka (≤29 days; 30-day visa) → Singapore
+> (2 nights) → Bali (5 nights; Marriott 5th-night-free) → BOS, home by Feb 7, 2027.**
+
+It buys as **two purchases**, and everything in the code is named for them:
+
+| | what | how it's scraped |
+|---|---|---|
+| **Ticket ①** | BOS→IST + IST→DAC + DPS→BOS, one multi-city ticket | `ISTANBUL2_SEARCH` (kind `stopover2`) |
+| **Ticket ②** | DAC→SIN→DPS — one multi-city ticket **or** two one-ways, whichever is cheaper | `SG_TICKET_SEARCHES` + the two `LEGS` |
+
+Every night at midnight it scrapes those 13 searches, prices the trip, self-checks,
+writes a Google Sheet, Telegrams the result (with per-leg baggage + same-date
+alternatives), and publishes `site/data.json` for **dhaka-flights.vercel.app**.
+
+**Hard rules:** 5 Bali nights, 2 Istanbul nights, 2 Singapore nights, home ≤ Feb 7,
+Dhaka ≤ 29 days. Nights that come out different still win on price — they're
+surfaced as a self-check note, never silently. **Airline rules:** NOTHING excluded
+— "US-Bangla prices are unbeatable" — the CHEAPEST wins. THAI / Singapore Airlines
+are a soft preference: when the winner isn't THAI/SQ but such an option exists, its
+upgrade price surfaces as `alt_note`. `_is_preferred` requires EVERY carrier in a
+multi-airline string to be THAI/SQ (substring matching once paid +$1,328 for a
+half-Malaysia-Airlines ticket).
+
+**RETIRED 2026-07-25 — do not resurrect without asking.** The direct open-jaw, the
+three-one-ways combo, the Istanbul-only and Singapore-only variants, and the TK
+30h-stopover trip are no longer scraped, tracked, charted or Telegrammed
+("i only need the main trip … not the others"). Their configs
+(`OPENJAW_SEARCHES`, `STOPOVER_SEARCH`, `ISTANBUL3_SEARCH`) and their combo
+functions (`best_structures`, `best_combos`, `cheapest_by_leg`) still work and are
+still tested — re-adding one is a two-line change in `scrape_tickets_all()` / `LEGS`.
+Their historical numbers stay in `site/data.json` and in the Sheet's columns 3–7;
+nothing is rewritten backwards.
+Specs: `docs/superpowers/specs/2026-07-18-singapore-detour-variant-design.md`
+(the trip's evolution) — the 2026-07-25 narrowing is documented here and in git history.
 
 Redesigned 2026-07-15 from the original round-trip BOS⇄DAC/BKK watcher; design spec:
 `docs/superpowers/specs/2026-07-15-three-leg-trip-redesign-design.md`.
@@ -38,45 +50,50 @@ Redesigned 2026-07-15 from the original round-trip BOS⇄DAC/BKK watcher; design
 
 ```
 launchd 12:00am + 2:00am retry slot (com.jalal.dhaka-flights.plist, parallel with com.jalal.carmax — isolated browse sessions; retry no-ops after success via .last_run_date; run_daily.sh Telegrams on a crash exit AND refuses to START after 5:30 AM — user awake/working — so wake-replays of missed slots skip for the day) → run_daily.sh → run_daily.py
-  scraper.py   scrape_all()          18 one-way searches (LEGS: BOS→DAC Jan 4–6,
-                                     DAC→DPS Jan 31–Feb 3, DPS→BOS Feb 5–7, plus
-                                     DAC→SIN Jan 29–Feb 1, SIN→DPS Jan 31–Feb 3)
-               scrape_openjaw_all()  4 multi-city searches: OPENJAW_SEARCHES
-                                     (BOS→DAC Jan 4 + DPS→BOS Feb 6 / Feb 7) +
-                                     STOPOVER_SEARCHES: the Turkish 30h-Istanbul
-                                     free-hotel itinerary (kind "stopover") AND the
-                                     Istanbul 2- AND 3-NIGHT variants (both kind "stopover2" —
-                                     istanbul2_total = cheaper of the two; IST→DAC Jan 7 or 8, no airline
-                                     filter). IST/SIN nights flex 1–3, price decides — ONLY 5 Bali nights is a hard constant
-               scrape_sg_tickets_all() 4 multi-city DAC→SIN→DPS tickets (SEPARATE
-                                     list, NOT mixed into openjaws — the direct
-                                     open-jaw loop would mis-pair them)
+  scraper.py   scrape_tickets_all()    Ticket ① — 1 multi-city search, up to
+                                       TICKET1_ATTEMPTS=3 tries (nothing else can
+                                       substitute for it, so it runs FIRST and
+                                       retries hardest): BOS→IST Jan 4 + IST→DAC
+                                       Jan 7 + DPS→BOS Feb 6, no airline filter
+               scrape_sg_tickets_all() Ticket ② as one ticket — 4 multi-city
+                                       DAC→SIN→DPS searches (SEPARATE list; the
+                                       open-jaw pairing loop would mis-handle them)
+               scrape_all()            Ticket ② as two one-ways — 8 searches
+                                       (LEGS: DAC→SIN Jan 29–Feb 1, SIN→DPS Jan 31–Feb 3)
         │  drives real Chrome via the `browse` CLI (a11y-tree snapshots)
         ▼
-  combo.py     best_combos()       cheapest valid one-way triple
-               best_structures()   one-ways vs open-jaw+middle, cheapest first
-               best_singapore()    via-SIN trips (isolated); long legs = one-ways
-                                   or open-jaw, SG middle = cheaper of 2-one-ways
-                                   / 1-ticket; flags off-ideal Bali/Singapore nights
+  combo.py     main_trip()         THE trip (kind 'sg-stopover2') — Ticket ① paired
+                                   with the cheaper of {1-ticket, 2-one-way} middle
+               ticket1_options()   same-dates alternatives to Ticket ①, w/ price gap
+               ticket2_options()   same-dates alternatives to Ticket ②, w/ price gap
+                                   ('1 ticket' and '2 tickets' rows, deduped)
+               best_structures/best_combos/cheapest_by_leg — retired from the
+                                   nightly path, kept working + tested
+  baggage.py   annotate()/warnings()  per-leg allowance from a sourced carrier
+                                   table (Google's tree has NO bag data); US piece
+                                   rule for Ticket ①, Asian weight rules for ②
         ▼
-  sheet_writer.py → Google Sheet tab "Google Flights" (one-ways only, replaced daily)
-  notify_telegram.py → Telegram: best structure + cheapest per leg
-  publish.py  → site/data.json (results + appended history) → git commit+push
+  sheet_writer.py → Google Sheet tab "Google Flights" (Ticket ① + ② fares then the
+                    one-way legs, replaced daily) + "History" tab (append-only)
+  notify_telegram.py → Telegram: the trip, per-leg baggage, same-date alternatives
+  publish.py  → site/data.json (main + options + appended history) → git commit+push
         ▼
   site/index.html (static, deployed once on Vercel) fetches data.json raw from
-  GitHub on every page load — no redeploy needed for data updates. Three tabs:
-  ⭐ The Trip (the MAIN combined itinerary: visual timeline chips, hero card,
-  ⚖️ option matrix comparing every variant's total/Δ-vs-main/nights) ·
-  🔀 All options (every structure card grouped: IST+SIN, SIN-only, IST-only,
-  direct) · History (columns incl. ⭐ IST+SIN). Strip tiles + chart lead with
-  combined_total. All views degrade gracefully when a section is missing.
+  GitHub on every page load — no redeploy needed for data updates. Two tabs:
+  ⭐ The Trip (timeline chips · hero card · trip plan with a 🧳 line per flight ·
+  baggage table · Ticket ② then Ticket ① alternatives with Δ-vs-chosen and bag
+  rules · booking playbook · price history) · 📈 History (⭐ trip / Ticket ① /
+  Ticket ② / airlines / nights / home, tap a row for that day's full detail).
+  Strip tiles and chart show trip total + the two ticket prices. All views
+  degrade gracefully when a section is missing.
 ```
 
 ## 3. How to run / test / deploy
 
-- Tests: `python3 -m pytest tests/ -q` (pure logic only — parsers, combos, sheets rows).
+- Tests: `python3 -m pytest tests/ -q` (pure logic only — parsers, combos,
+  baggage table, sheets rows; no browser).
 - Manual full run: `./run_daily.sh` (delete `.last_run_date` first or it skips).
-- One search interactively: `python3 -c "from scraper import scrape_route; print(scrape_route('BOS','DAC','January 4, 2027'))"`.
+- One search interactively: `python3 -c "from scraper import scrape_route; print(scrape_route('DAC','SIN','January 30, 2027'))"`.
 - Dashboard deploy (only when site/index.html changes): `cd site && vercel --prod --yes`
   (project `dhaka-flights`, account `jalalchowdhury-8053`). Data updates need NO deploy.
 
@@ -108,6 +125,28 @@ Jalal relies on this nightly until an early-September 2026 booking decision
    >36 h old — a silently dead tracker is visible on first glance.
 7. Self-check warnings on the site are COLLAPSED by default (tap to expand).
 
+## 4c. Baggage (added 2026-07-25)
+
+Google Flights' a11y tree carries **no** bag information, and the real allowance
+depends on the fare brand (EcoFly / Economy Lite / Basic) which only appears at
+the airline's checkout. So `baggage.py` is a **sourced lookup table**, not a
+scrape: every carrier entry has an official `url` and a `confidence`
+(`verified` = read off the airline's own page on `CHECKED`, `typical`, `varies`,
+`unknown`). Rules:
+
+- **Never** present these numbers as the booked allowance — the UI says
+  "reference — the checkout page is the authority", keep it that way.
+- Ticket ① is priced under the **US piece concept** (any itinerary touching the
+  Americas, both directions, whole through-ticket): Turkish/Gulf 2 × 23 kg,
+  European carriers usually 1 × 23 kg. Ticket ② uses **Asian weight rules**,
+  which vary by carrier *and* route (US-Bangla: 40 kg DAC→SIN, 20 kg to Doha).
+- A multi-city ticket's **second leg carrier is unknown to us** — Google names
+  only the first leg. `annotate()` says "not shown on this ticket" rather than
+  guessing; don't "fix" that by assuming the first carrier flies both legs.
+- Multi-airline strings ("US-Bangla + Jetstar") get a `summary` naming BOTH
+  allowances — the cheap half often includes no free bag at all.
+- When a carrier's policy changes, edit `CARRIERS` and bump `CHECKED`.
+
 ## 5. Gotchas / hard rules
 
 1. **Google shows the TOTAL price for all selected passengers** (verified 2026-07-15:
@@ -121,11 +160,13 @@ Jalal relies on this nightly until an early-September 2026 booking decision
    "From X US dollars." — `_parse_results` accepts both. Flight details on the
    multi-city selection page describe the FIRST leg; the price includes its cheapest
    completion. Only ~top-10 fares show inline — the scraper clicks "View more flights".
-4. **Structures must NEVER be dropped silently** (2026-07-16: the exact-5-night
+4. **The trip must NEVER be dropped silently** (2026-07-16: the exact-5-night
    pairing rule hid a valid $3.4k open-jaw from the daily message). When no
-   5-night DAC→DPS pairing exists, `best_structures` falls back to 4/6 nights
-   and sets `flag` (shown verbatim in Telegram + site badges). The parser keeps
-   the CHEAPEST `MAX_RESULTS` fares, not the first in page order.
+   5-night pairing exists, 4/6 nights are used and `flag` is set (shown verbatim
+   in Telegram + site badges); off-target Istanbul/Singapore nights become a
+   self-check note. The parser keeps the CHEAPEST `MAX_RESULTS` fares, not the
+   first in page order. Since 2026-07-25 there is no second structure to fall
+   back on, so `sanity.py` warns loudly when Ticket ① prices but no trip builds.
 5. **Trip rules live in combo.py** (`MAX_DHAKA_DAYS=29` counting both end days,
    `IDEAL_BALI_NIGHTS=5`, `HOME_DEADLINE=Feb 7`). Open-jaw "home" date is a
    +1-day heuristic (return-leg arrival isn't parsed on the selection page).
@@ -142,26 +183,33 @@ Jalal relies on this nightly until an early-September 2026 booking decision
 
 - `main_flyai.py` / `scraper_flyai.py` are dead legacy (flyai experiment) — ignore.
 - `cron.log`, `debug_last_zero.txt`, `.DS_Store` are untracked local artifacts.
-- Open-jaw watch is fixed to Jan 4 out; if Jan 5/6 open-jaws get interesting, add
-  pairs to `OPENJAW_SEARCHES` (each adds ~2 min to the run).
-- **Killed-run gotcha (2026-07-18):** a full run is now ~20–25 min (30 searches).
-  Never run it inside a harness/tool with a ≤10-min timeout — it gets SIGKILLed
-  mid-scrape (no stamp written, no output flushed with buffered stdout). Manual
-  runs: `nohup … python3 -u run_daily.py > log 2>&1 &` and watch the log. The
-  launchd job has no timeout and is unaffected.
+- Ticket ① is fixed to BOS→IST Jan 4 / IST→DAC Jan 7 / DPS→BOS Feb 6. Other
+  outbound or return dates would change the trip's shape, so they're a product
+  decision, not a config tweak — ask before adding.
+- **Killed-run gotcha (2026-07-18):** a full run is ~11 min (13 searches; it was
+  ~25 min at 30 searches before the 2026-07-25 narrowing). Never run it inside a
+  harness/tool with a ≤10-min timeout — it gets SIGKILLed mid-scrape (no stamp
+  written, no output flushed with buffered stdout). Manual runs:
+  `nohup … python3 -u run_daily.py > log 2>&1 &` and watch the log. The launchd
+  job has no timeout and is unaffected.
 
 ## 7. File map
 
 - `run_daily.sh` / `run_daily.py` — launchd entrypoint; stamp + DIAG alerting
-- `sanity.py` — self-check watchdog run before every send: every scraped variant
-  must appear in structures, every leg×date must have fares, yesterday's metrics
-  must not silently vanish, >25% swings and parser drift get flagged. Violations
+- `sanity.py` — self-check watchdog run before every send: Ticket ① must price,
+  a priced Ticket ① must produce a trip, every leg×date and Ticket ② date pair
+  must have fares, yesterday's totals must not silently vanish, >25% swings,
+  parser drift, and trip-shape drift (2/2/5 nights) all get flagged. Violations
   ride along to Telegram ("🧪 Self-check") and the site's amber banner. When
-  adding a new tracked structure/search, add its invariant here too.
-- `scraper.py` — browse-CLI form driving + parsing (one-way & multi-city), LEGS config
-- `combo.py` — trip rules, `best_combos`, `best_structures`, `cheapest_by_leg`
-- `publish.py` — data.json build + git push
+  adding a tracked search, add its invariant here too.
+- `scraper.py` — browse-CLI form driving + parsing (one-way & multi-city); LEGS,
+  STOPOVER_SEARCHES, SG_TICKET_SEARCHES config (+ retired configs, kept)
+- `combo.py` — trip rules, `main_trip`, `ticket1_options`, `ticket2_options`
+  (+ retired `best_structures` / `best_combos` / `cheapest_by_leg`)
+- `baggage.py` — sourced per-carrier allowance table; `annotate`, `warnings` (§4c)
+- `publish.py` — `build_today` → payload → `write_payload` (backup, write, push)
 - `sheet_writer.py`, `notify_telegram.py` — outputs
 - `site/` — static dashboard (index.html) + data.json (machine-written)
 - `main.py` — manual run: scrape + sheet + terminal summary (no Telegram/publish)
-- `tests/` — pytest suite (29 tests)
+- `tests/` — pytest suite (92 tests; `test_main_trip.py` holds the shared trip
+  fixtures, `test_baggage.py` guards the allowance table's honesty)

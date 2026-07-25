@@ -1,16 +1,15 @@
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from combo import best_structures, best_singapore
+from combo import main_trip
 from sanity import self_check
-from tests.test_combo import LEG1, LEG2, LEG3, _f
-from tests.test_structures import OJ_FEB6, STOPOVER, MID_FEB1
+from scraper import LEGS, SG_TICKET_SEARCHES
+from tests.test_combo import _f
+from tests.test_main_trip import (TICKET1, TICKET2, DAC_SIN, SIN_DPS,
+                                  FLIGHTS, SG_TICKETS)
 
-ALL_FLIGHTS = [LEG1, LEG2, LEG3, MID_FEB1]
 
-
-def _full_coverage(flights):
-    """Pad fares so invariant 2 (every leg×date has a fare) stays quiet."""
-    from scraper import LEGS
+def _full_coverage(flights=FLIGHTS):
+    """Pad fares so the coverage invariant stays quiet in unrelated tests."""
     fares = list(flights)
     seen = {(f["route"], f["depart"]) for f in fares}
     for leg in LEGS:
@@ -21,48 +20,77 @@ def _full_coverage(flights):
     return fares
 
 
+def _all_ticket2_pairs():
+    """One Ticket ② fare per scraped date pair, so invariant 3 stays quiet."""
+    out = list(SG_TICKETS)
+    have = {(t["out_date"], t["ret_date"]) for t in out}
+    for d1, d2 in SG_TICKET_SEARCHES:
+        if (d1, d2) not in have:
+            out.append(dict(TICKET2, out_date=d1, ret_date=d2, out_arrive=d1,
+                            price_total=9999))
+    return out
+
+
+def _check(flights=None, tickets1=(TICKET1,), sg=None, prev=None):
+    flights = _full_coverage() if flights is None else flights
+    sg = _all_ticket2_pairs() if sg is None else sg
+    trip = main_trip(flights, list(tickets1), sg)
+    return self_check(flights, list(tickets1), trip, prev, sg_tickets=sg)
+
+
 def test_clean_day_produces_no_warnings():
-    flights = _full_coverage(ALL_FLIGHTS)
-    ojs = [OJ_FEB6, STOPOVER]
-    sg = best_singapore(flights, ojs, [])   # padded SIN legs → a via-SIN trip exists
-    w = self_check(flights, ojs, best_structures(flights, ojs), sg=sg)
-    assert w == []
+    assert _check() == []
 
 
-def test_scraped_variant_with_no_structure_warns():
-    # Open-jaw scraped, but zero DAC→DPS fares in any legal window → invariant 1
-    flights = _full_coverage([LEG1, LEG3])
-    flights = [f for f in flights if f["route"] != "DAC→DPS"]
-    structures = best_structures(flights, [OJ_FEB6])
-    w = self_check(flights, [OJ_FEB6], structures)
-    assert any("NO structure" in x for x in w)
+def test_missing_ticket1_is_the_loudest_warning():
+    w = _check(tickets1=())
+    assert any("Ticket ①" in x and "NO fares" in x for x in w)
 
 
-def test_missing_search_date_warns():
-    flights = _full_coverage(ALL_FLIGHTS)
-    flights = [f for f in flights if not (f["route"] == "DAC→DPS" and
-                                          f["depart"] == "January 31, 2027")]
-    w = self_check(flights, [OJ_FEB6], best_structures(flights, [OJ_FEB6]))
-    assert any("Jan 31" in x and "no fares" in x for x in w)
+def test_ticket1_priced_but_no_trip_built_warns():
+    # Ticket ① exists, but no Singapore middle can pair with it.
+    w = _check(flights=[], sg=[])
+    assert any("NO trip was built" in x or "no trip used them" in x for x in w)
+
+
+def test_missing_leg_date_warns():
+    flights = [f for f in _full_coverage()
+               if not (f["route"] == "DAC→SIN" and f["depart"] == "January 29, 2027")]
+    w = _check(flights=flights)
+    assert any("DAC→SIN" in x and "Jan 29" in x for x in w)
+
+
+def test_missing_ticket2_date_pair_warns():
+    w = _check(sg=SG_TICKETS)          # only the Jan 30 + Feb 1 pair is present
+    assert any("Ticket ②" in x and "no" in x.lower() for x in w)
 
 
 def test_metric_that_vanished_since_yesterday_warns():
-    flights = _full_coverage(ALL_FLIGHTS)
-    structures = best_structures(flights, [OJ_FEB6])  # no stopover today
-    prev = {"stopover_total": 5028, "openjaw_total": 4763, "oneway_combo_total": 6229}
-    w = self_check(flights, [OJ_FEB6], structures, prev)
-    assert any("Turkish stopover structure" in x and "MISSING" in x for x in w)
+    prev = {"main_total": 4600, "ticket1_total": 3600, "ticket2_total": 1000}
+    w = _check(tickets1=(), prev=prev)
+    assert any("MAIN trip total" in x and "MISSING" in x for x in w)
 
 
-def test_big_swing_warns():
-    flights = _full_coverage(ALL_FLIGHTS)
-    structures = best_structures(flights, [OJ_FEB6])
-    prev = {"openjaw_total": 3000}  # today's is 4763 → +59%
-    w = self_check(flights, [OJ_FEB6], structures, prev)
+def test_pre_rewrite_history_key_still_compares():
+    # Yesterday's file used combined_total; a swing must still be detected.
+    w = _check(prev={"combined_total": 3000})
     assert any("big swing" in x for x in w)
 
 
+def test_big_swing_warns():
+    w = _check(prev={"main_total": 3000, "ticket1_total": 3600, "ticket2_total": 1000})
+    assert any("big swing" in x for x in w)
+
+
+def test_shape_drift_is_reported():
+    # An overnight arrival that leaves only 1 Singapore night is allowed to win
+    # on price — but it must never be a silent surprise.
+    one_night = dict(TICKET2, out_arrive="January 31, 2027")
+    w = _check(flights=[], sg=[one_night])
+    assert any("Singapore night" in x for x in w)
+
+
 def test_parser_drift_warns():
-    flights = [dict(f, arrive="N/A") for f in _full_coverage(ALL_FLIGHTS)]
-    w = self_check(flights, [], [], None)
+    flights = [dict(f, arrive="N/A") for f in _full_coverage()]
+    w = _check(flights=flights)
     assert any("arrival date failed to parse" in x for x in w)

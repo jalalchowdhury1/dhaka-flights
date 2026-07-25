@@ -35,20 +35,53 @@ def _get_or_create_tab(spreadsheet, tab_name: str):
         return spreadsheet.add_worksheet(title=tab_name, rows=200, cols=10)
 
 
+def multicity_as_rows(tickets: list, route_label: str) -> list:
+    """Multi-city fares (Ticket ① / Ticket ②) reshaped like one-way flights so
+    the daily Sheet tab shows the whole trip, not just its one-way legs."""
+    out = []
+    for t in tickets or []:
+        out.append({
+            "route": route_label,
+            "depart": t.get("out_date", "N/A"),
+            "arrive": t.get("out_arrive", "N/A"),
+            "airline": t.get("airline", "N/A"),
+            "stops": t.get("stops", "N/A"),
+            "duration": t.get("duration", "N/A"),
+            "layovers": t.get("layovers", "N/A"),
+            "price_total": t.get("price_total", "N/A"),
+            "link": t.get("link", ""),
+        })
+    return out
+
+
 # ── daily History tab (append-only, cloud-redundant copy of data.json history) ─
+# APPEND-ONLY: never reorder or delete a column — the sheet is the third copy of
+# the price history. Columns 3–7 belong to trips retired on 2026-07-25 (direct
+# open-jaw, Singapore-only, Istanbul-only, TK 30h, three one-ways); they stay in
+# place, holding their old values, and are written blank from now on.
 HISTORY_HEADERS = ["Date", "⭐ IST+SIN main", "Direct OJ + hop", "SIN only",
-                   "IST only", "TK 30h stopover", "3 one-ways", "Best $", "Best structure"]
+                   "IST only", "TK 30h stopover", "3 one-ways", "Best $",
+                   "Best structure",
+                   "Ticket ① $", "Ticket ② $", "① airline", "② airline",
+                   "IST/DAC/SIN/Bali"]
 
 
 def history_row(entry: dict) -> list:
     """Pure: one history entry → one sheet row (testable without gspread)."""
     e = entry or {}
+    main = e.get("main_total", e.get("combined_total", ""))
+    nights = "/".join(str(e.get(k) if e.get(k) is not None else "–")
+                      for k in ("ist_nights", "dhaka_days", "sg_nights", "bali_nights"))
     return [
         e.get("date", ""),
-        e.get("combined_total", ""), e.get("openjaw_total", ""),
-        e.get("singapore_total", ""), e.get("istanbul2_total", ""),
-        e.get("stopover_total", ""), e.get("oneway_combo_total", ""),
+        main,
+        e.get("openjaw_total", ""), e.get("singapore_total", ""),
+        e.get("istanbul2_total", ""), e.get("stopover_total", ""),
+        e.get("oneway_combo_total", ""),
         e.get("best_total", ""), e.get("best_structure", ""),
+        e.get("ticket1_total", ""), e.get("ticket2_total", ""),
+        e.get("ticket1_airline", ""), e.get("ticket2_airline", ""),
+        nights if e.get("date") else "",
     ]
 
 
@@ -63,6 +96,10 @@ def append_history_row(entry: dict, tab_name: str = "History") -> None:
     sheet = _get_or_create_tab(client.open_by_key(SPREADSHEET_ID), tab_name)
     values = sheet.get_all_values()
     row = history_row(entry)
+    # New columns were appended (2026-07-25) — widen the header in place. Only
+    # ever extends to the right; existing columns keep their meaning and data.
+    if values and len(values[0]) < len(HISTORY_HEADERS):
+        sheet.update("A1", [HISTORY_HEADERS], value_input_option="USER_ENTERED")
     if not values:
         sheet.update("A1", [HISTORY_HEADERS, row], value_input_option="USER_ENTERED")
     elif values[-1] and values[-1][0] == entry["date"]:
