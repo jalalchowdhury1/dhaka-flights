@@ -519,7 +519,8 @@ function altTable(options, note) {
   return `<div class="card scroll-x"><table>
     <tr><th>Airline</th><th>How</th><th class="num">Price</th><th class="num">vs chosen</th>
         <th>Checked bags</th><th></th></tr>${body}</table>
-    <div class="muted" style="margin-top:8px">${note}</div></div>`;
+    <div class="muted" style="margin-top:8px"><b>Prices are totals for all 3 travelers</b> (2 adults + 1 child) —
+    "vs chosen" is how much more the whole family pays. ${note}</div></div>`;
 }
 
 function renderToday(d) {
@@ -546,8 +547,8 @@ function renderToday(d) {
     const t2dates = main.sg_ticket ? `${short(main.sg_ticket.out_date)} + ${short(main.sg_ticket.ret_date)}` : "the same dates";
     html += sec(`🔀 Ticket ② alternatives — Dhaka→Singapore→Bali (${t2dates})`,
       altTable(t2, "Same dates, so the Singapore and Bali nights are identical — the price gap is the whole story. " +
-                   "\"2 tickets\" means buying Dhaka→Singapore and Singapore→Bali separately: cheaper sometimes, " +
-                   "but you re-check bags in Singapore and a delay on the first leg is your problem, not the airline's."),
+                   "\"1 ticket\" = one multi-city booking; \"2 tickets\" = Dhaka→Singapore and Singapore→Bali bought separately " +
+                   "(sometimes cheaper, but you re-check bags in Singapore and a delay on the first leg is your problem, not the airline's)."),
       true);
     html += sec("🎫 Ticket ① alternatives — Boston→Istanbul→Dhaka + Bali→Boston",
       altTable(d.ticket1_options || [], "Same three flights and dates, different airline. Watch the bag column: " +
