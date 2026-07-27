@@ -53,9 +53,11 @@ def test_legs_config_is_the_singapore_middle_only():
     # 2026-07-25: one trip only. The long legs are priced solely as Ticket ①,
     # so the only one-way searches left are the Dhaka→Singapore→Bali middle.
     assert [(l["origin"], l["dest"]) for l in LEGS] == [("DAC", "SIN"), ("SIN", "DPS")]
-    assert sum(len(l["dates"]) for l in LEGS) == 8
-    # DAC→SIN starts Jan 29 so a 2-night Singapore stay can still reach Bali
-    # on Feb 1 (5 nights before the Feb 6 return).
+    assert sum(len(l["dates"]) for l in LEGS) == 10
+    # DAC→SIN covers Jan 27–Feb 1: Jan 29+ gives a 2-night Singapore stay
+    # reaching Bali Feb 1 (5 nights before the Feb 6 return); Jan 27–28 catch
+    # the 💸 budget companion's leave-Dhaka-early deals (2026-07-27).
+    assert "January 27, 2027" in LEGS[0]["dates"]
     assert "January 29, 2027" in LEGS[0]["dates"]
     assert "February 1, 2027" in LEGS[1]["dates"]
 
@@ -93,6 +95,6 @@ def test_scrape_all_retries_route_once_then_moves_on(monkeypatch):
     monkeypatch.setattr(scraper.time, "sleep", lambda s: None)
     result = scraper.scrape_all()
     assert scraper.DIAG["aborted_early"] is False
-    # 8 searches: first call empty + retry, rest succeed first try = 9 calls
-    assert calls["n"] == 9
-    assert len(result) == 8
+    # 10 searches: first call empty + retry, rest succeed first try = 11 calls
+    assert calls["n"] == 11
+    assert len(result) == 10

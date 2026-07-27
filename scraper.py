@@ -12,16 +12,20 @@ from typing import Union
 #
 # RETIRED 2026-07-25 — the direct BOS→DAC / DAC→DPS / DPS→BOS one-ways and the
 # plain open-jaw watch. They priced the alternative trips Jalal no longer wants,
-# and dropping them takes the nightly run from 30 searches (~25 min) to 13
-# (~11 min), which also means far fewer chances to hit a Google throttle.
+# and dropping them took the nightly run from 30 searches (~25 min) to 13;
+# the 💸 budget dates (2026-07-27) brought it to 17 (~14 min) — still far
+# fewer chances to hit a Google throttle than the old full sweep.
 # Restoring them = put the legs back in LEGS and OPENJAW_SEARCHES back in
 # scrape_tickets_all(); combo.best_structures()/best_combos() still work.
 LEGS = [
     # The Singapore middle, priced as two one-ways — the cheaper of {2 one-ways,
     # 1 multi-city ticket} wins inside combo.best_singapore. Both are the SAME
     # trip, just a different way to buy the Dhaka→Singapore→Bali hop.
+    # Jan 27–28 added 2026-07-27 for the 💸 budget companion — Jalal is happy
+    # to leave Dhaka a day or two early if that's where the deal is.
     {"origin": "DAC", "dest": "SIN",
-     "dates": ["January 29, 2027", "January 30, 2027", "January 31, 2027", "February 1, 2027"]},
+     "dates": ["January 27, 2027", "January 28, 2027", "January 29, 2027",
+               "January 30, 2027", "January 31, 2027", "February 1, 2027"]},
     {"origin": "SIN", "dest": "DPS",
      "dates": ["January 31, 2027", "February 1, 2027", "February 2, 2027", "February 3, 2027"]},
 ]
@@ -684,6 +688,10 @@ def scrape_stopover(cfg=None) -> list:
 # (2 nights in Singapore). Paired so SIN→DPS departs 2 days after DAC→SIN. The
 # two-one-way version of the same middle comes from the DAC→SIN / SIN→DPS LEGS.
 SG_TICKET_SEARCHES = [
+    # Jan 27–28 outbounds (ret Feb 1, the 5-night-Bali return) added 2026-07-27
+    # for the 💸 budget companion — early-Dhaka-exit deals as one ticket.
+    ("January 27, 2027", "February 1, 2027"),
+    ("January 28, 2027", "February 1, 2027"),
     ("January 29, 2027", "January 31, 2027"),
     ("January 30, 2027", "February 1, 2027"),
     ("January 31, 2027", "February 2, 2027"),

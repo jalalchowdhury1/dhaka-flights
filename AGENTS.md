@@ -18,9 +18,19 @@ It buys as **two purchases**, and everything in the code is named for them:
 | **Ticket ①** | BOS→IST + IST→DAC + DPS→BOS, one multi-city ticket | `ISTANBUL2_SEARCH` (kind `stopover2`) |
 | **Ticket ②** | DAC→SIN→DPS — one multi-city ticket **or** two one-ways, whichever is cheaper | `SG_TICKET_SEARCHES` + the two `LEGS` |
 
-Every night at midnight it scrapes those 13 searches, prices the trip, self-checks,
-writes a Google Sheet, Telegrams the result (with per-leg baggage + same-date
-alternatives), and publishes `site/data.json` for **dhaka-flights.vercel.app**.
+Every night at midnight it scrapes those 17 searches (13 + the Jan 27–28 budget
+dates added 2026-07-27), prices the trip, self-checks, writes a Google Sheet,
+Telegrams the result (with per-leg baggage + same-date alternatives), and
+publishes `site/data.json` for **dhaka-flights.vercel.app**.
+
+**💸 Budget companion (`combo.budget_trip`, 2026-07-27):** alongside the main
+trip, the cheapest version of the SAME trip — same Ticket ①, same 5-night Bali
+block — with the minimum-2-Singapore-nights rule waived (≥1 night) and the
+Dhaka departure free to shift (DAC→SIN now scraped from Jan 27). Only shown
+when STRICTLY cheaper than the main trip (else `budget` is None and nothing
+renders); carries `savings` + human `diffs` vs main. Surfaces as a 💸 block in
+Telegram, a collapsible card on the site, `budget_total` in history/data.json,
+and the Sheet History column "💸 Budget $" (appended, per the append-only rule).
 
 **Hard rules:** 5 Bali nights, 2 Istanbul nights, **MINIMUM 2 Singapore nights**
 (`MIN_SG_NIGHTS`, Jalal 2026-07-27 — an overnight DAC→SIN had priced a 1-night
@@ -215,7 +225,7 @@ reason.
 - Ticket ① is fixed to BOS→IST Jan 4 / IST→DAC Jan 7 / DPS→BOS Feb 6. Other
   outbound or return dates would change the trip's shape, so they're a product
   decision, not a config tweak — ask before adding.
-- **Killed-run gotcha (2026-07-18):** a full run is ~11 min (13 searches; it was
+- **Killed-run gotcha (2026-07-18):** a full run is ~14 min (17 searches; it was
   ~25 min at 30 searches before the 2026-07-25 narrowing). Never run it inside a
   harness/tool with a ≤10-min timeout — it gets SIGKILLed mid-scrape (no stamp
   written, no output flushed with buffered stdout). Manual runs:

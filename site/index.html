@@ -561,6 +561,15 @@ function renderToday(d) {
       timeline(main) + structureCard(main, true) +
       (main.alt_note ? `<div class="muted" style="margin-top:6px">💸 ${esc(main.alt_note)}</div>` : ""),
       true);
+    const budget = d.budget;
+    if (budget) {
+      html += sec(`💸 Cheaper if you're flexible — ${usd(budget.total)} (save ${usd(budget.savings)})`,
+        `<div class="muted" style="margin:8px 0 2px">Same Ticket ① and the same 5-night Bali block —
+         the minimum-2-Singapore-nights rule is waived and the Dhaka dates shift to whatever prices best.` +
+        ((budget.diffs || []).length ? ` What changes: <b>${budget.diffs.map(esc).join(" · ")}</b>.` : "") +
+        `</div>` + timeline(budget) + structureCard(budget, false),
+        true);
+    }
     html += sec("🗓 Trip plan — dates, flights, layovers, baggage & stays", tripPlan(main), true);
     html += sec("🧳 Baggage, leg by leg", baggageCard(main), true);
 

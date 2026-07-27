@@ -380,6 +380,63 @@ def main_trip(flights, openjaws, sg_tickets):
     return None
 
 
+def budget_trip(flights, sg_tickets, main):
+    """The 💸 companion to the main trip (Jalal 2026-07-27: "also present one
+    which is cheaper, like the 1-night option — feel free to squeeze dates in
+    Bangladesh"). Same Ticket ①, same Bali block; the minimum-2-Singapore-
+    nights rule is WAIVED (≥1 night allowed) and the Dhaka departure may shift
+    to whatever scraped date prices best. Returned ONLY when strictly cheaper
+    than the main trip — None means today's cheapest honest trip IS the main
+    one, and nothing is shown."""
+    if not main or not main.get("openjaw"):
+        return None
+    oj = main["openjaw"]
+    ret = _date(oj["ret_date"])
+    dac_in = _date(oj.get("out_arrive", "")) or (_date(oj["out_date"]) + timedelta(days=1))
+    if not ret:
+        return None
+    exact, near = [], []
+    for m in _sg_middles(flights, sg_tickets):
+        dhaka_days = (m["dhaka_out"] - dac_in).days + 1
+        if not 1 <= dhaka_days <= MAX_DHAKA_DAYS:
+            continue
+        nights = (ret - m["bali_in"]).days
+        if nights not in ALLOWED_BALI_NIGHTS:
+            continue
+        (exact if nights == IDEAL_BALI_NIGHTS else near).append((m, nights, dhaka_days))
+    pool = exact or near
+    if not pool:
+        return None
+    m, nights, dhaka_days = min(pool, key=lambda t: t[0]["cost"])
+    total = oj["price_total"] + m["cost"]
+    if total >= main["total"]:
+        return None
+    diffs = []
+    if m["sg_nights"] != main.get("sg_nights"):
+        diffs.append(f"{m['sg_nights']} Singapore night"
+                     f"{'s' if m['sg_nights'] != 1 else ''} instead of "
+                     f"{main.get('sg_nights')}")
+    dd = dhaka_days - main["dhaka_days"]
+    if dd:
+        diffs.append(f"{abs(dd)} Dhaka day{'s' if abs(dd) != 1 else ''} "
+                     f"{'more' if dd > 0 else 'fewer'} than the main trip")
+    if nights != IDEAL_BALI_NIGHTS:
+        diffs.append(f"{nights}-night Bali pairing")
+    return {
+        "name": f"Budget · same trip, flexible dates · {m['kind']} middle",
+        "kind": "sg-budget", "trip": "via-SIN",
+        "total": total, "savings": main["total"] - total,
+        "valid": True, "flag": None,
+        "home": main["home"], "dhaka_days": dhaka_days,
+        "bali_nights": nights, "sg_nights": m["sg_nights"],
+        "ist_nights": main.get("ist_nights"),
+        "sg_preferred": m["preferred"], "sg_airlines": m["airlines"],
+        "alt_note": None, "diffs": diffs,
+        "legs": list(m["legs"]), "sg_ticket": m["ticket"],
+        "openjaw": oj,
+    }
+
+
 def ticket1_options(openjaws, chosen=None, top_n=8) -> list:
     """Every airline that sells Ticket ① on the tracked dates, cheapest first,
     with the price gap against the one the trip is priced on."""

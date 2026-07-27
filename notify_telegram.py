@@ -147,6 +147,18 @@ def build_message(payload: dict) -> str:
     if main.get("alt_note"):
         lines.append(f"💸 {main['alt_note']}")
 
+    budget = payload.get("budget")
+    if budget:
+        lines.append("")
+        lines.append(f"💸 *Cheaper if flexible: ${budget['total']:,}* — "
+                     f"save ${budget['savings']:,}")
+        if budget.get("diffs"):
+            lines.append(f"_{' · '.join(budget['diffs'])}_")
+        if budget.get("sg_ticket"):
+            lines.append(_ticket2_line(budget["sg_ticket"]))
+        for f in budget.get("legs", []):
+            lines.append(_leg_line(f))
+
     changes = payload.get("changes") or []
     if changes:
         lines.append("")

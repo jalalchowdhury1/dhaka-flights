@@ -9,7 +9,7 @@ import subprocess
 
 import alerts
 import baggage
-from combo import main_trip, ticket1_options, ticket2_options
+from combo import budget_trip, main_trip, ticket1_options, ticket2_options
 
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(REPO_DIR, "site", "data.json")
@@ -55,6 +55,15 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
                     baggage_warnings=baggage.warnings(main),
                     baggage_checked=baggage.CHECKED)
 
+    # 💸 companion: same trip with the min-2-SG-nights rule waived and Dhaka
+    # dates free to shift — present only when strictly cheaper than main.
+    budget = budget_trip(flights, sg_tickets or [], main)
+    if budget:
+        budget = dict(budget,
+                      baggage=baggage.annotate(budget),
+                      baggage_warnings=baggage.warnings(budget),
+                      baggage_checked=baggage.CHECKED)
+
     t1 = (main or {}).get("openjaw") or None
     t2 = (main or {}).get("sg_ticket") or None
     t1_total = t1.get("price_total") if t1 else None
@@ -80,6 +89,7 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
         "home": (main or {}).get("home"),
         "valid": main.get("valid") if main else None,
         "flag": (main or {}).get("flag"),
+        "budget_total": budget["total"] if budget else None,
         # Kept for the Sheet's existing columns + the History tab's detail row.
         "best_total": main["total"] if main else None,
         "best_structure": main["name"] if main else None,
@@ -113,6 +123,7 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
                       "5 nights Bali · home by Feb 7, 2027 · cheapest airline wins"),
         },
         "main": main,
+        "budget": budget,
         # "how much more is the non-US-Bangla option?" — with each airline's bag
         # rule alongside, because a $60 saving that drops 40 kg isn't a saving.
         "ticket1_options": _with_baggage(ticket1_options(openjaws, t1),
