@@ -56,8 +56,8 @@ def test_no_singapore_data_returns_empty():
     assert best_singapore([LEG1, LEG3], [], []) == []
 
 
-def test_exactly_two_sg_nights_required():
-    # 2026-07-18 final rule: EXACTLY 2 Singapore nights. A cheaper 1-night
+def test_two_sg_nights_beat_a_cheaper_one_night_pairing():
+    # 2026-07-27 rule: MINIMUM 2 Singapore nights. A cheaper 1-night
     # pairing must be ignored in favor of the 2-night one.
     dac_sin_late = _f("DAC→SIN", "February 1, 2027", "February 1, 2027", 300)  # 1 SG night
     sg = best_singapore([LEG1, LEG3, DAC_SIN, SIN_DPS, dac_sin_late], [], [])
@@ -124,6 +124,48 @@ def test_cheapest_wins_with_thai_sq_upsell_note():
     assert s["total"] == 2400 + 400 + 200 + 2700   # cheapest (Biman) wins
     assert s["sg_preferred"] is False
     assert "THAI/Singapore Airlines option +$200" in (s["alt_note"] or "")
+
+
+# ── minimum 2 Singapore nights (2026-07-27) ─────────────────────────────────
+# Live failure this rule fixes: a US-Bangla overnight DAC→SIN (dep 10:15 PM,
+# arr 4:30 AM next day) priced a 1-NIGHT ticket below every 2-night option and
+# headlined the trip. Jalal: "make sure that it's a minimum of 2 nights of
+# Singapore" — a ≥2-night middle always outranks a shorter one; a <2-night
+# middle is only a flagged last resort so the trip never silently disappears.
+
+ONE_NIGHT_TICKET = {"kind": "sg-ticket", "route": "DAC→SIN→DPS",
+                    "out_date": "January 30, 2027", "ret_date": "February 1, 2027",
+                    "out_arrive": "January 31, 2027", "price_total": 700,
+                    "airline": "US-Bangla Airlines", "stops": "Nonstop",
+                    "duration": "x", "layovers": "N/A", "link": "http://usb"}
+
+
+def test_cheaper_one_night_ticket_loses_to_two_night_middle():
+    dac_sin = _f("DAC→SIN", "January 30, 2027", "January 30, 2027", 600)
+    sin_dps = _f("SIN→DPS", "February 1, 2027", "February 1, 2027", 200)
+    sg = best_singapore([dac_sin, sin_dps], [IST2_OJ], [ONE_NIGHT_TICKET])
+    main = next(s for s in sg if s["kind"] == "sg-stopover2")
+    assert main["sg_nights"] == 2
+    assert main["total"] == 3600 + 800      # NOT 3600 + the cheaper 1-night $700
+    assert main["valid"] is True
+
+
+def test_one_night_only_day_is_kept_but_flagged():
+    sg = best_singapore([], [IST2_OJ], [ONE_NIGHT_TICKET])
+    main = next(s for s in sg if s["kind"] == "sg-stopover2")
+    assert main["sg_nights"] == 1
+    assert main["valid"] is False
+    assert "1-night Singapore" in (main["flag"] or "")
+
+
+def test_three_sg_nights_allowed_as_minimum_not_exact():
+    dac_sin = _f("DAC→SIN", "January 29, 2027", "January 29, 2027", 600)
+    sin_dps = _f("SIN→DPS", "February 1, 2027", "February 1, 2027", 200)
+    sg = best_singapore([dac_sin, sin_dps], [IST2_OJ], [])
+    main = next(s for s in sg if s["kind"] == "sg-stopover2")
+    assert main["sg_nights"] == 3
+    assert main["valid"] is True
+    assert main["flag"] is None
 
 
 def test_mixed_airline_ticket_is_not_preferred():

@@ -103,9 +103,10 @@ def self_check(flights, openjaws, main, prev_entry=None, sg_tickets=None) -> lis
                             f"{len(priced)} fares — Google may have changed its "
                             f"wording; combo math is falling back to estimates")
 
-    # 7. Shape drift — the trip Jalal asked for is 2 / 2 / 5 nights. Cheapest
-    # still wins (a 1-night Singapore ticket is allowed to be the answer), but
-    # he should never discover it at the airport.
+    # 7. Shape drift — the trip Jalal asked for is 2 / 2 / 5 nights. Singapore
+    # is a hard MINIMUM of 2 since 2026-07-27 (combo prefers ≥2 and flags a
+    # 1-night fallback day); this warning still fires on ANY drift — a 3-night
+    # Singapore or an off-shape day should never be discovered at the airport.
     if main:
         for got, want, what in ((main.get("ist_nights"), 2, "Istanbul"),
                                 (main.get("sg_nights"), 2, "Singapore"),

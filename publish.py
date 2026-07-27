@@ -109,7 +109,7 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
         "trip": {
             "route": "BOS → Istanbul → Dhaka → Singapore → Bali → BOS",
             "travelers": "2 adults + 1 child",
-            "rules": ("2 nights Istanbul · Dhaka ≤29 days · 2 nights Singapore · "
+            "rules": ("2 nights Istanbul · Dhaka ≤29 days · min 2 nights Singapore · "
                       "5 nights Bali · home by Feb 7, 2027 · cheapest airline wins"),
         },
         "main": main,

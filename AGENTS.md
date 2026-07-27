@@ -22,9 +22,13 @@ Every night at midnight it scrapes those 13 searches, prices the trip, self-chec
 writes a Google Sheet, Telegrams the result (with per-leg baggage + same-date
 alternatives), and publishes `site/data.json` for **dhaka-flights.vercel.app**.
 
-**Hard rules:** 5 Bali nights, 2 Istanbul nights, 2 Singapore nights, home ≤ Feb 7,
-Dhaka ≤ 29 days. Nights that come out different still win on price — they're
-surfaced as a self-check note, never silently. **Airline rules:** NOTHING excluded
+**Hard rules:** 5 Bali nights, 2 Istanbul nights, **MINIMUM 2 Singapore nights**
+(`MIN_SG_NIGHTS`, Jalal 2026-07-27 — an overnight DAC→SIN had priced a 1-night
+ticket below every 2-night option and headlined the trip; a ≥2-night middle now
+always outranks a shorter one, price decides only within a tier, and a <2-night
+day survives only as a flagged fallback), home ≤ Feb 7, Dhaka ≤ 29 days. Other
+nights that come out different still win on price — they're surfaced as a
+self-check note, never silently. **Airline rules:** NOTHING excluded
 — "US-Bangla prices are unbeatable" — the CHEAPEST wins. THAI / Singapore Airlines
 are a soft preference: when the winner isn't THAI/SQ but such an option exists, its
 upgrade price surfaces as `alt_note`. `_is_preferred` requires EVERY carrier in a
@@ -186,8 +190,9 @@ reason.
    completion. Only ~top-10 fares show inline — the scraper clicks "View more flights".
 4. **The trip must NEVER be dropped silently** (2026-07-16: the exact-5-night
    pairing rule hid a valid $3.4k open-jaw from the daily message). When no
-   5-night pairing exists, 4/6 nights are used and `flag` is set (shown verbatim
-   in Telegram + site badges); off-target Istanbul/Singapore nights become a
+   5-night Bali pairing exists, 4/6 nights are used and `flag` is set (shown
+   verbatim in Telegram + site badges); a day with only <2 Singapore nights is
+   likewise kept but flagged; off-target Istanbul nights become a
    self-check note. The parser keeps the CHEAPEST `MAX_RESULTS` fares, not the
    first in page order. Since 2026-07-25 there is no second structure to fall
    back on, so `sanity.py` warns loudly when Ticket ① prices but no trip builds.

@@ -201,11 +201,14 @@ def best_combos(flights, top_n=3) -> list:
 
 
 # ── Singapore-detour variant (2026-07-18) ──────────────────────────────────
-# Dhaka a few nights shorter, 1–3 nights in Singapore en route to Bali. Kept as
+# Dhaka a few nights shorter, ≥2 nights in Singapore en route to Bali. Kept as
 # an isolated parallel path so the direct-trip ranking is never destabilized.
-# EXACTLY 2 Singapore nights (Jalal 2026-07-18 final: "2 nights both in
-# Istanbul and Singapore"; Bali fixed at 5).
-ALLOWED_SG_NIGHTS = (2,)
+# MINIMUM 2 Singapore nights (Jalal 2026-07-27: "make sure that it's a minimum
+# of 2 nights of Singapore" — an overnight DAC→SIN had priced a 1-night ticket
+# below every 2-night option and headlined the trip). A ≥2-night middle always
+# outranks a shorter one; price only decides within a tier. A <2-night middle
+# is a flagged last resort so the trip never silently disappears.
+MIN_SG_NIGHTS = 2
 
 
 def _sg_middles(flights, sg_tickets):
@@ -224,7 +227,7 @@ def _sg_middles(flights, sg_tickets):
             if not (b_dep and b_arr):
                 continue
             sg_nights = (b_dep - a_arr).days
-            if sg_nights not in ALLOWED_SG_NIGHTS:
+            if sg_nights < 1:       # impossible pairing (fly out before arriving)
                 continue
             middles.append({
                 "cost": a["price_total"] + b["price_total"],
@@ -244,6 +247,8 @@ def _sg_middles(flights, sg_tickets):
         # landing at 4 AM gives 1 real hotel night, not 2 (2026-07-18: the old
         # departure-date fallback overcounted and mislabeled the trip plan).
         sg_nights = (d2 - arr).days
+        if sg_nights < 1:           # ret before arrival — a parse error, not a fare
+            continue
         middles.append({
             "cost": t["price_total"], "dhaka_out": d1, "bali_in": d2,
             "sg_nights": sg_nights, "kind": "1 ticket", "legs": [], "ticket": t,
@@ -258,7 +263,7 @@ def best_singapore(flights, openjaws, sg_tickets, top_n=3) -> list:
     (BOS→DAC + DPS→BOS) OR a direct open-jaw ticket; the Singapore middle is
     whichever of {two one-ways, one ticket} is cheaper & valid. Entries mirror
     best_structures shape, tagged trip='via-SIN'. Never drops a valid trip:
-    only 4/6-night Bali or 1/3 Singapore-night compromises get flagged."""
+    4/6-night Bali or <2-Singapore-night compromises get flagged instead."""
     middles = _sg_middles(flights, sg_tickets)
     if not middles:
         return []
@@ -275,7 +280,12 @@ def best_singapore(flights, openjaws, sg_tickets, top_n=3) -> list:
             if nights not in ALLOWED_BALI_NIGHTS:
                 continue
             (exact if nights == IDEAL_BALI_NIGHTS else near).append((m, nights, dhaka_days))
-        pool = exact or near
+        # Minimum 2 Singapore nights (2026-07-27): ≥2-night middles always
+        # outrank shorter ones — even a 5-night-Bali pairing loses to a
+        # 4/6-night one if only the latter keeps 2 Singapore nights.
+        def _sg_ok(pool):
+            return [t for t in pool if t[0]["sg_nights"] >= MIN_SG_NIGHTS]
+        pool = _sg_ok(exact) or _sg_ok(near) or exact or near
         if not pool:
             return
         # CHEAPEST WINS (US-Bangla and all). THAI/SQ is a soft preference: if
@@ -292,7 +302,9 @@ def best_singapore(flights, openjaws, sg_tickets, top_n=3) -> list:
             flags.append(f"home {home.strftime('%b %-d')} — after Feb 7")
         if nights != IDEAL_BALI_NIGHTS:
             flags.append(f"only a {nights}-night Bali pairing today")
-        # Singapore nights (1–3) are deliberately NOT flagged — price decides.
+        if m["sg_nights"] < MIN_SG_NIGHTS:
+            flags.append(f"only a {m['sg_nights']}-night Singapore pairing today")
+        # ≥2 Singapore nights are never flagged — price decides between 2 and 3.
         structures.append({
             "name": f"{name} · {m['kind']} middle",
             "kind": kind, "trip": "via-SIN",
