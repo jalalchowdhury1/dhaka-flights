@@ -1,53 +1,63 @@
 {
- "updated": "2026-07-27 00:12",
+ "updated": "2026-07-27 10:47",
  "alerts": [],
- "price_context": "5th-cheapest of 10 days tracked \u00b7 $4 above the low",
+ "price_context": "10th-cheapest of 10 days tracked \u00b7 $383 above the low",
  "countdown": "\ud83d\udcc5 36 days to your usual booking window (booked Sep 18 '24 \u00b7 Sep 23 '25)",
  "changes": [
-  "\ud83c\uddf8\ud83c\uddec Ticket \u2461 composition: US-Bangla Airlines + Jetstar \u00b7 2 one-ways (Jan 29 + Feb 1) \u2192 US-Bangla Airlines 1-ticket (Jan 30 + Feb 1)",
-  "Singapore nights: 2 \u2192 1",
-  "Dhaka days: 22 \u2192 23",
+  "\ud83c\uddf8\ud83c\uddec Ticket \u2461 composition: US-Bangla Airlines + Jetstar \u00b7 2 one-ways (Jan 29 + Feb 1) \u2192 Malaysia Airlines + Jetstar \u00b7 2 one-ways (Jan 29 + Feb 1)",
+  "\ud83c\uddf8\ud83c\uddec Ticket \u2461 $1,019 \u2192 $1,401 (+$382)",
   "\ud83e\uddf3\u26a0\ufe0f Airline/composition changed \u2014 baggage rules changed with it, check the baggage table before assuming yesterday's allowances"
  ],
- "warnings": [
-  "today's cheapest trip gives 1 Singapore night, not 2"
- ],
+ "warnings": [],
  "trip": {
   "route": "BOS \u2192 Istanbul \u2192 Dhaka \u2192 Singapore \u2192 Bali \u2192 BOS",
   "travelers": "2 adults + 1 child",
-  "rules": "2 nights Istanbul \u00b7 Dhaka \u226429 days \u00b7 2 nights Singapore \u00b7 5 nights Bali \u00b7 home by Feb 7, 2027 \u00b7 cheapest airline wins"
+  "rules": "2 nights Istanbul \u00b7 Dhaka \u226429 days \u00b7 min 2 nights Singapore \u00b7 5 nights Bali \u00b7 home by Feb 7, 2027 \u00b7 cheapest airline wins"
  },
  "main": {
-  "name": "Istanbul 2-night stopover + Singapore \u00b7 1 ticket middle",
+  "name": "Istanbul 2-night stopover + Singapore \u00b7 2 one-ways middle",
   "kind": "sg-stopover2",
   "trip": "via-SIN",
-  "total": 4669,
+  "total": 5048,
   "valid": true,
   "flag": null,
   "home": "Feb 7",
-  "dhaka_days": 23,
+  "dhaka_days": 22,
   "bali_nights": 5,
-  "sg_nights": 1,
+  "sg_nights": 2,
   "ist_nights": 2,
   "sg_preferred": false,
-  "sg_airlines": "US-Bangla Airlines",
+  "sg_airlines": "Malaysia Airlines + Jetstar",
   "alt_note": null,
-  "legs": [],
-  "sg_ticket": {
-   "out_date": "January 30, 2027",
-   "ret_date": "February 1, 2027",
-   "price_total": 1022,
-   "airline": "US-Bangla Airlines",
-   "out_arrive": "January 31, 2027",
-   "out_depart_time": "10:15 PM",
-   "out_arrive_time": "4:30 AM",
-   "stops": "Nonstop",
-   "duration": "4 hr 15 min",
-   "layovers": "none",
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOGh4SCjIwMjctMDItMDFqBwgBEgNTSU5yBwgBEgNEUFNAAUABQAJIAXABggELCP___________wGYAQM&hl=en",
-   "kind": "sg-ticket",
-   "route": "DAC\u2192SIN\u2192DPS"
-  },
+  "legs": [
+   {
+    "route": "DAC\u2192SIN",
+    "depart": "January 29, 2027",
+    "arrive": "January 30, 2027",
+    "depart_time": "10:55 PM",
+    "arrive_time": "9:05 AM",
+    "airline": "Malaysia Airlines",
+    "stops": "1 stop",
+    "duration": "8 hr 10 min",
+    "layovers": "2 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+    "price_total": 1121,
+    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
+   },
+   {
+    "route": "SIN\u2192DPS",
+    "depart": "February 1, 2027",
+    "arrive": "February 1, 2027",
+    "depart_time": "7:25 PM",
+    "arrive_time": "10:00 PM",
+    "airline": "Jetstar",
+    "stops": "Nonstop",
+    "duration": "2 hr 35 min",
+    "layovers": "none",
+    "price_total": 280,
+    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDU0lOcgcIARIDRFBTQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
+   }
+  ],
+  "sg_ticket": null,
   "openjaw": {
    "out_date": "January 4, 2027",
    "ret_date": "February 6, 2027",
@@ -97,26 +107,27 @@
     "route": "DAC\u2192SIN",
     "label": "Dhaka \u2192 Singapore",
     "ticket": 2,
-    "carrier": "US-Bangla Airlines",
-    "checked": "40 kg (max 2 pieces) per person",
-    "cabin": "7 kg (published per ticket)",
-    "note": "Dhaka\u2192Singapore is one of their most generous routes: 40 kg in two bags.",
-    "url": "https://usbair.com/free-baggage-allowence",
-    "confidence": "verified",
+    "carrier": "Malaysia Airlines",
+    "checked": "30 kg (Basic fares less)",
+    "cabin": "1 \u00d7 7 kg",
+    "note": "",
+    "url": "https://www.malaysiaairlines.com/us/en/plan/baggage-information.html",
+    "confidence": "typical",
     "others": [],
-    "summary": "40 kg (max 2 pieces) per person"
+    "summary": "30 kg (Basic fares less)"
    },
    {
     "route": "SIN\u2192DPS",
     "label": "Singapore \u2192 Bali",
     "ticket": 2,
-    "carrier": "not shown on this ticket",
-    "checked": "unknown until booking",
-    "cabin": "\u2014",
-    "confidence": "unknown",
+    "carrier": "Jetstar",
+    "checked": "NONE on Starter fares \u2014 prepay 20 kg+",
+    "cabin": "7 kg total",
+    "note": "Low-cost carrier: bags are an add-on.",
+    "url": "https://www.jetstar.com/au/en/help/articles/carry-on-baggage-restrictions",
+    "confidence": "verified",
     "others": [],
-    "note": "Google names only the first leg of a multi-city ticket. If this hop is Scoot/Jetstar/AirAsia it may include NO free bag even though Dhaka\u2192Singapore did.",
-    "url": "https://www.google.com/search?q=Singapore+to+Denpasar+baggage+allowance"
+    "summary": "NONE on Starter fares \u2014 prepay 20 kg+"
    },
    {
     "route": "DPS\u2192BOS",
@@ -134,8 +145,7 @@
   ],
   "baggage_warnings": [
    "Two separate purchases \u2192 bags are NOT checked through. Collect them in Dhaka and re-check for Ticket \u2461; same again in Singapore if the middle is two one-way tickets.",
-   "Allowance is per person and the child with a seat normally gets the adult allowance \u2014 infants on a lap do not.",
-   "Ticket \u2461's Singapore\u2192Bali carrier isn't visible on Google's multi-city page \u2014 confirm that leg's allowance before paying."
+   "Allowance is per person and the child with a seat normally gets the adult allowance \u2014 infants on a lap do not."
   ],
   "baggage_checked": "2026-07-25"
  },
@@ -338,74 +348,18 @@
  ],
  "ticket2_options": [
   {
-   "kind": "1 ticket",
-   "airline": "US-Bangla Airlines",
-   "price": 1022,
-   "stops": "Nonstop",
-   "duration": "4 hr 15 min",
-   "layovers": "none",
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOGh4SCjIwMjctMDItMDFqBwgBEgNTSU5yBwgBEgNEUFNAAUABQAJIAXABggELCP___________wGYAQM&hl=en",
-   "depart_time": "10:15 PM",
-   "arrive_time": "4:30 AM",
-   "chosen": true,
-   "delta": 0,
-   "baggage": {
-    "carrier": "US-Bangla Airlines",
-    "checked": "40 kg (max 2 pieces) per person",
-    "cabin": "7 kg (published per ticket)",
-    "note": "Dhaka\u2192Singapore is one of their most generous routes: 40 kg in two bags.",
-    "url": "https://usbair.com/free-baggage-allowence",
-    "confidence": "verified",
-    "others": [],
-    "summary": "40 kg (max 2 pieces) per person"
-   }
-  },
-  {
-   "kind": "2 tickets",
-   "airline": "THAI + Jetstar",
-   "price": 1401,
-   "stops": "1 stop / Nonstop",
-   "duration": "6 hr 40 min / 2 hr 35 min",
-   "layovers": null,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
-   "link2": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDU0lOcgcIARIDRFBTQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
-   "depart_time": "1:40 PM",
-   "arrive_time": "10:20 PM",
-   "chosen": false,
-   "delta": 379,
-   "baggage": {
-    "carrier": "THAI Airways",
-    "checked": "Economy Saver 23 kg \u00b7 Flexi/Full 30 kg",
-    "cabin": "1 \u00d7 7 kg",
-    "note": "Saver dropped from 25\u219223 kg in Apr 2025; excess is charged per piece since Mar 2026.",
-    "url": "https://www.thaiairways.com/en-th/content/baggage/checked-baggage/",
-    "confidence": "verified",
-    "others": [
-     {
-      "carrier": "Jetstar",
-      "checked": "NONE on Starter fares \u2014 prepay 20 kg+",
-      "cabin": "7 kg total",
-      "note": "Low-cost carrier: bags are an add-on.",
-      "url": "https://www.jetstar.com/au/en/help/articles/carry-on-baggage-restrictions",
-      "confidence": "verified"
-     }
-    ],
-    "summary": "THAI Airways: Economy Saver 23 kg \u00b7 Flexi/Full 30 kg \u00b7 Jetstar: NONE on Starter fares \u2014 prepay 20 kg+"
-   }
-  },
-  {
    "kind": "2 tickets",
    "airline": "Malaysia Airlines + Jetstar",
    "price": 1401,
    "stops": "1 stop / Nonstop",
-   "duration": "10 hr / 2 hr 35 min",
+   "duration": "8 hr 10 min / 2 hr 35 min",
    "layovers": null,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
    "link2": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDU0lOcgcIARIDRFBTQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
-   "depart_time": "12:30 PM",
-   "arrive_time": "12:30 AM",
-   "chosen": false,
-   "delta": 379,
+   "depart_time": "10:55 PM",
+   "arrive_time": "9:05 AM",
+   "chosen": true,
+   "delta": 0,
    "baggage": {
     "carrier": "Malaysia Airlines",
     "checked": "30 kg (Basic fares less)",
@@ -428,50 +382,17 @@
   },
   {
    "kind": "2 tickets",
-   "airline": "THAI + TransNusa",
-   "price": 1514,
-   "stops": "1 stop / Nonstop",
-   "duration": "6 hr 40 min / 2 hr 35 min",
-   "layovers": null,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
-   "link2": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDU0lOcgcIARIDRFBTQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
-   "depart_time": "1:40 PM",
-   "arrive_time": "10:20 PM",
-   "chosen": false,
-   "delta": 492,
-   "baggage": {
-    "carrier": "THAI Airways",
-    "checked": "Economy Saver 23 kg \u00b7 Flexi/Full 30 kg",
-    "cabin": "1 \u00d7 7 kg",
-    "note": "Saver dropped from 25\u219223 kg in Apr 2025; excess is charged per piece since Mar 2026.",
-    "url": "https://www.thaiairways.com/en-th/content/baggage/checked-baggage/",
-    "confidence": "verified",
-    "others": [
-     {
-      "checked": "not published for this carrier here",
-      "cabin": "\u2014",
-      "confidence": "unknown",
-      "note": "Carrier isn't in the reference table \u2014 open its baggage page before paying.",
-      "url": "https://www.google.com/search?q=TransNusa+checked+baggage+allowance+economy",
-      "carrier": "TransNusa"
-     }
-    ],
-    "summary": "THAI Airways: Economy Saver 23 kg \u00b7 Flexi/Full 30 kg \u00b7 TransNusa: not published for this carrier here"
-   }
-  },
-  {
-   "kind": "2 tickets",
    "airline": "Malaysia Airlines + TransNusa",
    "price": 1514,
    "stops": "1 stop / Nonstop",
-   "duration": "10 hr / 2 hr 35 min",
+   "duration": "8 hr 10 min / 2 hr 35 min",
    "layovers": null,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
    "link2": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDU0lOcgcIARIDRFBTQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
-   "depart_time": "12:30 PM",
-   "arrive_time": "12:30 AM",
+   "depart_time": "10:55 PM",
+   "arrive_time": "9:05 AM",
    "chosen": false,
-   "delta": 492,
+   "delta": 113,
    "baggage": {
     "carrier": "Malaysia Airlines",
     "checked": "30 kg (Basic fares less)",
@@ -494,17 +415,17 @@
   },
   {
    "kind": "2 tickets",
-   "airline": "THAI + Scoot",
-   "price": 1586,
+   "airline": "THAI + Jetstar",
+   "price": 1533,
    "stops": "1 stop / Nonstop",
-   "duration": "6 hr 40 min / 3 hr 10 min",
+   "duration": "7 hr 15 min / 2 hr 35 min",
    "layovers": null,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
    "link2": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDU0lOcgcIARIDRFBTQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
-   "depart_time": "1:40 PM",
-   "arrive_time": "10:20 PM",
+   "depart_time": "2:00 AM",
+   "arrive_time": "11:15 AM",
    "chosen": false,
-   "delta": 564,
+   "delta": 132,
    "baggage": {
     "carrier": "THAI Airways",
     "checked": "Economy Saver 23 kg \u00b7 Flexi/Full 30 kg",
@@ -514,15 +435,15 @@
     "confidence": "verified",
     "others": [
      {
-      "carrier": "Scoot",
-      "checked": "NONE on Fly fares \u2014 prepay 20 kg+",
-      "cabin": "10 kg total (2 items)",
+      "carrier": "Jetstar",
+      "checked": "NONE on Starter fares \u2014 prepay 20 kg+",
+      "cabin": "7 kg total",
       "note": "Low-cost carrier: bags are an add-on.",
-      "url": "https://www.flyscoot.com/en/plan/booking-your-flight/baggage",
+      "url": "https://www.jetstar.com/au/en/help/articles/carry-on-baggage-restrictions",
       "confidence": "verified"
      }
     ],
-    "summary": "THAI Airways: Economy Saver 23 kg \u00b7 Flexi/Full 30 kg \u00b7 Scoot: NONE on Fly fares \u2014 prepay 20 kg+"
+    "summary": "THAI Airways: Economy Saver 23 kg \u00b7 Flexi/Full 30 kg \u00b7 Jetstar: NONE on Starter fares \u2014 prepay 20 kg+"
    }
   },
   {
@@ -530,14 +451,14 @@
    "airline": "Malaysia Airlines + Scoot",
    "price": 1586,
    "stops": "1 stop / Nonstop",
-   "duration": "10 hr / 3 hr 10 min",
+   "duration": "8 hr 10 min / 3 hr 10 min",
    "layovers": null,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
    "link2": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDU0lOcgcIARIDRFBTQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
-   "depart_time": "12:30 PM",
-   "arrive_time": "12:30 AM",
+   "depart_time": "10:55 PM",
+   "arrive_time": "9:05 AM",
    "chosen": false,
-   "delta": 564,
+   "delta": 185,
    "baggage": {
     "carrier": "Malaysia Airlines",
     "checked": "30 kg (Basic fares less)",
@@ -560,17 +481,116 @@
   },
   {
    "kind": "2 tickets",
-   "airline": "THAI + Scoot",
+   "airline": "Malaysia Airlines + Scoot",
    "price": 1645,
    "stops": "1 stop / Nonstop",
-   "duration": "6 hr 40 min / 2 hr 55 min",
+   "duration": "8 hr 10 min / 2 hr 55 min",
    "layovers": null,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
    "link2": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDU0lOcgcIARIDRFBTQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
-   "depart_time": "1:40 PM",
-   "arrive_time": "10:20 PM",
+   "depart_time": "10:55 PM",
+   "arrive_time": "9:05 AM",
    "chosen": false,
-   "delta": 623,
+   "delta": 244,
+   "baggage": {
+    "carrier": "Malaysia Airlines",
+    "checked": "30 kg (Basic fares less)",
+    "cabin": "1 \u00d7 7 kg",
+    "note": "",
+    "url": "https://www.malaysiaairlines.com/us/en/plan/baggage-information.html",
+    "confidence": "typical",
+    "others": [
+     {
+      "carrier": "Scoot",
+      "checked": "NONE on Fly fares \u2014 prepay 20 kg+",
+      "cabin": "10 kg total (2 items)",
+      "note": "Low-cost carrier: bags are an add-on.",
+      "url": "https://www.flyscoot.com/en/plan/booking-your-flight/baggage",
+      "confidence": "verified"
+     }
+    ],
+    "summary": "Malaysia Airlines: 30 kg (Basic fares less) \u00b7 Scoot: NONE on Fly fares \u2014 prepay 20 kg+"
+   }
+  },
+  {
+   "kind": "2 tickets",
+   "airline": "THAI + TransNusa",
+   "price": 1646,
+   "stops": "1 stop / Nonstop",
+   "duration": "7 hr 15 min / 2 hr 35 min",
+   "layovers": null,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
+   "link2": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDU0lOcgcIARIDRFBTQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
+   "depart_time": "2:00 AM",
+   "arrive_time": "11:15 AM",
+   "chosen": false,
+   "delta": 245,
+   "baggage": {
+    "carrier": "THAI Airways",
+    "checked": "Economy Saver 23 kg \u00b7 Flexi/Full 30 kg",
+    "cabin": "1 \u00d7 7 kg",
+    "note": "Saver dropped from 25\u219223 kg in Apr 2025; excess is charged per piece since Mar 2026.",
+    "url": "https://www.thaiairways.com/en-th/content/baggage/checked-baggage/",
+    "confidence": "verified",
+    "others": [
+     {
+      "checked": "not published for this carrier here",
+      "cabin": "\u2014",
+      "confidence": "unknown",
+      "note": "Carrier isn't in the reference table \u2014 open its baggage page before paying.",
+      "url": "https://www.google.com/search?q=TransNusa+checked+baggage+allowance+economy",
+      "carrier": "TransNusa"
+     }
+    ],
+    "summary": "THAI Airways: Economy Saver 23 kg \u00b7 Flexi/Full 30 kg \u00b7 TransNusa: not published for this carrier here"
+   }
+  },
+  {
+   "kind": "2 tickets",
+   "airline": "Malaysia Airlines + Garuda Indonesia",
+   "price": 1665,
+   "stops": "1 stop / Nonstop",
+   "duration": "8 hr 10 min / 2 hr 55 min",
+   "layovers": null,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
+   "link2": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDU0lOcgcIARIDRFBTQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
+   "depart_time": "10:55 PM",
+   "arrive_time": "9:05 AM",
+   "chosen": false,
+   "delta": 264,
+   "baggage": {
+    "carrier": "Malaysia Airlines",
+    "checked": "30 kg (Basic fares less)",
+    "cabin": "1 \u00d7 7 kg",
+    "note": "",
+    "url": "https://www.malaysiaairlines.com/us/en/plan/baggage-information.html",
+    "confidence": "typical",
+    "others": [
+     {
+      "carrier": "Garuda Indonesia",
+      "checked": "30 kg economy",
+      "cabin": "1 \u00d7 7 kg",
+      "note": "",
+      "url": "https://www.garuda-indonesia.com/id/en/garuda-indonesia-experience/on-ground/baggage",
+      "confidence": "typical"
+     }
+    ],
+    "summary": "Malaysia Airlines: 30 kg (Basic fares less) \u00b7 Garuda Indonesia: 30 kg economy"
+   }
+  },
+  {
+   "kind": "2 tickets",
+   "airline": "THAI + Scoot",
+   "price": 1718,
+   "stops": "1 stop / Nonstop",
+   "duration": "7 hr 15 min / 3 hr 10 min",
+   "layovers": null,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
+   "link2": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDU0lOcgcIARIDRFBTQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
+   "depart_time": "2:00 AM",
+   "arrive_time": "11:15 AM",
+   "chosen": false,
+   "delta": 317,
    "baggage": {
     "carrier": "THAI Airways",
     "checked": "Economy Saver 23 kg \u00b7 Flexi/Full 30 kg",
@@ -593,24 +613,24 @@
   },
   {
    "kind": "2 tickets",
-   "airline": "Malaysia Airlines + Scoot",
-   "price": 1645,
+   "airline": "THAI + Scoot",
+   "price": 1777,
    "stops": "1 stop / Nonstop",
-   "duration": "10 hr / 2 hr 55 min",
+   "duration": "7 hr 15 min / 2 hr 55 min",
    "layovers": null,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
    "link2": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDU0lOcgcIARIDRFBTQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
-   "depart_time": "12:30 PM",
-   "arrive_time": "12:30 AM",
+   "depart_time": "2:00 AM",
+   "arrive_time": "11:15 AM",
    "chosen": false,
-   "delta": 623,
+   "delta": 376,
    "baggage": {
-    "carrier": "Malaysia Airlines",
-    "checked": "30 kg (Basic fares less)",
+    "carrier": "THAI Airways",
+    "checked": "Economy Saver 23 kg \u00b7 Flexi/Full 30 kg",
     "cabin": "1 \u00d7 7 kg",
-    "note": "",
-    "url": "https://www.malaysiaairlines.com/us/en/plan/baggage-information.html",
-    "confidence": "typical",
+    "note": "Saver dropped from 25\u219223 kg in Apr 2025; excess is charged per piece since Mar 2026.",
+    "url": "https://www.thaiairways.com/en-th/content/baggage/checked-baggage/",
+    "confidence": "verified",
     "others": [
      {
       "carrier": "Scoot",
@@ -621,22 +641,22 @@
       "confidence": "verified"
      }
     ],
-    "summary": "Malaysia Airlines: 30 kg (Basic fares less) \u00b7 Scoot: NONE on Fly fares \u2014 prepay 20 kg+"
+    "summary": "THAI Airways: Economy Saver 23 kg \u00b7 Flexi/Full 30 kg \u00b7 Scoot: NONE on Fly fares \u2014 prepay 20 kg+"
    }
   },
   {
    "kind": "2 tickets",
    "airline": "THAI + Garuda Indonesia",
-   "price": 1665,
+   "price": 1797,
    "stops": "1 stop / Nonstop",
-   "duration": "6 hr 40 min / 2 hr 55 min",
+   "duration": "7 hr 15 min / 2 hr 55 min",
    "layovers": null,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
    "link2": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDU0lOcgcIARIDRFBTQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en",
-   "depart_time": "1:40 PM",
-   "arrive_time": "10:20 PM",
+   "depart_time": "2:00 AM",
+   "arrive_time": "11:15 AM",
    "chosen": false,
-   "delta": 643,
+   "delta": 396,
    "baggage": {
     "carrier": "THAI Airways",
     "checked": "Economy Saver 23 kg \u00b7 Flexi/Full 30 kg",
@@ -2945,52 +2965,65 @@
   },
   {
    "date": "2026-07-27",
-   "main_total": 4669,
-   "combined_total": 4669,
+   "main_total": 5048,
+   "combined_total": 5048,
    "ticket1_total": 3647,
-   "ticket2_total": 1022,
+   "ticket2_total": 1401,
    "ticket1_airline": "Turkish Airlines",
-   "ticket2_airline": "US-Bangla Airlines",
+   "ticket2_airline": "Malaysia Airlines + Jetstar",
    "ist_nights": 2,
-   "sg_nights": 1,
+   "sg_nights": 2,
    "bali_nights": 5,
-   "dhaka_days": 23,
+   "dhaka_days": 22,
    "home": "Feb 7",
    "valid": true,
    "flag": null,
-   "best_total": 4669,
-   "best_structure": "Istanbul 2-night stopover + Singapore \u00b7 1 ticket middle",
+   "best_total": 5048,
+   "best_structure": "Istanbul 2-night stopover + Singapore \u00b7 2 one-ways middle",
    "best_detail": {
-    "name": "Istanbul 2-night stopover + Singapore \u00b7 1 ticket middle",
+    "name": "Istanbul 2-night stopover + Singapore \u00b7 2 one-ways middle",
     "kind": "sg-stopover2",
     "trip": "via-SIN",
-    "total": 4669,
+    "total": 5048,
     "valid": true,
     "flag": null,
     "home": "Feb 7",
-    "dhaka_days": 23,
+    "dhaka_days": 22,
     "bali_nights": 5,
-    "sg_nights": 1,
+    "sg_nights": 2,
     "ist_nights": 2,
     "sg_preferred": false,
-    "sg_airlines": "US-Bangla Airlines",
+    "sg_airlines": "Malaysia Airlines + Jetstar",
     "alt_note": null,
-    "legs": [],
-    "sg_ticket": {
-     "out_date": "January 30, 2027",
-     "ret_date": "February 1, 2027",
-     "price_total": 1022,
-     "airline": "US-Bangla Airlines",
-     "out_arrive": "January 31, 2027",
-     "out_depart_time": "10:15 PM",
-     "out_arrive_time": "4:30 AM",
-     "stops": "Nonstop",
-     "duration": "4 hr 15 min",
-     "layovers": "none",
-     "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOGh4SCjIwMjctMDItMDFqBwgBEgNTSU5yBwgBEgNEUFNAAUABQAJIAXABggELCP___________wGYAQM&hl=en",
-     "kind": "sg-ticket",
-     "route": "DAC\u2192SIN\u2192DPS"
-    },
+    "legs": [
+     {
+      "route": "DAC\u2192SIN",
+      "depart": "January 29, 2027",
+      "arrive": "January 30, 2027",
+      "depart_time": "10:55 PM",
+      "arrive_time": "9:05 AM",
+      "airline": "Malaysia Airlines",
+      "stops": "1 stop",
+      "duration": "8 hr 10 min",
+      "layovers": "2 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+      "price_total": 1121,
+      "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
+     },
+     {
+      "route": "SIN\u2192DPS",
+      "depart": "February 1, 2027",
+      "arrive": "February 1, 2027",
+      "depart_time": "7:25 PM",
+      "arrive_time": "10:00 PM",
+      "airline": "Jetstar",
+      "stops": "Nonstop",
+      "duration": "2 hr 35 min",
+      "layovers": "none",
+      "price_total": 280,
+      "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDU0lOcgcIARIDRFBTQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
+     }
+    ],
+    "sg_ticket": null,
     "openjaw": {
      "out_date": "January 4, 2027",
      "ret_date": "February 6, 2027",
@@ -3040,26 +3073,27 @@
       "route": "DAC\u2192SIN",
       "label": "Dhaka \u2192 Singapore",
       "ticket": 2,
-      "carrier": "US-Bangla Airlines",
-      "checked": "40 kg (max 2 pieces) per person",
-      "cabin": "7 kg (published per ticket)",
-      "note": "Dhaka\u2192Singapore is one of their most generous routes: 40 kg in two bags.",
-      "url": "https://usbair.com/free-baggage-allowence",
-      "confidence": "verified",
+      "carrier": "Malaysia Airlines",
+      "checked": "30 kg (Basic fares less)",
+      "cabin": "1 \u00d7 7 kg",
+      "note": "",
+      "url": "https://www.malaysiaairlines.com/us/en/plan/baggage-information.html",
+      "confidence": "typical",
       "others": [],
-      "summary": "40 kg (max 2 pieces) per person"
+      "summary": "30 kg (Basic fares less)"
      },
      {
       "route": "SIN\u2192DPS",
       "label": "Singapore \u2192 Bali",
       "ticket": 2,
-      "carrier": "not shown on this ticket",
-      "checked": "unknown until booking",
-      "cabin": "\u2014",
-      "confidence": "unknown",
+      "carrier": "Jetstar",
+      "checked": "NONE on Starter fares \u2014 prepay 20 kg+",
+      "cabin": "7 kg total",
+      "note": "Low-cost carrier: bags are an add-on.",
+      "url": "https://www.jetstar.com/au/en/help/articles/carry-on-baggage-restrictions",
+      "confidence": "verified",
       "others": [],
-      "note": "Google names only the first leg of a multi-city ticket. If this hop is Scoot/Jetstar/AirAsia it may include NO free bag even though Dhaka\u2192Singapore did.",
-      "url": "https://www.google.com/search?q=Singapore+to+Denpasar+baggage+allowance"
+      "summary": "NONE on Starter fares \u2014 prepay 20 kg+"
      },
      {
       "route": "DPS\u2192BOS",
@@ -3077,8 +3111,7 @@
     ],
     "baggage_warnings": [
      "Two separate purchases \u2192 bags are NOT checked through. Collect them in Dhaka and re-check for Ticket \u2461; same again in Singapore if the middle is two one-way tickets.",
-     "Allowance is per person and the child with a seat normally gets the adult allowance \u2014 infants on a lap do not.",
-     "Ticket \u2461's Singapore\u2192Bali carrier isn't visible on Google's multi-city page \u2014 confirm that leg's allowance before paying."
+     "Allowance is per person and the child with a seat normally gets the adult allowance \u2014 infants on a lap do not."
     ],
     "baggage_checked": "2026-07-25"
    }
