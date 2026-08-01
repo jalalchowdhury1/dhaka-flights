@@ -16,17 +16,23 @@ IST2 = {"kind": "stopover2", "label": "Istanbul 2-night stopover",
         "note": "n"}
 
 
-def test_only_the_two_night_istanbul_ticket_is_scraped():
-    # 2026-07-25: one trip only. The TK 30h (1-night) variant and the plain
-    # open-jaw are retired from the rotation; their configs stay for re-adding.
-    assert [c["kind"] for c in STOPOVER_SEARCHES] == ["stopover2"]
-    assert ISTANBUL2_SEARCH["airline_filter"] is None
-    assert ISTANBUL2_SEARCH["legs"][1] == ("IST", "DAC", "January 7, 2027")
+def test_ticket1_is_one_two_night_istanbul_search_per_order():
+    # 2026-08-01: two Ticket ① searches, one per city order — same Istanbul
+    # front, the return leg from whichever city the order visits last. The TK
+    # 30h variant, the plain open-jaw and the Bali (DPS) return stay retired.
+    assert [c["kind"] for c in STOPOVER_SEARCHES] == ["stopover2", "stopover2"]
+    assert sorted(c["ret_city"] for c in STOPOVER_SEARCHES) == ["BKK", "SIN"]
+    for c in STOPOVER_SEARCHES:
+        assert c["airline_filter"] is None
+        assert c["legs"][1] == ("IST", "DAC", "January 7, 2027")
+        assert c["legs"][2] == (c["ret_city"], "BOS", "February 6, 2027")
+    assert ISTANBUL2_SEARCH["legs"][2][0] == "DPS", "Bali config kept, just not scraped"
     assert OPENJAW_SEARCHES, "config kept, just not scraped"
 
 
-def test_only_the_singapore_middle_legs_are_scraped_as_one_ways():
-    assert [(l["origin"], l["dest"]) for l in LEGS] == [("DAC", "SIN"), ("SIN", "DPS")]
+def test_only_the_ticket2_middle_legs_are_scraped_as_one_ways():
+    assert [(l["origin"], l["dest"]) for l in LEGS] == [
+        ("DAC", "SIN"), ("SIN", "BKK"), ("DAC", "BKK"), ("BKK", "SIN")]
 
 
 def test_ticket1_gets_extra_attempts_since_nothing_can_replace_it():

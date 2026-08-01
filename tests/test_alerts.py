@@ -6,7 +6,7 @@ import alerts
 from alerts import (headlines, price_context, countdown, changes_since, stage,
                     BUY_BELOW, WINDOW_OPENS, BOOK_BY)
 
-JUL = datetime.date(2026, 7, 25)
+WATCH_DAY = datetime.date(2026, 8, 5)      # inside the new 2026-08-01 epoch
 SEP_5 = datetime.date(2026, 9, 5)
 SEP_21 = datetime.date(2026, 9, 21)
 
@@ -21,46 +21,49 @@ def _entry(date, main, t1=None, t2=None, **kw):
 
 
 HIST = [
-    {"date": "2026-07-15", "best_total": 4763},                 # retired-trip era
-    {"date": "2026-07-18", "combined_total": 4709},             # old key
-    {"date": "2026-07-24", "combined_total": 4665},
+    {"date": "2026-07-15", "best_total": 4763},                 # open-jaw era
+    {"date": "2026-07-24", "combined_total": 4300},             # Bali era — retired 2026-08-01
+    {"date": "2026-08-02", "main_total": 4709},
+    {"date": "2026-08-04", "main_total": 4665},
 ]
 
 
 def test_stages():
-    assert stage(JUL) == "watch"
+    assert stage(WATCH_DAY) == "watch"
     assert stage(WINDOW_OPENS) == "window"
     assert stage(BOOK_BY) == "past"
 
 
 def test_quiet_ordinary_day():
-    e = _entry("2026-07-25", 4666, t1=3647)
-    assert headlines(e, HIST + [e], JUL) == []
+    e = _entry("2026-08-05", 4666, t1=3647)
+    assert headlines(e, HIST + [e], WATCH_DAY) == []
 
 
 def test_new_all_time_low_fires():
-    e = _entry("2026-07-25", 4600, t1=3647)
-    lines = headlines(e, HIST + [e], JUL)
+    e = _entry("2026-08-05", 4600, t1=3647)
+    lines = headlines(e, HIST + [e], WATCH_DAY)
     assert any("🔥 New all-time low: $4,600" in l and "$4,665" in l for l in lines)
 
 
 def test_retired_trip_prices_do_not_pollute_the_low():
-    # 2026-07-15's $4,763 open-jaw was a DIFFERENT trip; the low must come
-    # from the tracked-trip era only (min $4,665, not $4,763).
-    e = _entry("2026-07-25", 4700, t1=3647)
-    assert headlines(e, HIST + [e], JUL) == []          # 4700 > 4665: no alert
+    # The Bali era's $4,300 (and the open-jaw era's $4,763) were DIFFERENT
+    # trips; the low must come from the 2026-08-01+ era only. $4,400 beats
+    # $4,665 → the alert fires; if the Bali $4,300 leaked in, it wouldn't.
+    e = _entry("2026-08-05", 4400, t1=3647)
+    lines = headlines(e, HIST + [e], WATCH_DAY)
+    assert any("New all-time low: $4,400" in l and "$4,665" in l for l in lines)
 
 
 def test_buy_zone_fires_in_watch_stage_too():
-    e = _entry("2026-07-25", BUY_BELOW - 1, t1=3647)
-    lines = headlines(e, HIST + [e], JUL)
+    e = _entry("2026-08-05", BUY_BELOW - 1, t1=3647)
+    lines = headlines(e, HIST + [e], WATCH_DAY)
     assert any("BUY ZONE" in l for l in lines)
 
 
 def test_ticket1_low_fires_even_when_trip_total_does_not():
-    prev = _entry("2026-07-25", 4666, t1=3647)
-    cur = _entry("2026-07-26", 4666, t1=3500)           # trip flat, ① dropped
-    lines = headlines(cur, HIST + [prev, cur], JUL)
+    prev = _entry("2026-08-05", 4666, t1=3647)
+    cur = _entry("2026-08-06", 4666, t1=3500)           # trip flat, ① dropped
+    lines = headlines(cur, HIST + [prev, cur], WATCH_DAY)
     assert any("Ticket ① new low: $3,500" in l for l in lines)
 
 
@@ -72,19 +75,19 @@ def test_past_book_by_leads_and_retires_the_price_threshold():
 
 
 def test_price_context_ranks_within_tracked_era():
-    # 2026-07-15 has no main-trip value → 3 tracked days, not 4.
-    e = _entry("2026-07-25", 4666)
+    # Only the two Aug entries + today count → 3 tracked days, not 5.
+    e = _entry("2026-08-05", 4666)
     ctx = price_context(e, HIST + [e])
     assert "2nd-cheapest of 3 days" in ctx and "$1 above the low" in ctx
 
 
 def test_price_context_at_the_low():
-    e = _entry("2026-07-25", 4665)
+    e = _entry("2026-08-05", 4665)
     assert "matches the all-time low" in price_context(e, HIST + [e])
 
 
 def test_countdown_by_stage():
-    assert "days to your usual booking window" in countdown(JUL)
+    assert "days to your usual booking window" in countdown(WATCH_DAY)
     assert "days left" in countdown(SEP_5)
     assert countdown(SEP_21) is None                    # 'past' leads instead
 
@@ -135,6 +138,17 @@ def test_nights_change_is_reported():
     b = dict(_entry("2026-07-26", 4666, t1=3647, t2=1019, detail=T2_ONE_TICKET),
              sg_nights=1)
     assert any("Singapore nights: 2 → 1" in l for l in changes_since(a, b))
+
+
+def test_order_flip_leads_the_changes_and_flags_baggage():
+    a = _entry("2026-08-05", 4666, t1=3647, t2=1019, detail=T2_ONE_TICKET,
+               order="Singapore first")
+    b = _entry("2026-08-06", 4666, t1=3647, t2=1019, detail=T2_ONE_TICKET,
+               order="Bangkok first")
+    out = changes_since(a, b)
+    assert any("Cheaper order flipped: Singapore first → Bangkok first" in l
+               for l in out)
+    assert any("🧳⚠️" in l for l in out)
 
 
 def test_old_format_yesterday_is_skipped_gracefully():

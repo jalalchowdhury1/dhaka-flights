@@ -30,7 +30,8 @@ def test_history_entry_splits_the_two_tickets():
     assert h["ticket1_total"] == 3600
     assert h["ticket2_total"] == 1000
     assert h["ticket1_airline"] == "Turkish Airlines"
-    assert h["ist_nights"] == 2 and h["sg_nights"] == 2 and h["bali_nights"] == 5
+    assert h["ist_nights"] == 2 and h["sg_nights"] == 2 and h["bkk_nights"] == 5
+    assert h["order"] == "Singapore first"
     assert h["dhaka_days"] == 23 and h["home"] == "Feb 7"
 
 

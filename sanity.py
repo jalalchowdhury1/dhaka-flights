@@ -5,24 +5,29 @@ Born 2026-07-16, after the exact-5-night pairing rule silently hid a valid
 $3,423 open-jaw from the daily message. The scraper had the data; the output
 lost it; nothing complained.
 
-Rewritten 2026-07-25 when the tracker narrowed to ONE trip. That narrowing
-removed the safety net of "some other structure will still be there", so these
-invariants matter more than before:
+Rewritten 2026-07-25 when the tracker narrowed to ONE trip; order-aware since
+2026-08-01 (Bangkok+Singapore, both orders). The narrowing removed the safety
+net of "some other structure will still be there", so these invariants matter
+more than before:
   1. Ticket ① priced but no trip built  → pairing rules ate the trip
   2. Ticket ① not priced at all         → the run has nothing to say
-  3. every leg×date and every Ticket ② date pair produced a fare
+     (2b: one ORDER's Ticket ① variant empty → that order can't compete)
+  3. every leg×date and every Ticket ② order+date pair produced a fare
   4. a metric that had a value yesterday must not silently become None
   5. big day-over-day swings get called out for a human sanity look
   6. the arrival-date parser must still be parsing (Google phrasing drift)
-  7. the trip's shape (2 IST / 2 SG / 5 Bali nights) is what was asked for
+  7. the trip's shape (2 IST / 2 SIN / 5 BKK nights) is what was asked for
 """
-from scraper import LEGS, SG_TICKET_SEARCHES
+from scraper import LEGS, TICKET2_SEARCHES
 
 TRACKED = {
     "main_total": "MAIN trip total",
-    "ticket1_total": "Ticket ① (Boston–Istanbul–Dhaka + Bali–Boston)",
-    "ticket2_total": "Ticket ② (Dhaka–Singapore–Bali)",
+    "ticket1_total": "Ticket ① (Boston–Istanbul–Dhaka + return)",
+    "ticket2_total": "Ticket ② (Dhaka–Bangkok/Singapore middle)",
 }
+
+# ret_city on Ticket ① ↔ the order it prices (return = LAST city of the order).
+RET_CITY_ORDER = {"SIN": "Bangkok-first", "BKK": "Singapore-first"}
 
 
 def _short(d):
@@ -40,23 +45,32 @@ def self_check(flights, openjaws, main, prev_entry=None, sg_tickets=None) -> lis
     tickets1 = _priced([o for o in (openjaws or []) if o.get("kind") == "stopover2"])
     tickets2 = _priced(sg_tickets or [])
     sg_legs = _priced([f for f in flights
-                       if f.get("route") in ("DAC→SIN", "SIN→DPS")])
+                       if f.get("route") in ("DAC→SIN", "SIN→BKK",
+                                             "DAC→BKK", "BKK→SIN")])
 
     # 1 + 2. The trip itself
     if not tickets1:
-        warnings.append("Ticket ① (BOS→IST→DAC + DPS→BOS) returned NO fares — "
-                        "the trip can't be priced today; check cron.log and "
-                        "debug_last_zero.txt")
-    elif not main:
-        cheapest = min(t["price_total"] for t in tickets1)
-        warnings.append(f"Ticket ① was scraped from ${cheapest:,} but NO trip was "
-                        f"built — a pairing rule dropped it, investigate "
-                        f"combo.best_singapore")
+        warnings.append("Ticket ① (BOS→IST→DAC + return) returned NO fares in "
+                        "EITHER order — the trip can't be priced today; check "
+                        "cron.log and debug_last_zero.txt")
+    else:
+        # 2b. One order's variant empty = tonight's "cheaper order" verdict is
+        # really "the only order that priced" — say so.
+        for city, order in RET_CITY_ORDER.items():
+            if not [t for t in tickets1 if t.get("ret_city") == city]:
+                warnings.append(f"Ticket ① with the {city}→BOS return came back "
+                                f"empty — the {order} order can't be priced "
+                                f"today, so no order comparison happened")
+        if not main:
+            cheapest = min(t["price_total"] for t in tickets1)
+            warnings.append(f"Ticket ① was scraped from ${cheapest:,} but NO trip "
+                            f"was built — a pairing rule dropped it, investigate "
+                            f"combo.order_trip")
     if (tickets2 or sg_legs) and not main:
-        warnings.append("Dhaka→Singapore→Bali fares exist but no trip used them "
-                        "— check the Bali-night / visa-window pairing rules")
+        warnings.append("Dhaka→Bangkok/Singapore fares exist but no trip used "
+                        "them — check the Bangkok-night / visa-window pairing rules")
 
-    # 3. Coverage: every one-way leg×date and every Ticket ② date pair
+    # 3. Coverage: every one-way leg×date and every Ticket ② order+date pair
     seen = {(f["route"], f["depart"]) for f in flights}
     for leg in LEGS:
         route = f"{leg['origin']}→{leg['dest']}"
@@ -64,11 +78,12 @@ def self_check(flights, openjaws, main, prev_entry=None, sg_tickets=None) -> lis
             if (route, date) not in seen:
                 warnings.append(f"no fares captured for {route} {_short(date)} "
                                 f"— search failed or parsed 0")
-    seen_pairs = {(t.get("out_date"), t.get("ret_date")) for t in (sg_tickets or [])}
-    for d1, d2 in SG_TICKET_SEARCHES:
-        if (d1, d2) not in seen_pairs:
-            warnings.append(f"no Ticket ② fares for {_short(d1)} + {_short(d2)} "
-                            f"— search failed or parsed 0")
+    seen_pairs = {(t.get("order"), t.get("out_date"), t.get("ret_date"))
+                  for t in (sg_tickets or [])}
+    for order, d1, d2 in TICKET2_SEARCHES:
+        if (order, d1, d2) not in seen_pairs:
+            warnings.append(f"no Ticket ② fares for {order} {_short(d1)} + "
+                            f"{_short(d2)} — search failed or parsed 0")
 
     # 4 + 5. Compare today's tracked totals against yesterday's history entry
     if prev_entry:
@@ -103,14 +118,15 @@ def self_check(flights, openjaws, main, prev_entry=None, sg_tickets=None) -> lis
                             f"{len(priced)} fares — Google may have changed its "
                             f"wording; combo math is falling back to estimates")
 
-    # 7. Shape drift — the trip Jalal asked for is 2 / 2 / 5 nights. Singapore
-    # is a hard MINIMUM of 2 since 2026-07-27 (combo prefers ≥2 and flags a
-    # 1-night fallback day); this warning still fires on ANY drift — a 3-night
-    # Singapore or an off-shape day should never be discovered at the airport.
+    # 7. Shape drift — the trip Jalal asked for is 2 IST / 2 SIN / 5 BKK
+    # nights, in either order. Singapore is a hard MINIMUM of 2 since
+    # 2026-07-27 (combo prefers ≥2 and flags a 1-night fallback day); this
+    # warning still fires on ANY drift — a 3-night Singapore or an off-shape
+    # day should never be discovered at the airport.
     if main:
         for got, want, what in ((main.get("ist_nights"), 2, "Istanbul"),
                                 (main.get("sg_nights"), 2, "Singapore"),
-                                (main.get("bali_nights"), 5, "Bali")):
+                                (main.get("bkk_nights"), 5, "Bangkok")):
             if isinstance(got, int) and got != want:
                 warnings.append(f"today's cheapest trip gives {got} {what} "
                                 f"night{'s' if got != 1 else ''}, not {want}")

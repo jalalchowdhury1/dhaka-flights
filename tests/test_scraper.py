@@ -49,17 +49,21 @@ def test_parse_results_nonstop_without_layover():
     assert results[0]["layovers"] == "none"
 
 
-def test_legs_config_is_the_singapore_middle_only():
-    # 2026-07-25: one trip only. The long legs are priced solely as Ticket ①,
-    # so the only one-way searches left are the Dhaka→Singapore→Bali middle.
-    assert [(l["origin"], l["dest"]) for l in LEGS] == [("DAC", "SIN"), ("SIN", "DPS")]
-    assert sum(len(l["dates"]) for l in LEGS) == 10
-    # DAC→SIN covers Jan 27–Feb 1: Jan 29+ gives a 2-night Singapore stay
-    # reaching Bali Feb 1 (5 nights before the Feb 6 return); Jan 27–28 catch
-    # the 💸 budget companion's leave-Dhaka-early deals (2026-07-27).
-    assert "January 27, 2027" in LEGS[0]["dates"]
-    assert "January 29, 2027" in LEGS[0]["dates"]
+def test_legs_config_is_the_ticket2_middles_both_orders():
+    # 2026-08-01: one trip, two orders. The long legs are priced solely as
+    # Ticket ①, so the one-way searches are the two Dhaka→city1→city2 middles.
+    assert [(l["origin"], l["dest"]) for l in LEGS] == [
+        ("DAC", "SIN"), ("SIN", "BKK"), ("DAC", "BKK"), ("BKK", "SIN")]
+    assert sum(len(l["dates"]) for l in LEGS) == 18
+    # Both DAC exits cover Jan 27–Feb 1: Jan 29+ pairs into the on-shape trip;
+    # Jan 27–28 catch the 💸 budget companion's leave-Dhaka-early deals.
+    for leg in (LEGS[0], LEGS[2]):
+        assert "January 27, 2027" in leg["dates"]
+        assert "January 29, 2027" in leg["dates"]
+    # SIN-first: SIN→BKK arriving Feb 1 gives the 5-night Bangkok block.
     assert "February 1, 2027" in LEGS[1]["dates"]
+    # BKK-first: BKK→SIN Feb 4 keeps 2 Singapore nights before the Feb 6 return.
+    assert "February 4, 2027" in LEGS[3]["dates"]
 
 
 def test_run_timeout_returns_empty_and_counts(monkeypatch):
@@ -95,6 +99,6 @@ def test_scrape_all_retries_route_once_then_moves_on(monkeypatch):
     monkeypatch.setattr(scraper.time, "sleep", lambda s: None)
     result = scraper.scrape_all()
     assert scraper.DIAG["aborted_early"] is False
-    # 10 searches: first call empty + retry, rest succeed first try = 11 calls
-    assert calls["n"] == 11
-    assert len(result) == 10
+    # 18 searches: first call empty + retry, rest succeed first try = 19 calls
+    assert calls["n"] == 19
+    assert len(result) == 18

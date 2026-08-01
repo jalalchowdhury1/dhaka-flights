@@ -1,21 +1,47 @@
-"""Pick the cheapest valid 3-leg combination (BOS→DAC, DAC→DPS, DPS→BOS).
+"""Trip rules + cheapest-valid-combination pickers.
 
-Trip rules (docs/superpowers/specs/2026-07-15-three-leg-trip-redesign-design.md):
+THE trip since 2026-08-01 (docs/superpowers/specs/2026-08-01-bangkok-singapore-
+swap-design.md — Bali retired, "I don't like the tail risk of dengue"):
+- BOS → Istanbul 2n → Dhaka → Bangkok 5n + Singapore 2n → BOS, home ≤ Feb 7
 - Dhaka stay ≤ 29 days, counting BOTH the arrival and departure day (30-day visa)
-- 5 nights in Bali (Marriott 5th-night-free); 4 or 6 allowed but ranked below 5
-- Back in Boston on/before Feb 7, 2027
+- 5 nights in Bangkok (Marriott 5th-night-free); 4 or 6 allowed but ranked below 5
+- BOTH city orders (DAC→BKK→SIN→BOS and DAC→SIN→BKK→BOS) are priced nightly and
+  the cheaper complete trip wins — Jalal 2026-08-01: "whatever is cheaper"
 
 Uses the arrival dates parsed from Google's result text; when a flight's
-arrival didn't parse, falls back to depart+1 day for long-haul legs
-(BOS→DAC, DPS→BOS) and same-day for DAC→DPS.
+arrival didn't parse, falls back to depart+1 day (see _FALLBACK_ARRIVAL_LAG;
+short intra-Asia hops usually parse their real arrival). The Bali-era
+functions further down are RETIRED but kept working + tested.
 """
 import re
 from datetime import datetime, timedelta
 
 MAX_DHAKA_DAYS = 29
-IDEAL_BALI_NIGHTS = 5
-ALLOWED_BALI_NIGHTS = (4, 5, 6)
+IDEAL_BKK_NIGHTS = 5                # the Marriott 5th-night-free block
+ALLOWED_BKK_NIGHTS = (4, 5, 6)
+IDEAL_BALI_NIGHTS = 5               # retired Bali-era constants, used only by
+ALLOWED_BALI_NIGHTS = (4, 5, 6)     # the kept-but-retired functions below
 HOME_DEADLINE = datetime(2027, 2, 7)
+
+# The two ways the same trip can run after Dhaka (2026-08-01). Ticket ① always
+# includes the return from whichever city comes LAST, so each order has its own
+# Ticket ① search (ret_city) and its own Ticket ② route pair.
+ORDERS = {
+    "BKK-first": {
+        "label": "Bangkok first",
+        "route": "DAC→BKK→SIN→BOS",
+        "route1": "DAC→BKK", "route2": "BKK→SIN",
+        "ret_city": "SIN",          # Ticket ① comes home from Singapore
+        "bkk_position": "middle",   # the 5-night Bangkok block sits between ②'s legs
+    },
+    "SIN-first": {
+        "label": "Singapore first",
+        "route": "DAC→SIN→BKK→BOS",
+        "route1": "DAC→SIN", "route2": "SIN→BKK",
+        "ret_city": "BKK",
+        "bkk_position": "final",    # Bangkok is pinned against the Feb 6 return
+    },
+}
 
 # Airline rules (Jalal 2026-07-18, revised same day): NOTHING is excluded —
 # "US-Bangla prices are unbeatable, keep that". CHEAPEST WINS. THAI/Singapore
@@ -369,25 +395,241 @@ def best_singapore(flights, openjaws, sg_tickets, top_n=3) -> list:
     return deduped[:top_n]
 
 
-# ── The one tracked trip (2026-07-25) ──────────────────────────────────────
+# ── The one tracked trip, in either order (2026-08-01) ─────────────────────
+def _order_middles(flights, tickets2, order_key):
+    """Every valid Dhaka→city1→city2 MIDDLE for one order, priced two ways:
+      - two one-ways on the order's route pair
+      - one multi-city ticket (rows tagged with this order by the scraper)
+    Each: {cost, dhaka_out (DAC depart), city2_in (arrival at the second city),
+    mid_nights (nights at the FIRST city), kind, legs, ticket}."""
+    cfg = ORDERS[order_key]
+    middles = []
+    for a in _priced(flights, cfg["route1"]):
+        a_dep, a_arr = _date(a.get("depart", "")), _arrival(a)
+        if not (a_dep and a_arr):
+            continue
+        for b in _priced(flights, cfg["route2"]):
+            b_dep, b_arr = _date(b.get("depart", "")), _arrival(b)
+            if not (b_dep and b_arr):
+                continue
+            mid_nights = (b_dep - a_arr).days
+            if mid_nights < 1:      # impossible pairing (fly out before arriving)
+                continue
+            middles.append({
+                "cost": a["price_total"] + b["price_total"],
+                "dhaka_out": a_dep, "city2_in": b_arr, "mid_nights": mid_nights,
+                "kind": "2 one-ways", "legs": [a, b], "ticket": None,
+                "preferred": _is_preferred(a.get("airline")) and _is_preferred(b.get("airline")),
+                "airlines": f"{a.get('airline')} + {b.get('airline')}",
+            })
+    for t in (tickets2 or []):
+        if t.get("order") != order_key:
+            continue
+        if not isinstance(t.get("price_total"), (int, float)) or not _airline_ok(t):
+            continue
+        d1, d2 = _date(t.get("out_date", "")), _date(t.get("ret_date", ""))
+        if not (d1 and d2):
+            continue
+        arr = _date(t.get("out_arrive", "")) or d1   # leg-1 arrival (may be +1)
+        # STRICT nights from the actual arrival date — an overnight first hop
+        # landing at 4 AM gives 1 real hotel night, not 2 (2026-07-18 lesson).
+        mid_nights = (d2 - arr).days
+        if mid_nights < 1:          # ret before arrival — a parse error, not a fare
+            continue
+        middles.append({
+            "cost": t["price_total"], "dhaka_out": d1, "city2_in": d2,
+            "mid_nights": mid_nights, "kind": "1 ticket", "legs": [], "ticket": t,
+            "preferred": _is_preferred(t.get("airline")),
+            "airlines": t.get("airline", ""),
+        })
+    return middles
+
+
+def _split_nights(cfg, mid_nights, final_nights):
+    """(bkk_nights, sin_nights) — which city got the middle vs final stay
+    depends on the order."""
+    if cfg["bkk_position"] == "middle":
+        return mid_nights, final_nights
+    return final_nights, mid_nights
+
+
+def order_trip(flights, openjaws, tickets2, order_key):
+    """Best complete trip for ONE order (Ticket ① with the right return city +
+    the cheapest valid middle), or None. Tier rules as agreed:
+      - 5 Bangkok nights ideal; 4/6 rank below and get flagged
+      - ≥2 Singapore nights always outrank fewer; <2 survives only flagged
+      - nothing is dropped silently."""
+    cfg = ORDERS[order_key]
+    ojs = [o for o in (openjaws or [])
+           if o.get("kind") == "stopover2" and o.get("ret_city") == cfg["ret_city"]
+           and isinstance(o.get("price_total"), (int, float)) and _airline_ok(o)]
+    if not ojs:
+        return None
+    oj = min(ojs, key=lambda o: o["price_total"])
+    ret = _date(oj["ret_date"])
+    dac_in = _date(oj.get("out_arrive", "")) or (_date(oj["out_date"]) + timedelta(days=1))
+    if not ret:
+        return None
+
+    exact, near = [], []
+    for m in _order_middles(flights, tickets2, order_key):
+        dhaka_days = (m["dhaka_out"] - dac_in).days + 1
+        if not 1 <= dhaka_days <= MAX_DHAKA_DAYS:
+            continue
+        final_nights = (ret - m["city2_in"]).days
+        if final_nights < 1:
+            continue
+        bkk_nights, sin_nights = _split_nights(cfg, m["mid_nights"], final_nights)
+        if bkk_nights not in ALLOWED_BKK_NIGHTS:
+            continue
+        (exact if bkk_nights == IDEAL_BKK_NIGHTS else near).append(
+            (m, bkk_nights, sin_nights, dhaka_days))
+
+    def _sg_ok(pool):
+        return [t for t in pool if t[2] >= MIN_SG_NIGHTS]
+    pool = _sg_ok(exact) or _sg_ok(near) or exact or near
+    if not pool:
+        return None
+    m, bkk_nights, sin_nights, dhaka_days = min(pool, key=lambda t: t[0]["cost"])
+
+    alt_note = None
+    pref = [t for t in pool if t[0]["preferred"]]
+    if pref and not m["preferred"]:
+        pm = min(pref, key=lambda t: t[0]["cost"])[0]
+        alt_note = (f"THAI/Singapore Airlines option +${pm['cost'] - m['cost']:,.0f} "
+                    f"({pm['airlines']})")
+
+    home = ret + timedelta(days=1)   # return leg lands next day (heuristic)
+    flags = []
+    if home > HOME_DEADLINE:
+        flags.append(f"home {home.strftime('%b %-d')} — after Feb 7")
+    if bkk_nights != IDEAL_BKK_NIGHTS:
+        flags.append(f"only a {bkk_nights}-night Bangkok pairing today")
+    if sin_nights < MIN_SG_NIGHTS:
+        flags.append(f"only a {sin_nights}-night Singapore pairing today")
+
+    return {
+        "name": f"{cfg['label']} · {m['kind']} middle",
+        "kind": "sg-stopover2", "trip": cfg["route"],
+        "order": order_key, "order_label": cfg["label"],
+        "total": oj["price_total"] + m["cost"],
+        "valid": not flags, "flag": " · ".join(flags) or None,
+        "home": home.strftime("%b %-d"),
+        "dhaka_days": dhaka_days, "bkk_nights": bkk_nights,
+        "sg_nights": sin_nights, "ist_nights": oj.get("ist_nights"),
+        "sg_preferred": m["preferred"], "sg_airlines": m["airlines"],
+        "alt_note": alt_note,
+        "legs": list(m["legs"]), "sg_ticket": m["ticket"],
+        "openjaw": oj,
+    }
+
+
 def main_trip(flights, openjaws, sg_tickets):
-    """THE trip: BOS → Istanbul 2n → Dhaka → Singapore → Bali 5n → BOS.
-    Everything else was retired from the nightly run; this is the only
-    structure the tracker builds now (kind 'sg-stopover2')."""
+    """THE trip: both orders priced, the cheaper VALID one wins (a flagged day
+    never outranks a clean one). The losing order rides along as
+    `other_order` (slim dict with its Δ) so it's surfaced, never hidden."""
+    trips = [t for t in (order_trip(flights, openjaws, sg_tickets or [], k)
+                         for k in ORDERS) if t]
+    if not trips:
+        return None
+    trips.sort(key=lambda s: (not s["valid"], s["total"]))
+    win = dict(trips[0])
+    if len(trips) > 1:
+        o = trips[1]
+        t2_total = (o["sg_ticket"]["price_total"] if o.get("sg_ticket")
+                    else sum(f.get("price_total", 0) for f in o.get("legs", [])))
+        win["other_order"] = {
+            "order": o["order"], "order_label": o["order_label"],
+            "total": o["total"], "delta": o["total"] - win["total"],
+            "valid": o["valid"], "flag": o["flag"],
+            "sg_nights": o["sg_nights"], "bkk_nights": o["bkk_nights"],
+            "dhaka_days": o["dhaka_days"],
+            "ticket1_total": o["openjaw"]["price_total"],
+            "ticket1_airline": o["openjaw"].get("airline"),
+            "ticket2_total": t2_total,
+            "ticket2_airlines": o.get("sg_airlines"),
+            "ticket2_kind": "1 ticket" if o.get("sg_ticket") else "2 one-ways",
+        }
+    return win
+
+
+def budget_trip(flights, sg_tickets, main):
+    """The 💸 companion (Jalal 2026-07-27: "also present one which is cheaper
+    … feel free to squeeze dates in Bangladesh"). Same Ticket ① — and
+    therefore the SAME ORDER — as the main trip, same Bangkok block; the
+    minimum-2-Singapore-nights rule is WAIVED (≥1 night allowed) and the Dhaka
+    departure may shift to whatever scraped date prices best. Returned ONLY
+    when strictly cheaper than the main trip — None means today's cheapest
+    honest trip IS the main one, and nothing is shown."""
+    if not main or not main.get("openjaw") or main.get("order") not in ORDERS:
+        return None
+    cfg = ORDERS[main["order"]]
+    oj = main["openjaw"]
+    ret = _date(oj["ret_date"])
+    dac_in = _date(oj.get("out_arrive", "")) or (_date(oj["out_date"]) + timedelta(days=1))
+    if not ret:
+        return None
+    exact, near = [], []
+    for m in _order_middles(flights, sg_tickets, main["order"]):
+        dhaka_days = (m["dhaka_out"] - dac_in).days + 1
+        if not 1 <= dhaka_days <= MAX_DHAKA_DAYS:
+            continue
+        final_nights = (ret - m["city2_in"]).days
+        if final_nights < 1:
+            continue
+        bkk_nights, sin_nights = _split_nights(cfg, m["mid_nights"], final_nights)
+        if bkk_nights not in ALLOWED_BKK_NIGHTS:
+            continue
+        (exact if bkk_nights == IDEAL_BKK_NIGHTS else near).append(
+            (m, bkk_nights, sin_nights, dhaka_days))
+    pool = exact or near
+    if not pool:
+        return None
+    m, bkk_nights, sin_nights, dhaka_days = min(pool, key=lambda t: t[0]["cost"])
+    total = oj["price_total"] + m["cost"]
+    if total >= main["total"]:
+        return None
+    diffs = []
+    if sin_nights != main.get("sg_nights"):
+        diffs.append(f"{sin_nights} Singapore night"
+                     f"{'s' if sin_nights != 1 else ''} instead of "
+                     f"{main.get('sg_nights')}")
+    dd = dhaka_days - main["dhaka_days"]
+    if dd:
+        diffs.append(f"{abs(dd)} Dhaka day{'s' if abs(dd) != 1 else ''} "
+                     f"{'more' if dd > 0 else 'fewer'} than the main trip")
+    if bkk_nights != IDEAL_BKK_NIGHTS:
+        diffs.append(f"{bkk_nights}-night Bangkok pairing")
+    return {
+        "name": f"Budget · same trip, flexible dates · {m['kind']} middle",
+        "kind": "sg-budget", "trip": cfg["route"],
+        "order": main["order"], "order_label": main.get("order_label"),
+        "total": total, "savings": main["total"] - total,
+        "valid": True, "flag": None,
+        "home": main["home"], "dhaka_days": dhaka_days,
+        "bkk_nights": bkk_nights, "sg_nights": sin_nights,
+        "ist_nights": main.get("ist_nights"),
+        "sg_preferred": m["preferred"], "sg_airlines": m["airlines"],
+        "alt_note": None, "diffs": diffs,
+        "legs": list(m["legs"]), "sg_ticket": m["ticket"],
+        "openjaw": oj,
+    }
+
+
+# Bali-era versions, RETIRED 2026-08-01 — kept working + tested like the other
+# retired paths (re-adding is a call-site swap, and the old history's
+# best_detail entries still make sense to code that reads them).
+def main_trip_bali(flights, openjaws, sg_tickets):
+    """THE trip of the Bali era: BOS → Istanbul 2n → Dhaka → Singapore →
+    Bali 5n → BOS (kind 'sg-stopover2' out of best_singapore)."""
     for s in best_singapore(flights, openjaws, sg_tickets or [], top_n=5):
         if s.get("kind") == "sg-stopover2":
             return s
     return None
 
 
-def budget_trip(flights, sg_tickets, main):
-    """The 💸 companion to the main trip (Jalal 2026-07-27: "also present one
-    which is cheaper, like the 1-night option — feel free to squeeze dates in
-    Bangladesh"). Same Ticket ①, same Bali block; the minimum-2-Singapore-
-    nights rule is WAIVED (≥1 night allowed) and the Dhaka departure may shift
-    to whatever scraped date prices best. Returned ONLY when strictly cheaper
-    than the main trip — None means today's cheapest honest trip IS the main
-    one, and nothing is shown."""
+def budget_trip_bali(flights, sg_tickets, main):
+    """Bali-era 💸 companion: same Ticket ①, same Bali block, min-2-SG waived."""
     if not main or not main.get("openjaw"):
         return None
     oj = main["openjaw"]
@@ -443,6 +685,7 @@ def ticket1_options(openjaws, chosen=None, top_n=8) -> list:
     base = (chosen or {}).get("price_total")
     out_d = (chosen or {}).get("out_date")
     ret_d = (chosen or {}).get("ret_date")
+    ret_city = (chosen or {}).get("ret_city")
     opts = []
     for oj in openjaws or []:
         if oj.get("kind") != "stopover2":
@@ -450,6 +693,10 @@ def ticket1_options(openjaws, chosen=None, top_n=8) -> list:
         if not isinstance(oj.get("price_total"), (int, float)):
             continue
         if out_d and (oj.get("out_date") != out_d or oj.get("ret_date") != ret_d):
+            continue
+        # Same ticket = same return city too — the other order's Ticket ① is a
+        # different purchase, surfaced via other_order, not as an "alternative".
+        if ret_city and oj.get("ret_city") and oj["ret_city"] != ret_city:
             continue
         opts.append({
             "kind": "1 ticket",
@@ -465,22 +712,25 @@ def ticket1_options(openjaws, chosen=None, top_n=8) -> list:
 
 
 def ticket2_options(flights, sg_tickets, main, top_n=10) -> list:
-    """Alternatives to whatever airline won the Dhaka→Singapore→Bali middle,
-    ON THE SAME DATES (Jalal 2026-07-25: "how much more is it").
+    """Alternatives to whatever airline won the Ticket ② middle, ON THE SAME
+    DATES (Jalal 2026-07-25: "how much more is it").
 
     Two shapes are comparable and both are listed:
-      · '1 ticket'  — a DAC→SIN→DPS multi-city fare
-      · '2 tickets' — DAC→SIN and SIN→DPS bought separately, same two dates
-    Same dates ⇒ the Singapore and Bali nights are identical, so the price gap
-    is the whole story."""
+      · '1 ticket'  — a multi-city fare on the trip's order
+      · '2 tickets' — the two one-way legs bought separately, same two dates
+    Same dates ⇒ the Singapore and Bangkok nights are identical, so the price
+    gap is the whole story. Routes come from the trip's ORDER; Bali-era mains
+    (no order key) keep the old DAC→SIN→DPS routes so history still renders."""
     if not main:
         return []
+    cfg = ORDERS.get(main.get("order"))
+    r1, r2 = (cfg["route1"], cfg["route2"]) if cfg else ("DAC→SIN", "SIN→DPS")
     t = main.get("sg_ticket")
     legs = {f.get("route"): f for f in (main.get("legs") or [])}
     if t:
         out_d, ret_d, base = t.get("out_date"), t.get("ret_date"), t.get("price_total")
     else:
-        a, b = legs.get("DAC→SIN"), legs.get("SIN→DPS")
+        a, b = legs.get(r1), legs.get(r2)
         if not (a and b):
             return []
         out_d, ret_d = a.get("depart"), b.get("depart")
@@ -489,6 +739,8 @@ def ticket2_options(flights, sg_tickets, main, top_n=10) -> list:
     opts = []
     for x in sg_tickets or []:
         if not isinstance(x.get("price_total"), (int, float)):
+            continue
+        if cfg and x.get("order") and x["order"] != main["order"]:
             continue
         if x.get("out_date") != out_d or x.get("ret_date") != ret_d:
             continue
@@ -501,10 +753,10 @@ def ticket2_options(flights, sg_tickets, main, top_n=10) -> list:
             "chosen": bool(t) and x["price_total"] == base and x.get("airline") == t.get("airline"),
         })
 
-    for a in _priced(flights, "DAC→SIN"):
+    for a in _priced(flights, r1):
         if a.get("depart") != out_d:
             continue
-        for b in _priced(flights, "SIN→DPS"):
+        for b in _priced(flights, r2):
             if b.get("depart") != ret_d:
                 continue
             opts.append({

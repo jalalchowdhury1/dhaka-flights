@@ -66,6 +66,28 @@ CARRIERS = {
         "note": "Allowance follows the fare brand — Lite is the cheap one you'll be quoted.",
         "url": "https://www.singaporeair.com/en_UK/us/travel-info/baggage/free-baggage-allowance/",
     },
+    # The three "Thai <LCC>" carriers MUST sit before "thai" — _carrier_key is
+    # a first-substring-match in insertion order, and "thai" would otherwise
+    # credit Thai Lion / Thai Vietjet / Thai AirAsia with THAI Airways' full-
+    # service allowance (they're big on the DAC/SIN⇄BKK routes).
+    "thai lion": {
+        "name": "Thai Lion Air", "checked_us": None,
+        "checked_asia": "20 kg on most international routes (0 on some promos)",
+        "cabin": "7 kg", "confidence": "varies",
+        "note": "Low-cost carrier — confirm the fare actually includes the bag.",
+        "url": "https://www.lionairthai.com/en/ThaiLionAir-Baggage-Allowance"},
+    "thai vietjet": {
+        "name": "Thai Vietjet", "checked_us": None,
+        "checked_asia": "NONE on Eco fares — prepay 20 kg+ (Deluxe includes 20 kg)",
+        "cabin": "7 kg", "confidence": "varies",
+        "note": "Low-cost carrier: bags are an add-on on the cheap fares.",
+        "url": "https://www.vietjetair.com/en/pages/checked-baggage-1638496498500"},
+    "thai airasia": {
+        "name": "Thai AirAsia", "checked_us": None,
+        "checked_asia": "NONE included — prepay 20 kg+ online",
+        "cabin": "7 kg total (2 items)", "confidence": "verified",
+        "note": "AirAsia group: bags are an add-on and cost ~2× more at the airport.",
+        "url": "https://support.airasia.com/s/article/baggage-allowance"},
     "thai": {
         "name": "THAI Airways",
         "checked_us": "2 × 23 kg per person",
@@ -247,13 +269,30 @@ def for_leg(airline: str, ticket_type: str, route: str = "") -> dict:
     return first
 
 
+# Per-order Ticket ② routes + display names; the Bali-era entry keeps old
+# history's best_detail rendering correctly.
+CITY_NAMES = {"DAC": "Dhaka", "SIN": "Singapore", "BKK": "Bangkok",
+              "DPS": "Bali", "BOS": "Boston", "IST": "Istanbul"}
+_ORDER_T2 = {
+    "BKK-first": (("DAC→BKK", "BKK→SIN"), "SIN→BOS"),
+    "SIN-first": (("DAC→SIN", "SIN→BKK"), "BKK→BOS"),
+    None:        (("DAC→SIN", "SIN→DPS"), "DPS→BOS"),   # Bali era
+}
+
+
+def _label(route: str) -> str:
+    a, b = route.split("→")
+    return f"{CITY_NAMES.get(a, a)} → {CITY_NAMES.get(b, b)}"
+
+
 def annotate(main: dict) -> list:
     """Per-leg baggage rows for the main trip, in travel order.
 
-    Ticket ① (BOS→IST→DAC + DPS→BOS) is one purchase: one allowance across all
-    three of its flights. Ticket ② (DAC→SIN→DPS) is a separate purchase, and
-    when it's sold as ONE multi-city ticket Google only names the FIRST leg's
-    carrier — SIN→DPS is then genuinely unknown to us and says so.
+    Ticket ① (BOS→IST→DAC + the return from the order's LAST city) is one
+    purchase: one allowance across all three of its flights. Ticket ② is a
+    separate purchase, and when it's sold as ONE multi-city ticket Google only
+    names the FIRST leg's carrier — the second hop is then genuinely unknown
+    to us and says so.
     """
     if not main:
         return []
@@ -261,6 +300,7 @@ def annotate(main: dict) -> list:
     t2 = main.get("sg_ticket")
     legs = {f.get("route"): f for f in (main.get("legs") or [])}
     t1_air = oj.get("airline", "")
+    (r1, r2), ret_route = _ORDER_T2.get(main.get("order"), _ORDER_T2[None])
 
     rows = [
         {"route": "BOS→IST", "label": "Boston → Istanbul", "ticket": 1,
@@ -270,25 +310,27 @@ def annotate(main: dict) -> list:
     ]
 
     if t2:
-        rows.append({"route": "DAC→SIN", "label": "Dhaka → Singapore", "ticket": 2,
-                     **for_leg(t2.get("airline", ""), ASIA_TICKET, "DAC→SIN")})
-        rows.append({"route": "SIN→DPS", "label": "Singapore → Bali", "ticket": 2,
+        rows.append({"route": r1, "label": _label(r1), "ticket": 2,
+                     **for_leg(t2.get("airline", ""), ASIA_TICKET, r1)})
+        dest = _label(r2).split(" → ")[1]
+        rows.append({"route": r2, "label": _label(r2), "ticket": 2,
                      "carrier": "not shown on this ticket",
                      "checked": "unknown until booking",
                      "cabin": "—", "confidence": "unknown", "others": [],
                      "note": ("Google names only the first leg of a multi-city "
                               "ticket. If this hop is Scoot/Jetstar/AirAsia it "
-                              "may include NO free bag even though Dhaka→Singapore did."),
-                     "url": "https://www.google.com/search?q=Singapore+to+Denpasar+baggage+allowance"})
+                              f"may include NO free bag even though {_label(r1)} did."),
+                     "url": ("https://www.google.com/search?q=" +
+                             _label(r2).replace(" → ", "+to+").replace(" ", "+") +
+                             "+baggage+allowance")})
     else:
-        for route, label in (("DAC→SIN", "Dhaka → Singapore"),
-                             ("SIN→DPS", "Singapore → Bali")):
+        for route in (r1, r2):
             f = legs.get(route)
-            rows.append({"route": route, "label": label, "ticket": 2,
+            rows.append({"route": route, "label": _label(route), "ticket": 2,
                          **for_leg((f or {}).get("airline", ""), ASIA_TICKET, route)})
 
-    rows.append({"route": "DPS→BOS", "label": "Bali → Boston", "ticket": 1,
-                 **for_leg(t1_air, US_TICKET, "DPS→BOS")})
+    rows.append({"route": ret_route, "label": _label(ret_route), "ticket": 1,
+                 **for_leg(t1_air, US_TICKET, ret_route)})
     return rows
 
 
@@ -296,16 +338,19 @@ def warnings(main: dict) -> list:
     """The structural traps that hold no matter which airline wins tonight."""
     if not main:
         return []
+    (r1, r2), _ = _ORDER_T2.get(main.get("order"), _ORDER_T2[None])
+    stop_city = _label(r1).split(" → ")[1]
     out = [
         "Two separate purchases → bags are NOT checked through. Collect them in "
-        "Dhaka and re-check for Ticket ②; same again in Singapore if the middle "
-        "is two one-way tickets.",
+        "Dhaka and re-check for Ticket ②; same again in "
+        f"{stop_city} if the middle is two one-way tickets.",
         "Allowance is per person and the child with a seat normally gets the "
         "adult allowance — infants on a lap do not.",
     ]
     if main.get("sg_ticket"):
-        out.append("Ticket ②'s Singapore→Bali carrier isn't visible on Google's "
-                   "multi-city page — confirm that leg's allowance before paying.")
+        out.append(f"Ticket ②'s {_label(r2).replace(' → ', '→')} carrier isn't "
+                   "visible on Google's multi-city page — confirm that leg's "
+                   "allowance before paying.")
     mixed = [r for r in annotate(main) if r.get("others")]
     if mixed:
         out.append("This itinerary mixes airlines on one ticket (" +

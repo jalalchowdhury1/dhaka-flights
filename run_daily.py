@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
-Daily runner for ONE trip (2026-07-25):
-BOS → Istanbul 2n → Dhaka → Singapore 2n → Bali 5n → BOS, 2 adults + 1 child.
+Daily runner for ONE trip (2026-07-25; Bangkok+Singapore since 2026-08-01):
+BOS → Istanbul 2n → Dhaka → Bangkok 5n + Singapore 2n → BOS, 2 adults +
+1 child — BOTH city orders priced nightly, the cheaper complete trip wins.
 
-  Ticket ①  BOS→IST + IST→DAC + DPS→BOS, one multi-city ticket
-  Ticket ②  DAC→SIN→DPS, one ticket or two one-ways (whichever is cheaper)
+  Ticket ①  BOS→IST + IST→DAC + {SIN or BKK}→BOS, one multi-city ticket per order
+  Ticket ②  DAC→{BKK→SIN or SIN→BKK}, one ticket or two one-ways (cheaper wins)
 
 Scrapes both, prices the trip, self-checks, writes the Sheet, Telegrams the
 result with per-leg baggage + same-date alternatives, and publishes data.json.
@@ -90,8 +91,8 @@ def main():
     payload = publish.build_today(flights, tickets1, warnings, sg_tickets)
 
     write_to_sheet(
-        multicity_as_rows(tickets1, "① BOS→IST→DAC + DPS→BOS")
-        + multicity_as_rows(sg_tickets, "② DAC→SIN→DPS")
+        multicity_as_rows(tickets1, "① BOS→IST→DAC + return")
+        + multicity_as_rows(sg_tickets, "② Dhaka→BKK/SIN middle")
         + flights,
         tab_name="Google Flights")
     notify_cheapest(payload)

@@ -8,9 +8,10 @@ from combo import main_trip, ticket2_options
 
 
 def main():
-    print("Trip: BOS → Istanbul 2n → Dhaka → Singapore 2n → Bali 5n → BOS "
-          "(2 adults + 1 child)")
-    print("Ticket ① BOS→IST + IST→DAC + DPS→BOS · Ticket ② DAC→SIN→DPS\n")
+    print("Trip: BOS → Istanbul 2n → Dhaka → Bangkok 5n + Singapore 2n → BOS "
+          "(2 adults + 1 child, either order — cheaper wins)")
+    print("Ticket ① BOS→IST + IST→DAC + {SIN|BKK}→BOS · "
+          "Ticket ② DAC→{BKK→SIN | SIN→BKK}\n")
 
     tickets1 = scrape_tickets_all()
     sg_tickets = scrape_sg_tickets_all()
@@ -26,8 +27,8 @@ def main():
 
     flights.sort(key=sort_key)
     write_to_sheet(
-        multicity_as_rows(tickets1, "① BOS→IST→DAC + DPS→BOS")
-        + multicity_as_rows(sg_tickets, "② DAC→SIN→DPS")
+        multicity_as_rows(tickets1, "① BOS→IST→DAC + return")
+        + multicity_as_rows(sg_tickets, "② Dhaka→BKK/SIN middle")
         + flights,
         tab_name="Google Flights")
 
@@ -36,9 +37,9 @@ def main():
         print("\nNo valid trip built — check the pairing rules in combo.py.")
         return
 
-    print(f"\n--- THE TRIP: ${trip['total']:,} total ---")
+    print(f"\n--- THE TRIP: ${trip['total']:,} total · {trip.get('order_label')} ---")
     print(f"Istanbul {trip.get('ist_nights')}n · Dhaka {trip['dhaka_days']}d · "
-          f"Singapore {trip.get('sg_nights')}n · Bali {trip['bali_nights']}n · "
+          f"Singapore {trip.get('sg_nights')}n · Bangkok {trip['bkk_nights']}n · "
           f"home {trip['home']}")
     if trip.get("openjaw"):
         oj = trip["openjaw"]

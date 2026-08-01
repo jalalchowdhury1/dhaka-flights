@@ -20,9 +20,11 @@ WINDOW_OPENS = datetime.date(2026, 9, 1)
 BOOK_BY = datetime.date(2026, 9, 20)
 BOOKED_HISTORY = "booked Sep 18 '24 · Sep 23 '25"
 
-# History entries before this date describe RETIRED trips (direct open-jaw
-# era) — their totals aren't comparable to the tracked trip.
-TRIP_TRACKED_SINCE = "2026-07-18"
+# History entries before this date describe RETIRED trips — their totals
+# aren't comparable to the tracked trip. Moved 2026-07-18 → 2026-08-01 when
+# Bali was swapped for Bangkok: the Bali-era totals are a different trip and
+# must not pollute the new trip's rank / all-time-low context.
+TRIP_TRACKED_SINCE = "2026-08-01"
 
 
 def _main(entry) -> float:
@@ -153,6 +155,13 @@ def changes_since(prev, cur) -> list:
     out = []
     bag_impact = False
 
+    # The single biggest thing that can change overnight now (2026-08-01):
+    # which city order is cheaper. It flips the whole shape of both tickets.
+    if (prev.get("order") and cur.get("order")
+            and prev["order"] != cur["order"]):
+        out.append(f"🔁 Cheaper order flipped: {prev['order']} → {cur['order']}")
+        bag_impact = True
+
     if prev.get("ticket1_airline") != cur.get("ticket1_airline"):
         out.append(f"🎫 Ticket ① airline: {prev.get('ticket1_airline')} → "
                    f"{cur.get('ticket1_airline')}")
@@ -174,7 +183,8 @@ def changes_since(prev, cur) -> list:
 
     for key, label in (("ist_nights", "Istanbul nights"),
                        ("sg_nights", "Singapore nights"),
-                       ("bali_nights", "Bali nights"),
+                       ("bkk_nights", "Bangkok nights"),
+                       ("bali_nights", "Bali nights"),   # pre-2026-08-01 entries
                        ("dhaka_days", "Dhaka days"),
                        ("home", "home date")):
         if (prev.get(key) is not None and cur.get(key) is not None

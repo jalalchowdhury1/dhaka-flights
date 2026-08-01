@@ -37,11 +37,13 @@ def _get_or_create_tab(spreadsheet, tab_name: str):
 
 def multicity_as_rows(tickets: list, route_label: str) -> list:
     """Multi-city fares (Ticket ① / Ticket ②) reshaped like one-way flights so
-    the daily Sheet tab shows the whole trip, not just its one-way legs."""
+    the daily Sheet tab shows the whole trip, not just its one-way legs.
+    Rows that carry their own route (order-aware since 2026-08-01) keep it;
+    route_label is the fallback."""
     out = []
     for t in tickets or []:
         out.append({
-            "route": route_label,
+            "route": t.get("route") or route_label,
             "depart": t.get("out_date", "N/A"),
             "arrive": t.get("out_arrive", "N/A"),
             "airline": t.get("airline", "N/A"),
@@ -58,20 +60,24 @@ def multicity_as_rows(tickets: list, route_label: str) -> list:
 # APPEND-ONLY: never reorder or delete a column — the sheet is the third copy of
 # the price history. Columns 3–7 belong to trips retired on 2026-07-25 (direct
 # open-jaw, Singapore-only, Istanbul-only, TK 30h, three one-ways); they stay in
-# place, holding their old values, and are written blank from now on.
+# place, holding their old values, and are written blank from now on. The nights
+# column's last figure is Bali before 2026-08-01 and Bangkok after (same slot —
+# both are the trip's 5-night Marriott block); "Order" appended 2026-08-01.
 HISTORY_HEADERS = ["Date", "⭐ IST+SIN main", "Direct OJ + hop", "SIN only",
                    "IST only", "TK 30h stopover", "3 one-ways", "Best $",
                    "Best structure",
                    "Ticket ① $", "Ticket ② $", "① airline", "② airline",
-                   "IST/DAC/SIN/Bali", "💸 Budget $"]
+                   "IST/DAC/SIN/5n-city", "💸 Budget $", "Order"]
 
 
 def history_row(entry: dict) -> list:
     """Pure: one history entry → one sheet row (testable without gspread)."""
     e = entry or {}
     main = e.get("main_total", e.get("combined_total", ""))
-    nights = "/".join(str(e.get(k) if e.get(k) is not None else "–")
-                      for k in ("ist_nights", "dhaka_days", "sg_nights", "bali_nights"))
+    five_city = e.get("bkk_nights", e.get("bali_nights"))
+    nights = "/".join(str(v if v is not None else "–")
+                      for v in (e.get("ist_nights"), e.get("dhaka_days"),
+                                e.get("sg_nights"), five_city))
     return [
         e.get("date", ""),
         main,
@@ -83,6 +89,7 @@ def history_row(entry: dict) -> list:
         e.get("ticket1_airline", ""), e.get("ticket2_airline", ""),
         nights if e.get("date") else "",
         e.get("budget_total") if e.get("budget_total") is not None else "",
+        e.get("order", ""),
     ]
 
 

@@ -6,23 +6,37 @@ import json
 from typing import Union
 
 # ONE TRIP ONLY (Jalal, 2026-07-25: "i only need the main trip … you just need
-# to track this one and not the others"): BOS → Istanbul 2n → Dhaka →
-# Singapore → Bali 5n → BOS. Ticket ① (the two long legs + Istanbul) is one
-# multi-city search; the DAC→SIN→DPS middle is Ticket ②.
+# to track this one and not the others"), reshaped 2026-08-01 (Bali retired —
+# dengue tail risk): BOS → Istanbul 2n → Dhaka → Bangkok 5n + Singapore 2n →
+# BOS, BOTH city orders priced nightly, the cheaper complete trip wins.
+# Ticket ① (the two long legs + Istanbul) is one multi-city search PER ORDER
+# (the return city differs); Ticket ② is the Dhaka→city1→city2 middle.
 #
 # RETIRED 2026-07-25 — the direct BOS→DAC / DAC→DPS / DPS→BOS one-ways and the
-# plain open-jaw watch. They priced the alternative trips Jalal no longer wants,
-# and dropping them took the nightly run from 30 searches (~25 min) to 13;
-# the 💸 budget dates (2026-07-27) brought it to 17 (~14 min) — still far
-# fewer chances to hit a Google throttle than the old full sweep.
-# Restoring them = put the legs back in LEGS and OPENJAW_SEARCHES back in
-# scrape_tickets_all(); combo.best_structures()/best_combos() still work.
+# plain open-jaw watch. RETIRED 2026-08-01 — every DPS/Bali search (the old
+# LEGS pair lives on in BALI_LEGS below for the kept-but-retired combo paths).
+# Restoring anything = put the legs back in LEGS and the configs back in
+# scrape_tickets_all(); the retired combo functions still work.
 LEGS = [
-    # The Singapore middle, priced as two one-ways — the cheaper of {2 one-ways,
-    # 1 multi-city ticket} wins inside combo.best_singapore. Both are the SAME
-    # trip, just a different way to buy the Dhaka→Singapore→Bali hop.
-    # Jan 27–28 added 2026-07-27 for the 💸 budget companion — Jalal is happy
-    # to leave Dhaka a day or two early if that's where the deal is.
+    # Ticket ② legs for BOTH orders, priced as one-ways — the cheaper of
+    # {2 one-ways, 1 multi-city ticket} wins inside combo.order_trip. Jan 27–28
+    # starts are the 💸 budget companion's early-Dhaka-exit dates (2026-07-27).
+    # SIN-first order: DAC→SIN (2 SIN nights) then SIN→BKK (5 BKK nights to Feb 6)
+    {"origin": "DAC", "dest": "SIN",
+     "dates": ["January 27, 2027", "January 28, 2027", "January 29, 2027",
+               "January 30, 2027", "January 31, 2027", "February 1, 2027"]},
+    {"origin": "SIN", "dest": "BKK",
+     "dates": ["January 31, 2027", "February 1, 2027", "February 2, 2027"]},
+    # BKK-first order: DAC→BKK (5 BKK nights) then BKK→SIN (2 SIN nights to Feb 6)
+    {"origin": "DAC", "dest": "BKK",
+     "dates": ["January 27, 2027", "January 28, 2027", "January 29, 2027",
+               "January 30, 2027", "January 31, 2027", "February 1, 2027"]},
+    {"origin": "BKK", "dest": "SIN",
+     "dates": ["February 2, 2027", "February 3, 2027", "February 4, 2027"]},
+]
+
+# Bali-era LEGS, retired 2026-08-01 — kept for the retired combo paths' tests.
+BALI_LEGS = [
     {"origin": "DAC", "dest": "SIN",
      "dates": ["January 27, 2027", "January 28, 2027", "January 29, 2027",
                "January 30, 2027", "January 31, 2027", "February 1, 2027"]},
@@ -42,6 +56,10 @@ AIRPORT_PICK = {
     # would do the same ("listitem", "single"), so give it explicit picks.
     "IST": ["Istanbul Airport", "Istanbul"],
     "SIN": ["Singapore Changi", "Changi", "Singapore"],
+    # "Bangkok" (the city entry) before "Suvarnabhumi": the city covers BOTH
+    # airports — AirAsia/Thai Lion fly the cheap DAC routes out of Don Mueang
+    # (DMK), and an airport-only pick would hide them.
+    "BKK": ["Bangkok", "Suvarnabhumi"],
 }
 
 # 2 adults + 1 child (aged 2-11, own seat). Google Flights shows the TOTAL
@@ -655,9 +673,33 @@ ISTANBUL3_SEARCH = dict(
 
 # ISTANBUL3_SEARCH retired from the nightly rotation (2026-07-18 final: exactly
 # 2 nights in Istanbul). STOPOVER_SEARCH (the Turkish 30h/1-night version)
-# retired 2026-07-25 — it was a DIFFERENT trip, and only the 2-night Istanbul
-# itinerary is tracked now. Both configs kept above for easy re-adding.
-STOPOVER_SEARCHES = [ISTANBUL2_SEARCH]
+# retired 2026-07-25. ISTANBUL2_SEARCH (the DPS/Bali return) retired
+# 2026-08-01 with Bali itself. All configs kept above for easy re-adding.
+
+# Ticket ① since 2026-08-01: one search per ORDER — same Boston→Istanbul→Dhaka
+# front, the return leg comes from whichever city the order visits LAST.
+# ret_city is what pairs each fare with its order in combo.ORDERS.
+TICKET1_SIN_RETURN = dict(
+    ISTANBUL2_SEARCH,
+    ret_city="SIN",
+    label="Istanbul 2n + return from Singapore (Bangkok-first order)",
+    legs=[("BOS", "IST", "January 4, 2027"),
+          ("IST", "DAC", "January 7, 2027"),
+          ("SIN", "BOS", "February 6, 2027")],
+    desc=("BOS→IST Jan 4 · 2 nights Istanbul · IST→DAC Jan 7 "
+          "+ SIN→BOS Feb 6 — one ticket"),
+)
+TICKET1_BKK_RETURN = dict(
+    ISTANBUL2_SEARCH,
+    ret_city="BKK",
+    label="Istanbul 2n + return from Bangkok (Singapore-first order)",
+    legs=[("BOS", "IST", "January 4, 2027"),
+          ("IST", "DAC", "January 7, 2027"),
+          ("BKK", "BOS", "February 6, 2027")],
+    desc=("BOS→IST Jan 4 · 2 nights Istanbul · IST→DAC Jan 7 "
+          "+ BKK→BOS Feb 6 — one ticket"),
+)
+STOPOVER_SEARCHES = [TICKET1_SIN_RETURN, TICKET1_BKK_RETURN]
 
 # Ticket ① is the ONLY search that can kill the whole trip if it comes back
 # empty — nothing else can stand in for it now that the alternatives are gone —
@@ -678,18 +720,41 @@ def scrape_stopover(cfg=None) -> list:
             f.update(kind=cfg["kind"], label=cfg["label"], desc=cfg["desc"],
                      note=cfg["note"], out_arrive=cfg["out_arrive"],
                      ist_nights=cfg.get("ist_nights"))
+            if cfg.get("ret_city"):
+                f.update(ret_city=cfg["ret_city"],
+                         route=f"BOS→IST→DAC + {cfg['ret_city']}→BOS")
             out.append(f)
         return out
 
     return _scrape_multicity(cfg["legs"], parse, f"{cfg['kind']}: {legs_str}")
 
 
-# Singapore-detour middle as a single multi-city ticket: DAC→SIN then SIN→DPS
-# (2 nights in Singapore). Paired so SIN→DPS departs 2 days after DAC→SIN. The
-# two-one-way version of the same middle comes from the DAC→SIN / SIN→DPS LEGS.
+# Ticket ② as a single multi-city ticket, one route pair PER ORDER
+# (2026-08-01). The two-one-way version of the same middles comes from LEGS.
+ORDER_ROUTES = {"SIN-first": (("DAC", "SIN"), ("SIN", "BKK")),
+                "BKK-first": (("DAC", "BKK"), ("BKK", "SIN"))}
+
+TICKET2_SEARCHES = [
+    # SIN-first: DAC→SIN + SIN→BKK. Second leg pinned near Feb 1 (arrive BKK
+    # Feb 1 = the 5-night block to the Feb 6 return); Jan 27–28 outbounds are
+    # the 💸 budget companion's early-Dhaka-exit dates (2026-07-27).
+    ("SIN-first", "January 27, 2027", "February 1, 2027"),
+    ("SIN-first", "January 28, 2027", "February 1, 2027"),
+    ("SIN-first", "January 29, 2027", "January 31, 2027"),
+    ("SIN-first", "January 30, 2027", "February 1, 2027"),
+    ("SIN-first", "January 31, 2027", "February 2, 2027"),
+    ("SIN-first", "February 1, 2027", "February 3, 2027"),
+    # BKK-first: DAC→BKK + BKK→SIN, 5 nights apart (Bangkok block first),
+    # landing SIN with ≥2 nights before the Feb 6 SIN→BOS return.
+    ("BKK-first", "January 27, 2027", "February 1, 2027"),
+    ("BKK-first", "January 28, 2027", "February 2, 2027"),
+    ("BKK-first", "January 29, 2027", "February 3, 2027"),
+    ("BKK-first", "January 30, 2027", "February 4, 2027"),
+]
+
+# Bali-era pairs (DAC→SIN + SIN→DPS), retired 2026-08-01 — kept for the
+# retired combo paths' tests and easy re-adding.
 SG_TICKET_SEARCHES = [
-    # Jan 27–28 outbounds (ret Feb 1, the 5-night-Bali return) added 2026-07-27
-    # for the 💸 budget companion — early-Dhaka-exit deals as one ticket.
     ("January 27, 2027", "February 1, 2027"),
     ("January 28, 2027", "February 1, 2027"),
     ("January 29, 2027", "January 31, 2027"),
@@ -699,10 +764,28 @@ SG_TICKET_SEARCHES = [
 ]
 
 
+def scrape_ticket2(order: str, d1: str, d2: str) -> list:
+    """Multi-city Ticket ② on one ticket, routes per ORDER_ROUTES. Returns
+    dicts tagged kind='sg-ticket' + order, out_date=leg-1, ret_date=leg-2
+    (the leg-2 date doubles as the second city's arrival date — these are
+    short, usually same-day hops)."""
+    (o1, dst1), (o2, dst2) = ORDER_ROUTES[order]
+    legs = [(o1, dst1, d1), (o2, dst2, d2)]
+
+    def parse(tree, url):
+        out = []
+        for f in _parse_openjaw_results(tree, d1, d2, url):
+            f.update(kind="sg-ticket", order=order,
+                     route=f"{o1}→{dst1}→{dst2}")
+            out.append(f)
+        return out
+
+    return _scrape_multicity(legs, parse,
+                             f"ticket2 {order}: {o1}->{dst1} {d1} + {o2}->{dst2} {d2}")
+
+
 def scrape_sg_ticket(dac_sin_date: str, sin_dps_date: str) -> list:
-    """Multi-city DAC→SIN + SIN→DPS on one ticket. Returns dicts tagged
-    kind='sg-ticket' with out_date=DAC→SIN, ret_date=SIN→DPS (the SIN→DPS
-    date doubles as the Bali-arrival date; SIN→DPS is a short same-day hop)."""
+    """RETIRED Bali-era version (DAC→SIN→DPS), kept for tests/re-adding."""
     legs = [("DAC", "SIN", dac_sin_date), ("SIN", "DPS", sin_dps_date)]
 
     def parse(tree, url):
@@ -717,16 +800,17 @@ def scrape_sg_ticket(dac_sin_date: str, sin_dps_date: str) -> list:
 
 
 def scrape_sg_tickets_all() -> list:
-    """All Singapore-detour multi-city tickets. Kept SEPARATE from the open-jaw
-    list — the direct open-jaw pairing loop would mis-handle these."""
+    """All Ticket ② multi-city searches, both orders. (Name kept from the
+    Singapore-detour era — run_daily imports it.) Kept SEPARATE from the
+    open-jaw list — the open-jaw pairing loop would mis-handle these."""
     all_results = []
-    for i, (d1, d2) in enumerate(SG_TICKET_SEARCHES, 1):
-        print(f"[sg-ticket {i}/{len(SG_TICKET_SEARCHES)}] DAC→SIN {d1} + SIN→DPS {d2}")
-        results = scrape_sg_ticket(d1, d2)
+    for i, (order, d1, d2) in enumerate(TICKET2_SEARCHES, 1):
+        print(f"[ticket2 {i}/{len(TICKET2_SEARCHES)}] {order} {d1} + {d2}")
+        results = scrape_ticket2(order, d1, d2)
         if not results:
             print("  0 results — retrying once with a fresh session...")
             time.sleep(5)
-            results = scrape_sg_ticket(d1, d2)
+            results = scrape_ticket2(order, d1, d2)
         all_results += results
         print(f"  Got {len(results)} options")
     return all_results

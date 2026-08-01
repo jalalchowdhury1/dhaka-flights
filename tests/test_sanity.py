@@ -2,10 +2,10 @@ import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from combo import main_trip
 from sanity import self_check
-from scraper import LEGS, SG_TICKET_SEARCHES
+from scraper import LEGS, TICKET2_SEARCHES
 from tests.test_combo import _f
-from tests.test_main_trip import (TICKET1, TICKET2, DAC_SIN, SIN_DPS,
-                                  FLIGHTS, SG_TICKETS)
+from tests.test_main_trip import (TICKET1, TICKET1_SIN, TICKET2, DAC_SIN,
+                                  SIN_BKK, TICKET2_BKK_FIRST, FLIGHTS, SG_TICKETS)
 
 
 def _full_coverage(flights=FLIGHTS):
@@ -21,17 +21,18 @@ def _full_coverage(flights=FLIGHTS):
 
 
 def _all_ticket2_pairs():
-    """One Ticket ② fare per scraped date pair, so invariant 3 stays quiet."""
+    """One Ticket ② fare per scraped order+date pair, so invariant 3 stays quiet."""
     out = list(SG_TICKETS)
-    have = {(t["out_date"], t["ret_date"]) for t in out}
-    for d1, d2 in SG_TICKET_SEARCHES:
-        if (d1, d2) not in have:
-            out.append(dict(TICKET2, out_date=d1, ret_date=d2, out_arrive=d1,
-                            price_total=9999))
+    have = {(t.get("order"), t["out_date"], t["ret_date"]) for t in out}
+    for order, d1, d2 in TICKET2_SEARCHES:
+        if (order, d1, d2) not in have:
+            base = TICKET2 if order == "SIN-first" else TICKET2_BKK_FIRST
+            out.append(dict(base, order=order, out_date=d1, ret_date=d2,
+                            out_arrive=d1, price_total=9999))
     return out
 
 
-def _check(flights=None, tickets1=(TICKET1,), sg=None, prev=None):
+def _check(flights=None, tickets1=(TICKET1, TICKET1_SIN), sg=None, prev=None):
     flights = _full_coverage() if flights is None else flights
     sg = _all_ticket2_pairs() if sg is None else sg
     trip = main_trip(flights, list(tickets1), sg)
@@ -48,9 +49,16 @@ def test_missing_ticket1_is_the_loudest_warning():
 
 
 def test_ticket1_priced_but_no_trip_built_warns():
-    # Ticket ① exists, but no Singapore middle can pair with it.
+    # Ticket ① exists, but no middle can pair with it in either order.
     w = _check(flights=[], sg=[])
     assert any("NO trip was built" in x or "no trip used them" in x for x in w)
+
+
+def test_one_orders_ticket1_variant_empty_warns():
+    # Only the BKK→BOS return priced → the Bangkok-first order never competed;
+    # tonight's "cheaper order" claim would be hollow without a warning.
+    w = _check(tickets1=(TICKET1,))
+    assert any("SIN→BOS return" in x and "Bangkok-first" in x for x in w)
 
 
 def test_missing_leg_date_warns():

@@ -9,7 +9,9 @@ TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
 LEG_EMOJI = {"BOS→DAC": "🇧🇩", "DAC→DPS": "🌴", "DPS→BOS": "🏠",
-             "DAC→SIN": "🇸🇬", "SIN→DPS": "🌴", "DAC→SIN→DPS": "🇸🇬"}
+             "DAC→SIN": "🇸🇬", "SIN→DPS": "🌴", "DAC→SIN→DPS": "🇸🇬",
+             "DAC→BKK": "🇹🇭", "BKK→SIN": "🇸🇬", "SIN→BKK": "🇹🇭",
+             "DAC→BKK→SIN": "🇹🇭", "DAC→SIN→BKK": "🇸🇬"}
 
 
 def send_message(text: str) -> bool:
@@ -49,7 +51,9 @@ def _ticket1_line(oj: dict) -> str:
 
 
 def _ticket2_line(t: dict) -> str:
-    return (f"🇸🇬 *Ticket ②* DAC→SIN→DPS · {_short_date(t['out_date'])} + "
+    route = t.get("route", "DAC→SIN→DPS")
+    return (f"{LEG_EMOJI.get(route, '✈️')} *Ticket ②* {route} · "
+            f"{_short_date(t['out_date'])} + "
             f"{_short_date(t['ret_date'])} (one ticket) · {t.get('airline','?')} · "
             f"${t['price_total']:,} · [book]({t['link']})")
 
@@ -111,7 +115,9 @@ def build_message(payload: dict) -> str:
     countdown, link."""
     main = payload.get("main")
     warnings = payload.get("warnings") or []
-    lines = ["✈️ *BOS → Istanbul → Dhaka → Singapore → Bali → BOS* (2 adults + 1 child)\n"]
+    cities = ("Bangkok → Singapore" if (main or {}).get("order") == "BKK-first"
+              else "Singapore → Bangkok")
+    lines = [f"✈️ *BOS → Istanbul → Dhaka → {cities} → BOS* (2 adults + 1 child)\n"]
 
     for a in payload.get("alerts") or []:
         lines.append(a)
@@ -125,19 +131,21 @@ def build_message(payload: dict) -> str:
         lines.append("")
 
     if not main:
-        lines.append("⚠️ *No trip could be priced today* — the Istanbul ticket or the "
-                     "Singapore middle came back empty. Check cron.log; the retry "
-                     "slots will try again.")
+        lines.append("⚠️ *No trip could be priced today* — Ticket ① or the "
+                     "Bangkok/Singapore middle came back empty in both orders. "
+                     "Check cron.log; the retry slots will try again.")
         lines.append(f"\n{SITE}")
         return "\n".join(lines)
 
     flag = "" if main.get("valid") else f" ⚠️ {main.get('flag') or 'check dates'}"
-    lines.append(f"🌟 *${main['total']:,} total*{flag}")
+    lines.append(f"🌟 *${main['total']:,} total* · {main.get('order_label', '?')}{flag}")
     if payload.get("price_context"):
         lines.append(f"_{payload['price_context']}_")
+    stays = (f"Bangkok {main.get('bkk_nights')}n · Singapore {main.get('sg_nights')}n"
+             if main.get("order") == "BKK-first" else
+             f"Singapore {main.get('sg_nights')}n · Bangkok {main.get('bkk_nights')}n")
     lines.append(f"_Istanbul {main.get('ist_nights') or 2}n · Dhaka {main['dhaka_days']}d · "
-                 f"Singapore {main.get('sg_nights')}n · Bali {main['bali_nights']}n · "
-                 f"home {main['home']}_")
+                 f"{stays} · home {main['home']}_")
     if main.get("openjaw"):
         lines.append(_ticket1_line(main["openjaw"]))
     if main.get("sg_ticket"):
@@ -146,6 +154,18 @@ def build_message(payload: dict) -> str:
         lines.append(_leg_line(f))
     if main.get("alt_note"):
         lines.append(f"💸 {main['alt_note']}")
+
+    other = main.get("other_order")
+    if other:
+        gap = (f"+${other['delta']:,}" if other["delta"] > 0 else
+               "same price" if other["delta"] == 0 else f"−${-other['delta']:,}")
+        oflag = "" if other.get("valid") else f" ⚠️ {other.get('flag') or ''}"
+        lines.append(f"🔁 *Other order* ({other.get('order_label')}): "
+                     f"${other['total']:,} ({gap}){oflag} — "
+                     f"① {other.get('ticket1_airline','?')} "
+                     f"${other.get('ticket1_total', 0):,} + "
+                     f"② {other.get('ticket2_airlines','?')} "
+                     f"${other.get('ticket2_total', 0):,}")
 
     budget = payload.get("budget")
     if budget:
