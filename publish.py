@@ -137,9 +137,9 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
                       ("Bangkok → Singapore" if (main or {}).get("order") == "BKK-first"
                        else "Singapore → Bangkok") + " → BOS"),
             "travelers": "2 adults + 1 child",
-            "rules": ("2 nights Istanbul · Dhaka ≤29 days · min 2 nights Singapore · "
-                      "5 nights Bangkok · either order, cheaper wins · "
-                      "home by Feb 7, 2027 · cheapest airline wins"),
+            "rules": ("2 nights Istanbul · Dhaka ≤29 days · Singapore 2-4 nights "
+                      "(price decides) · 5 nights Bangkok · either order, cheaper "
+                      "wins · home by Feb 7, 2027 · cheapest airline wins"),
         },
         "main": main,
         "budget": budget,
