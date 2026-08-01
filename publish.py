@@ -42,7 +42,8 @@ def _with_baggage(options: list, ticket_type: str, route: str) -> list:
 
 
 def build_payload(flights: list, openjaws: list, history: list, today: str,
-                  warnings: list = None, sg_tickets: list = None) -> dict:
+                  warnings: list = None, sg_tickets: list = None,
+                  bali: dict = None) -> dict:
     """One trip, one payload (2026-07-25). The alternative trips — direct
     open-jaw, three one-ways, Istanbul-only, Singapore-only — are no longer
     scraped, tracked, or charted; `main` IS the product now."""
@@ -63,6 +64,16 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
                       baggage=baggage.annotate(budget),
                       baggage_warnings=baggage.warnings(budget),
                       baggage_checked=baggage.CHECKED)
+
+    # 🌴 comparison watch: the retired Bali trip rides along with its Δ so
+    # "was dropping Bali worth it" stays answerable at a glance.
+    if bali:
+        bali = dict(bali,
+                    baggage=baggage.annotate(bali),
+                    baggage_warnings=baggage.warnings(bali),
+                    baggage_checked=baggage.CHECKED)
+        if main:
+            bali["delta_vs_main"] = bali["total"] - main["total"]
 
     t1 = (main or {}).get("openjaw") or None
     t2 = (main or {}).get("sg_ticket") or None
@@ -87,6 +98,7 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
         "sg_nights": (main or {}).get("sg_nights"),
         "bkk_nights": (main or {}).get("bkk_nights"),
         "other_order_total": ((main or {}).get("other_order") or {}).get("total"),
+        "bali_total": bali["total"] if bali else None,
         "dhaka_days": (main or {}).get("dhaka_days"),
         "home": (main or {}).get("home"),
         "valid": main.get("valid") if main else None,
@@ -129,6 +141,7 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
         },
         "main": main,
         "budget": budget,
+        "bali": bali,
         # "how much more is the non-US-Bangla option?" — with each airline's bag
         # rule alongside, because a $60 saving that drops 40 kg isn't a saving.
         "ticket1_options": _with_baggage(ticket1_options(openjaws, t1),
@@ -144,11 +157,12 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
 
 
 def build_today(flights: list, openjaws: list, warnings: list = None,
-                sg_tickets: list = None) -> dict:
+                sg_tickets: list = None, bali: dict = None) -> dict:
     """Today's payload, history included — built BEFORE Telegram goes out so the
     message and the dashboard can't disagree about what the trip costs."""
     return build_payload(flights, openjaws, _load_history(),
-                         datetime.date.today().isoformat(), warnings, sg_tickets)
+                         datetime.date.today().isoformat(), warnings, sg_tickets,
+                         bali=bali)
 
 
 def write_payload(payload: dict) -> None:

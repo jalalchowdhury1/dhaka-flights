@@ -179,6 +179,16 @@ def build_message(payload: dict) -> str:
         for f in budget.get("legs", []):
             lines.append(_leg_line(f))
 
+    bali = payload.get("bali")
+    if bali:
+        d = bali.get("delta_vs_main")
+        gap = ("no Bangkok trip to compare" if not isinstance(d, (int, float))
+               else "same price as Bangkok" if d == 0
+               else f"+${d:,} more than Bangkok" if d > 0
+               else f"−${-d:,} CHEAPER than Bangkok")
+        lines.append("")
+        lines.append(f"🌴 *Original Bali trip (benchmark):* ${bali['total']:,} — {gap}")
+
     changes = payload.get("changes") or []
     if changes:
         lines.append("")

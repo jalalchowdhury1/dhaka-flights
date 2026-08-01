@@ -67,7 +67,7 @@ HISTORY_HEADERS = ["Date", "⭐ IST+SIN main", "Direct OJ + hop", "SIN only",
                    "IST only", "TK 30h stopover", "3 one-ways", "Best $",
                    "Best structure",
                    "Ticket ① $", "Ticket ② $", "① airline", "② airline",
-                   "IST/DAC/SIN/5n-city", "💸 Budget $", "Order"]
+                   "IST/DAC/SIN/5n-city", "💸 Budget $", "Order", "🌴 Bali $"]
 
 
 def history_row(entry: dict) -> list:
@@ -90,6 +90,7 @@ def history_row(entry: dict) -> list:
         nights if e.get("date") else "",
         e.get("budget_total") if e.get("budget_total") is not None else "",
         e.get("order", ""),
+        e.get("bali_total") if e.get("bali_total") is not None else "",
     ]
 
 

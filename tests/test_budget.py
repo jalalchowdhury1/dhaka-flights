@@ -117,10 +117,10 @@ def test_telegram_shows_budget_block_only_when_present():
 
 def test_history_row_appends_budget_and_order_columns():
     from sheet_writer import history_row, HISTORY_HEADERS
-    assert HISTORY_HEADERS[-2:] == ["💸 Budget $", "Order"]
+    assert HISTORY_HEADERS[-3:] == ["💸 Budget $", "Order", "🌴 Bali $"]
     row = history_row({"date": "2026-07-27", "main_total": 5048,
                        "budget_total": 4669, "order": "Singapore first"})
     assert len(row) == len(HISTORY_HEADERS)
-    assert row[-2] == 4669
-    assert row[-1] == "Singapore first"
-    assert history_row({"date": "x"})[-2:] == ["", ""]   # no budget/order → blank
+    assert row[-3] == 4669
+    assert row[-2] == "Singapore first"
+    assert history_row({"date": "x"})[-3:] == ["", "", ""]   # nothing → blank

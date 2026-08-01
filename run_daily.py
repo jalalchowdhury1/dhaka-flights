@@ -17,7 +17,8 @@ from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
-from scraper import scrape_all, scrape_tickets_all, scrape_sg_tickets_all
+from scraper import (scrape_all, scrape_tickets_all, scrape_sg_tickets_all,
+                     scrape_bali_watch)
 from sheet_writer import write_to_sheet, multicity_as_rows
 from notify_telegram import notify_cheapest
 import publish
@@ -51,6 +52,10 @@ def main():
     tickets1 = scrape_tickets_all()
     sg_tickets = scrape_sg_tickets_all()      # Ticket ② as one multi-city ticket
     flights = scrape_all()                    # Ticket ② as two one-ways
+    # 🌴 comparison watch: the retired Bali trip, scraped LAST so a throttled
+    # night hurts the benchmark before it hurts the product.
+    bali_t1, bali_sg, bali_legs = scrape_bali_watch()
+    flights += bali_legs                      # SIN→DPS rows ride along
 
     if not (tickets1 or sg_tickets or flights):
         from notify_telegram import send_message
@@ -78,21 +83,25 @@ def main():
 
     # Self-check: any invariant violation rides along to Telegram + the site,
     # so data losses are loud instead of silent (see sanity.py).
-    from combo import main_trip
+    from combo import main_trip, main_trip_bali
     from sanity import self_check
     trip = main_trip(flights, tickets1, sg_tickets)
+    bali = main_trip_bali(flights, bali_t1, bali_sg)
     warnings = self_check(flights, tickets1, trip, publish.last_history_entry(),
-                          sg_tickets=sg_tickets)
+                          sg_tickets=sg_tickets, bali=bali, bali_t1=bali_t1)
     for w in warnings:
         print(f"SELF-CHECK WARNING: {w}")
 
     # Build the payload BEFORE notifying, so Telegram and the dashboard quote
     # the same numbers, alternatives and baggage rules.
-    payload = publish.build_today(flights, tickets1, warnings, sg_tickets)
+    payload = publish.build_today(flights, tickets1, warnings, sg_tickets,
+                                  bali=bali)
 
     write_to_sheet(
         multicity_as_rows(tickets1, "① BOS→IST→DAC + return")
         + multicity_as_rows(sg_tickets, "② Dhaka→BKK/SIN middle")
+        + multicity_as_rows(bali_t1, "🌴① BOS→IST→DAC + DPS→BOS")
+        + multicity_as_rows(bali_sg, "🌴② DAC→SIN→DPS")
         + flights,
         tab_name="Google Flights")
     notify_cheapest(payload)

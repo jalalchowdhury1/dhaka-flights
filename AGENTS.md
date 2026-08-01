@@ -24,10 +24,25 @@ as **two purchases**, and everything in the code is named for them:
 | **Ticket ②** | DAC→BKK→SIN (BKK-first) or DAC→SIN→BKK (SIN-first) — one multi-city ticket **or** two one-ways, whichever is cheaper | `TICKET2_SEARCHES` (order-tagged) + the four `LEGS` |
 
 Every night at midnight it scrapes those 30 searches (2 Ticket ① + 10 Ticket ②
-pairs + 18 one-way leg×dates), prices both orders, self-checks, writes a
-Google Sheet, Telegrams the result (with per-leg baggage + same-date
-alternatives), and publishes `site/data.json` for **dhaka-flights.vercel.app**.
+pairs + 18 one-way leg×dates) **plus the 🌴 Bali watch (11 more searches — see
+below), ~41 total ≈ 33 min**, prices both orders, self-checks, writes a Google
+Sheet, Telegrams the result (with per-leg baggage + same-date alternatives),
+and publishes `site/data.json` for **dhaka-flights.vercel.app**.
 Spec: `docs/superpowers/specs/2026-08-01-bangkok-singapore-swap-design.md`.
+
+**🌴 Bali comparison watch (2026-08-01 evening, Jalal: "keep another tab open
+for the original bali trip. i want to be able to compare"):** the RETIRED
+original trip (BOS→IST 2n→DAC→SIN 2n→Bali 5n→BOS) is still scraped nightly —
+`scraper.scrape_bali_watch()` runs LAST (a throttled night degrades the
+benchmark before the product) using the retired configs: `ISTANBUL2_SEARCH`
+(DPS-return Ticket ①), `SG_TICKET_SEARCHES`, and the SIN→DPS dates from
+`BALI_LEGS` (DAC→SIN is shared with the main LEGS). The trip is built by the
+retired `combo.main_trip_bali`, rides in the payload as `bali` (with
+`delta_vs_main`), history key `bali_total`, Sheet column "🌴 Bali $", a 🌴
+Telegram line, and the site's "🌴 Bali (old)" tab; the chart's Bali line
+stitches pre-swap `main_total` history to nightly `bali_total`. It is a
+BENCHMARK, not a bookable product: no alerts fire on it, and sanity raises
+ONE warning when it's missing (never per-search noise).
 
 **💸 Budget companion (`combo.budget_trip`, 2026-07-27):** alongside the main
 trip, the cheapest version of the SAME trip — same Ticket ① (and therefore the
@@ -256,8 +271,8 @@ reason.
 - Ticket ① is fixed to BOS→IST Jan 4 / IST→DAC Jan 7 / {SIN|BKK}→BOS Feb 6.
   Other outbound or return dates would change the trip's shape, so they're a
   product decision, not a config tweak — ask before adding.
-- **Killed-run gotcha (2026-07-18):** a full run is ~25 min again (back to 30
-  searches with the 2026-08-01 both-orders rework; it was ~14 min at 17). Never
+- **Killed-run gotcha (2026-07-18):** a full run is ~33 min (41 searches:
+  both-orders rework + the 🌴 Bali watch, 2026-08-01; it was ~14 min at 17). Never
   run it inside a harness/tool with a ≤10-min timeout — it gets SIGKILLed
   mid-scrape (no stamp written, no output flushed with buffered stdout). Manual
   runs: `nohup … python3 -u run_daily.py > log 2>&1 &` and watch the log. The

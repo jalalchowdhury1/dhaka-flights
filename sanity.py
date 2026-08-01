@@ -39,7 +39,8 @@ def _priced(items):
     return [x for x in items if isinstance(x.get("price_total"), (int, float))]
 
 
-def self_check(flights, openjaws, main, prev_entry=None, sg_tickets=None) -> list:
+def self_check(flights, openjaws, main, prev_entry=None, sg_tickets=None,
+               bali=None, bali_t1=None) -> list:
     """Return a list of human-readable warning strings (empty = all good)."""
     warnings = []
     tickets1 = _priced([o for o in (openjaws or []) if o.get("kind") == "stopover2"])
@@ -117,6 +118,16 @@ def self_check(flights, openjaws, main, prev_entry=None, sg_tickets=None) -> lis
             warnings.append(f"arrival date failed to parse on {missing}/"
                             f"{len(priced)} fares — Google may have changed its "
                             f"wording; combo math is falling back to estimates")
+
+    # 🌴 Bali comparison watch (2026-08-01): a missing benchmark must be
+    # visible, not silent — but it's ONE warning, not per-search noise.
+    if bali_t1 is not None or bali is not None:
+        if not _priced(bali_t1 or []):
+            warnings.append("🌴 Bali watch: Ticket ① (DPS return) returned no "
+                            "fares — no Bali comparison today")
+        elif not bali:
+            warnings.append("🌴 Bali watch: fares exist but no Bali trip was "
+                            "built — check the retired pairing rules")
 
     # 7. Shape drift — the trip Jalal asked for is 2 IST / 2 SIN / 5 BKK
     # nights, in either order. Singapore is a hard MINIMUM of 2 since

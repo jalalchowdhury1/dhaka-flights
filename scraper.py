@@ -822,6 +822,47 @@ def scrape_sg_tickets_all() -> list:
     return all_results
 
 
+# 🌴 Bali comparison watch (2026-08-01 evening): the ORIGINAL trip stays
+# scraped nightly so the price gap vs the Bangkok rework stays visible
+# (Jalal: "keep another tab open for the original bali trip. i want to be
+# able to compare"). Uses the retired Bali configs; the DAC→SIN one-ways are
+# shared with the main LEGS, so only SIN→DPS is scraped extra here.
+def scrape_bali_watch():
+    """(tickets1, sg_tickets, legs) for the retired Bali trip: Ticket ① with
+    the DPS→BOS return, DAC→SIN→DPS one-tickets, and the SIN→DPS one-way
+    dates. Runs LAST in the nightly order — the Bangkok trip is the product,
+    so a throttled night degrades the comparison before the headline."""
+    print("[bali-watch] Ticket ① (DPS return)")
+    tickets1 = []
+    for attempt in range(1, TICKET1_ATTEMPTS + 1):
+        tickets1 = scrape_stopover(ISTANBUL2_SEARCH)
+        if tickets1:
+            break
+        print(f"  0 results (attempt {attempt}/{TICKET1_ATTEMPTS}) — retrying...")
+        time.sleep(5)
+    sg = []
+    for i, (d1, d2) in enumerate(SG_TICKET_SEARCHES, 1):
+        print(f"[bali-watch sg-ticket {i}/{len(SG_TICKET_SEARCHES)}] {d1} + {d2}")
+        r = scrape_sg_ticket(d1, d2)
+        if not r:
+            time.sleep(5)
+            r = scrape_sg_ticket(d1, d2)
+        sg += r
+    legs = []
+    for leg in BALI_LEGS:
+        if any(l["origin"] == leg["origin"] and l["dest"] == leg["dest"]
+               for l in LEGS):
+            continue                    # DAC→SIN is already scraped nightly
+        for date in leg["dates"]:
+            print(f"[bali-watch] {leg['origin']}→{leg['dest']} {date}")
+            r = scrape_route(leg["origin"], leg["dest"], date)
+            if not r:
+                time.sleep(5)
+                r = scrape_route(leg["origin"], leg["dest"], date)
+            legs += r
+    return tickets1, sg, legs
+
+
 def scrape_tickets_all() -> list:
     """Ticket ① searches: BOS→IST + IST→DAC + DPS→BOS on one multi-city ticket.
     (Was scrape_openjaw_all; the plain open-jaw searches retired 2026-07-25.)"""

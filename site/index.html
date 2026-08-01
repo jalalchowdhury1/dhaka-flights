@@ -149,9 +149,11 @@
   <div class="strip" id="strip"></div>
   <div class="tabs" role="tablist">
     <button id="tab-today" class="active" role="tab">⭐ The Trip</button>
+    <button id="tab-bali" role="tab">🌴 Bali (old)</button>
     <button id="tab-history" role="tab">📈 History</button>
   </div>
   <div id="view-today"></div>
+  <div id="view-bali" style="display:none"></div>
   <div id="view-history" style="display:none"></div>
 
   <dialog id="infoModal">
@@ -285,6 +287,7 @@ async function load() {
   }
   renderStrip(data);
   renderToday(data);
+  renderBali(data);
   hRows = flattenHistory(data.history);
   renderHistory();
 }
@@ -337,6 +340,29 @@ function sgTicketLine(t) {
     <span class="price">${usd(t.price_total)} ${bookBtn(t.link)}</span></div>`;
 }
 
+/* 🌴 The retired trip, still scraped nightly as a benchmark (2026-08-01). */
+function renderBali(d) {
+  const b = d.bali;
+  let html;
+  if (!b) {
+    html = `<div class="card muted" style="margin-top:16px">No Bali comparison in the
+      latest data yet — the original trip is scraped nightly alongside the Bangkok
+      trip and will appear here after the next run.</div>`;
+  } else {
+    const delta = b.delta_vs_main;
+    const line = delta == null ? "" :
+      delta > 0 ? `The old Bali trip costs <b>${usd(delta)} more</b> than the Bangkok trip tonight.` :
+      delta < 0 ? `The old Bali trip is <b>${usd(-delta)} cheaper</b> than the Bangkok trip tonight.` :
+      `Both trips price identically tonight.`;
+    html = `<div class="card" style="margin-top:16px"><b>🌴 The original trip, kept as a benchmark</b>
+      <div class="muted" style="margin-top:4px">BOS → Istanbul 2n → Dhaka → Singapore 2n → Bali 5n → BOS —
+      dropped 2026-08-01 (dengue tail risk) but still scraped nightly so the price gap stays visible.</div>
+      ${line ? `<div style="margin-top:8px">${line}</div>` : ""}</div>`
+      + timeline(b) + structureCard(b, true);
+  }
+  document.getElementById("view-bali").innerHTML = html;
+}
+
 /* The losing order — always shown with its Δ, never hidden (2026-08-01). */
 function otherOrderCard(o) {
   if (!o) return "";
@@ -370,8 +396,14 @@ function structureCard(s, hero) {
 }
 
 function chart(history) {
+  /* The ⭐ line is the Bangkok trip (from 1 Aug 2026); the 🌴 line stitches the
+     pre-swap era (when main WAS the Bali trip) to the nightly Bali watch, so
+     the two trips stay comparable on one axis. */
   const series = [
-    {label: "⭐ Whole trip", color: "#0ea5a3", get: mainTotal},
+    {label: "⭐ Bangkok trip", color: "#0ea5a3",
+     get: h => h.date >= "2026-08-01" ? mainTotal(h) : null},
+    {label: "🌴 Bali (old)", color: "#e0653f",
+     get: h => h.bali_total ?? (h.date < "2026-08-01" ? mainTotal(h) : null)},
     {label: "Ticket ①", color: "var(--s1)", get: h => h.ticket1_total ?? null},
     {label: "Ticket ②", color: "var(--s3)", get: h => h.ticket2_total ?? null},
   ];
@@ -667,6 +699,7 @@ const HCOLS = [
   {key: "ticket1_airline", label: "① airline",       num: false},
   {key: "ticket2_airline", label: "② airline",       num: false},
   {key: "order",           label: "Order",           num: false},
+  {key: "bali_total",      label: "🌴 Bali $",        num: true},
   {key: "_nights",         label: "IST/DAC/SIN/5n",  num: false},
   {key: "_home",           label: "Home",            num: false},
 ];
@@ -702,6 +735,7 @@ function trendSummary(history) {
     new Date(t).toLocaleDateString("en-US", {month: "short", day: "numeric"}); };
   const series = [
     {label: "⭐ Whole trip", get: mainTotal},
+    {label: "🌴 Bali (old)", get: h => h.bali_total ?? null},
     {label: "🎫 Ticket ①", get: h => h.ticket1_total ?? null},
     {label: "🇸🇬 Ticket ②", get: h => h.ticket2_total ?? null},
   ];
@@ -759,12 +793,13 @@ function renderHistory() {
 }
 
 function setTab(which) {
-  for (const t of ["today", "history"]) {
+  for (const t of ["today", "bali", "history"]) {
     document.getElementById("tab-" + t).classList.toggle("active", which === t);
     document.getElementById("view-" + t).style.display = which === t ? "" : "none";
   }
 }
 document.getElementById("tab-today").onclick = () => setTab("today");
+document.getElementById("tab-bali").onclick = () => setTab("bali");
 document.getElementById("tab-history").onclick = () => setTab("history");
 
 const modal = document.getElementById("infoModal");
