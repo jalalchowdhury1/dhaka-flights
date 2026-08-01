@@ -102,3 +102,19 @@ def test_scrape_all_retries_route_once_then_moves_on(monkeypatch):
     # 18 searches: first call empty + retry, rest succeed first try = 19 calls
     assert calls["n"] == 19
     assert len(result) == 18
+
+
+def test_bkk_picker_survives_the_input_echo_and_bangkok_yai():
+    # Typing "Bangkok" (TYPE_AS) puts that word in the input box's own tree
+    # line, and Google also offers a "Bangkok Yai, Thailand" district — both
+    # must lose to the real city option, which covers BKK *and* DMK.
+    import json
+    from scraper import _pick_airport, TYPE_AS
+    assert TYPE_AS["BKK"] == "Bangkok"
+    tree = "\n".join([
+        "[0-1] combobox: Where to? Bangkok",
+        "[0-2] option: Bangkok Yai, Thailand",
+        "[0-3] option: Bangkok, Thailand Capital of Thailand",
+        "[0-4] option: Suvarnabhumi Airport BKK 17 mi to destination",
+    ])
+    assert _pick_airport(json.dumps({"tree": tree}), "BKK") == "@0-3"

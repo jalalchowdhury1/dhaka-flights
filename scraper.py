@@ -56,11 +56,17 @@ AIRPORT_PICK = {
     # would do the same ("listitem", "single"), so give it explicit picks.
     "IST": ["Istanbul Airport", "Istanbul"],
     "SIN": ["Singapore Changi", "Changi", "Singapore"],
-    # "Bangkok" (the city entry) before "Suvarnabhumi": the city covers BOTH
-    # airports — AirAsia/Thai Lion fly the cheap DAC routes out of Don Mueang
-    # (DMK), and an airport-only pick would hide them.
-    "BKK": ["Bangkok", "Suvarnabhumi"],
+    # BKK types "Bangkok" (TYPE_AS) and picks the CITY option, which covers
+    # BOTH airports — Thai AirAsia/Thai Lion fly the cheap DAC routes out of
+    # Don Mueang (DMK), and typing the bare code offers ONLY Suvarnabhumi
+    # (live-checked 2026-08-01). The "option:" prefix stops the keyword from
+    # matching the input box's own value line (which now reads "Bangkok"),
+    # and a plain "Bangkok" keyword would also hit "Bangkok Yai, Thailand".
+    "BKK": ["option: Bangkok, Thailand", "Suvarnabhumi"],
 }
+
+# What to TYPE into the airport box, when it isn't the airport code itself.
+TYPE_AS = {"BKK": "Bangkok"}
 
 # 2 adults + 1 child (aged 2-11, own seat). Google Flights shows the TOTAL
 # price for all selected passengers (verified 2026-07-15: 1-pax search showed
@@ -244,7 +250,7 @@ def scrape_route(origin: str, dest: str, depart: str) -> list:
         _run(f"browse click {origin_ref}"); time.sleep(0.6)
         _run("browse press Escape"); time.sleep(0.3)
         _run(f"browse click {origin_ref}"); time.sleep(0.5)
-        _run(f"browse type {origin}"); time.sleep(2)
+        _run(f"browse type {TYPE_AS.get(origin, origin)}"); time.sleep(2)
         snap = _snap()
         pick = _pick_airport(snap, origin)
         if pick:
@@ -258,7 +264,7 @@ def scrape_route(origin: str, dest: str, depart: str) -> list:
         print(f"  Filling destination: {dest}...")
         dest_ref = _find_ref(snap, "Where to")
         _run(f"browse click {dest_ref}"); time.sleep(0.5)
-        _run(f"browse type {dest}"); time.sleep(2)
+        _run(f"browse type {TYPE_AS.get(dest, dest)}"); time.sleep(2)
         snap = _snap()
         pick = _pick_airport(snap, dest)
         if pick:
@@ -517,7 +523,7 @@ def _scrape_multicity(legs: list, parse_fn, tag: str) -> list:
             _run(f"browse click {froms[i]}"); time.sleep(0.6)
             _run("browse press Escape"); time.sleep(0.3)
             _run(f"browse click {froms[i]}"); time.sleep(0.5)
-            _run(f"browse type {o}"); time.sleep(2)
+            _run(f"browse type {TYPE_AS.get(o, o)}"); time.sleep(2)
             snap = _snap()
             pick = _pick_airport(snap, o)
             if pick:
@@ -529,7 +535,7 @@ def _scrape_multicity(legs: list, parse_fn, tag: str) -> list:
 
             tos = _find_refs(snap, "Where to")
             _run(f"browse click {tos[i]}"); time.sleep(0.5)
-            _run(f"browse type {d}"); time.sleep(2)
+            _run(f"browse type {TYPE_AS.get(d, d)}"); time.sleep(2)
             snap = _snap()
             pick = _pick_airport(snap, d)
             if pick:

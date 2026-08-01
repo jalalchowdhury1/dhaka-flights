@@ -221,7 +221,7 @@ reason.
    `DIAG`), blank-page bail, per-route retry, 4-dead-routes abort, and the Telegram
    alert distinguishes LOCAL browser failure from a real 0-result day.
    Debug a 0-day via `cron.log` + `debug_last_zero.txt`.
-3. Airport pickers must have an AIRPORT_PICK entry — the bare-code fallback substring-matches random tree lines ("IST" hit "listitem") and derails the form. BKK deliberately prefers the "Bangkok" CITY entry over Suvarnabhumi so Don-Mueang-based LCC fares (AirAsia, Thai Lion) are included. **Multi-city result lines say "From X US dollars total."**; one-way lines say just
+3. Airport pickers must have an AIRPORT_PICK entry — the bare-code fallback substring-matches random tree lines ("IST" hit "listitem") and derails the form. BKK TYPES "Bangkok" (`TYPE_AS`) and picks the `option: Bangkok, Thailand` CITY line — typing the code offers ONLY Suvarnabhumi (live-checked 2026-08-01), which would hide Don-Mueang LCC fares (Thai AirAsia/Lion); the `option:` prefix keeps the keyword off the input box's own value line and off "Bangkok Yai, Thailand". **Multi-city result lines say "From X US dollars total."**; one-way lines say just
    "From X US dollars." — `_parse_results` accepts both. Flight details on the
    multi-city selection page describe the FIRST leg; the price includes its cheapest
    completion. Only ~top-10 fares show inline — the scraper clicks "View more flights".
