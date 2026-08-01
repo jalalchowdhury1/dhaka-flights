@@ -99,6 +99,22 @@ def main():
     payload = publish.build_today(flights, tickets1, warnings, sg_tickets,
                                   bali=bali)
 
+    # 🔎 Independent re-check (2026-08-01: "once done verify. Multiple times.
+    # take different perspectives.") — recompute / arithmetic / contract.
+    # Findings join the self-check block; a clean pass adds a footer line.
+    try:
+        import verify
+        issues = verify.verify_payload(payload, flights, tickets1, sg_tickets)
+    except Exception as e:                     # noqa: BLE001 — never kill the run
+        issues = [f"re-check crashed: {e}"]
+    if issues:
+        for p in issues:
+            print(f"VERIFY: {p}")
+        payload["warnings"] = list(payload.get("warnings") or []) +             [f"🔎 {p}" for p in issues]
+    else:
+        payload["verified"] = ("independent re-check ✓ (recompute · "
+                               "arithmetic · trip contract)")
+
     write_to_sheet(
         multicity_as_rows(tickets1, "① BOS→IST→DAC + return")
         + multicity_as_rows(sg_tickets, "② Dhaka→BKK/SIN middle")

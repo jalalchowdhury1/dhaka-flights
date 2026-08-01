@@ -32,6 +32,18 @@ prices both orders, self-checks, writes a Google Sheet, Telegrams the result
 publishes `site/data.json` for **dhaka-flights.vercel.app**.
 Spec: `docs/superpowers/specs/2026-08-01-bangkok-singapore-swap-design.md`.
 
+**🔎 Nightly self-verification (`verify.py`, 2026-08-01 evening — "once done
+verify. Multiple times. take different perspectives."):** after the payload is
+built and BEFORE anything is sent, three independent perspectives run every
+night: (1) RECOMPUTE — a brute-force cheapest-strict-shape search written
+independently of combo.py must agree with each order's total, and a flagged
+day must truly have no strict-shape option; (2) ARITHMETIC — ①+②=total,
+other-order/Bali Δs, history mirror, budget strictly cheaper; (3) CONTRACT —
+unflagged days must be 2 IST / 5 BKK / 2-4 SIN and the hotel card must match
+the flights. Findings join the 🧪 self-check block in Telegram + the site;
+a clean pass adds a "🔎 independent re-check ✓" footer. verify.py must stay
+INDEPENDENT of combo.py — its value is being a second implementation.
+
 **Speed rules (2026-08-01 evening — protect the 25-min cap):**
 1. ONE browser session per RUN (`scraper._ensure_session`): the old
    per-search stop→env→open cycle cost ~35-40s each. Blank pages/exceptions
@@ -192,6 +204,15 @@ Jalal relies on this nightly until an early-September 2026 booking decision
    later slots no-ops after success. Stamp is written ONLY if ≥1 trip structure
    was built — a catastrophic zero-structure day auto-retries.
 3. **No-start-after-5:30** window guard (wake-replays skip, user is working).
+   3b. **Same-day rescrape caution (2026-08-01):** after ~100 searches in one
+   afternoon every browse command crawled to 30s+ timeouts on FOUR straight
+   manual attempts even with a clean process table — consistent with Google
+   slow-walking the IP. Repeated same-day manual runs are the one thing that
+   degrades this scraper; prefer the midnight window and its 2:00/4:00 slots.
+   Also: killed manual runs leave ORPHANED browse daemons + stagehand Chrome
+   instances that compound the slowness — `pkill -f "browse --session";
+   pkill -f stagehand` before relaunching (safe when no other scraper is
+   mid-run; carmax runs at midnight).
 4. **Alerts**: wrapper Telegrams on crash exit; in-run Telegram warns on
    0-flight days (browser-broken vs Google-empty distinguished via DIAG).
 5. **History in triplicate**: site/data.json (append-only, keyed by date) +
@@ -327,9 +348,11 @@ reason.
 - `hotels.py` — curated Marriott award-stay references + `hotel_plan(trip)`
   (order-aware stay dates; points are checked references, never scraped)
 - `alerts.py` — buy-signal stages, price context, countdown, change diff (§4d)
+- `verify.py` — the nightly 3-perspective independent re-check (keep it
+  independent of combo.py; that's the point)
 - `publish.py` — `build_today` → payload → `write_payload` (backup, write, push)
 - `sheet_writer.py`, `notify_telegram.py` — outputs
 - `site/` — static dashboard (index.html) + data.json (machine-written)
 - `main.py` — manual run: scrape + sheet + terminal summary (no Telegram/publish)
-- `tests/` — pytest suite (146 tests; `test_main_trip.py` holds the shared trip
+- `tests/` — pytest suite (152 tests; `test_main_trip.py` holds the shared trip
   fixtures, `test_baggage.py` guards the allowance table's honesty)

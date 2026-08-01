@@ -222,6 +222,8 @@ def build_message(payload: dict) -> str:
 
     if payload.get("countdown"):
         lines.append(f"\n{payload['countdown']}")
+    if payload.get("verified"):
+        lines.append(f"\n_🔎 {payload['verified']}_")
     lines.append("\n_Google Flights · prices are totals for all 3 travelers_")
     lines.append(SITE)
     return "\n".join(lines)

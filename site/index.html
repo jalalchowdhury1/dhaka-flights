@@ -631,7 +631,8 @@ function renderToday(d) {
     return h <= 1 ? " (just now)" : ` (${h} h ago)`;
   })();
   document.getElementById("rules").textContent = `${d.trip.travelers} · ${d.trip.rules}`;
-  document.getElementById("updated").textContent = `Last scrape: ${d.updated}${ago}`;
+  document.getElementById("updated").textContent = `Last scrape: ${d.updated}${ago}` +
+    (d.verified ? " · 🔎 re-check ✓" : "");
   let html = "";
 
   // Buy-signal layer: alert lines lead the page exactly like they lead the
