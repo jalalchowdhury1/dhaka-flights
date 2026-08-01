@@ -23,9 +23,10 @@ as **two purchases**, and everything in the code is named for them:
 | **Ticket ①** | BOS→IST + IST→DAC + **{SIN or BKK}→BOS**, one multi-city ticket per order | `STOPOVER_SEARCHES` = `TICKET1_SIN_RETURN` + `TICKET1_BKK_RETURN` (kind `stopover2`, `ret_city` keys the order) |
 | **Ticket ②** | DAC→BKK→SIN (BKK-first) or DAC→SIN→BKK (SIN-first) — one multi-city ticket **or** two one-ways, whichever is cheaper | `TICKET2_SEARCHES` (order-tagged) + the four `LEGS` |
 
-Every night at midnight it scrapes **25 searches ≈ 17–20 min** (2 Ticket ① +
-6 Ticket ② pairs + 14 one-way leg×dates + the 3-search 🌴 Bali watch —
-trimmed from 41 on 2026-08-01 evening, Jalal: "no more than 25 minutes"),
+Every night at midnight it scrapes **30 searches ≈ 20–24 min** (2 Ticket ① +
+7 Ticket ② pairs + 18 one-way leg×dates + the 3-search 🌴 Bali watch — the
+budget is Jalal's, 2026-08-01 evening: "no more than 25 minutes" then "you
+can get it up to 30 searches if it helps you"),
 prices both orders, self-checks, writes a Google Sheet, Telegrams the result
 (with per-leg baggage + same-date alternatives + the 🏨 hotel plan), and
 publishes `site/data.json` for **dhaka-flights.vercel.app**.
@@ -67,20 +68,24 @@ Refresh the numbers by re-running the hotel sweep, then bump CHECKED.
 
 **💸 Budget companion (`combo.budget_trip`, 2026-07-27):** alongside the main
 trip, the cheapest version of the SAME trip — same Ticket ① (and therefore the
-same ORDER), same 5-night Bangkok block — with the minimum-2-Singapore-nights
-rule waived (≥1 night) and the Dhaka departure free to shift WITHIN the
-tracked grid (the Jan 27–28 early-exit dates were retired 2026-08-01 evening
-for the 25-min cap). Only shown when STRICTLY cheaper than the main trip
+same ORDER), same 5-night Bangkok block — with the Singapore-nights band
+waived entirely (≥1 night) and the Dhaka departure free to shift (Jan 27–28
+early-exit dates restored under the 30-search allowance). Only shown when
+STRICTLY cheaper than the main trip
 (else `budget` is None and nothing renders); carries `savings` + human `diffs`
 vs main. Surfaces as a 💸 block in Telegram, a collapsible card on the site,
 `budget_total` in history/data.json, and the Sheet History column "💸 Budget $"
 (appended, per the append-only rule).
 
-**Hard rules:** 5 Bangkok nights, 2 Istanbul nights, **MINIMUM 2 Singapore
-nights** (`MIN_SG_NIGHTS`, Jalal 2026-07-27 — an overnight first hop had priced
-a 1-night ticket below every 2-night option and headlined the trip; a ≥2-night
-Singapore stay now always outranks a shorter one, price decides only within a
-tier, and a <2-night day survives only as a flagged fallback), home ≤ Feb 7,
+**Hard rules:** 5 Bangkok nights, 2 Istanbul nights, **Singapore 2–4 nights
+(a FLEX BAND, not a fixed number)** — `MIN_SG_NIGHTS`/`MAX_SG_NIGHTS`; Jalal
+2026-07-27 "minimum of 2 nights" (an overnight first hop had priced a 1-night
+ticket below every 2-night option and headlined the trip) + 2026-08-01 "isn't
+a hardline. you can take it up to 3 or even 4 if its cheaper in terms of the
+flight". An in-band middle always outranks one outside the band, price
+decides within it, and an out-of-band day survives only as a flagged
+fallback; 3-4 SIN nights are a normal outcome, NOT a sanity warning —
+home ≤ Feb 7,
 Dhaka ≤ 29 days. **Across orders, a valid trip always outranks a flagged one**
 (sort key `(not valid, total)`), so a cheap-but-off-shape order never silently
 displaces the on-shape one. Other nights that come out different still win on
@@ -119,13 +124,14 @@ launchd 12:00am + 2:00am retry slot (com.jalal.dhaka-flights.plist, parallel wit
                                        up to TICKET1_ATTEMPTS=3 tries each
                                        (nothing else can substitute, so they run
                                        FIRST and retry hardest), no airline filter
-               scrape_sg_tickets_all() Ticket ② as one ticket — 6 multi-city
+               scrape_sg_tickets_all() Ticket ② as one ticket — 7 multi-city
                                        searches (TICKET2_SEARCHES, order-tagged:
-                                       3 DAC→SIN→BKK + 3 DAC→BKK→SIN; SEPARATE
+                                       4 DAC→SIN→BKK + 3 DAC→BKK→SIN, incl. the
+                                       Jan 28 4-SIN-night flex pairs; SEPARATE
                                        list; the open-jaw pairing loop would
                                        mis-handle them)
-               scrape_all()            Ticket ② as two one-ways — 14 searches
-                                       (LEGS: DAC→SIN + DAC→BKK Jan 29–Feb 1,
+               scrape_all()            Ticket ② as two one-ways — 18 searches
+                                       (LEGS: DAC→SIN + DAC→BKK Jan 27–Feb 1,
                                        SIN→BKK Jan 31–Feb 2, BKK→SIN Feb 2–4)
                scrape_bali_watch()     🌴 benchmark, runs LAST — 3 searches
         │  drives real Chrome via the `browse` CLI (a11y-tree snapshots)
@@ -294,7 +300,7 @@ reason.
 - Ticket ① is fixed to BOS→IST Jan 4 / IST→DAC Jan 7 / {SIN|BKK}→BOS Feb 6.
   Other outbound or return dates would change the trip's shape, so they're a
   product decision, not a config tweak — ask before adding.
-- **Killed-run gotcha (2026-07-18):** a full run is ~17-20 min (25 searches
+- **Killed-run gotcha (2026-07-18):** a full run is ~20-24 min (30 searches
   with one browser session per run, 2026-08-01 evening). Never
   run it inside a harness/tool with a ≤10-min timeout — it gets SIGKILLed
   mid-scrape (no stamp written, no output flushed with buffered stdout). Manual
@@ -325,5 +331,5 @@ reason.
 - `sheet_writer.py`, `notify_telegram.py` — outputs
 - `site/` — static dashboard (index.html) + data.json (machine-written)
 - `main.py` — manual run: scrape + sheet + terminal summary (no Telegram/publish)
-- `tests/` — pytest suite (143 tests; `test_main_trip.py` holds the shared trip
+- `tests/` — pytest suite (146 tests; `test_main_trip.py` holds the shared trip
   fixtures, `test_baggage.py` guards the allowance table's honesty)

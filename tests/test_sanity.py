@@ -102,3 +102,11 @@ def test_parser_drift_warns():
     flights = [dict(f, arrive="N/A") for f in _full_coverage()]
     w = _check(flights=flights)
     assert any("arrival date failed to parse" in x for x in w)
+
+
+def test_three_singapore_nights_are_not_shape_drift():
+    # 2-4 SIN nights are the flex band (2026-08-01) — no warning noise.
+    three = dict(TICKET2, out_date="January 29, 2027",
+                 out_arrive="January 29, 2027", ret_date="February 1, 2027")
+    w = _check(flights=[], sg=[three])
+    assert not any("Singapore night" in x for x in w)

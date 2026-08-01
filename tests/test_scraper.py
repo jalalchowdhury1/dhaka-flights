@@ -50,14 +50,13 @@ def test_parse_results_nonstop_without_layover():
 
 
 def test_legs_config_is_the_ticket2_middles_both_orders():
-    # 2026-08-01: one trip, two orders; trimmed same evening to the 25-minute
-    # cap (Jan 27–28 budget dates retired). The long legs are priced solely as
-    # Ticket ①, so the one-way searches are the two Dhaka→city1→city2 middles.
+    # 2026-08-01 evening, 30-search allowance: Jan 27–28 restored — they feed
+    # the 2-4-night Singapore flex band and the 💸 early-Dhaka-exit deals.
     assert [(l["origin"], l["dest"]) for l in LEGS] == [
         ("DAC", "SIN"), ("SIN", "BKK"), ("DAC", "BKK"), ("BKK", "SIN")]
-    assert sum(len(l["dates"]) for l in LEGS) == 14
+    assert sum(len(l["dates"]) for l in LEGS) == 18
     for leg in (LEGS[0], LEGS[2]):
-        assert "January 27, 2027" not in leg["dates"], "budget dates retired"
+        assert "January 27, 2027" in leg["dates"]
         assert "January 29, 2027" in leg["dates"]
     # SIN-first: SIN→BKK arriving Feb 1 gives the 5-night Bangkok block.
     assert "February 1, 2027" in LEGS[1]["dates"]
@@ -98,9 +97,9 @@ def test_scrape_all_retries_route_once_then_moves_on(monkeypatch):
     monkeypatch.setattr(scraper.time, "sleep", lambda s: None)
     result = scraper.scrape_all()
     assert scraper.DIAG["aborted_early"] is False
-    # 14 searches: first call empty + retry, rest succeed first try = 15 calls
-    assert calls["n"] == 15
-    assert len(result) == 14
+    # 18 searches: first call empty + retry, rest succeed first try = 19 calls
+    assert calls["n"] == 19
+    assert len(result) == 18
 
 
 def test_bkk_picker_survives_the_input_echo_and_bangkok_yai():

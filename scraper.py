@@ -20,19 +20,20 @@ from typing import Union
 LEGS = [
     # Ticket ② legs for BOTH orders, priced as one-ways — the cheaper of
     # {2 one-ways, 1 multi-city ticket} wins inside combo.order_trip.
-    # TRIMMED 2026-08-01 evening (Jalal: "no more than 25 minutes"): the
-    # Jan 27–28 early-Dhaka-exit budget dates are RETIRED — the 💸 companion
-    # still works, it just shifts dates within this grid only.
-    # SIN-first order: DAC→SIN (2 SIN nights) then SIN→BKK (5 BKK nights to Feb 6)
+    # Jan 27–28 starts serve the 2-4-night Singapore FLEX BAND (2026-08-01:
+    # "you can take it up to 3 or even 4 if its cheaper") and the 💸 budget
+    # companion's early-Dhaka-exit deals — restored under the 30-search
+    # allowance ("you can get it up to 30 searches if it helps you").
+    # SIN-first order: DAC→SIN (2-4 SIN nights) then SIN→BKK (5 BKK nights to Feb 6)
     {"origin": "DAC", "dest": "SIN",
-     "dates": ["January 29, 2027", "January 30, 2027",
-               "January 31, 2027", "February 1, 2027"]},
+     "dates": ["January 27, 2027", "January 28, 2027", "January 29, 2027",
+               "January 30, 2027", "January 31, 2027", "February 1, 2027"]},
     {"origin": "SIN", "dest": "BKK",
      "dates": ["January 31, 2027", "February 1, 2027", "February 2, 2027"]},
-    # BKK-first order: DAC→BKK (5 BKK nights) then BKK→SIN (2 SIN nights to Feb 6)
+    # BKK-first order: DAC→BKK (5 BKK nights) then BKK→SIN (2-4 SIN nights to Feb 6)
     {"origin": "DAC", "dest": "BKK",
-     "dates": ["January 29, 2027", "January 30, 2027",
-               "January 31, 2027", "February 1, 2027"]},
+     "dates": ["January 27, 2027", "January 28, 2027", "January 29, 2027",
+               "January 30, 2027", "January 31, 2027", "February 1, 2027"]},
     {"origin": "BKK", "dest": "SIN",
      "dates": ["February 2, 2027", "February 3, 2027", "February 4, 2027"]},
 ]
@@ -763,16 +764,17 @@ ORDER_ROUTES = {"SIN-first": (("DAC", "SIN"), ("SIN", "BKK")),
                 "BKK-first": (("DAC", "BKK"), ("BKK", "SIN"))}
 
 TICKET2_SEARCHES = [
-    # TRIMMED 10 → 6 for the 25-minute cap (2026-08-01 evening): the diagonal
-    # around each order's ideal shape only.
+    # 7 pairs (2026-08-01 evening, 30-search allowance): the diagonal around
+    # each order's ideal shape + the Jan 28 4-SIN-night flex pair.
     # SIN-first: DAC→SIN + SIN→BKK; second leg arriving Feb 1 = the 5-night
     # Bangkok block against the Feb 6 return.
+    ("SIN-first", "January 28, 2027", "February 1, 2027"),   # 4 SIN nights
     ("SIN-first", "January 29, 2027", "January 31, 2027"),
     ("SIN-first", "January 30, 2027", "February 1, 2027"),
     ("SIN-first", "January 31, 2027", "February 2, 2027"),
     # BKK-first: DAC→BKK + BKK→SIN, 5 nights apart (Bangkok block first),
-    # landing SIN with ≥2 nights before the Feb 6 SIN→BOS return.
-    ("BKK-first", "January 28, 2027", "February 2, 2027"),
+    # landing SIN with 2-4 nights before the Feb 6 SIN→BOS return.
+    ("BKK-first", "January 28, 2027", "February 2, 2027"),   # 4 SIN nights
     ("BKK-first", "January 29, 2027", "February 3, 2027"),
     ("BKK-first", "January 30, 2027", "February 4, 2027"),
 ]

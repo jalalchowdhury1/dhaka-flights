@@ -129,17 +129,20 @@ def self_check(flights, openjaws, main, prev_entry=None, sg_tickets=None,
             warnings.append("🌴 Bali watch: fares exist but no Bali trip was "
                             "built — check the retired pairing rules")
 
-    # 7. Shape drift — the trip Jalal asked for is 2 IST / 2 SIN / 5 BKK
-    # nights, in either order. Singapore is a hard MINIMUM of 2 since
-    # 2026-07-27 (combo prefers ≥2 and flags a 1-night fallback day); this
-    # warning still fires on ANY drift — a 3-night Singapore or an off-shape
-    # day should never be discovered at the airport.
+    # 7. Shape drift — the trip is 2 IST / 5 BKK nights, with Singapore a
+    # 2-4-night FLEX BAND (Jalal 2026-08-01: "isn't a hardline. you can take
+    # it up to 3 or even 4 if its cheaper") — 3-4 SIN nights are a normal
+    # outcome, NOT a warning; outside the band still gets flagged loudly.
     if main:
         for got, want, what in ((main.get("ist_nights"), 2, "Istanbul"),
-                                (main.get("sg_nights"), 2, "Singapore"),
                                 (main.get("bkk_nights"), 5, "Bangkok")):
             if isinstance(got, int) and got != want:
                 warnings.append(f"today's cheapest trip gives {got} {what} "
                                 f"night{'s' if got != 1 else ''}, not {want}")
+        sg = main.get("sg_nights")
+        if isinstance(sg, int) and not 2 <= sg <= 4:
+            warnings.append(f"today's cheapest trip gives {sg} Singapore "
+                            f"night{'s' if sg != 1 else ''} — outside the "
+                            f"2-4-night band")
 
     return warnings

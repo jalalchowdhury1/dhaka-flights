@@ -229,12 +229,13 @@ def best_combos(flights, top_n=3) -> list:
 # ── Singapore-detour variant (2026-07-18) ──────────────────────────────────
 # Dhaka a few nights shorter, ≥2 nights in Singapore en route to Bali. Kept as
 # an isolated parallel path so the direct-trip ranking is never destabilized.
-# MINIMUM 2 Singapore nights (Jalal 2026-07-27: "make sure that it's a minimum
-# of 2 nights of Singapore" — an overnight DAC→SIN had priced a 1-night ticket
-# below every 2-night option and headlined the trip). A ≥2-night middle always
-# outranks a shorter one; price only decides within a tier. A <2-night middle
-# is a flagged last resort so the trip never silently disappears.
+# Singapore nights are a FLEX BAND, not a fixed number (Jalal 2026-07-27 +
+# 2026-08-01: "minimum of 2 nights" … "isn't a hardline. you can take it up
+# to 3 or even 4 if its cheaper in terms of the flight"). A 2-4-night middle
+# always outranks one outside the band; price decides within it. An
+# out-of-band day survives only flagged so the trip never silently disappears.
 MIN_SG_NIGHTS = 2
+MAX_SG_NIGHTS = 4
 
 
 def _sg_middles(flights, sg_tickets):
@@ -486,7 +487,7 @@ def order_trip(flights, openjaws, tickets2, order_key):
             (m, bkk_nights, sin_nights, dhaka_days))
 
     def _sg_ok(pool):
-        return [t for t in pool if t[2] >= MIN_SG_NIGHTS]
+        return [t for t in pool if MIN_SG_NIGHTS <= t[2] <= MAX_SG_NIGHTS]
     pool = _sg_ok(exact) or _sg_ok(near) or exact or near
     if not pool:
         return None
@@ -507,6 +508,9 @@ def order_trip(flights, openjaws, tickets2, order_key):
         flags.append(f"only a {bkk_nights}-night Bangkok pairing today")
     if sin_nights < MIN_SG_NIGHTS:
         flags.append(f"only a {sin_nights}-night Singapore pairing today")
+    elif sin_nights > MAX_SG_NIGHTS:
+        flags.append(f"a {sin_nights}-night Singapore stay — beyond the "
+                     f"{MAX_SG_NIGHTS}-night comfort band")
 
     return {
         "name": f"{cfg['label']} · {m['kind']} middle",

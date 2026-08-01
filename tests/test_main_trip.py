@@ -183,3 +183,28 @@ def test_two_oneway_middle_wins_when_cheaper():
     assert t["total"] == 3600 + 700
     assert t["sg_ticket"] is None
     assert len(t["legs"]) == 2
+
+
+def test_three_or_four_singapore_nights_win_unflagged_when_cheaper():
+    # 2026-08-01: "The singapore one isn't a hardline. you can take it up to
+    # 3 or even 4 if its cheaper in terms of the flight."
+    four_night = dict(TICKET2, out_date="January 28, 2027",
+                      out_arrive="January 28, 2027", price_total=800,
+                      airline="Biman", link="http://t2flex")
+    t = main_trip(FLIGHTS, [TICKET1], SG_TICKETS + [four_night])
+    assert t["sg_nights"] == 4
+    assert t["total"] == 3600 + 800
+    assert t["valid"] is True and t["flag"] is None
+
+
+def test_five_singapore_nights_survive_only_flagged():
+    five_night = dict(TICKET2, out_date="January 27, 2027",
+                      out_arrive="January 27, 2027", price_total=500,
+                      airline="Biman", link="http://t2long")
+    t = main_trip([], [TICKET1], [five_night])   # only option → kept, flagged
+    assert t["sg_nights"] == 5
+    assert t["valid"] is False
+    assert "comfort band" in t["flag"]
+    # …but never beats an in-band option, even a pricier one:
+    t2 = main_trip(FLIGHTS, [TICKET1], SG_TICKETS + [five_night])
+    assert t2["sg_nights"] == 2 and t2["total"] == 4600
