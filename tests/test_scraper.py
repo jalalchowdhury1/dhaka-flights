@@ -50,15 +50,14 @@ def test_parse_results_nonstop_without_layover():
 
 
 def test_legs_config_is_the_ticket2_middles_both_orders():
-    # 2026-08-01: one trip, two orders. The long legs are priced solely as
+    # 2026-08-01: one trip, two orders; trimmed same evening to the 25-minute
+    # cap (Jan 27–28 budget dates retired). The long legs are priced solely as
     # Ticket ①, so the one-way searches are the two Dhaka→city1→city2 middles.
     assert [(l["origin"], l["dest"]) for l in LEGS] == [
         ("DAC", "SIN"), ("SIN", "BKK"), ("DAC", "BKK"), ("BKK", "SIN")]
-    assert sum(len(l["dates"]) for l in LEGS) == 18
-    # Both DAC exits cover Jan 27–Feb 1: Jan 29+ pairs into the on-shape trip;
-    # Jan 27–28 catch the 💸 budget companion's leave-Dhaka-early deals.
+    assert sum(len(l["dates"]) for l in LEGS) == 14
     for leg in (LEGS[0], LEGS[2]):
-        assert "January 27, 2027" in leg["dates"]
+        assert "January 27, 2027" not in leg["dates"], "budget dates retired"
         assert "January 29, 2027" in leg["dates"]
     # SIN-first: SIN→BKK arriving Feb 1 gives the 5-night Bangkok block.
     assert "February 1, 2027" in LEGS[1]["dates"]
@@ -99,9 +98,9 @@ def test_scrape_all_retries_route_once_then_moves_on(monkeypatch):
     monkeypatch.setattr(scraper.time, "sleep", lambda s: None)
     result = scraper.scrape_all()
     assert scraper.DIAG["aborted_early"] is False
-    # 18 searches: first call empty + retry, rest succeed first try = 19 calls
-    assert calls["n"] == 19
-    assert len(result) == 18
+    # 14 searches: first call empty + retry, rest succeed first try = 15 calls
+    assert calls["n"] == 15
+    assert len(result) == 14
 
 
 def test_bkk_picker_survives_the_input_echo_and_bangkok_yai():
@@ -118,3 +117,22 @@ def test_bkk_picker_survives_the_input_echo_and_bangkok_yai():
         "[0-4] option: Suvarnabhumi Airport BKK 17 mi to destination",
     ])
     assert _pick_airport(json.dumps({"tree": tree}), "BKK") == "@0-3"
+
+
+def test_browser_session_is_reused_until_marked_dirty(monkeypatch):
+    # 2026-08-01 evening: one session per RUN (the per-search restart cost
+    # ~35-40s each). A dirty mark — blank page, exception — must force a
+    # fresh stop/env cycle on the next search.
+    import scraper
+    cmds = []
+    monkeypatch.setattr(scraper, "_run", lambda c: cmds.append(c) or "")
+    monkeypatch.setattr(scraper.time, "sleep", lambda s: None)
+    scraper._session_dirty()
+    scraper._ensure_session()
+    scraper._ensure_session()
+    scraper._ensure_session()
+    assert cmds.count("browse env local") == 1, "session must be reused"
+    scraper._session_dirty()
+    scraper._ensure_session()
+    assert cmds.count("browse env local") == 2, "dirty mark must force restart"
+    scraper._session_dirty()

@@ -55,7 +55,9 @@ def main():
     # 🌴 comparison watch: the retired Bali trip, scraped LAST so a throttled
     # night hurts the benchmark before it hurts the product.
     bali_t1, bali_sg, bali_legs = scrape_bali_watch()
-    flights += bali_legs                      # SIN→DPS rows ride along
+    flights += bali_legs
+    from scraper import end_session
+    end_session()                             # one browser session per run
 
     if not (tickets1 or sg_tickets or flights):
         from notify_telegram import send_message

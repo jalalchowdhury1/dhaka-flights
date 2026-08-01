@@ -23,32 +23,54 @@ as **two purchases**, and everything in the code is named for them:
 | **Ticket ①** | BOS→IST + IST→DAC + **{SIN or BKK}→BOS**, one multi-city ticket per order | `STOPOVER_SEARCHES` = `TICKET1_SIN_RETURN` + `TICKET1_BKK_RETURN` (kind `stopover2`, `ret_city` keys the order) |
 | **Ticket ②** | DAC→BKK→SIN (BKK-first) or DAC→SIN→BKK (SIN-first) — one multi-city ticket **or** two one-ways, whichever is cheaper | `TICKET2_SEARCHES` (order-tagged) + the four `LEGS` |
 
-Every night at midnight it scrapes those 30 searches (2 Ticket ① + 10 Ticket ②
-pairs + 18 one-way leg×dates) **plus the 🌴 Bali watch (11 more searches — see
-below), ~41 total ≈ 33 min**, prices both orders, self-checks, writes a Google
-Sheet, Telegrams the result (with per-leg baggage + same-date alternatives),
-and publishes `site/data.json` for **dhaka-flights.vercel.app**.
+Every night at midnight it scrapes **25 searches ≈ 17–20 min** (2 Ticket ① +
+6 Ticket ② pairs + 14 one-way leg×dates + the 3-search 🌴 Bali watch —
+trimmed from 41 on 2026-08-01 evening, Jalal: "no more than 25 minutes"),
+prices both orders, self-checks, writes a Google Sheet, Telegrams the result
+(with per-leg baggage + same-date alternatives + the 🏨 hotel plan), and
+publishes `site/data.json` for **dhaka-flights.vercel.app**.
 Spec: `docs/superpowers/specs/2026-08-01-bangkok-singapore-swap-design.md`.
+
+**Speed rules (2026-08-01 evening — protect the 25-min cap):**
+1. ONE browser session per RUN (`scraper._ensure_session`): the old
+   per-search stop→env→open cycle cost ~35-40s each. Blank pages/exceptions
+   call `_session_dirty()` so the existing retry paths restart the browser;
+   `end_session()` is called once by the runners after all scraping. Never
+   reintroduce a per-search `browse stop`.
+2. Adding a search costs ~45-60s of nightly runtime — anything new must fit
+   the cap or displace something.
 
 **🌴 Bali comparison watch (2026-08-01 evening, Jalal: "keep another tab open
 for the original bali trip. i want to be able to compare"):** the RETIRED
 original trip (BOS→IST 2n→DAC→SIN 2n→Bali 5n→BOS) is still scraped nightly —
 `scraper.scrape_bali_watch()` runs LAST (a throttled night degrades the
-benchmark before the product) using the retired configs: `ISTANBUL2_SEARCH`
-(DPS-return Ticket ①), `SG_TICKET_SEARCHES`, and the SIN→DPS dates from
-`BALI_LEGS` (DAC→SIN is shared with the main LEGS). The trip is built by the
-retired `combo.main_trip_bali`, rides in the payload as `bali` (with
+benchmark before the product): `ISTANBUL2_SEARCH` (DPS-return Ticket ①) +
+the two `BALI_WATCH_PAIRS` one-ticket middles = 3 searches (slimmed from 11
+for the cap; no one-way middles — a consistent yardstick beats exhaustive
+coverage for a benchmark). The trip is built by the retired
+`combo.main_trip_bali`, rides in the payload as `bali` (with
 `delta_vs_main`), history key `bali_total`, Sheet column "🌴 Bali $", a 🌴
 Telegram line, and the site's "🌴 Bali (old)" tab; the chart's Bali line
 stitches pre-swap `main_total` history to nightly `bali_total`. It is a
 BENCHMARK, not a bookable product: no alerts fire on it, and sanity raises
 ONE warning when it's missing (never per-search noise).
 
+**🏨 Hotel integration (`hotels.py`, 2026-08-01 evening):** the Marriott
+award stay rides with the trip — payload `hotel` (Bangkok: The Athenee,
+Luxury Collection; quality bar = "top notch … we did the kempinsky last
+time") and `bali.hotel` (The Laguna, the old plan). Stay DATES are derived
+nightly from the winning trip's shape (order-aware); POINTS figures are
+CURATED live-checked references with a CHECKED date, like baggage.py — NOT
+scraped (marriott.com is bot-guarded and dynamic; nightly scraping would
+blow the cap). A ≠5-night pairing gets a loud 5th-night-free warning.
+Refresh the numbers by re-running the hotel sweep, then bump CHECKED.
+
 **💸 Budget companion (`combo.budget_trip`, 2026-07-27):** alongside the main
 trip, the cheapest version of the SAME trip — same Ticket ① (and therefore the
 same ORDER), same 5-night Bangkok block — with the minimum-2-Singapore-nights
-rule waived (≥1 night) and the Dhaka departure free to shift (both DAC exits
-scraped from Jan 27). Only shown when STRICTLY cheaper than the main trip
+rule waived (≥1 night) and the Dhaka departure free to shift WITHIN the
+tracked grid (the Jan 27–28 early-exit dates were retired 2026-08-01 evening
+for the 25-min cap). Only shown when STRICTLY cheaper than the main trip
 (else `budget` is None and nothing renders); carries `savings` + human `diffs`
 vs main. Surfaces as a 💸 block in Telegram, a collapsible card on the site,
 `budget_total` in history/data.json, and the Sheet History column "💸 Budget $"
@@ -97,14 +119,15 @@ launchd 12:00am + 2:00am retry slot (com.jalal.dhaka-flights.plist, parallel wit
                                        up to TICKET1_ATTEMPTS=3 tries each
                                        (nothing else can substitute, so they run
                                        FIRST and retry hardest), no airline filter
-               scrape_sg_tickets_all() Ticket ② as one ticket — 10 multi-city
+               scrape_sg_tickets_all() Ticket ② as one ticket — 6 multi-city
                                        searches (TICKET2_SEARCHES, order-tagged:
-                                       6 DAC→SIN→BKK + 4 DAC→BKK→SIN; SEPARATE
+                                       3 DAC→SIN→BKK + 3 DAC→BKK→SIN; SEPARATE
                                        list; the open-jaw pairing loop would
                                        mis-handle them)
-               scrape_all()            Ticket ② as two one-ways — 18 searches
-                                       (LEGS: DAC→SIN + DAC→BKK Jan 27–Feb 1,
+               scrape_all()            Ticket ② as two one-ways — 14 searches
+                                       (LEGS: DAC→SIN + DAC→BKK Jan 29–Feb 1,
                                        SIN→BKK Jan 31–Feb 2, BKK→SIN Feb 2–4)
+               scrape_bali_watch()     🌴 benchmark, runs LAST — 3 searches
         │  drives real Chrome via the `browse` CLI (a11y-tree snapshots)
         ▼
   combo.py     ORDERS             the two city orders: route pair + Ticket ①
@@ -271,8 +294,8 @@ reason.
 - Ticket ① is fixed to BOS→IST Jan 4 / IST→DAC Jan 7 / {SIN|BKK}→BOS Feb 6.
   Other outbound or return dates would change the trip's shape, so they're a
   product decision, not a config tweak — ask before adding.
-- **Killed-run gotcha (2026-07-18):** a full run is ~33 min (41 searches:
-  both-orders rework + the 🌴 Bali watch, 2026-08-01; it was ~14 min at 17). Never
+- **Killed-run gotcha (2026-07-18):** a full run is ~17-20 min (25 searches
+  with one browser session per run, 2026-08-01 evening). Never
   run it inside a harness/tool with a ≤10-min timeout — it gets SIGKILLed
   mid-scrape (no stamp written, no output flushed with buffered stdout). Manual
   runs: `nohup … python3 -u run_daily.py > log 2>&1 &` and watch the log. The
@@ -295,10 +318,12 @@ reason.
   `ticket1_options`, `ticket2_options` (+ retired `best_structures` /
   `best_combos` / `best_singapore` / `cheapest_by_leg` / `*_bali`)
 - `baggage.py` — sourced per-carrier allowance table; `annotate`, `warnings` (§4c)
+- `hotels.py` — curated Marriott award-stay references + `hotel_plan(trip)`
+  (order-aware stay dates; points are checked references, never scraped)
 - `alerts.py` — buy-signal stages, price context, countdown, change diff (§4d)
 - `publish.py` — `build_today` → payload → `write_payload` (backup, write, push)
 - `sheet_writer.py`, `notify_telegram.py` — outputs
 - `site/` — static dashboard (index.html) + data.json (machine-written)
 - `main.py` — manual run: scrape + sheet + terminal summary (no Telegram/publish)
-- `tests/` — pytest suite (129 tests; `test_main_trip.py` holds the shared trip
+- `tests/` — pytest suite (143 tests; `test_main_trip.py` holds the shared trip
   fixtures, `test_baggage.py` guards the allowance table's honesty)

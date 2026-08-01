@@ -16,6 +16,8 @@ def main():
     tickets1 = scrape_tickets_all()
     sg_tickets = scrape_sg_tickets_all()
     flights = scrape_all()
+    from scraper import end_session
+    end_session()                             # one browser session per run
 
     if not (tickets1 or sg_tickets or flights):
         print("Nothing scraped. Check the browse daemon (see AGENTS.md §5.2).")

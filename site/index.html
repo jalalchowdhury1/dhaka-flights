@@ -340,6 +340,25 @@ function sgTicketLine(t) {
     <span class="price">${usd(t.price_total)} ${bookBtn(t.link)}</span></div>`;
 }
 
+/* 🏨 The Marriott award stay that goes with a trip (points are CHECKED
+   reference values, not a live quote; dates follow tonight's winner). */
+function hotelCard(h) {
+  if (!h) return "";
+  const pts = Object.entries(h.points || {}).map(([w, p]) =>
+    `<b>${p.toLocaleString()}</b> pts (${w})`).join(" · ");
+  return `<div class="card">
+    <b>🏨 ${esc(h.property)}</b>
+    <div style="margin-top:4px">${esc(h.checkin)}–${esc(h.checkout)} · ${h.nights ?? "?"} nights ·
+      ${pts}${h.fifth_night_free ? ` · <span class="badge good">5th night free ✓</span>` : ""}</div>
+    ${h.warn ? `<div style="margin-top:6px;color:var(--warn-fg)">⚠️ ${esc(h.warn)}</div>` : ""}
+    ${h.points_note ? `<div class="muted" style="margin-top:6px">${esc(h.points_note)}</div>` : ""}
+    <div class="muted" style="margin-top:6px">${esc(h.note || "")}</div>
+    ${h.runner_up ? `<div class="muted" style="margin-top:4px">Runners-up: ${esc(h.runner_up)}</div>` : ""}
+    <div class="muted" style="margin-top:6px">Cash reference: ${esc(h.cash_ref || "—")} ·
+      award pricing is dynamic — figures live-checked ${esc(h.checked)}; confirm on marriott.com before booking.</div>
+  </div>`;
+}
+
 /* 🌴 The retired trip, still scraped nightly as a benchmark (2026-08-01). */
 function renderBali(d) {
   const b = d.bali;
@@ -356,9 +375,10 @@ function renderBali(d) {
       `Both trips price identically tonight.`;
     html = `<div class="card" style="margin-top:16px"><b>🌴 The original trip, kept as a benchmark</b>
       <div class="muted" style="margin-top:4px">BOS → Istanbul 2n → Dhaka → Singapore 2n → Bali 5n → BOS —
-      dropped 2026-08-01 (dengue tail risk) but still scraped nightly so the price gap stays visible.</div>
+      dropped 2026-08-01 (dengue tail risk) but still scraped nightly so the price gap stays visible.
+      Flight totals are cash; add the hotel below for the full picture.</div>
       ${line ? `<div style="margin-top:8px">${line}</div>` : ""}</div>`
-      + timeline(b) + structureCard(b, true);
+      + timeline(b) + structureCard(b, true) + hotelCard(b.hotel);
   }
   document.getElementById("view-bali").innerHTML = html;
 }
@@ -647,6 +667,7 @@ function renderToday(d) {
         true);
     }
     html += sec("🗓 Trip plan — dates, flights, layovers, baggage & stays", tripPlan(main), true);
+    if (d.hotel) html += sec("🏨 Hotel — Marriott points, 5th night free", hotelCard(d.hotel), true);
     html += sec("🧳 Baggage, leg by leg", baggageCard(main), true);
 
     const t2 = d.ticket2_options || [];

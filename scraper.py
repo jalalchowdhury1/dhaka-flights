@@ -19,18 +19,20 @@ from typing import Union
 # scrape_tickets_all(); the retired combo functions still work.
 LEGS = [
     # Ticket ② legs for BOTH orders, priced as one-ways — the cheaper of
-    # {2 one-ways, 1 multi-city ticket} wins inside combo.order_trip. Jan 27–28
-    # starts are the 💸 budget companion's early-Dhaka-exit dates (2026-07-27).
+    # {2 one-ways, 1 multi-city ticket} wins inside combo.order_trip.
+    # TRIMMED 2026-08-01 evening (Jalal: "no more than 25 minutes"): the
+    # Jan 27–28 early-Dhaka-exit budget dates are RETIRED — the 💸 companion
+    # still works, it just shifts dates within this grid only.
     # SIN-first order: DAC→SIN (2 SIN nights) then SIN→BKK (5 BKK nights to Feb 6)
     {"origin": "DAC", "dest": "SIN",
-     "dates": ["January 27, 2027", "January 28, 2027", "January 29, 2027",
-               "January 30, 2027", "January 31, 2027", "February 1, 2027"]},
+     "dates": ["January 29, 2027", "January 30, 2027",
+               "January 31, 2027", "February 1, 2027"]},
     {"origin": "SIN", "dest": "BKK",
      "dates": ["January 31, 2027", "February 1, 2027", "February 2, 2027"]},
     # BKK-first order: DAC→BKK (5 BKK nights) then BKK→SIN (2 SIN nights to Feb 6)
     {"origin": "DAC", "dest": "BKK",
-     "dates": ["January 27, 2027", "January 28, 2027", "January 29, 2027",
-               "January 30, 2027", "January 31, 2027", "February 1, 2027"]},
+     "dates": ["January 29, 2027", "January 30, 2027",
+               "January 31, 2027", "February 1, 2027"]},
     {"origin": "BKK", "dest": "SIN",
      "dates": ["February 2, 2027", "February 3, 2027", "February 4, 2027"]},
 ]
@@ -140,6 +142,39 @@ def _snap() -> str:
     return _run("browse snapshot")
 
 
+# ── One browser session per RUN (2026-08-01 evening) ────────────────────────
+# The per-search stop→env→open cycle cost ~35-40s of pure overhead per search
+# — the single biggest chunk of the nightly runtime (Jalal: "no more than 25
+# minutes"). The session now starts once and is REUSED; any blank page or
+# exception marks it dirty so the NEXT search (or the existing retry paths)
+# restarts it. That keeps the 2026-07-15 wedge hardening: a broken browser
+# still gets a fresh session before another attempt.
+_SESSION_STARTED = False
+
+
+def _ensure_session(fresh: bool = False) -> None:
+    global _SESSION_STARTED
+    if fresh or not _SESSION_STARTED:
+        _run("browse stop")
+        time.sleep(1)
+        _run("browse env local")
+        _SESSION_STARTED = True
+
+
+def _session_dirty() -> None:
+    global _SESSION_STARTED
+    _SESSION_STARTED = False
+
+
+def end_session() -> None:
+    """Call ONCE when a run's scraping is finished — never between searches."""
+    _session_dirty()
+    try:
+        _run("browse stop")
+    except Exception as e:
+        print(f"  WARN: browse stop failed during cleanup: {e}")
+
+
 # Google streams its results in after the page URL changes. A FIXED sleep
 # snapshots an empty list whenever the Mac is busy — seen live 2026-07-25: the
 # search URL was right, the tree had 153 lines and zero fares, and the run
@@ -172,9 +207,7 @@ def scrape_route(origin: str, dest: str, depart: str) -> list:
     """One-way search. depart is human-readable e.g. 'January 4, 2027'."""
     results = []
     try:
-        _run("browse stop")
-        time.sleep(1)
-        _run("browse env local")
+        _ensure_session()
         _run("browse open https://www.google.com/travel/flights?hl=en&curr=USD&gl=us")
         time.sleep(4)
         snap = _snap()
@@ -208,6 +241,7 @@ def scrape_route(origin: str, dest: str, depart: str) -> list:
         # a form that doesn't exist and reporting a bogus 0-flights result.
         if "Where from" not in _get_tree(snap):
             DIAG["blank_pages"] += 1
+            _session_dirty()          # retry paths get a fresh browser
             print("  ERROR: Flights page never loaded (blank/stub tree) — "
                   "local browser problem, NOT a Google block")
             return results
@@ -322,14 +356,8 @@ def scrape_route(origin: str, dest: str, depart: str) -> list:
             print(f"  (tree saved to {DEBUG_TREE_FILE})")
 
     except Exception as e:
+        _session_dirty()
         print(f"  Error: {e}")
-    finally:
-        try:
-            _run("browse stop")
-        except Exception as e:
-            # Never let cleanup kill the whole daily run (it did on 2026-07-15).
-            print(f"  WARN: browse stop failed during cleanup: {e}")
-
     return results
 
 
@@ -461,15 +489,14 @@ def _scrape_multicity(legs: list, parse_fn, tag: str) -> list:
     describe the FIRST leg — each choice is priced with its cheapest completion."""
     results = []
     try:
-        _run("browse stop")
-        time.sleep(1)
-        _run("browse env local")
+        _ensure_session()
         _run("browse open https://www.google.com/travel/flights?hl=en&curr=USD&gl=us")
         time.sleep(4)
         snap = _snap()
 
         if "Where from" not in _get_tree(snap):
             DIAG["blank_pages"] += 1
+            _session_dirty()          # retry paths get a fresh browser
             print("  ERROR: Flights page never loaded (blank/stub tree)")
             return results
 
@@ -582,13 +609,8 @@ def _scrape_multicity(legs: list, parse_fn, tag: str) -> list:
                 f.write(f"{tag}\nurl: {result_url}\n\n{tree}")
             print(f"  (tree saved to {DEBUG_TREE_FILE})")
     except Exception as e:
+        _session_dirty()
         print(f"  Error: {e}")
-    finally:
-        try:
-            _run("browse stop")
-        except Exception as e:
-            print(f"  WARN: browse stop failed during cleanup: {e}")
-
     return results
 
 
@@ -741,18 +763,15 @@ ORDER_ROUTES = {"SIN-first": (("DAC", "SIN"), ("SIN", "BKK")),
                 "BKK-first": (("DAC", "BKK"), ("BKK", "SIN"))}
 
 TICKET2_SEARCHES = [
-    # SIN-first: DAC→SIN + SIN→BKK. Second leg pinned near Feb 1 (arrive BKK
-    # Feb 1 = the 5-night block to the Feb 6 return); Jan 27–28 outbounds are
-    # the 💸 budget companion's early-Dhaka-exit dates (2026-07-27).
-    ("SIN-first", "January 27, 2027", "February 1, 2027"),
-    ("SIN-first", "January 28, 2027", "February 1, 2027"),
+    # TRIMMED 10 → 6 for the 25-minute cap (2026-08-01 evening): the diagonal
+    # around each order's ideal shape only.
+    # SIN-first: DAC→SIN + SIN→BKK; second leg arriving Feb 1 = the 5-night
+    # Bangkok block against the Feb 6 return.
     ("SIN-first", "January 29, 2027", "January 31, 2027"),
     ("SIN-first", "January 30, 2027", "February 1, 2027"),
     ("SIN-first", "January 31, 2027", "February 2, 2027"),
-    ("SIN-first", "February 1, 2027", "February 3, 2027"),
     # BKK-first: DAC→BKK + BKK→SIN, 5 nights apart (Bangkok block first),
     # landing SIN with ≥2 nights before the Feb 6 SIN→BOS return.
-    ("BKK-first", "January 27, 2027", "February 1, 2027"),
     ("BKK-first", "January 28, 2027", "February 2, 2027"),
     ("BKK-first", "January 29, 2027", "February 3, 2027"),
     ("BKK-first", "January 30, 2027", "February 4, 2027"),
@@ -825,13 +844,22 @@ def scrape_sg_tickets_all() -> list:
 # 🌴 Bali comparison watch (2026-08-01 evening): the ORIGINAL trip stays
 # scraped nightly so the price gap vs the Bangkok rework stays visible
 # (Jalal: "keep another tab open for the original bali trip. i want to be
-# able to compare"). Uses the retired Bali configs; the DAC→SIN one-ways are
-# shared with the main LEGS, so only SIN→DPS is scraped extra here.
+# able to compare"). SLIMMED same day for the 25-minute cap: Ticket ① (DPS
+# return) + the two one-ticket middle pairs around the ideal shape — 3
+# searches, no one-way middles. It's a BENCHMARK, not a bookable product;
+# a consistent yardstick beats exhaustive coverage here.
+BALI_WATCH_PAIRS = [
+    ("January 29, 2027", "January 31, 2027"),
+    ("January 30, 2027", "February 1, 2027"),   # the ideal 2-SIN/5-Bali pair
+]
+
+
 def scrape_bali_watch():
     """(tickets1, sg_tickets, legs) for the retired Bali trip: Ticket ① with
-    the DPS→BOS return, DAC→SIN→DPS one-tickets, and the SIN→DPS one-way
-    dates. Runs LAST in the nightly order — the Bangkok trip is the product,
-    so a throttled night degrades the comparison before the headline."""
+    the DPS→BOS return + the BALI_WATCH_PAIRS one-ticket middles. Runs LAST
+    in the nightly order — the Bangkok trip is the product, so a throttled
+    night degrades the comparison before the headline. legs is always [] —
+    the one-way SIN→DPS middles were dropped for speed."""
     print("[bali-watch] Ticket ① (DPS return)")
     tickets1 = []
     for attempt in range(1, TICKET1_ATTEMPTS + 1):
@@ -841,26 +869,14 @@ def scrape_bali_watch():
         print(f"  0 results (attempt {attempt}/{TICKET1_ATTEMPTS}) — retrying...")
         time.sleep(5)
     sg = []
-    for i, (d1, d2) in enumerate(SG_TICKET_SEARCHES, 1):
-        print(f"[bali-watch sg-ticket {i}/{len(SG_TICKET_SEARCHES)}] {d1} + {d2}")
+    for i, (d1, d2) in enumerate(BALI_WATCH_PAIRS, 1):
+        print(f"[bali-watch sg-ticket {i}/{len(BALI_WATCH_PAIRS)}] {d1} + {d2}")
         r = scrape_sg_ticket(d1, d2)
         if not r:
             time.sleep(5)
             r = scrape_sg_ticket(d1, d2)
         sg += r
-    legs = []
-    for leg in BALI_LEGS:
-        if any(l["origin"] == leg["origin"] and l["dest"] == leg["dest"]
-               for l in LEGS):
-            continue                    # DAC→SIN is already scraped nightly
-        for date in leg["dates"]:
-            print(f"[bali-watch] {leg['origin']}→{leg['dest']} {date}")
-            r = scrape_route(leg["origin"], leg["dest"], date)
-            if not r:
-                time.sleep(5)
-                r = scrape_route(leg["origin"], leg["dest"], date)
-            legs += r
-    return tickets1, sg, legs
+    return tickets1, sg, []
 
 
 def scrape_tickets_all() -> list:

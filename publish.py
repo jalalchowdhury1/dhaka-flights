@@ -9,6 +9,7 @@ import subprocess
 
 import alerts
 import baggage
+import hotels
 from combo import budget_trip, main_trip, ticket1_options, ticket2_options
 
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -71,7 +72,8 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
         bali = dict(bali,
                     baggage=baggage.annotate(bali),
                     baggage_warnings=baggage.warnings(bali),
-                    baggage_checked=baggage.CHECKED)
+                    baggage_checked=baggage.CHECKED,
+                    hotel=hotels.hotel_plan(bali))
         if main:
             bali["delta_vs_main"] = bali["total"] - main["total"]
 
@@ -142,6 +144,9 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
         "main": main,
         "budget": budget,
         "bali": bali,
+        # 🏨 the Marriott award stay rides with the trip: reference points
+        # figures (hotels.CHECKED), stay dates derived from tonight's winner.
+        "hotel": hotels.hotel_plan(main),
         # "how much more is the non-US-Bangla option?" — with each airline's bag
         # rule alongside, because a $60 saving that drops 40 kg isn't a saving.
         "ticket1_options": _with_baggage(ticket1_options(openjaws, t1),

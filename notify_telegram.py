@@ -179,6 +179,16 @@ def build_message(payload: dict) -> str:
         for f in budget.get("legs", []):
             lines.append(_leg_line(f))
 
+    hotel = payload.get("hotel")
+    if hotel:
+        pts = " / ".join(f"{w} {p:,}" for w, p in (hotel.get("points") or {}).items())
+        lines.append(f"🏨 *{hotel['property']}* · {hotel['checkin']}–{hotel['checkout']} "
+                     f"({hotel['nights']}n) · ~{pts} pts"
+                     f"{' · 5th night FREE' if hotel.get('fifth_night_free') else ''}"
+                     f" _(checked {hotel['checked']})_")
+        if hotel.get("warn"):
+            lines.append(f"  ⚠️ {hotel['warn']}")
+
     bali = payload.get("bali")
     if bali:
         d = bali.get("delta_vs_main")
