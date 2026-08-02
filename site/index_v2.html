@@ -26,7 +26,7 @@
     --warn: #7a5200; --warn-bg: #fbf0d2;
     --bad:  #a4262c; --bad-bg:  #fbe4e4;
     --accent: var(--ink);
-    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+    --s1: #2a5da8; --s2: #c0562e; --s3: #178f6b; --s4: #a87b00;
     --shadow: 0 2px 10px rgb(26 43 73 / .14);
     --mono: ui-monospace, "SF Mono", Menlo, monospace;
   }
@@ -38,7 +38,7 @@
       --band: #111a2e; --band-ink: #e9ecf4;
       --good: #7fd49a; --good-bg: #14311f; --warn: #f0c86a; --warn-bg: #3a2c07;
       --bad: #f2a0a4; --bad-bg: #43181a; --shadow: none;
-      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+      --s1: #5a91e8; --s2: #d96536; --s3: #27a37b; --s4: #bb8626;
     }
   }
   /* Explicit overrides so the toggle beats the media query in BOTH directions. */
@@ -49,7 +49,7 @@
     --band: #111a2e; --band-ink: #e9ecf4;
     --good: #7fd49a; --good-bg: #14311f; --warn: #f0c86a; --warn-bg: #3a2c07;
     --bad: #f2a0a4; --bad-bg: #43181a; --shadow: none;
-    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+    --s1: #5a91e8; --s2: #d96536; --s3: #27a37b; --s4: #bb8626;
   }
   :root[data-theme="light"] {
     color-scheme: light;
@@ -59,7 +59,7 @@
     --good: #0f7b3f; --good-bg: #e7f2e9; --warn: #7a5200; --warn-bg: #fbf0d2;
     --bad: #a4262c; --bad-bg: #fbe4e4;
     --shadow: 0 2px 10px rgb(26 43 73 / .14);
-    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+    --s1: #2a5da8; --s2: #c0562e; --s3: #178f6b; --s4: #a87b00;
   }
 
   * { box-sizing: border-box; margin: 0; }
@@ -1111,11 +1111,253 @@ function renderStays(d) {
 
   return root;
 }
-function renderHistory(d) {
-  return el(`<div class="pass"><span class="micro">History</span>
-    <div class="muted" style="margin-top:6px">Screen under construction.</div></div>`);
+/* ---- History (#/history) — chart, per-night detail, Bali benchmark ----- */
+/* Categorical slots in fixed order (validated for CVD in both modes with the
+   dataviz checker 2026-08-02 on the boarding-pass surfaces — order is the
+   CVD-safety mechanism, don't reshuffle):
+   1 blue = Bangkok trip · 2 burnt orange = Bali · 3 teal = ① · 4 gold = ②. */
+const SERIES = [
+  {key:"trip", label:"⭐ Bangkok trip", v:"--s1", story:true,
+   get: h => h.date >= "2026-08-01" ? mainTotal(h) : null},
+  {key:"bali", label:"🌴 Bali (old)", v:"--s2", story:true,
+   get: h => h.bali_total ?? (h.date < "2026-08-01" ? mainTotal(h) : null)},
+  {key:"t1", label:"Ticket ①", v:"--s3", get: h => h.ticket1_total ?? null},
+  {key:"t2", label:"Ticket ②", v:"--s4", get: h => h.ticket2_total ?? null},
+];
+
+function niceTicks(lo, hi) {
+  const span = Math.max(hi - lo, 1);
+  const step = [250, 500, 1000, 2000, 5000].find(s => span / s <= 6) || 5000;
+  const start = Math.floor(lo / step) * step, end = Math.ceil(hi / step) * step;
+  const ticks = [];
+  for (let v = start; v <= end; v += step) ticks.push(v);
+  return {ticks, start, end};
 }
-function bindChartHover(root) { /* ported with the chart in Task 9 */ }
+
+function chart(history) {
+  const pts = (history || []).filter(h => SERIES.some(s => s.get(h) != null));
+  if (pts.length < 2) return `<div class="muted" style="margin-top:8px">Price history appears after a couple of days of data.</div>`;
+  const W = Math.max(340, Math.min(720, pts.length * 56)), H = 230,
+        L = 52, R = 14, T = 12, B = 26;
+  const vals = pts.flatMap(p => SERIES.map(s => s.get(p)).filter(v => v != null));
+  const {ticks, start, end} = niceTicks(Math.min(...vals), Math.max(...vals));
+  const y = v => T + (H - T - B) * (1 - (v - start) / (end - start || 1));
+  const x = i => L + (W - L - R) * (pts.length === 1 ? .5 : i / (pts.length - 1));
+  let g = "";
+  for (const v of ticks) {
+    g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--rule)" stroke-width="1"/>
+          <text x="${L - 7}" y="${y(v) + 3.5}" text-anchor="end" font-size="10.5" fill="var(--ink-3)">$${v.toLocaleString()}</text>`;
+  }
+  for (const s of SERIES) {
+    const sp = pts.map((p, i) => s.get(p) != null ? [x(i), y(s.get(p))] : null).filter(Boolean);
+    if (!sp.length) continue;
+    g += `<polyline points="${sp.map(p => p.join(",")).join(" ")}" fill="none"
+          stroke="var(${s.v})" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    const [ex, ey] = sp[sp.length - 1];
+    g += `<circle cx="${ex}" cy="${ey}" r="4.5" fill="var(${s.v})" stroke="var(--card)" stroke-width="2"/>`;
+  }
+  // Selective end labels: only the two story series, collision-nudged apart.
+  const labs = SERIES.filter(s => s.story)
+    .map(s => { const lastVal = [...pts].reverse().map(p => s.get(p)).find(v => v != null);
+                return lastVal != null ? {s, v: lastVal, y: y(lastVal)} : null; })
+    .filter(Boolean).sort((a, b) => a.y - b.y);
+  for (let i = 1; i < labs.length; i++)
+    if (labs[i].y - labs[i - 1].y < 14) labs[i].y = labs[i - 1].y + 14;
+  for (const l of labs) {
+    g += `<text x="${W - R - 2}" y="${Math.max(T + 9, l.y - 8)}" font-size="11" font-weight="650"
+          fill="var(--ink)" text-anchor="end">${usd(l.v)}</text>`;
+  }
+  // Hover targets: one column per date, tooltip built from data attributes.
+  pts.forEach((p, i) => {
+    if (i === 0 || i === pts.length - 1 || pts.length <= 8 || i % Math.ceil(pts.length / 7) === 0)
+      g += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle" font-size="10" fill="var(--ink-3)">${p.date.slice(5).replace("-", "/")}</text>`;
+    const rows = SERIES.map(s => s.get(p) != null
+      ? `<div class="tip-row"><span class="dot" style="background:var(${s.v})"></span>${esc(s.label)}<span class="tip-v">${usd(s.get(p))}</span></div>` : "").join("");
+    const half = (W - L - R) / Math.max(pts.length - 1, 1) / 2;
+    g += `<rect class="chart-hit" x="${x(i) - half}" y="${T}" width="${half * 2}" height="${H - T - B}"
+          fill="transparent" data-px="${x(i)}" data-tip="${esc(`<div class='tip-date'>${p.date}</div>` + rows)}"/>`;
+  });
+  const legend = `<div class="legend">${SERIES.map(s =>
+    `<span><span class="dot" style="background:var(${s.v})"></span>${esc(s.label)}</span>`).join("")}</div>`;
+  return `${legend}<div class="chart-wrap"><div class="scroll-x">
+    <svg width="${W}" height="${H}" role="img" aria-label="Price history: Bangkok trip, Bali benchmark, and both tickets">
+      <line class="chart-vline" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="var(--ink-3)" stroke-width="1" visibility="hidden"/>
+      ${g}</svg></div><div class="chart-tip"></div></div>
+    <div class="small" style="margin-top:6px">Before 1 Aug 2026 the tracked trip visited Bali instead of Bangkok —
+      the 🌴 line carries that history forward. Ticket ① / ② lines start 25 Jul 2026. Hover or tap a date for every value;
+      the night-by-night table below has the full detail.</div>`;
+}
+
+function bindChartHover(root) {
+  root.querySelectorAll(".chart-wrap").forEach(w => {
+    const tip = w.querySelector(".chart-tip");
+    const vline = w.querySelector(".chart-vline");
+    if (!tip || !vline) return;
+    w.querySelectorAll(".chart-hit").forEach(r => {
+      r.addEventListener("mouseenter", () => {
+        tip.innerHTML = r.dataset.tip;
+        tip.style.display = "block";
+        const px = parseFloat(r.dataset.px);
+        vline.setAttribute("x1", px); vline.setAttribute("x2", px);
+        vline.setAttribute("visibility", "visible");
+        const wrapW = w.clientWidth, tipW = tip.offsetWidth || 150;
+        tip.style.left = Math.max(0, Math.min(px + 12, wrapW - tipW - 4)) + "px";
+        tip.style.top = "8px";
+      });
+      r.addEventListener("mouseleave", () => {
+        tip.style.display = "none";
+        vline.setAttribute("visibility", "hidden");
+      });
+    });
+  });
+}
+
+/* ---------- night-by-night table of the tracked trip ---------- */
+const HCOLS = [
+  {key: "date",            label: "Date",            num: false},
+  {key: "_main",           label: "⭐ Trip $",        num: true},
+  {key: "ticket1_total",   label: "① $",             num: true},
+  {key: "ticket2_total",   label: "② $",             num: true},
+  {key: "ticket1_airline", label: "① airline",       num: false},
+  {key: "ticket2_airline", label: "② airline",       num: false},
+  {key: "order",           label: "Order",           num: false},
+  {key: "bali_total",      label: "🌴 Bali $",        num: true},
+  {key: "_nights",         label: "IST/DAC/SIN/5n",  num: false},
+  {key: "_home",           label: "Home",            num: false},
+];
+let hSort = {key: "date", dir: -1};
+
+function flattenHistory(history) {
+  return (history || []).map(h => ({
+    ...h,
+    _main: mainTotal(h),
+    _home: h.home ?? (h.best_detail ? h.best_detail.home : null) ?? "—",
+    _nights: [h.ist_nights, h.dhaka_days, h.sg_nights, h.bkk_nights ?? h.bali_nights]
+      .every(v => v == null) ? "—"
+      : [h.ist_nights, h.dhaka_days, h.sg_nights, h.bkk_nights ?? h.bali_nights]
+          .map(v => v == null ? "–" : v).join("/"),
+  }));
+}
+
+function detailHTML(h) {
+  const d = h.best_detail;
+  if (!d) return `<span class="muted">No trip was priced this day.</span>`;
+  const oi = orderInfo(d);
+  const stays = [oi.c1, oi.c2].map(c => `${CITY[c.code]} ${c.n ?? "–"} nights`).join(" · ");
+  const bags = (d.baggage || []).map(b =>
+    `<div class="muted">🧳 ${esc(b.route)} · ${esc(b.carrier)}: ${esc(b.checked)}</div>`).join("");
+  return `<div class="muted" style="margin-bottom:4px">${esc(d.name)} · Istanbul ${d.ist_nights ?? "–"} nights · Dhaka ${d.dhaka_days} days · ${stays} · home ${esc(d.home)}</div>`
+    + (d.openjaw ? ojLine(d.openjaw) : "") + (d.sg_ticket ? sgTicketLine(d.sg_ticket) : "")
+    + (d.legs || []).map(legLine).join("") + bags;
+}
+
+/* Which way are prices heading? Today vs first tracked day + low/high marks. */
+function trendSummary(history) {
+  const md = s => { const t = Date.parse(s + "T12:00"); return isNaN(t) ? s :
+    new Date(t).toLocaleDateString("en-US", {month: "short", day: "numeric"}); };
+  const series = [
+    {label: "⭐ Bangkok trip", get: h => h.date >= "2026-08-01" ? mainTotal(h) : null},
+    {label: "🌴 Bali (old)", get: h => h.bali_total ?? null},
+    {label: "🎫 Ticket ①", get: h => h.ticket1_total ?? null},
+    {label: "✈️ Ticket ②", get: h => h.ticket2_total ?? null},
+  ];
+  const rows = series.map(s => {
+    const pts = history.map(h => ({d: h.date, v: s.get(h)})).filter(p => p.v != null);
+    if (!pts.length) return "";
+    const cur = pts[pts.length - 1];
+    if (pts.length < 2)
+      return `<div style="margin-top:4px">${s.label}: <b>${usd(cur.v)}</b> <span class="muted">— first day tracked</span></div>`;
+    const first = pts[0], d = cur.v - first.v;
+    const dir = d === 0 ? `<span class="muted">flat since ${md(first.d)}</span>` :
+      d < 0 ? `<span style="color:var(--good);font-weight:600">▼ ${usd(-d)} since ${md(first.d)}</span>`
+            : `<span style="color:var(--warn);font-weight:600">▲ ${usd(d)} since ${md(first.d)}</span>`;
+    const lo = pts.reduce((a, b) => b.v < a.v ? b : a);
+    const hi = pts.reduce((a, b) => b.v > a.v ? b : a);
+    return `<div style="margin-top:4px">${s.label}: <b>${usd(cur.v)}</b> · ${dir}
+      <span class="muted">· low ${usd(lo.v)} (${md(lo.d)}) · high ${usd(hi.v)} (${md(hi.d)})</span></div>`;
+  }).join("");
+  return `<div style="font-size:.84rem;margin-top:10px;border-top:1px solid var(--rule);padding-top:8px">${rows}</div>`;
+}
+
+function nightTableCard(hRows) {
+  const wrap = el("", "pass scroll-x");
+  const paint = () => {
+    const dir = hSort.dir, k = hSort.key;
+    const rows = [...hRows].sort((a, b) => {
+      const av = a[k], bv = b[k];
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      return (typeof av === "number" ? av - bv : String(av).localeCompare(String(bv))) * dir;
+    });
+    const head = HCOLS.map(c =>
+      `<th class="sortable ${c.num ? "num" : ""}" data-key="${c.key}">${c.label}` +
+      (hSort.key === c.key ? ` <span class="arrow">${dir === 1 ? "▲" : "▼"}</span>` : "") + `</th>`).join("");
+    const body = rows.map(h =>
+      `<tr class="clickable" title="Tap for that day's full trip detail">` +
+      HCOLS.map(c => `<td class="${c.num ? "num" : ""}">${c.num ? usd(h[c.key]) : esc(h[c.key] ?? "—")}</td>`).join("") +
+      `</tr><tr class="detail-row" style="display:none"><td colspan="${HCOLS.length}">${detailHTML(h)}</td></tr>`).join("");
+    wrap.innerHTML = `<table><tr>${head}</tr>${body}</table>
+      <div class="small" style="margin-top:8px">Tap a column header to sort · tap a row for that day's airlines, layovers, baggage and booking links.
+      Dollar figures are totals for all 3 travelers. Days before 18 Jul 2026 predate this trip definition and show “—”;
+      the Ticket ① / ② split starts 25 Jul 2026; Bangkok replaced Bali on 1 Aug 2026.</div>`;
+    wrap.querySelectorAll("th.sortable").forEach(th => th.onclick = () => {
+      const key = th.dataset.key;
+      hSort = {key, dir: hSort.key === key ? -hSort.dir : (key === "date" ? -1 : 1)};
+      paint();
+    });
+    wrap.querySelectorAll("tr.clickable").forEach(tr => tr.onclick = () => {
+      const next = tr.nextElementSibling;
+      next.style.display = next.style.display === "none" ? "" : "none";
+    });
+  };
+  paint();
+  return wrap;
+}
+
+/* 🌴 The retired trip, still scraped nightly as a benchmark — both orders. */
+function baliWatchCard(d) {
+  const b = d.bali;
+  if (!b) return el(`<div class="pass muted">No Bali comparison in the
+    latest data yet — the original trip is scraped nightly alongside the Bangkok
+    trip and will appear here after the next run.</div>`);
+  const delta = b.delta_vs_main;
+  const line = delta == null ? "" :
+    delta > 0 ? `The old Bali trip costs <b>${usd(delta)} more</b> than the Bangkok trip tonight.` :
+    delta < 0 ? `The old Bali trip is <b>${usd(-delta)} cheaper</b> than the Bangkok trip tonight.` :
+    `Both trips price identically tonight.`;
+  const ob = b.other_bali;
+  const obLine = ob ? `<div class="muted" style="margin-top:4px">🔁 Other Bali order
+      (${esc(ob.order_label)}): ${usd(ob.total)} (${ob.delta > 0 ? "+" + usd(ob.delta) : usd(ob.delta)})</div>` : "";
+  return el(`<div class="pass">
+    <div class="pass-head"><span>🌴 Bali watch</span><span>${usd(b.total)}</span></div>
+    <b>The original trip, kept as a benchmark</b>
+    <div class="muted" style="margin-top:4px">BOS → Istanbul 2n → Dhaka → Bali + Singapore → BOS —
+    dropped 2026-08-01 (dengue tail risk) but still scraped nightly, in BOTH orders, so the
+    price gap stays visible. Tonight's cheaper Bali order: <b>${esc(b.order_label || "Singapore → Bali")}</b>.</div>
+    ${line ? `<div style="margin-top:8px">${line}</div>` : ""}${obLine}</div>`);
+}
+
+function renderHistory(d) {
+  const root = el("");
+  const hRows = flattenHistory(d.history);
+  add(root, () => el(`<span class="micro">Price trend</span>
+    <div class="pass">${chart(hRows)}${trendSummary(hRows)}</div>`));
+  add(root, () => {
+    const alerts = (d.alerts || []).map(a =>
+      `<div class="${a.includes("🚨") ? "" : "muted"}" style="margin-top:4px">${plain(a)}</div>`).join("");
+    const ctx = [d.price_context, d.countdown && String(d.countdown).replace(/📅 /, "")]
+      .filter(Boolean).map(plain).join(" · ");
+    if (!alerts && !ctx) return null;
+    return el(`<span class="micro" style="display:block;margin-top:16px">Where tonight sits</span>
+      <div class="pass">${alerts}${ctx ? `<div class="small" style="margin-top:${alerts ? "6" : "0"}px">📅 ${ctx}</div>` : ""}</div>`);
+  });
+  add(root, () => el(`<span class="micro" style="display:block;margin-top:16px">The trip, night by night</span>`));
+  add(root, () => nightTableCard(hRows));
+  add(root, () => el(`<span class="micro" style="display:block;margin-top:16px">The retired Bali benchmark</span>`));
+  add(root, () => baliWatchCard(d));
+  return root;
+}
 
 /* ================================ boot ==================================== */
 function renderNoDataScreen() {
