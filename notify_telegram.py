@@ -273,12 +273,15 @@ def build_message(payload: dict, core_only: bool = False) -> str:
 
 
 # The last-resort rung: fixed text (can't fail to render — no dict lookups,
-# no formatting that depends on the payload) plus a link like every other
-# rung, so a completely broken brief night still points at the dashboard.
+# no formatting that depends on the payload), warnings (if any) in the
+# middle, and the dashboard link LAST — same shape as every other rung,
+# which always ends on the link.
 MINIMAL_FALLBACK_TEXT = (
     "⚠️ tonight's brief could not be built — see cron.log; data may still "
-    f'have published.\n<a href="{SITE_URL}">dashboard</a>'
+    "have published."
 )
+MINIMAL_FALLBACK_LINK = f'<a href="{SITE_URL}">dashboard</a>'
+MINIMAL_FALLBACK_PLAIN = MINIMAL_FALLBACK_TEXT + "\n" + MINIMAL_FALLBACK_LINK
 
 
 def _safe_build(*args, **kwargs) -> Optional[str]:
@@ -304,13 +307,15 @@ def _safe_send(text: str) -> bool:
 
 
 def _minimal_fallback_message(payload: dict) -> str:
-    """The last rung: MINIMAL_FALLBACK_TEXT plus, if any, the first few
+    """The last rung: MINIMAL_FALLBACK_TEXT, then (if any) the first few
     self-check warnings — escaped like every other dynamic string in this
-    module — so a broken-brief night still says WHY it broke, not just
-    that it did."""
+    module — then the dashboard link LAST, so a broken-brief night still
+    says WHY it broke and still ends on the same link every other rung
+    ends on."""
     lines = [MINIMAL_FALLBACK_TEXT]
     for w in (payload.get("warnings") or [])[:3]:
         lines.append(f"⚠️ {esc_html(w)}")
+    lines.append(MINIMAL_FALLBACK_LINK)
     return "\n".join(lines)
 
 
@@ -320,10 +325,16 @@ def notify_cheapest(payload: dict) -> str:
     core-only, then a minimal static line naming why — rather than losing
     the night's message or raising and costing the run its publish step.
 
-    Returns the rung that actually sent: "full" | "core" | "minimal" |
-    "none" (nothing got through). run_daily.py uses this to decide whether
-    tonight's brief was good enough to count as done — a "minimal" night
-    should retry at the 2:00/4:00 slots, same as a no-trip night."""
+    Returns the rung that actually sent: "full" | "core" | "minimal". If
+    even the minimal send failed, the split that matters is WHY nothing
+    reached anyone: "none" means at least one real build (full or core)
+    succeeded — Telegram itself was unreachable, a delivery problem the
+    published data doesn't share in. "broken" means BOTH real builds
+    failed — a genuine payload/shape problem, the same class of trouble a
+    no-trip night is. run_daily.py stamps on "full"/"core"/"none" but not
+    on "minimal"/"broken" — the former three mean tonight's data is fine
+    even if Telegram never heard about it; the latter two mean tonight's
+    run needs another shot."""
     full = _safe_build(payload)
     if full is not None and _safe_send(full):
         print("Telegram notification sent.")
@@ -333,14 +344,15 @@ def notify_cheapest(payload: dict) -> str:
     if core is not None and _safe_send(core):
         print("Telegram notification sent (core-only fallback).")
         return "core"
+    built_ok = full is not None or core is not None
     print("Core-only fallback failed too — sending minimal static message...")
     try:
         minimal = _minimal_fallback_message(payload)
     except Exception as e:  # noqa: BLE001 — the last rung must not raise either
         print(f"minimal fallback message build failed too: {e}")
-        minimal = MINIMAL_FALLBACK_TEXT
+        minimal = MINIMAL_FALLBACK_PLAIN
     if _safe_send(minimal):
         print("Telegram notification sent (minimal fallback).")
         return "minimal"
     print("Telegram notification failed.")
-    return "none"
+    return "none" if built_ok else "broken"

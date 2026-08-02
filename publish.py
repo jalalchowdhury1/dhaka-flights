@@ -240,11 +240,23 @@ def write_payload(payload: dict) -> None:
             stderr = push.stderr or ""
             print(f"WARN: git push failed (attempt {attempt}/{PUSH_ATTEMPTS}): "
                   f"{stderr.strip()[:200]}")
+            # A GitHub-side rejection (a repo rule / push-protection hook,
+            # "[remote rejected] ... push declined due to a detected
+            # secret") is a different animal from a plain non-fast-forward:
+            # no amount of pulling fixes a blocked secret — this repo has
+            # hit push-protection before — so it gets its own fail-fast
+            # branch and its own advice instead of the wrong "pull" hint.
+            if "remote rejected" in stderr:
+                _telegram_warn(
+                    "⚠️ dhaka-flights: origin rejected the push (hook/"
+                    "push-protection) — see cron.log for git's message; "
+                    "this needs a human.")
+                break
             # A non-fast-forward rejection can't be fixed by waiting and
             # retrying — only a pull fixes it — so burning the remaining
             # backoff on more of the same rejection just delays the warning
             # that actually tells the user what to do.
-            if "rejected" in stderr or "non-fast-forward" in stderr:
+            if "non-fast-forward" in stderr or "fetch first" in stderr:
                 _telegram_warn(
                     "⚠️ dhaka-flights: origin/main has commits this Mac "
                     "doesn't have — run `git pull --rebase` in the repo, "
@@ -260,6 +272,13 @@ def write_payload(payload: dict) -> None:
                 "GitHub creds on the Mac mini.")
     except Exception as e:
         print(f"WARN: publish failed (daily run continues): {e}")
+        # The only failure path with no Telegram warning of its own — a
+        # serialization failure lands here BEFORE data.json is touched, so
+        # yesterday's file is safe, but the user still needs to know
+        # tonight's run never got that far.
+        _telegram_warn(
+            "⚠️ dhaka-flights: publish crashed before writing data.json — "
+            "dashboard keeps yesterday's data. See cron.log.")
 
 
 def publish(flights: list, openjaws: list, warnings: list = None,

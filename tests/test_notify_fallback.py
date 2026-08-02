@@ -3,8 +3,14 @@ a broken send_message) cost the run its Telegram message — the same
 never-raise contract publish.write_payload holds, applied to the notify
 step so a build/send failure can't kill the run before write_payload runs.
 It also reports back WHICH rung actually sent ("full" | "core" | "minimal"
-| "none") — run_daily.py uses that to decide whether tonight's brief was
-good enough to count as done."""
+| "none" | "broken") — run_daily.py uses that to decide whether tonight's
+brief was good enough to count as done. "none" and "broken" both mean
+nothing reached anyone, but for different reasons: "none" = a real build
+succeeded and only Telegram delivery failed (data is fine); "broken" =
+neither the full nor the core build ever rendered (a genuine payload
+problem) — collapsing that distinction was the exact hole a prior review
+found (a missing-total payload + a dead send_message used to both read as
+plain "none")."""
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import notify_telegram
@@ -61,12 +67,16 @@ def test_main_missing_total_falls_through_to_a_fallback_send(monkeypatch):
     assert "could not be built" in sent[0]
 
 
-def test_main_missing_total_and_send_failing_still_does_not_raise(monkeypatch):
+def test_main_missing_total_and_send_failing_reports_broken_not_none(monkeypatch):
+    # Neither the full nor the core build ever rendered (missing 'total')
+    # AND every send failed — this must read as "broken" (a payload
+    # problem), not "none" (a delivery-only problem), or run_daily would
+    # stamp a night whose brief never actually worked.
     monkeypatch.setattr(notify_telegram, "send_message",
                         lambda text, parse_mode="HTML": False)
     payload = {"warnings": [], "history": [], "main": {"order_label": "IST-first"}}
     status = notify_telegram.notify_cheapest(payload)  # must not raise
-    assert status == "none"
+    assert status == "broken"
 
 
 def test_full_send_fails_core_only_succeeds(monkeypatch):
@@ -82,7 +92,7 @@ def test_full_send_fails_core_only_succeeds(monkeypatch):
     assert len(calls) == 2
 
 
-def test_minimal_rung_includes_the_first_warnings(monkeypatch):
+def test_minimal_rung_includes_the_first_warnings_before_the_link(monkeypatch):
     sent = []
     monkeypatch.setattr(notify_telegram, "send_message",
                         lambda text, parse_mode="HTML": sent.append(text) or True)
@@ -98,9 +108,15 @@ def test_minimal_rung_includes_the_first_warnings(monkeypatch):
     assert "sanity check failed" in sent[0]
     assert "extra note" in sent[0]
     assert "should be dropped" not in sent[0]
+    # Every other rung ends on the dashboard link — the minimal rung must
+    # too, so the warnings have to land BEFORE it, not after.
+    assert sent[0].strip().endswith(notify_telegram.MINIMAL_FALLBACK_LINK)
 
 
-def test_everything_fails_reports_none_and_still_does_not_raise(monkeypatch):
+def test_everything_fails_but_a_build_succeeded_reports_none(monkeypatch):
+    # A real build (full or core) succeeded here — VALID_MAIN renders fine
+    # — so every send failing is purely a Telegram-delivery problem; the
+    # published data is unaffected. This must read as "none", not "broken".
     monkeypatch.setattr(notify_telegram, "send_message",
                         lambda text, parse_mode="HTML": False)
     payload = {"warnings": [], "history": [], "main": dict(VALID_MAIN)}

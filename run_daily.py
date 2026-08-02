@@ -42,12 +42,14 @@ def mark_ran_today():
 
 def should_stamp(payload: dict, notify_status: str) -> bool:
     """Only mark tonight as done when there's a trip AND the brief reached a
-    rung a person actually reads. notify_status "minimal" means
-    build_message and send_message both failed all the way down to the
-    static fallback — that's the same "come back later" situation as a
-    catastrophic no-trip night, so it must not block the 2:00/4:00 retry
-    slots either."""
-    return bool(payload.get("main")) and notify_status != "minimal"
+    rung that means the DATA was fine. "minimal" (build_message itself
+    never rendered) and "broken" (same, plus even Telegram delivery failed)
+    both mean a genuine payload/shape problem, the same "come back later"
+    situation as a catastrophic no-trip night — neither may stamp. "none"
+    is different: it means a real build succeeded but Telegram couldn't be
+    reached, a delivery problem the published data doesn't share, so it
+    still counts as done."""
+    return bool(payload.get("main")) and notify_status not in ("minimal", "broken")
 
 
 def _check(label, fn):
