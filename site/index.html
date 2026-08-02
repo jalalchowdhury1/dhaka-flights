@@ -838,6 +838,46 @@ function renderToday(d) {
     }
     html += sec("🗓 Trip plan — dates, flights, layovers & stays", tripPlan(main), true);
     if (d.hotel) html += sec("🏨 Hotel — Marriott points, 5th night free", hotelCard(d.hotel), true);
+    html += sec("🧠 Hotel playbook — good to know", `<div class="card">
+      <ul style="padding-left:20px;font-size:.86rem;margin:0">
+        <li style="margin:7px 0"><b>Never split the 5-night award stay.</b> The 5th-night-free
+          discount only triggers on ONE award reservation of 5+ nights — booking 3 nights on
+          points + 2 on cash loses the free night and usually costs more points AND cash.</li>
+        <li style="margin:7px 0"><b>The chosen play: book standard, upgrade with cash on top.</b>
+          Book the 5-night standard-room award (173–177K pts, $0), then ask the hotel for a paid
+          upgrade quote on top of it. The award stay never changes: free night kept, one
+          reservation, no room move — the supplement is pure optionality you can decline.</li>
+        <li style="margin:7px 0"><b>How to get the quote:</b> email the hotel after booking
+          ("5-night redemption stay, confirmation #X — what's the supplement for a suite, and
+          for a Club room, and does it include lounge access?"). Supplements typically run well
+          below the cash gap between room categories (ballpark $80–150/night for a suite here).
+          Get it in writing on the reservation; pay in THB on the Brilliant card (6× points back).</li>
+        <li style="margin:7px 0"><b>Platinum covers breakfast, NOT the lounge.</b> At Luxury
+          Collection / St. Regis / Ritz / W, elite status never unlocks the Club lounge — that's
+          a paid room category only. Status still gets restaurant breakfast for two as the welcome
+          choice. So a Club supplement buys the rest of the day: afternoon tea, evening cocktails
+          + canapés (a light dinner, effectively), calmer breakfast room. For stay-in days,
+          Club-on-standard-room can out-value the bigger suite.</li>
+        <li style="margin:7px 0"><b>The decision ladder:</b> quote fair → lock the suite or Club.
+          Quote greedy → decline and keep the free Platinum-upgrade lottery at check-in (the
+          Athenee upgrades Platinums reasonably often outside peak). Fallback for guaranteed
+          plush: St. Regis at 239K (Jan 30–Feb 4) — butler standard for every room, needs a
+          ~66K points top-up.</li>
+        <li style="margin:7px 0"><b>Cancellation is the safety net.</b> Award stays refund 100%
+          of the points if cancelled before the hotel's deadline — typically 24–72h before
+          check-in, printed on the confirmation at booking. So book EARLY once flights settle
+          (~Sept), ask for quotes at leisure, decide late. Watch-out: Chinese New Year is
+          Feb 6, 2027 — a Feb 1–6 stay may carry a stricter special-event policy than
+          Jan 30–Feb 4 (which also prices ~4–7K points cheaper everywhere).</li>
+        <li style="margin:7px 0"><b>The 3-guest trap (the Laguna lesson).</b> Headline award
+          rates are often for base rooms that legally sleep only 2 — the Laguna's "167K" needed
+          +$1,310 cash or 223K points for a room that actually fit 2 adults + child. Always
+          run the award search as 2 adults + 1 child before trusting a rate; every figure on
+          this page was checked that way.</li>
+      </ul>
+      <div class="small" style="margin-top:8px">Captured 2026-08-01. One pre-arrival email in
+        September asks for both supplements (suite + Club) on the same award stay.</div>
+    </div>`, false);
     html += sec("🧳 Baggage, leg by leg", baggageCard(main), false);
 
     const t2 = d.ticket2_options || [];
