@@ -175,13 +175,20 @@ launchd 12:00am + 2:00am retry slot (com.jalal.dhaka-flights.plist, parallel wit
   publish.py  → site/data.json (main + options + appended history) → git commit+push
         ▼
   site/index.html (static, deployed once on Vercel) fetches data.json raw from
-  GitHub on every page load — no redeploy needed for data updates. Two tabs:
-  ⭐ The Trip (timeline chips · hero card · trip plan with a 🧳 line per flight ·
-  baggage table · Ticket ② then Ticket ① alternatives with Δ-vs-chosen and bag
-  rules · booking playbook · price history) · 📈 History (⭐ trip / Ticket ① /
-  Ticket ② / airlines / nights / home, tap a row for that day's full detail).
-  Strip tiles and chart show trip total + the two ticket prices. All views
-  degrade gracefully when a section is missing.
+  GitHub on every page load — no redeploy needed for data updates. Hash-routed
+  boarding-pass dashboard (redesigned 2026-08-02, rollback tag v1-pre-overhaul),
+  four routes in one file:
+  #/ Tonight (verdict pass: order-aware mono route · total + Δ vs yesterday ·
+  buy-signal/price-context chips · ①/② stub row · sparkline · 4 drill-in tiles) ·
+  #/flights (Ticket ① and ② as passes with per-leg 🧳 lines · budget card ·
+  other-order card · alternatives with Δ-vs-chosen · baggage table · playbook ·
+  all one-way fares) · #/stays (Athenee pass · Bali hotel footnote · IST/SIN
+  card-play offset tables · hotel playbook) · #/history (4-series chart · trend
+  summary · sortable night table w/ tap-row detail · Bali watch card).
+  Can never render blank: fetch falls back raw→local→localStorage last-good
+  (labeled banner) →designed error screen; every section renders through a
+  renderSafe error boundary; client-side validatePayload + arithmetic checks
+  feed the collapsed 🧪 footer.
 ```
 
 ## 3. How to run / test / deploy
@@ -341,7 +348,14 @@ reason.
 
 ## 7. File map
 
-- `run_daily.sh` / `run_daily.py` — launchd entrypoint; stamp + DIAG alerting
+- `run_daily.sh` / `run_daily.py` — launchd entrypoint; stamp + DIAG alerting;
+  arms the ⏱ overrun clock (`scraper.begin_run()`) and folds deadline skips +
+  📐 contract findings into the night's warnings
+- `schema_check.py` — the data.json contract as code: `validate(payload)`
+  returns human-readable violations (never raises, never blocks publishing);
+  run nightly from run_daily between the verify block and the sheet write.
+  site/index.html's `validatePayload()` mirrors its TOP/numeric lists — keep
+  the two in sync when the payload shape changes
 - `sanity.py` — self-check watchdog run before every send: Ticket ① must price
   (per order variant too), a priced Ticket ① must produce a trip, every
   leg×date and Ticket ② order+date pair must have fares, yesterday's totals
@@ -351,7 +365,11 @@ reason.
   search, add its invariant here too.
 - `scraper.py` — browse-CLI form driving + parsing (one-way & multi-city); LEGS,
   STOPOVER_SEARCHES (2 Ticket ① variants), TICKET2_SEARCHES + ORDER_ROUTES
-  (+ retired configs, kept)
+  (+ retired configs, kept). ⏱ Overrun guard (2026-08-02): past
+  `RUN_DEADLINE_MIN` (35 min from `begin_run()`), `scrape_bali_watch` skips
+  entirely and `scrape_all` drops its remaining one-ways — skips land in
+  `DIAG["deadline_skips"]`; Ticket ①/② multi-city searches are never skipped.
+  Interactive use has no deadline (`begin_run` is opt-in)
 - `combo.py` — trip rules, `ORDERS`, `order_trip`, `main_trip`, `budget_trip`,
   `ticket1_options`, `ticket2_options` (+ retired `best_structures` /
   `best_combos` / `best_singapore` / `cheapest_by_leg` / `*_bali`)
@@ -361,18 +379,35 @@ reason.
 - `alerts.py` — buy-signal stages, price context, countdown, change diff (§4d)
 - `verify.py` — the nightly 3-perspective independent re-check (keep it
   independent of combo.py; that's the point)
-- `publish.py` — `build_today` → payload → `write_payload` (backup, write, push)
+- `publish.py` — `build_today` → payload → `write_payload` (backup, atomic
+  write, push). git push retries 3× (10s/30s backoff) then warns Telegram via
+  `_telegram_warn` — a failed push can no longer leave the site silently stale
 - `sheet_writer.py`, `notify_telegram.py` — outputs
 - `site/` — static dashboard (index.html) + data.json (machine-written).
-  REDESIGNED 2026-08-01 late via the design-taste + dataviz skills: token
-  system (one blue UI accent; 4 validated categorical series slots for the
-  chart — order is the CVD-safety mechanism, don't reshuffle), decision-first
-  layout (hero verdict card → stat tiles → tabs), chart follows the dataviz
-  spec (2px lines, ring endpoints, hairline grid, clean $ ticks, legend,
-  selective end labels, crosshair tooltip via bindChartHover), aria'd tabs,
-  focus-visible + prefers-reduced-motion guards, AA-contrast muted text,
-  light AND dark verified. `orderInfo()` maps every trip shape incl.
-  `bali-rev`; keep it in sync with combo.ORDERS when orders change.
+  REBUILT 2026-08-02 as a hash-routed boarding-pass app (design-taste +
+  dataviz skills; rollback tag `v1-pre-overhaul`). Conventions:
+  - Boarding-pass tokens: warm-paper light is home, dark is a navy night
+    variant (never grey inversion); `--ink-3` is #67624f, darkened from the
+    spec's #8a8371 to pass WCAG AA — don't lighten it back. Theme toggle
+    cycles auto→dark→light via `data-theme` on :root; the two explicit
+    `[data-theme]` blocks must keep beating the media query in BOTH
+    directions.
+  - Robustness: `loadData()` falls back GitHub-raw → same-origin copy →
+    localStorage last-good (banner) → designed error screen; every section
+    renders through `renderSafe()`; `validatePayload()` MIRRORS
+    schema_check.py's TOP/numeric lists — change one, change the other;
+    `arithmeticFindings()` re-checks ①+②=total + the history mirror.
+    Findings join the payload's own warnings in the collapsed 🧪 footer.
+  - `?qa=<name>` dev hook: serves `./qa/<name>.json` instead of live data
+    (build mutants with jq, delete the folder after — never commit qa/).
+  - Chart: 4 validated categorical slots, assignment order trip/Bali/①/②
+    IS the CVD-safety mechanism — don't reshuffle; series colors were
+    re-validated with the dataviz checker on the 2026-08-02 surfaces (light
+    #2a5da8/#c0562e/#178f6b/#a87b00, dark #5a91e8/#d96536/#27a37b/#bb8626);
+    2px lines, ring endpoints, hairline grid, $ ticks, legend, selective
+    end labels, crosshair tooltip via bindChartHover.
+  - `orderInfo()` maps every trip shape incl. `bali-rev`; keep it in sync
+    with combo.ORDERS when orders change.
 - `main.py` — manual run: scrape + sheet + terminal summary (no Telegram/publish)
 - `tests/` — pytest suite (152 tests; `test_main_trip.py` holds the shared trip
   fixtures, `test_baggage.py` guards the allowance table's honesty)
