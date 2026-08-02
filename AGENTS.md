@@ -68,6 +68,12 @@ stitches pre-swap `main_total` history to nightly `bali_total`. It is a
 BENCHMARK, not a bookable product: no alerts fire on it, and sanity raises
 ONE warning when it's missing (never per-search noise).
 
+**Hotel-content convention (2026-08-02, Jalal: "make that standard"):** any
+hotel/resort table or card on the SITE must show the **offset %** — credits
+the user will actually use ÷ (room + ~12% tax) — with the July deal-
+calculator bands (≥70% book now · 50–70% solid · <50% wait). Keep the
+assumption line (which credits were counted) next to every table.
+
 **🏨 Hotel integration (`hotels.py`, 2026-08-01 evening):** the Marriott
 award stay rides with the trip — payload `hotel` (Bangkok: The Athenee,
 Luxury Collection; quality bar = "top notch … we did the kempinsky last
