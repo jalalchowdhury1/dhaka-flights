@@ -126,3 +126,15 @@ def test_reversed_bali_baggage_and_hotel_follow_the_reversed_shape():
     assert "Laguna" in h["property"]
     assert (h["checkin"], h["checkout"]) == ("Jan 30", "Feb 4")
     assert h["nights"] == 5
+
+
+def test_core_only_fallback_keeps_the_answer_and_drops_the_reference():
+    # A busy night must degrade to the one-screen core, never to silence.
+    p = publish.build_payload(list(FLIGHTS), [TICKET1], [], "2026-08-01",
+                              warnings=["x"], sg_tickets=list(SG_TICKETS),
+                              bali=_bali())
+    full = build_message(p)
+    core = build_message(p, core_only=True)
+    assert len(core) < len(full)
+    assert "$4,600" in core and "Original Bali trip" in core
+    assert "blockquote" not in core and "blockquote" in full
