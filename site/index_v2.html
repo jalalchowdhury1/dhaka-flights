@@ -960,9 +960,156 @@ function renderFlights(d) {
   }
   return root;
 }
+/* ---- Stays (#/stays) — hotels + the premium-card play ------------------ */
+/* 🏨 The Marriott award stay that goes with the trip (points are CHECKED
+   reference values, not a live quote; dates follow tonight's winner). */
+function hotelPass(h) {
+  const pts = Object.entries(h.points || {}).map(([w, p]) =>
+    `<b>${p.toLocaleString()}</b> pts (${esc(w)})`).join(" · ");
+  return `<div class="pass">
+    <div class="pass-head"><span>🏨 ${esc(h.city || "")} stay</span>
+      <span>${h.nights ?? "?"} nights · Marriott points</span></div>
+    <b style="font-size:1.02rem">${esc(h.property)}</b>
+    <div style="margin-top:6px">${esc(h.checkin)}–${esc(h.checkout)} · ${h.nights ?? "?"} nights · ${pts}
+      ${h.fifth_night_free ? ` · <span class="badge good">5th night free ✓</span>` : ""}</div>
+    ${h.warn ? `<div style="margin-top:8px"><span class="chip chip-bad">⚠️ ${esc(h.warn)}</span></div>` : ""}
+    ${h.points_note ? `<div class="muted" style="margin-top:6px">${esc(h.points_note)}</div>` : ""}
+    <div class="muted" style="margin-top:6px">${esc(h.note || "")}</div>
+    ${h.runner_up ? `<div class="muted" style="margin-top:4px">Runners-up: ${esc(h.runner_up)}</div>` : ""}
+    <div class="perf"></div>
+    <div class="small">Cash reference: ${esc(h.cash_ref || "—")} · award pricing is
+      dynamic — figures live-checked ${esc(h.checked)}; confirm on marriott.com before booking.</div>
+  </div>`;
+}
+
 function renderStays(d) {
-  return el(`<div class="pass"><span class="micro">Stays</span>
-    <div class="muted" style="margin-top:6px">Screen under construction.</div></div>`);
+  const root = el("");
+  add(root, () => {
+    if (!d.hotel) return el(`<b>No hotel plan in tonight's data.</b>
+      <div class="muted" style="margin-top:4px">The Marriott stay rides with the
+      priced trip and appears after the next successful run.</div>`, "pass");
+    return el(`<span class="micro">The Bangkok stay — rides with tonight's winning order</span>`
+      + hotelPass(d.hotel));
+  });
+
+  if (d.bali && d.bali.hotel) add(root, () => {
+    const bh = d.bali.hotel;
+    const pts = Object.entries(bh.points || {}).map(([w, p]) =>
+      `${p.toLocaleString()} pts (${esc(w)})`).join(" · ");
+    return el(`<div class="small" style="margin-top:10px">🌴 Bali benchmark stay
+      (dropped 2026-08-01): ${esc(bh.property)} — ${pts} · ${esc(bh.cash_ref || "")}.</div>`);
+  });
+
+  add(root, () => el(`<span class="micro" style="display:block;margin-top:18px">Istanbul &amp; Singapore — the premium-card play</span>
+    <div class="pass">
+      <div class="muted">Bangkok is the Marriott-points stay; these two ride the premium-card hotel
+        programs. Research done 2026-08-01 (live rates + rosters, public sources).</div>
+      <div style="margin-top:10px"><b style="font-size:.9rem">The strategy: book-date arbitrage</b>
+      <div class="muted" style="margin-top:3px">Both credits key to the BOOKING date, not the stay.
+        Book Istanbul in Sept–Dec 2026 (uses the Jul–Dec Amex $300) and Singapore after Jan 1 2027
+        (fresh Jan–Jun $300) → <b>$600 Amex credit + two ~$100 property credits + daily breakfast
+        for 2 at both stays</b>, all on FHR's guaranteed-4pm-checkout terms — CSR Edit credits kept
+        in reserve. Fallback if a 2026 Amex credit is already spent: FHR→Istanbul + Edit→Singapore
+        ($550). FHR's guaranteed 4pm checkout matters most in Istanbul: the IST→DAC flight leaves
+        in the evening of Jan 7.</div></div>
+      <div class="scroll-x" style="margin-top:10px"><table>
+        <tr><th>🕌 Istanbul · Jan 5–7 (2n)</th><th>Program</th><th class="num">Nightly</th><th class="num">Offset</th><th>Angle</th></tr>
+        <tr><td>Sanasaryan Han (Lux. Coll.)</td><td>FHR</td><td class="num">$270</td>
+          <td class="num"><span class="badge good">~86%</span></td><td class="wrap">Old-city boutique · Bonvoy stacks</td></tr>
+        <tr><td><b>Ritz-Carlton Istanbul</b></td><td>FHR</td><td class="num">$314</td>
+          <td class="num"><span class="badge good">~74%</span></td><td class="wrap">Value pick · Bonvoy Platinum stacks (points + elite nights)</td></tr>
+        <tr><td>St. Regis Istanbul</td><td>FHR</td><td class="num">$525</td>
+          <td class="num"><span class="badge dim">~44%</span></td><td class="wrap">Butler with every room · Bonvoy stacks</td></tr>
+        <tr><td>Çırağan Palace Kempinski</td><td>FHR</td><td class="num">$726</td>
+          <td class="num"><span class="badge dim">~32%</span></td><td class="wrap">The sentimental splurge · Bosphorus palace, the favorite brand</td></tr>
+      </table></div>
+      <div class="scroll-x" style="margin-top:10px"><table>
+        <tr><th>🇸🇬 Singapore · nights follow the winning order</th><th>Program</th><th class="num">Nightly</th><th class="num">2n</th><th class="num">4n</th><th>Angle</th></tr>
+        <tr><td>Pan Pacific Orchard</td><td>THC + Edit</td><td class="num">$252</td>
+          <td class="num"><span class="badge good">~83%</span></td>
+          <td class="num"><span class="badge dim">~52%</span></td>
+          <td class="wrap">Wildcard: near-free at 2n / <span class="badge good">~74%</span> at 4n
+            if CSR's separate $250 select-hotels credit stacks · confirm in portal</td></tr>
+        <tr><td><b>St. Regis Singapore</b></td><td>FHR</td><td class="num">$329</td>
+          <td class="num"><span class="badge good">~71%</span></td>
+          <td class="num"><span class="badge dim">~43%</span></td>
+          <td class="wrap">Butler standard · Bonvoy stacks · cheap for SIN luxury</td></tr>
+        <tr><td>Ritz-Carlton Millenia</td><td>FHR</td><td class="num">$420</td>
+          <td class="num"><span class="badge dim">~55%</span></td>
+          <td class="num"><span class="badge dim">~34%</span></td>
+          <td class="wrap">Marina views · Bonvoy stacks</td></tr>
+        <tr><td>JW Marriott South Beach</td><td>The Edit only</td><td class="num">$497</td>
+          <td class="num"><span class="badge dim">~42%</span></td>
+          <td class="num"><span class="badge dim">~27%</span></td>
+          <td class="wrap">Best Edit-exclusive if the fallback strategy is needed</td></tr>
+      </table></div>
+      <div class="small" style="margin-top:8px"><b>Offset</b> = credits used ÷ (room + ~12% tax).
+        Credits assumed: $300 Amex (or $250 Edit) + $100 property + $60/day breakfast —
+        so IST 2n = $520 · SIN 2n = $520 FHR / $470 Edit · SIN 4n = $640 / $590. Bands:
+        ≥70% book now · 50–70% solid · &lt;50% wait for off-peak or a promo. A low offset isn't
+        a ban — it just means you're paying mostly cash for the luxury, so want it for its own
+        sake (Kempinski, St. Regis). Note the lever: the flight engine picks the Singapore
+        nights (2–4, cheapest wins), but when pairings are near-tied, a 2-night stay is where
+        the hotel credits concentrate.</div>
+      <div class="small" style="margin-top:10px">Good to know: CNY is Feb 6, 2027 — Singapore hasn't
+        loaded holiday premiums yet, so book early once dates firm. Program breakfasts cover 2;
+        the kid's is chargeable unless kids-eat-free. FHR at Marriott brands earns points + elite
+        nights AND keeps elite benefits (Marriott-confirmed). Edit 2026 rule: $500/yr, max $250 per
+        booking, prepaid 2-night minimum, purchase-date-keyed; 2027 terms unpublished. Open item:
+        confirm how much 2026 Edit + Jul–Dec Amex credit is still unspent, then lock the mapping.</div>
+    </div>`));
+
+  add(root, () => el(sec("🧠 Hotel playbook — good to know", `<div class="pass">
+      <ul style="padding-left:20px;font-size:.86rem;margin:0">
+        <li style="margin:7px 0"><b>Never split the 5-night award stay.</b> The 5th-night-free
+          discount only triggers on ONE award reservation of 5+ nights — booking 3 nights on
+          points + 2 on cash loses the free night and usually costs more points AND cash.</li>
+        <li style="margin:7px 0"><b>The chosen play: book standard, upgrade with cash on top.</b>
+          Book the 5-night standard-room award (173–177K pts, $0), then ask the hotel for a paid
+          upgrade quote on top of it. The award stay never changes: free night kept, one
+          reservation, no room move — the supplement is pure optionality you can decline.</li>
+        <li style="margin:7px 0"><b>How to get the quote:</b> email the hotel after booking
+          ("5-night redemption stay, confirmation #X — what's the supplement for a suite, and
+          for a Club room, and does it include lounge access?"). Supplements typically run well
+          below the cash gap between room categories (ballpark $80–150/night for a suite here).
+          Get it in writing on the reservation; pay in THB on the Brilliant card (6× points back).</li>
+        <li style="margin:7px 0"><b>Platinum covers breakfast, NOT the lounge.</b> At Luxury
+          Collection / St. Regis / Ritz / W, elite status never unlocks the Club lounge — that's
+          a paid room category only. Status still gets restaurant breakfast for two as the welcome
+          choice. So a Club supplement buys the rest of the day: afternoon tea, evening cocktails
+          + canapés (a light dinner, effectively), calmer breakfast room. For stay-in days,
+          Club-on-standard-room can out-value the bigger suite.</li>
+        <li style="margin:7px 0"><b>The decision ladder:</b> quote fair → lock the suite or Club.
+          Quote greedy → decline and keep the free Platinum-upgrade lottery at check-in (the
+          Athenee upgrades Platinums reasonably often outside peak). Fallback for guaranteed
+          plush: St. Regis at 239K (Jan 30–Feb 4) — butler standard for every room, needs a
+          ~66K points top-up.</li>
+        <li style="margin:7px 0"><b>Cancellation is the safety net.</b> Award stays refund 100%
+          of the points if cancelled before the hotel's deadline — typically 24–72h before
+          check-in, printed on the confirmation at booking. So book EARLY once flights settle
+          (~Sept), ask for quotes at leisure, decide late. Watch-out: Chinese New Year is
+          Feb 6, 2027 — a Feb 1–6 stay may carry a stricter special-event policy than
+          Jan 30–Feb 4 (which also prices ~4–7K points cheaper everywhere).</li>
+        <li style="margin:7px 0"><b>Direction arbitrage (proven Aug 2).</b> The order you
+          visit cities changes the price because the long-haul home from each city differs
+          (SIN→BOS has run ~$550 cheaper than DPS→BOS). Reversing the Bali benchmark's order
+          saved $1,143 on its first night; the same logic is why the Bangkok trip prices BOTH
+          orders nightly. Rule: never assume a multi-city order — price the reverse too.</li>
+        <li style="margin:7px 0"><b>The offset yardstick (used on every hotel table here).</b>
+          Offset = credits you'll actually use ÷ (room + ~12% tax). From the July deal
+          calculator: <b>≥70% book now · 50–70% solid · &lt;50% wait</b> for off-peak or a promo.
+          Count breakfast at $60/day only if you'd genuinely eat it.</li>
+        <li style="margin:7px 0"><b>The 3-guest trap (the Laguna lesson).</b> Headline award
+          rates are often for base rooms that legally sleep only 2 — the Laguna's "167K" needed
+          +$1,310 cash or 223K points for a room that actually fit 2 adults + child. Always
+          run the award search as 2 adults + 1 child before trusting a rate; every figure on
+          this page was checked that way.</li>
+      </ul>
+      <div class="small" style="margin-top:8px">Captured 2026-08-01. One pre-arrival email in
+        September asks for both supplements (suite + Club) on the same award stay.</div>
+    </div>`, false)));
+
+  return root;
 }
 function renderHistory(d) {
   return el(`<div class="pass"><span class="micro">History</span>
