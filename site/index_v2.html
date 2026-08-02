@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Istanbul · Dhaka · Bangkok · Singapore — Trip Tracker</title>
+<style>
+  /* Boarding-pass design tokens (spec §3.3). Light "paper" is home; dark is a
+     navy night variant, not a grey inversion. --ink-3 darkened from the spec's
+     #8a8371 to #67624f so micro-labels pass WCAG AA on card AND paper
+     (checked 2026-08-02: 6.0:1 / 4.8:1). Series colors --s1..--s4 are data
+     encodings for the chart — assignment ORDER is the CVD-safety mechanism,
+     never reshuffle (AGENTS.md §7). */
+  :root {
+    color-scheme: light;
+    --paper-bg: #e8e4dc;      /* page background — warm boarding-hall paper */
+    --card: #fffdf8;          /* the pass/card stock */
+    --ink: #1a2b49;           /* deep navy — headings, prices, pass headers */
+    --ink-2: #5a5648;         /* body text on paper */
+    --ink-3: #67624f;         /* micro-labels, muted */
+    --rule: #d8d2c4;          /* hairlines + perforation dashes */
+    --chip-bg: #f0ebdf;
+    --band: #1a2b49;          /* pass header strip */
+    --band-ink: #f4efe4;
+    --good: #0f7b3f; --good-bg: #e7f2e9;
+    --warn: #7a5200; --warn-bg: #fbf0d2;
+    --bad:  #a4262c; --bad-bg:  #fbe4e4;
+    --accent: var(--ink);
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+    --shadow: 0 2px 10px rgb(26 43 73 / .14);
+    --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --paper-bg: #10182a; --card: #1a2338; --ink: #e9ecf4; --ink-2: #b8bfce;
+      --ink-3: #8590a6; --rule: #2e3a55; --chip-bg: #232f4a;
+      --band: #111a2e; --band-ink: #e9ecf4;
+      --good: #7fd49a; --good-bg: #14311f; --warn: #f0c86a; --warn-bg: #3a2c07;
+      --bad: #f2a0a4; --bad-bg: #43181a; --shadow: none;
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+    }
+  }
+  /* Explicit overrides so the toggle beats the media query in BOTH directions. */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper-bg: #10182a; --card: #1a2338; --ink: #e9ecf4; --ink-2: #b8bfce;
+    --ink-3: #8590a6; --rule: #2e3a55; --chip-bg: #232f4a;
+    --band: #111a2e; --band-ink: #e9ecf4;
+    --good: #7fd49a; --good-bg: #14311f; --warn: #f0c86a; --warn-bg: #3a2c07;
+    --bad: #f2a0a4; --bad-bg: #43181a; --shadow: none;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --paper-bg: #e8e4dc; --card: #fffdf8; --ink: #1a2b49; --ink-2: #5a5648;
+    --ink-3: #67624f; --rule: #d8d2c4; --chip-bg: #f0ebdf;
+    --band: #1a2b49; --band-ink: #f4efe4;
+    --good: #0f7b3f; --good-bg: #e7f2e9; --warn: #7a5200; --warn-bg: #fbf0d2;
+    --bad: #a4262c; --bad-bg: #fbe4e4;
+    --shadow: 0 2px 10px rgb(26 43 73 / .14);
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+  }
+
+  * { box-sizing: border-box; margin: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { background: var(--paper-bg); color: var(--ink-2);
+         font: 15px/1.55 -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+         font-variant-numeric: tabular-nums;
+         max-width: 720px; margin: 0 auto; padding: 14px 14px 48px; }
+
+  /* ---- top bar ---- */
+  #topbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+            padding: 2px 2px 8px; }
+  .wordmark { font-family: var(--mono); font-weight: 700; font-size: .92rem;
+              letter-spacing: .1em; color: var(--ink); text-decoration: none; }
+  .back { font-size: .82rem; font-weight: 650; color: var(--ink);
+          text-decoration: none; white-space: nowrap; }
+  #topbar .spacer { flex: 1; }
+  .chip { display: inline-block; background: var(--chip-bg); color: var(--ink-2);
+          border-radius: 99px; padding: 2px 10px; font-size: .73rem;
+          font-weight: 600; white-space: nowrap; }
+  .chip-good { background: var(--good-bg); color: var(--good); }
+  .chip-warn { background: var(--warn-bg); color: var(--warn); }
+  .chip-bad  { background: var(--bad-bg);  color: var(--bad); }
+  .iconbtn { background: none; border: 1px solid var(--rule); color: var(--ink-3);
+             width: 26px; height: 26px; border-radius: 50%; font-size: .75rem;
+             font-weight: 600; cursor: pointer; line-height: 1; flex: none; }
+  .iconbtn:hover { color: var(--ink); border-color: var(--ink-3); }
+
+  /* ---- banners ---- */
+  .banner { border-radius: 12px; padding: 10px 14px; margin-top: 10px; font-size: .84rem; }
+  .banner-bad  { background: var(--bad-bg);  color: var(--bad); }
+  .banner-warn { background: var(--warn-bg); color: var(--warn); }
+
+  /* ---- the pass (card) ---- */
+  .pass { background: var(--card); border-radius: 14px; box-shadow: var(--shadow);
+          padding: 16px 18px; margin-top: 12px; position: relative; overflow: hidden; }
+  .pass-head { background: var(--band); color: var(--band-ink);
+               margin: -16px -18px 14px; padding: 9px 18px;
+               display: flex; justify-content: space-between; align-items: center;
+               gap: 8px; flex-wrap: wrap; font-family: var(--mono); font-size: .7rem;
+               font-weight: 700; text-transform: uppercase; letter-spacing: .13em; }
+  .perf { position: relative; border-top: 2px dashed var(--rule); margin: 14px -18px; }
+  .perf::before, .perf::after { content: ""; position: absolute; top: -10px;
+    width: 18px; height: 18px; border-radius: 50%; background: var(--paper-bg); }
+  .perf::before { left: -9px; } .perf::after { right: -9px; }
+  .mono-route { font-family: var(--mono); font-weight: 700; letter-spacing: .07em;
+                color: var(--ink); font-size: .95rem; overflow-wrap: anywhere; }
+  .micro { font-size: .67rem; text-transform: uppercase; letter-spacing: .12em;
+           color: var(--ink-3); font-weight: 650; }
+  .price-lg { font-size: clamp(2.3rem, 8vw, 3rem); font-weight: 750;
+              letter-spacing: -.03em; line-height: 1.05; color: var(--ink); }
+  .muted { color: var(--ink-2); font-size: .84rem; }
+  .small { font-size: .78rem; color: var(--ink-3); }
+  .delta { font-size: .82rem; font-weight: 650; }
+  .delta.down { color: var(--good); }
+  .delta.up { color: var(--warn); }
+  .delta.flat { color: var(--ink-3); font-weight: 450; }
+  .badge { display: inline-block; font-size: .72rem; font-weight: 650;
+           padding: 2px 9px; border-radius: 99px; vertical-align: middle; }
+  .badge.good { background: var(--good-bg); color: var(--good); }
+  .badge.warn { background: var(--warn-bg); color: var(--warn); }
+  .badge.dim { background: var(--chip-bg); color: var(--ink-2); }
+  .error-card { border: 1.5px dashed var(--bad); }
+
+  /* ---- drill-in tiles ---- */
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  @media (min-width: 720px) { .tiles { grid-template-columns: repeat(4, 1fr); } }
+  .tile { display: block; background: var(--card); border-radius: 14px;
+          box-shadow: var(--shadow); padding: 12px 14px; text-decoration: none;
+          color: var(--ink-2); font-size: .8rem; }
+  .tile b { color: var(--ink); display: block; font-size: .88rem; margin-top: 2px; }
+  .tile .micro { display: block; }
+
+  /* ---- links / buttons ---- */
+  a { color: var(--ink); font-weight: 600; text-decoration: underline;
+      text-decoration-color: var(--rule); text-underline-offset: 2px; }
+  a.tile, a.btn, a.back, a.wordmark { text-decoration: none; }
+  a:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .btn { display: inline-block; background: var(--ink); color: var(--paper-bg) !important;
+         border: 0; border-radius: 99px; padding: 5px 14px; font-size: .78rem;
+         font-weight: 650; min-height: 28px; cursor: pointer; font-family: inherit; }
+  .btn.big { padding: 10px 20px; font-size: .92rem; margin-top: 10px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .btn, .tile { transition: transform .1s ease; }
+    .btn:active, .tile:active { transform: translateY(1px) scale(.98); }
+  }
+
+  /* ---- tables ---- */
+  table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+  th, td { text-align: left; padding: 7px 10px 7px 0; border-top: 1px solid var(--rule);
+           white-space: nowrap; }
+  th { color: var(--ink-3); font-weight: 650; border-top: none; font-size: .72rem;
+       text-transform: uppercase; letter-spacing: .06em; }
+  td.num, th.num { text-align: right; padding-right: 10px; }
+  td.wrap { white-space: normal; }
+  tr.chosen td { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+  .scroll-x { overflow-x: auto; }
+
+  /* ---- trip plan ---- */
+  .plan td, .plan th { white-space: normal; vertical-align: top; }
+  .plan td.when { white-space: nowrap; font-weight: 600; width: 92px; }
+  .plan tr.stay td { background: color-mix(in srgb, var(--s3) 7%, transparent); }
+  .tk { display: inline-block; font-size: .67rem; font-weight: 700; border-radius: 6px;
+        padding: 1px 6px; vertical-align: 1px; font-family: var(--mono); }
+  .tk.t1 { background: color-mix(in srgb, var(--ink) 12%, transparent); color: var(--ink); }
+  .tk.t2 { background: color-mix(in srgb, var(--s4) 22%, transparent); color: var(--warn); }
+  .bag { margin-top: 3px; font-size: .78rem; color: var(--ink-2); }
+  .bag b { color: var(--ink); }
+  .bag.unknown { color: var(--warn); }
+  .leg { display: flex; gap: 9px; padding: 11px 0; border-top: 1px solid var(--rule);
+         font-size: .88rem; align-items: center; }
+  .leg:first-of-type { border-top: none; }
+  .leg .em { flex: none; }
+  .leg .price { margin-left: auto; font-weight: 650; white-space: nowrap;
+                display: flex; align-items: center; gap: 8px; }
+
+  /* ---- collapsible sections ---- */
+  details.sec { margin-top: 16px; }
+  details.sec > summary { list-style: none; cursor: pointer; display: flex;
+    align-items: center; gap: 8px; font-size: .74rem; color: var(--ink-2);
+    text-transform: uppercase; letter-spacing: .1em; font-weight: 700;
+    padding: 8px 0; user-select: none; border-top: 1px solid var(--rule);
+    min-height: 40px; font-family: var(--mono); }
+  details.sec.no-rule > summary { border-top: none; }
+  details.sec > summary::-webkit-details-marker { display: none; }
+  details.sec > summary::after { content: "▸"; margin-left: auto; color: var(--ink-3); font-size: 1rem; }
+  details.sec[open] > summary::after { content: "▾"; }
+  details.inner { margin-top: 10px; border-top: 1px solid var(--rule); padding-top: 8px; }
+  details.inner > summary { list-style: none; cursor: pointer; font-weight: 650;
+    font-size: .88rem; display: flex; align-items: center; min-height: 36px; color: var(--ink); }
+  details.inner > summary::-webkit-details-marker { display: none; }
+  details.inner > summary::after { content: "▸"; margin-left: auto; color: var(--ink-3); }
+  details.inner[open] > summary::after { content: "▾"; }
+  details.inner ul, details.inner ol { padding-left: 20px; font-size: .86rem; margin-top: 6px; }
+  details.inner li { margin: 6px 0; }
+  ol.playbook { padding-left: 20px; font-size: .86rem; }
+  ol.playbook li { margin: 7px 0; }
+  b { color: var(--ink); }
+
+  /* ---- chart ---- */
+  .chart-wrap { position: relative; }
+  .legend { display: flex; gap: 14px; font-size: .78rem; color: var(--ink-2);
+            margin: 6px 0 4px; flex-wrap: wrap; }
+  .legend .dot { display: inline-block; width: 9px; height: 9px; border-radius: 99px;
+                 margin-right: 5px; vertical-align: -1px; }
+  .chart-tip { position: absolute; pointer-events: none; background: var(--card);
+               border: 1px solid var(--rule); border-radius: 10px; padding: 8px 11px;
+               font-size: .76rem; box-shadow: 0 4px 14px rgb(0 0 0 / .18);
+               display: none; z-index: 3; min-width: 140px; }
+  .chart-tip .tip-date { font-weight: 650; margin-bottom: 3px; color: var(--ink); }
+  .chart-tip .tip-row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+  .chart-tip .dot { width: 8px; height: 8px; border-radius: 99px; flex: none; }
+  .chart-tip .tip-v { margin-left: auto; font-weight: 600; padding-left: 10px; }
+
+  /* ---- history table ---- */
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable:hover { color: var(--ink); }
+  th .arrow { font-size: .7rem; }
+  tr.detail-row td { white-space: normal; background: var(--paper-bg); }
+  tr.clickable { cursor: pointer; }
+
+  /* ---- modal ---- */
+  dialog { background: var(--card); color: var(--ink-2); border: 1px solid var(--rule);
+           border-radius: 14px; max-width: 640px; width: calc(100vw - 28px);
+           max-height: 85vh; padding: 18px 20px; }
+  dialog::backdrop { background: rgba(0,0,0,.45); }
+  dialog .close { float: right; background: none; border: none; color: var(--ink-3);
+                  font-size: 1.3rem; cursor: pointer; margin: -4px -6px 0 0; }
+
+  /* ---- self-check footer ---- */
+  #selfcheck { margin-top: 26px; font-size: .8rem; }
+  #selfcheck summary { cursor: pointer; list-style: none; font-weight: 600;
+                       color: var(--ink-3); min-height: 36px; display: flex;
+                       align-items: center; }
+  #selfcheck summary::-webkit-details-marker { display: none; }
+  #selfcheck .finding { margin-top: 6px; color: var(--warn); }
+  .credits { margin-top: 14px; color: var(--ink-3); font-size: .75rem; }
+</style>
+</head>
+<body>
+  <header id="topbar"></header>
+  <div id="banners"></div>
+  <main id="screen" aria-live="polite"></main>
+  <footer id="selfcheck"></footer>
+
+  <dialog id="infoModal">
+    <button class="close" aria-label="Close">×</button>
+    <h2 style="font-size:1rem;margin:0 24px 4px 0;color:var(--ink)">Trip handbook — tap a section</h2>
+    <details class="inner" open>
+      <summary>📋 Book in this order</summary>
+      <ol>
+        <li><b>Passports first</b> — all 3 (child too) valid <b>6+ months past Feb 2027</b> (into Aug 2027) with 2+ blank pages each.</li>
+        <li><b>Ticket ①</b> (Boston→Istanbul→Dhaka + the return from whichever city comes last) on the <b>airline's US website/app</b>. Booking there starts the federal 24-hour free-cancel window and keeps refunds simple. Avoid third-party sites.</li>
+        <li><b>Same day: Bangkok Marriott on points</b> (5 nights, 5th free). Points rates usually cancel free until a few days out. If the hotel doesn't work, cancel the flight within 24h at $0.</li>
+        <li><b>Bangladesh visas</b> — see Visas below. Do this before buying Ticket ②.</li>
+        <li><b>Ticket ② last</b> (the Dhaka→Bangkok/Singapore middle, in whichever order won). It never touches the US so the 24-hour rule does <b>not</b> apply. Treat it as non-refundable and buy it only once everything else is locked.</li>
+        <li><b>≤3 days before landing:</b> Thailand's TDAC digital arrival card + Singapore's SG Arrival Card, both free and online; no visas needed on US passports.</li>
+      </ol>
+    </details>
+    <details class="inner">
+      <summary>🧳 Baggage — why it's all over the place</summary>
+      <ul>
+        <li><b>Two different rulebooks.</b> Ticket ① starts in the USA, so it's counted in <b>bags</b> (piece concept). Turkish and the Gulf carriers give 2 × 23 kg per person, most European and US carriers give only 1. Ticket ② never touches the US, so it's counted in <b>kilos</b>, and the number changes by airline <i>and</i> by route.</li>
+        <li><b>Nothing is through-checked between the two tickets.</b> You collect the bags in Dhaka and check them in again for Ticket ②; same again at the middle stop if the middle is two separate tickets.</li>
+        <li><b>Low-cost carriers (AirAsia, Scoot, Jetstar, Thai LCCs) include no free checked bag at all.</b> The fare looks cheaper until you add 20 kg, and buying at the airport costs roughly double.</li>
+        <li><b>The child with a seat</b> normally gets the full adult allowance. Infants on a lap do not.</li>
+        <li>The figures on the Flights screen come from each airline's own baggage page. Fare brands (EcoFly, Economy Lite, Basic) can cut them. <b>The number on the checkout page is the one you actually bought.</b></li>
+      </ul>
+    </details>
+    <details class="inner">
+      <summary>💳 Cancellations & refunds</summary>
+      <ul>
+        <li><b>24-hour rule (US DOT):</b> any ticket that touches the US — Ticket ① — is fully refundable for <b>24 hours after booking</b> if departure is 7+ days away. This is the main safety valve; Turkish honors it only when booked via its own site/app.</li>
+        <li><b>After 24h on Turkish:</b> economy cancel fee roughly <b>$70–200+ per person</b>; the cheapest "EcoFly" promo fares are non-refundable. If unsure, pay the small step-up to a flexible economy fare. The exact rule shows at checkout. No cancellations in the last 12h before departure.</li>
+        <li><b>Ticket ② (the Dhaka→Bangkok/Singapore middle):</b> no US protection. AirAsia/Scoot/Thai LCCs are effectively non-refundable; full-service carriers charge fare-rule fees. Assume this money is spent once booked.</li>
+        <li><b>Airline-initiated changes:</b> if the airline significantly changes or cancels any flight, you're owed a <b>full refund</b> regardless of fare type.</li>
+        <li>Card refunds must arrive within 7 business days (DOT). Pay with a credit card that has trip protection.</li>
+        <li><b>Chase UR points:</b> portal bookings get real Turkish (235-) ticket numbers, so the stopover hotel usually still works. N/R fare classes are excluded, and changes route through Chase. Cleanest: book the airline direct with the card, spend UR on Ticket ② instead.</li>
+      </ul>
+    </details>
+    <details class="inner">
+      <summary>🛂 Visas & borders</summary>
+      <ul>
+        <li><b>Bangladesh:</b> US passports get a <b>30-day visa on arrival</b> at Dhaka — <b>$50 cash USD per person</b> (child too; carry $150 crisp), onward ticket + proof of funds (~$500), and it's granted at the officer's discretion. Getting tourist visas <b>in advance</b> from the mission is the safer play. Your stay keeps a buffer: never let the departure slip past day 30.</li>
+        <li><b>Thailand:</b> US passports enter <b>visa-exempt</b> (30+ days — a 5-night stay is well inside; no fee). File the free <b>TDAC digital arrival card online ≤3 days before</b> landing, kids included.</li>
+        <li><b>Istanbul stopover:</b> US citizens are <b>visa-free in Türkiye</b> (90 days/180). Leaving the airport for the 2 nights is fine, no visa needed.</li>
+        <li><b>Singapore:</b> visa-free for US passports; file the free <b>SG Arrival Card online ≤3 days before</b> landing.</li>
+        <li><b>Transit airside</b> on a single ticket needs no visa. Only if a hop is booked as two separate tickets would you clear immigration in the connecting country.</li>
+      </ul>
+    </details>
+    <details class="inner">
+      <summary>🕌 The Istanbul stopover perk</summary>
+      <ul>
+        <li>Turkish gives economy passengers a <b>FREE 4-star hotel night</b> when the connection is 20 hr–7 days on one reservation: book Ticket ①, then apply at their Stopover "Booker" page <b>≥72 hr before the flight</b>. Not valid on N/R fare classes. Check the booking-class letter before paying. On the 2-night version, night 2 is on you.</li>
+        <li>IST→DAC flies <b>once daily</b>, which is why the Istanbul stop costs so little extra. You'd be waiting for that flight anyway.</li>
+      </ul>
+    </details>
+    <details class="inner">
+      <summary>🧾 Small stuff that bites</summary>
+      <ul>
+        <li>Prices here are Google Flights <b>totals for all 3 travelers</b>; fares aren't held. Book on the airline site when ready.</li>
+        <li>Request bassinet/child meal at booking and re-confirm at check-in.</li>
+        <li>Carry printed copies of the onward tickets — both borders ask.</li>
+        <li>The "home" date assumes the return leg lands the next day; confirm the exact landing time before buying.</li>
+      </ul>
+    </details>
+  </dialog>
+
+<script>
+/* ================= shared helpers (ported verbatim from v1) ================ */
+const RAW = "https://raw.githubusercontent.com/jalalchowdhury1/dhaka-flights/main/site/data.json";
+const usd = (n) => n == null ? "—" : "$" + n.toLocaleString("en-US");
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const short = (d) => { const p = String(d).replace(",", "").split(" "); return p.length >= 2 ? p[0].slice(0,3) + " " + p[1] : d; };
+const EMOJI = {"BOS→DAC":"🇧🇩","DAC→DPS":"🌴","DPS→BOS":"🏠",
+               "DAC→SIN":"🇸🇬","SIN→DPS":"🌴","DAC→SIN→DPS":"🇸🇬",
+               "DAC→BKK":"🇹🇭","BKK→SIN":"🇸🇬","SIN→BKK":"🇹🇭",
+               "DAC→BKK→SIN":"🇹🇭","DAC→SIN→BKK":"🇸🇬",
+               "DPS→SIN":"🇸🇬","DAC→DPS→SIN":"🌴",
+               "BKK→BOS":"🏠","SIN→BOS":"🏠",
+               "BOS→IST":"🇺🇸","IST→DAC":"🕌"};
+const CITY = {BKK:"Bangkok", SIN:"Singapore", DPS:"Bali", DAC:"Dhaka",
+              BOS:"Boston", IST:"Istanbul"};
+const STAY_EMOJI = {BKK:"🇹🇭", SIN:"🇸🇬", DPS:"🌴"};
+const STAY_NOTE = {
+  BKK: "Marriott 5th-night-free block · US passports visa-exempt in Thailand · TDAC arrival card online ≤3 days before",
+  SIN: "US passports visa-free (SG Arrival Card online ≤3 days before)",
+  DPS: "Marriott 5th-night-free · e-VOA needs the onward booking as proof",
+};
+/* Which cities the trip's middle visits, in order. Bangkok-era entries carry
+   `order` + `bkk_nights`; Bali entries are either forward (no order) or the
+   reversed benchmark (`order: "bali-rev"`). Keep in sync with combo.ORDERS. */
+const orderInfo = (s) => s && s.bkk_nights != null
+  ? (s.order === "BKK-first"
+      ? {r1:"DAC→BKK", r2:"BKK→SIN", ret:"SIN→BOS",
+         c1:{code:"BKK", n:s.bkk_nights}, c2:{code:"SIN", n:s.sg_nights}}
+      : {r1:"DAC→SIN", r2:"SIN→BKK", ret:"BKK→BOS",
+         c1:{code:"SIN", n:s.sg_nights}, c2:{code:"BKK", n:s.bkk_nights}})
+  : s && s.order === "bali-rev"
+  ? {r1:"DAC→DPS", r2:"DPS→SIN", ret:"SIN→BOS",
+     c1:{code:"DPS", n:s.bali_nights}, c2:{code:"SIN", n:s.sg_nights}}
+  : {r1:"DAC→SIN", r2:"SIN→DPS", ret:"DPS→BOS",
+     c1:{code:"SIN", n:s ? s.sg_nights : null}, c2:{code:"DPS", n:s ? s.bali_nights : null}};
+/* main_total is the Bangkok trip from 1 Aug 2026; combined_total is the same
+   figure under its pre-rewrite name, kept so history stays continuous. */
+const mainTotal = (h) => h.main_total ?? h.combined_total ?? null;
+const plain = s => esc(String(s).replace(/\*/g, ""));
+const _d = s => { const t = Date.parse(s); return isNaN(t) ? null : new Date(t); };
+const addDays = (d, n) => d ? new Date(d.getTime() + n * 86400000) : null;
+const fd = d => d ? d.toLocaleDateString("en-US", {month: "short", day: "numeric"}) : "—";
+const fr = (a, b) => a && b ? `${fd(a)}–${fd(b)}` : "—";
+const el = (html, cls) => { const d = document.createElement("div");
+  if (cls) d.className = cls; d.innerHTML = html; return d; };
+
+/* ============ bulletproof data layer — the core robustness code ============ */
+const LS_KEY = "dhaka-flights:last-good";
+let DATA = null, DATA_SOURCE = "live";   // live | local | cache
+let CLIENT_FINDINGS = [];
+
+async function loadData() {
+  // 1. GitHub raw (fresh)  2. same-origin copy  3. last-good localStorage
+  try {
+    const r = await fetch(RAW, {cache: "no-store"});
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    DATA = await r.json();
+    saveLastGood(DATA);
+    return;
+  } catch (e) { console.warn("raw fetch failed", e); }
+  try {
+    const r = await fetch("./data.json", {cache: "no-store"});
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    DATA = await r.json();
+    DATA_SOURCE = "local";
+    saveLastGood(DATA);
+    return;
+  } catch (e) { console.warn("local fetch failed", e); }
+  const cached = loadLastGood();
+  if (cached && cached.payload) { DATA = cached.payload; DATA_SOURCE = "cache"; return; }
+  DATA = null;
+}
+function saveLastGood(payload) {
+  try { localStorage.setItem(LS_KEY,
+        JSON.stringify({savedAt: new Date().toISOString(), payload})); }
+  catch (e) {}                                  // quota/private mode: fine
+}
+function loadLastGood() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY)); }
+  catch (e) { return null; }
+}
+
+function renderSafe(fn) {
+  // Per-section error boundary: one broken section must never blank the page.
+  try { return fn(); }
+  catch (e) {
+    console.error(e);
+    return el(`<b>⚠ This section couldn't render.</b>
+      <div class="small" style="margin-top:4px">The data may have an unexpected
+      shape — the rest of the page is unaffected.</div>`, "pass error-card");
+  }
+}
+
+function validatePayload(d) {
+  // Mirrors schema_check.py TOP — keep the two lists in sync.
+  const probs = [];
+  if (!d || typeof d !== "object") return ["payload missing entirely"];
+  const want = {updated: "string", warnings: "array", trip: "object",
+                ticket1_options: "array", ticket2_options: "array",
+                flights: "array", history: "array"};
+  for (const [k, t] of Object.entries(want)) {
+    const v = d[k];
+    const ok = t === "array" ? Array.isArray(v)
+             : typeof v === t && v !== null;
+    if (!ok) probs.push(`'${k}' missing or not ${t}`);
+  }
+  for (const k of ["main", "budget", "bali", "hotel"])
+    if (d[k] !== null && d[k] !== undefined && typeof d[k] !== "object")
+      probs.push(`'${k}' should be object or null`);
+  return probs;
+}
+
+function arithmeticFindings(d) {
+  // The page re-checks the headline math it displays.
+  const out = [], m = d && d.main,
+        h = d && Array.isArray(d.history) && d.history.length
+            ? d.history[d.history.length - 1] : null;
+  if (m && typeof m.total === "number" && h &&
+      typeof h.ticket1_total === "number" && typeof h.ticket2_total === "number" &&
+      Math.abs(h.ticket1_total + h.ticket2_total - m.total) > 1)
+    out.push(`①(${h.ticket1_total}) + ②(${h.ticket2_total}) ≠ total (${m.total})`);
+  if (m && h && typeof m.total === "number" &&
+      typeof h.main_total === "number" && h.main_total !== m.total)
+    out.push(`history mirror (${h.main_total}) ≠ tonight's total (${m.total})`);
+  return out;
+}
+
+/* ============================ theme toggle ================================ */
+const THEME_KEY = "dhaka-flights:theme";       // auto | light | dark
+function applyTheme(mode) {
+  if (mode === "light" || mode === "dark")
+    document.documentElement.setAttribute("data-theme", mode);
+  else document.documentElement.removeAttribute("data-theme");
+  try { localStorage.setItem(THEME_KEY, mode); } catch (e) {}
+}
+function cycleTheme() {
+  const cur = localStorage.getItem(THEME_KEY) || "auto";
+  const next = cur === "auto" ? "dark" : cur === "dark" ? "light" : "auto";
+  applyTheme(next);
+  renderTopbar();
+}
+const themeLabel = () =>
+  ({auto: "🌓", dark: "🌙", light: "☀️"})[localStorage.getItem(THEME_KEY) || "auto"];
+
+/* ============================== app shell ================================= */
+function updatedChip(d) {
+  const raw = String(d && d.updated || "");
+  const t = Date.parse(raw.replace(" ", "T"));
+  if (isNaN(t)) return raw ? `upd ${esc(raw)}` : "no timestamp";
+  const h = Math.round((Date.now() - t) / 3600000);
+  const hhmm = raw.split(" ")[1] || raw;
+  return `upd ${esc(hhmm)} · ${h <= 1 ? "just now" : h + " h ago"}`;
+}
+
+function renderTopbar() {
+  const name = location.hash.replace(/^#\/?/, "");
+  document.getElementById("topbar").innerHTML = `
+    <a class="wordmark" href="#/">✈ TRIP·TRACKER</a>
+    <a class="back" href="#/" ${name ? "" : "hidden"}>← Tonight</a>
+    <span class="spacer"></span>
+    <span class="chip">${updatedChip(DATA)}</span>
+    ${DATA && DATA.verified ? `<span class="chip chip-good">🔎 re-check ✓</span>` : ""}
+    <button class="iconbtn" id="infoBtn" title="Booking, baggage, cancellation & visa handbook"
+      aria-label="Trip handbook">i</button>
+    <button class="iconbtn" id="themeBtn" aria-label="Switch color theme">${themeLabel()}</button>`;
+  document.getElementById("infoBtn").onclick = () => document.getElementById("infoModal").showModal();
+  document.getElementById("themeBtn").onclick = cycleTheme;
+}
+
+function renderBanners() {
+  const box = document.getElementById("banners");
+  let html = "";
+  if (DATA_SOURCE === "cache") {
+    const saved = (loadLastGood() || {}).savedAt || "";
+    html += `<div class="banner banner-warn"><b>📦 Showing saved data from
+      ${esc(saved.slice(0, 16).replace("T", " "))}</b> — the live fetch failed.
+      Reload to retry.</div>`;
+  }
+  // Freshness tripwire: if the tracker has silently died, say so loudly.
+  const ts = Date.parse(String(DATA && DATA.updated || "").replace(" ", "T"));
+  if (!isNaN(ts) && Date.now() - ts > 36 * 3600 * 1000) {
+    html += `<div class="banner banner-bad"><b>⚠️ This data is
+      ${Math.round((Date.now() - ts) / 86400000 * 10) / 10} days old.</b>
+      The nightly tracker may be down — check the Mac is on and see cron.log
+      in the Dhaka flights folder.</div>`;
+  }
+  box.innerHTML = html;
+}
+
+function renderSelfcheck() {
+  const notes = [
+    ...(DATA && DATA.warnings || []).map(w => "⚠️ " + esc(w)),
+    ...CLIENT_FINDINGS.map(esc),
+  ];
+  const credits = `<div class="credits">Prices are Google Flights totals for all
+    3 travelers. Data updates with the midnight scrape; reload to get the latest.</div>`;
+  document.getElementById("selfcheck").innerHTML = notes.length
+    ? `<details><summary>🧪 Self-check: ${notes.length} note${notes.length > 1 ? "s" : ""}
+         on today's data — tap to view</summary>
+       ${notes.map(n => `<div class="finding">${n}</div>`).join("")}</details>` + credits
+    : `<div class="small">🧪 Self-check: 0 findings — payload shape and headline
+       math verified in this browser.</div>` + credits;
+}
+
+/* ============================= hash router ================================ */
+const ROUTES = {
+  "":         () => renderTonight(DATA),
+  "flights":  () => renderFlights(DATA),
+  "stays":    () => renderStays(DATA),
+  "history":  () => renderHistory(DATA),
+};
+function route() {
+  const name = location.hash.replace(/^#\/?/, "");
+  const fn = ROUTES[name] || ROUTES[""];
+  const screen = document.getElementById("screen");
+  screen.innerHTML = "";
+  screen.appendChild(renderSafe(fn));
+  window.scrollTo(0, 0);
+  renderTopbar();                              // back link shows on drill-ins
+  bindChartHover(screen);
+}
+window.addEventListener("hashchange", route);
+
+/* ======================= screens (Tasks 6–9 fill these) =================== */
+function renderTonight(d) {
+  return el(`<div class="pass"><span class="micro">Tonight</span>
+    <div class="muted" style="margin-top:6px">Screen under construction.</div></div>`);
+}
+function renderFlights(d) {
+  return el(`<div class="pass"><span class="micro">Flights</span>
+    <div class="muted" style="margin-top:6px">Screen under construction.</div></div>`);
+}
+function renderStays(d) {
+  return el(`<div class="pass"><span class="micro">Stays</span>
+    <div class="muted" style="margin-top:6px">Screen under construction.</div></div>`);
+}
+function renderHistory(d) {
+  return el(`<div class="pass"><span class="micro">History</span>
+    <div class="muted" style="margin-top:6px">Screen under construction.</div></div>`);
+}
+function bindChartHover(root) { /* ported with the chart in Task 9 */ }
+
+/* ================================ boot ==================================== */
+function renderNoDataScreen() {
+  const screen = document.getElementById("screen");
+  screen.innerHTML = "";
+  screen.appendChild(el(`
+    <div class="pass-head"><span>No data</span><span>⚠</span></div>
+    <b>Couldn't reach tonight's data.</b>
+    <div class="muted" style="margin-top:6px">The live feed, the local copy and
+    the saved-in-browser fallback all failed — likely no network, or the first
+    visit happened while GitHub was unreachable.</div>
+    <button class="btn big" onclick="location.reload()">Try again</button>`, "pass error-card"));
+}
+
+const modal = document.getElementById("infoModal");
+modal.querySelector(".close").onclick = () => modal.close();
+modal.onclick = (e) => { if (e.target === modal) modal.close(); };
+
+(async function boot() {
+  applyTheme(localStorage.getItem(THEME_KEY) || "auto");
+  await loadData();
+  renderTopbar();
+  if (DATA === null) { renderNoDataScreen(); renderSelfcheck(); return; }
+  CLIENT_FINDINGS = [
+    ...validatePayload(DATA).map(p => "📐 " + p),
+    ...arithmeticFindings(DATA).map(p => "⚠ " + p),
+  ];
+  renderBanners();
+  renderSelfcheck();
+  route();
+})();
+</script>
+</body>
+</html>
