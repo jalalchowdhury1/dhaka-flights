@@ -75,6 +75,9 @@ def main():
 
     print("=== Daily flight search starting ===")
 
+    from scraper import begin_run, DIAG as SCRAPER_DIAG
+    begin_run()
+
     # Ticket ① goes FIRST: it's the one search nothing else can substitute for,
     # so it should run while the browser session is freshest.
     tickets1 = scrape_tickets_all()
@@ -120,6 +123,10 @@ def main():
                           sg_tickets=sg_tickets, bali=bali, bali_t1=bali_t1)
     for w in warnings:
         print(f"SELF-CHECK WARNING: {w}")
+
+    # ⏱ Deadline skips ride along as warnings — they also explain any
+    # "no fares for leg×date" sanity warnings from the same night.
+    warnings += [f"⏱ {s}" for s in SCRAPER_DIAG.get("deadline_skips", [])]
 
     # Build the payload BEFORE notifying, so Telegram and the dashboard quote
     # the same numbers, alternatives and baggage rules.

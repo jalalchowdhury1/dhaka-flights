@@ -88,7 +88,28 @@ def parse_price(raw: str) -> Union[int, str]:
 # browser-automation failure apart from a genuine "Google returned nothing".
 # (2026-07-15: the browse daemon wedged mid-run; every page after that was a
 # silent about:blank stub and the Telegram alert wrongly blamed Google.)
-DIAG = {"timeouts": 0, "blank_pages": 0, "aborted_early": False}
+DIAG = {"timeouts": 0, "blank_pages": 0, "aborted_early": False,
+        "deadline_skips": []}
+
+# ⏱ Soft wall-clock deadline (2026-08-02): past this, skippable searches are
+# dropped in reverse priority (Bali watch, then remaining one-way legs) so a
+# Google slow-walk night degrades instead of grinding for hours. Ticket ① /
+# Ticket ② multi-city searches are never skipped — they're the product.
+RUN_DEADLINE_MIN = 35
+_run_start = None
+
+
+def begin_run() -> None:
+    """Called once by run_daily at run start; arms the deadline clock."""
+    global _run_start
+    _run_start = time.monotonic()
+    DIAG["deadline_skips"] = []
+
+
+def _past_deadline() -> bool:
+    if _run_start is None:        # manual/interactive use: no deadline
+        return False
+    return (time.monotonic() - _run_start) > RUN_DEADLINE_MIN * 60
 
 DEBUG_TREE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "debug_last_zero.txt")
 
@@ -884,6 +905,11 @@ def scrape_bali_watch():
     """(tickets1, fwd_tickets, rev_tickets) for the retired Bali trip, both
     orders. Runs LAST in the nightly order — the Bangkok trip is the product,
     so a throttled night degrades the comparison before the headline."""
+    if _past_deadline():
+        DIAG["deadline_skips"].append(
+            f"🌴 Bali watch: all 3 searches (past {RUN_DEADLINE_MIN} min)")
+        print("DEADLINE: skipping Bali watch entirely")
+        return [], [], []
     print("[bali-watch] Ticket ① (DPS return)")
     tickets1 = []
     for attempt in range(1, TICKET1_ATTEMPTS + 1):
@@ -938,6 +964,13 @@ def scrape_all() -> list:
     for leg in LEGS:
         origin, dest = leg["origin"], leg["dest"]
         for depart in leg["dates"]:
+            if _past_deadline():
+                remaining = total - n
+                DIAG["deadline_skips"].append(
+                    f"one-way legs: {remaining} of {total} searches "
+                    f"(past {RUN_DEADLINE_MIN} min)")
+                print(f"DEADLINE: skipping remaining {remaining} one-way searches")
+                return all_results
             n += 1
             print(f"[{n}/{total}] {origin}→{dest}  {depart} (one-way)")
             results = scrape_route(origin, dest, depart)
