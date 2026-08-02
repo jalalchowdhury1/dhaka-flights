@@ -658,9 +658,307 @@ function renderTonight(d) {
       · ${esc(d.trip.rules)}</div>`));
   return root;
 }
+/* ---- Flights (#/flights) — deep dive on the two purchases -------------- */
+function bookBtn(link, big) {
+  return link ? `<a class="btn${big ? " big" : ""}" href="${esc(link)}" target="_blank" rel="noopener">Book</a>` : "";
+}
+
+function bagLine(bag) {
+  if (!bag) return "";
+  const cls = bag.confidence === "unknown" ? "bag unknown" : "bag";
+  const cabin = bag.cabin && bag.cabin !== "—" ? ` · cabin ${esc(bag.cabin)}` : "";
+  return `<div class="${cls}">🧳 <b>${esc(bag.checked)}</b> — ${esc(bag.carrier)}${cabin}</div>`;
+}
+
+function legLine(f) {
+  const lay = f.layovers && f.layovers !== "N/A" && f.layovers !== "none" ? " · " + esc(f.layovers) : "";
+  return `<div class="leg"><span class="em">${EMOJI[f.route] || "✈️"}</span>
+    <span>${esc(f.route)} <b>${short(f.depart)}</b> · ${esc(f.airline)} · ${esc(f.stops)}${lay}</span>
+    <span class="price">${usd(f.price_total)} ${bookBtn(f.link)}</span></div>`;
+}
+
+function ojLine(oj) {
+  const route = oj.desc ? esc(oj.desc)
+    : `BOS→DAC <b>${short(oj.out_date)}</b> + DPS→BOS <b>${short(oj.ret_date)}</b> — one ticket · ${esc(oj.airline)} out · ${esc(oj.stops)}${oj.layovers && oj.layovers !== "N/A" ? " · " + esc(oj.layovers) : ""}`;
+  return `<div class="leg"><span class="em">🎫</span>
+    <span>${route}</span>
+    <span class="price">${usd(oj.price_total)} ${bookBtn(oj.link)}</span></div>`;
+}
+
+function sgTicketLine(t) {
+  const route = t.route || "DAC→SIN→DPS";
+  return `<div class="leg"><span class="em">${EMOJI[route] || "✈️"}</span>
+    <span>${esc(route)} <b>${short(t.out_date)}</b> + <b>${short(t.ret_date)}</b> — one ticket · ${esc(t.airline)}</span>
+    <span class="price">${usd(t.price_total)} ${bookBtn(t.link)}</span></div>`;
+}
+
+function timeline(s) {
+  const stop = n => n != null ? `${n}n` : "?";
+  const o = orderInfo(s);
+  const chips = [
+    ["🇺🇸", "BOS", ""], ["🕌", "Istanbul", stop(s.ist_nights ?? 2)],
+    ["🇧🇩", "Dhaka", `${s.dhaka_days}d`],
+    [STAY_EMOJI[o.c1.code], CITY[o.c1.code], stop(o.c1.n)],
+    [STAY_EMOJI[o.c2.code], CITY[o.c2.code], stop(o.c2.n)],
+    ["🏠", `home ${esc(s.home)}`, ""],
+  ];
+  return `<div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:12px 0 4px">` +
+    chips.map(([e, name, n], i) =>
+      `${i ? '<span style="color:var(--ink-3)">→</span>' : ""}<span class="chip">${e} <b>${name}</b>${n ? ` <span style="color:var(--ink-2)">${n}</span>` : ""}</span>`
+    ).join("") + `</div>`;
+}
+
+function structureCard(s, hero) {
+  const badge = s.valid ? `<span class="badge good">home ${esc(s.home)} ✓</span>`
+                        : `<span class="badge warn">⚠️ ${esc(s.flag || "check dates")}</span>`;
+  const o = orderInfo(s);
+  const stays = [o.c1, o.c2].map(c => `${CITY[c.code]} ${c.n ?? "?"} nights`).join(" · ");
+  const ist = s.ist_nights != null ? `Istanbul ${s.ist_nights} nights · ` : "";
+  const num = hero ? `<div style="font-size:1.7rem;font-weight:750;letter-spacing:-.02em;color:var(--ink)">${usd(s.total)}</div>`
+                   : `<b style="font-size:1.15rem">${usd(s.total)}</b>`;
+  return `<div class="pass">
+    ${num}
+    <div style="margin:2px 0 8px">${esc(s.name)} ${badge}</div>
+    <div class="muted" style="margin-bottom:6px">${ist}Dhaka ${s.dhaka_days} days · ${stays}</div>
+    ${s.openjaw ? ojLine(s.openjaw) : ""}
+    ${s.sg_ticket ? sgTicketLine(s.sg_ticket) : ""}
+    ${(s.legs || []).map(legLine).join("")}
+    ${s.note ? `<div class="muted" style="margin-top:8px">💡 ${esc(s.note)}</div>` : ""}
+  </div>`;
+}
+
+function sec(title, body, open, noRule) {
+  return `<details class="sec${noRule ? " no-rule" : ""}"${open ? " open" : ""}><summary>${title}</summary>${body}</details>`;
+}
+
+/* Ticket ① as a boarding pass: the three flights that live on one booking. */
+function ticket1Pass(s, bag) {
+  const oj = s.openjaw || {};
+  const o = orderInfo(s);
+  const out = _d(oj.out_date), dacIn = _d(oj.out_arrive);
+  const istOut = addDays(dacIn, -1), ret = _d(oj.ret_date);
+  const lay = v => v && v !== "N/A" && v !== "none" ? ` · layover ${esc(v)}` : "";
+  const dur = v => v && v !== "N/A" ? `${esc(v)}` : "times at booking";
+  const c2 = CITY[o.c2.code];
+  const row = (em, route, when, detail, b) => `
+    <div class="leg"><span class="em">${em}</span>
+      <span><b>${route}</b> ${when}
+        <div class="muted" style="margin-top:2px">${detail}</div>${bagLine(b)}</span></div>`;
+  return `<div class="pass">
+    <div class="pass-head"><span>Ticket ① · ${esc(oj.airline || "?")}</span><span>${usd(oj.price_total)}</span></div>
+    ${row("🇺🇸", "BOS→IST", esc(fd(out)),
+      `${esc(oj.airline || "—")} · ${dur(oj.duration)}` +
+      (oj.out_depart_time ? ` · departs ${esc(oj.out_depart_time)}` : "") + lay(oj.layovers),
+      bag["BOS→IST"])}
+    ${row("🕌", "IST→DAC", esc(fd(istOut)),
+      `evening departure, lands ${esc(fd(dacIn))} morning · exact times shown at booking`,
+      bag["IST→DAC"])}
+    ${row("🏠", `${esc(o.ret)}`, esc(fd(ret)),
+      `return leg of the same ticket · lands ${esc(s.home)} · exact times at booking`,
+      bag[o.ret])}
+    <div class="perf"></div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      ${bookBtn(oj.link, true)}
+      <span class="small">24-hour free cancel when booked on the airline's US site
+      (departure 7+ days out) — book this one first.</span>
+    </div>
+  </div>`;
+}
+
+/* Ticket ② as a boarding pass: one multi-city ticket OR two one-ways. */
+function ticket2Pass(s, bag) {
+  const o = orderInfo(s);
+  const t = s.sg_ticket || null;
+  const legs = s.legs || [];
+  const l1 = legs.find(f => f.route === o.r1), l2 = legs.find(f => f.route === o.r2);
+  const lay = v => v && v !== "N/A" && v !== "none" ? ` · layover ${esc(v)}` : "";
+  const dur = v => v && v !== "N/A" ? `${esc(v)}` : "times at booking";
+  const tt = (dep, arr) => dep ? ` · ${esc(dep)}${arr ? " → " + esc(arr) : ""}` : "";
+  let head, rows, foot;
+  if (t) {
+    head = `<span>Ticket ② · ${esc(t.airline)} · one ticket</span><span>${usd(t.price_total)}</span>`;
+    rows = `
+      <div class="leg"><span class="em">${EMOJI[o.r1] || "✈️"}</span>
+        <span><b>${esc(o.r1)}</b> ${short(t.out_date)}
+          <div class="muted" style="margin-top:2px">${esc(t.airline)} · ${dur(t.duration)}` +
+          (t.out_depart_time ? ` · departs ${esc(t.out_depart_time)}` : "") +
+          (t.out_arrive_time ? ` → lands ${esc(t.out_arrive_time)}` : "") + lay(t.layovers) +
+          `</div>${bagLine(bag[o.r1])}</span></div>
+      <div class="leg"><span class="em">${EMOJI[o.r2] || "✈️"}</span>
+        <span><b>${esc(o.r2)}</b> ${short(t.ret_date)}
+          <div class="muted" style="margin-top:2px">second leg of the same ticket · short hop · times at booking</div>
+          ${bagLine(bag[o.r2])}</span></div>`;
+    foot = `${bookBtn(t.link, true)}
+      <span class="small">never touches the US — no 24-h rule; treat as
+      non-refundable and buy last.</span>`;
+  } else if (l1 || l2) {
+    const total = (l1 && l1.price_total || 0) + (l2 && l2.price_total || 0);
+    const legRow = (f, r) => f ? `
+      <div class="leg"><span class="em">${EMOJI[r] || "✈️"}</span>
+        <span><b>${esc(r)}</b> ${short(f.depart)}
+          <div class="muted" style="margin-top:2px">${esc(f.airline)} · ${esc(f.stops)}${tt(f.depart_time, f.arrive_time)}${lay(f.layovers)}</div>
+          ${bagLine(bag[r])}</span>
+        <span class="price">${usd(f.price_total)} ${bookBtn(f.link)}</span></div>` : "";
+    head = `<span>Ticket ② · two one-way tickets</span><span>${usd(total)}</span>`;
+    rows = legRow(l1, o.r1) + legRow(l2, o.r2);
+    foot = `<span class="small">two separate purchases (one Book button each above) —
+      you re-check bags in ${esc(CITY[o.c1.code])} and a delay on the first hop is
+      your problem, not the airline's. No US 24-h rule; buy last.</span>`;
+  } else {
+    return `<div class="pass"><div class="pass-head"><span>Ticket ②</span><span>—</span></div>
+      <div class="muted">No Ticket ② flights were captured tonight.</div></div>`;
+  }
+  return `<div class="pass">
+    <div class="pass-head">${head}</div>
+    ${rows}
+    <div class="perf"></div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">${foot}</div>
+  </div>`;
+}
+
+/* The losing order — always shown with its Δ, never hidden. */
+function otherOrderCard(o) {
+  if (!o) return "";
+  const gap = o.delta > 0 ? `+${usd(o.delta)}` : o.delta === 0 ? "same price" : `−${usd(-o.delta)}`;
+  const badge = o.valid ? "" : ` <span class="badge warn">⚠️ ${esc(o.flag || "check dates")}</span>`;
+  return `<div class="pass"><b style="font-size:.95rem">🔁 ${esc(o.order_label)} instead: ${usd(o.total)}</b>
+    <span class="muted">(${gap})</span>${badge}
+    <div class="muted" style="margin-top:4px">① ${esc(o.ticket1_airline || "?")} ${usd(o.ticket1_total)}
+      + ② ${esc(o.ticket2_airlines || "?")} ${usd(o.ticket2_total)} (${esc(o.ticket2_kind || "")})
+      · Bangkok ${o.bkk_nights ?? "–"}n · Singapore ${o.sg_nights ?? "–"}n</div>
+    <div class="small" style="margin-top:2px">Both orders are scraped nightly — the cheaper valid trip headlines.</div>
+  </div>`;
+}
+
+/* ---------- Baggage: the whole picture on one card ---------- */
+function baggageCard(s) {
+  const rows = s.baggage || [];
+  if (!rows.length) return "";
+  const body = rows.map(r => {
+    const others = (r.others || []).map(o => `<div class="muted">${esc(o.carrier)}: ${esc(o.checked)}</div>`).join("");
+    const warn = r.confidence === "unknown" ? ' style="color:var(--warn)"' : "";
+    return `<tr><td>${EMOJI[r.route] || "✈️"} ${esc(r.route)}</td>
+      <td><span class="tk t${r.ticket}">Ticket ${r.ticket === 1 ? "①" : "②"}</span></td>
+      <td class="wrap">${esc(r.carrier)}${others}</td>
+      <td class="wrap"${warn}><b>${esc(r.checked)}</b>${r.cabin && r.cabin !== "—" ? `<div class="muted">cabin ${esc(r.cabin)}</div>` : ""}</td>
+      <td>${r.url ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">rules</a>` : ""}</td></tr>`;
+  }).join("");
+  const warns = (s.baggage_warnings || []).map(w => `<div style="margin-top:6px">⚠️ ${esc(w)}</div>`).join("");
+  return `<div class="pass scroll-x">
+    <table><tr><th>Leg</th><th>On</th><th>Airline</th><th>Checked, per person</th><th></th></tr>${body}</table>
+    <div style="margin-top:10px;font-size:.84rem;color:var(--warn);background:var(--warn-bg);border-radius:10px;padding:10px 12px">
+      ${warns || "⚠️ Confirm every allowance on the fare page before paying."}</div>
+    <div class="small" style="margin-top:8px">Reference figures from each airline's own baggage page (checked ${esc(s.baggage_checked || "")}).
+      Fare brands — EcoFly, Economy Lite, Basic — can cut them, and Google never shows the brand. <b>The checkout page is the authority.</b></div>
+  </div>`;
+}
+
+/* ---------- "What else could I buy, and how much more?" ---------- */
+function altTable(options, note, legRoutes) {
+  if (!options || !options.length) return `<div class="pass muted">No alternatives were captured for these dates tonight.</div>`;
+  const body = options.map(o => {
+    const d = o.delta;
+    const gap = o.chosen ? `<span class="badge good">chosen</span>` :
+      d == null ? "—" :
+      d === 0 ? "same price" :
+      d < 0 ? `<span style="color:var(--good)">−${usd(-d).slice(1)}</span>` : `+${usd(d).slice(1)}`;
+    const b = o.baggage || {};
+    const bagTxt = b.summary || b.checked || "";
+    const btn = (l, t) => l ? `<a class="btn" href="${esc(l)}" target="_blank" rel="noopener">${t}</a>` : "";
+    const books = o.link2 && legRoutes
+      ? btn(o.link, `Book ${legRoutes[0]}`) +
+        `<div style="margin-top:4px">${btn(o.link2, `Book ${legRoutes[1]}`)}</div>`
+      : bookBtn(o.link);
+    return `<tr class="${o.chosen ? "chosen" : ""}">
+      <td class="wrap">${esc(o.airline)}</td>
+      <td>${esc(o.kind)}</td>
+      <td class="num"><b>${usd(o.price)}</b></td>
+      <td class="num">${gap}</td>
+      <td class="wrap">${esc(bagTxt)}</td>
+      <td class="num">${books}</td></tr>`;
+  }).join("");
+  return `<div class="pass scroll-x"><table>
+    <tr><th>Airline</th><th>How</th><th class="num">Price</th><th class="num">vs chosen</th>
+        <th>Checked bags</th><th></th></tr>${body}</table>
+    <div class="small" style="margin-top:8px"><b>Prices are totals for all 3 travelers</b> (2 adults + 1 child) —
+    "vs chosen" is how much more the whole family pays. ${note}</div></div>`;
+}
+
 function renderFlights(d) {
-  return el(`<div class="pass"><span class="micro">Flights</span>
-    <div class="muted" style="margin-top:6px">Screen under construction.</div></div>`);
+  const root = el("");
+  const m = d.main;
+  if (!m) {
+    root.appendChild(el(`<b>No trip could be priced in the latest run.</b>
+      <div class="muted" style="margin-top:4px">The flights deep-dive appears once
+      a trip prices — the retry slots try again automatically.</div>`, "pass"));
+    return root;
+  }
+  const oi = orderInfo(m);
+  const bag = {};
+  (m.baggage || []).forEach(b => { bag[b.route] = b; });
+
+  add(root, () => {
+    const badge = m.valid ? `<span class="badge good">home ${esc(m.home)} ✓</span>`
+                          : `<span class="badge warn">⚠️ ${esc(m.flag || "check dates")}</span>`;
+    return el(`<span class="micro">The trip you'd book — two purchases</span> ${badge}
+      ${timeline(m)}
+      ${ticket1Pass(m, bag)}
+      ${ticket2Pass(m, bag)}
+      ${m.alt_note ? `<div class="muted" style="margin-top:8px">💸 ${esc(m.alt_note)}</div>` : ""}
+      <div class="small" style="margin-top:8px">Book ① first (24-h free cancel on the
+      airline's US site) — full order in the ⓘ handbook, top right.</div>`);
+  });
+
+  const budget = d.budget;
+  if (budget) add(root, () => el(sec(
+    `💸 Cheaper if you're flexible — ${usd(budget.total)} (save ${usd(budget.savings)})`,
+    `<div class="muted" style="margin:8px 0 2px">Same Ticket ① (same order) and the same 5-night Bangkok block —
+     the Singapore-nights band is waived and the Dhaka dates shift to whatever prices best.` +
+    ((budget.diffs || []).length ? ` What changes: <b>${budget.diffs.map(esc).join(" · ")}</b>.` : "") +
+    `</div>` + timeline(budget) + structureCard(budget, false),
+    true)));
+
+  add(root, () => el(`<span class="micro" style="display:block;margin-top:16px">The other city order</span>`
+    + otherOrderCard(m.other_order)));
+
+  const t2 = d.ticket2_options || [];
+  const t2dates = m.sg_ticket ? `${short(m.sg_ticket.out_date)} + ${short(m.sg_ticket.ret_date)}` : "same dates";
+  add(root, () => el(sec(`🔀 Ticket ② alternatives (${t2dates})`,
+    altTable(t2, `Same dates, so the ${CITY[oi.c1.code]} and ${CITY[oi.c2.code]} nights are identical — the price gap is the whole story. ` +
+                 `"1 ticket" = one multi-city booking; "2 tickets" = the two hops bought separately ` +
+                 `(sometimes cheaper, but you re-check bags in ${CITY[oi.c1.code]} and a delay on the first leg is your problem, not the airline's). ` +
+                 "Two-ticket rows have one Book button per purchase.", [oi.r1, oi.r2]),
+    false)));
+  add(root, () => el(sec(`🎫 Ticket ① alternatives — return from ${CITY[oi.c2.code]}`,
+    altTable(d.ticket1_options || [], "Same three flights and dates, different airline. Watch the bag column: " +
+             "Turkish and the Gulf carriers give two 23 kg bags each where European and US carriers give one."),
+    false)));
+
+  add(root, () => el(sec("🧳 Baggage, leg by leg", baggageCard(m), false)));
+
+  add(root, () => el(sec("📋 How to book it (short version)", `<div class="pass">
+    <ol class="playbook">
+      <li>Check all 3 passports: valid into <b>Aug 2027</b>, 2+ blank pages.</li>
+      <li>Buy <b>Ticket ①</b> (Boston→Istanbul→Dhaka + the return from the last city) on the airline's US site — you get a <b>24-hour full-refund window</b> (federal rule, departure 7+ days out).</li>
+      <li>Same day, lock the Bangkok Marriott on points (5 nights, 5th free); if it falls through, cancel the flight free inside 24h.</li>
+      <li>Sort <b>Bangladesh visas</b> (30-day VOA: $50 cash each + onward ticket — or safer, get visas in advance).</li>
+      <li>Buy <b>Ticket ②</b> (the Dhaka→Bangkok/Singapore middle) last — no US refund protection; treat as non-refundable.</li>
+      <li>≤3 days before landing: Thailand's <b>TDAC</b> digital arrival card + Singapore's <b>SG Arrival Card</b> — both free & online; no visas needed on US passports.</li>
+    </ol>
+    <div class="muted" style="margin-top:6px">The ⓘ next to the theme button has the full handbook: baggage rulebooks, cancellation windows, visa fine print.</div>
+  </div>`, false)));
+
+  const flights = d.flights || [];
+  if (flights.length) {
+    add(root, () => {
+      const rows = flights.map(f => `<tr><td>${esc(f.route)}</td><td>${short(f.depart)}</td>
+        <td class="wrap">${esc(f.airline)}</td><td>${esc(f.stops)}</td><td class="num">${usd(f.price_total)}</td></tr>`).join("");
+      return el(sec(`🗂 All ${flights.length} one-way fares scraped tonight`,
+        `<div class="pass scroll-x"><table><tr><th>Leg</th><th>Depart</th><th>Airline</th><th>Stops</th><th class="num">Total</th></tr>${rows}</table>
+         <div class="small" style="margin-top:6px">Only the Ticket ② one-way legs (both orders) are scraped as singles; the long legs are only ever priced as Ticket ①.</div></div>`, false));
+    });
+  }
+  return root;
 }
 function renderStays(d) {
   return el(`<div class="pass"><span class="micro">Stays</span>
