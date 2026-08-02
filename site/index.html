@@ -5,152 +5,230 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Istanbul · Dhaka · Bangkok · Singapore — Trip Tracker</title>
 <style>
+  /* Design tokens — light is default; dark under media query AND data-theme,
+     per the validated reference palette. One UI accent (blue); series colors
+     are data encodings, validated for CVD in both modes. */
   :root {
     color-scheme: light;
-    --surface: #fcfcfb; --card: #ffffff; --border: #e5e4e0;
-    --text: #0b0b0b; --text-2: #52514e; --text-3: #8a897f;
-    --s1: #2a78d6; --s2: #1baf7a; --s3: #eda100;
+    --surface: #fcfcfb; --card: #ffffff; --border: #e5e4e0; --grid: #efeeeb;
+    --text: #0b0b0b; --text-2: #52514e; --text-3: #6f6e64;
+    --accent: #2a78d6; --accent-ink: #ffffff;
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
     --good-bg: #e3f4e3; --good-fg: #0f5c0f;
     --warn-bg: #fdeecd; --warn-fg: #7a5200;
-    --btn-bg: #2a78d6; --btn-fg: #ffffff;
+    --shadow: 0 1px 2px rgb(60 55 40 / .05);
   }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:where(:not([data-theme="light"])) {
       color-scheme: dark;
-      --surface: #1a1a19; --card: #232322; --border: #3a3936;
-      --text: #ffffff; --text-2: #c3c2b7; --text-3: #8a897f;
-      --s1: #3987e5; --s2: #199e70; --s3: #c98500;
+      --surface: #1a1a19; --card: #232322; --border: #3a3936; --grid: #2e2e2c;
+      --text: #f4f3ef; --text-2: #c3c2b7; --text-3: #9b9a8f;
+      --accent: #3987e5; --accent-ink: #ffffff;
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
       --good-bg: #143d14; --good-fg: #8fd48f;
       --warn-bg: #4a3400; --warn-fg: #f0c86a;
-      --btn-bg: #3987e5; --btn-fg: #ffffff;
+      --shadow: none;
     }
   }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface: #1a1a19; --card: #232322; --border: #3a3936; --grid: #2e2e2c;
+    --text: #f4f3ef; --text-2: #c3c2b7; --text-3: #9b9a8f;
+    --accent: #3987e5; --accent-ink: #ffffff;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+    --good-bg: #143d14; --good-fg: #8fd48f;
+    --warn-bg: #4a3400; --warn-fg: #f0c86a;
+    --shadow: none;
+  }
+
   * { box-sizing: border-box; margin: 0; }
+  html { -webkit-text-size-adjust: 100%; }
   body { background: var(--surface); color: var(--text);
-         font: 16px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif;
-         max-width: 760px; margin: 0 auto; padding: 16px 14px 48px; }
-  h1 { font-size: 1.3rem; margin: 4px 0 2px; display: flex; align-items: center; gap: 8px;
-       letter-spacing: -.015em; font-weight: 800; }
-  .sub { color: var(--text-2); font-size: .85rem; }
+         font: 15px/1.55 -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+         max-width: 780px; margin: 0 auto; padding: 20px 16px 56px; }
+
+  /* ---- header ---- */
+  header h1 { font-size: 1.02rem; font-weight: 700; letter-spacing: -.01em;
+              display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .sub { color: var(--text-2); font-size: .82rem; }
+  .meta-line { color: var(--text-3); font-size: .78rem; margin-top: 2px;
+               display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .ok-pill { color: var(--good-fg); background: var(--good-bg); border-radius: 99px;
+             padding: 1px 9px; font-size: .72rem; font-weight: 600; white-space: nowrap; }
+
+  /* ---- surfaces ---- */
   .card { background: var(--card); border: 1px solid var(--border);
-          border-radius: 12px; padding: 14px 16px; margin-top: 10px; }
-  .hero-num { font-size: 2.7rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1;
-              background: linear-gradient(100deg, var(--s1), var(--s2));
-              -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .card.hero { border: 1px solid transparent;
-    background: linear-gradient(var(--card), var(--card)) padding-box,
-                linear-gradient(120deg, var(--s1), var(--s2), var(--s3)) border-box; }
-  /* trip-plan itinerary */
-  .plan td, .plan th { white-space: normal; vertical-align: top; }
-  .plan td.when { white-space: nowrap; font-weight: 600; width: 88px; }
-  .plan tr.stay td { background: color-mix(in srgb, var(--s2) 7%, transparent); }
-  .plan .tk { display: inline-block; font-size: .68rem; font-weight: 700; border-radius: 6px;
-              padding: 1px 6px; vertical-align: 1px; }
-  .plan .tk.t1 { background: color-mix(in srgb, var(--s1) 18%, transparent); color: var(--s1); }
-  .plan .tk.t2 { background: color-mix(in srgb, var(--s3) 22%, transparent); color: var(--s3); }
-  .bag { margin-top: 3px; font-size: .8rem; color: var(--text-2); }
-  .bag b { color: var(--text); }
-  .bag.unknown { color: var(--warn-fg); }
-  .chip { background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-          padding: 3px 10px; font-size: .82rem; white-space: nowrap; }
-  .badge { display: inline-block; font-size: .75rem; font-weight: 600;
-           padding: 2px 8px; border-radius: 99px; vertical-align: middle; }
+          border-radius: 12px; padding: 16px 18px; margin-top: 12px; box-shadow: var(--shadow); }
+  .muted { color: var(--text-2); font-size: .82rem; }
+  .small { font-size: .78rem; color: var(--text-3); }
+
+  /* ---- decision hero ---- */
+  .hero-label { font-size: .8rem; color: var(--text-2); }
+  .hero-num { font-size: clamp(2.5rem, 8vw, 3.1rem); font-weight: 750;
+              letter-spacing: -.03em; line-height: 1.05; color: var(--text); }
+  .hero-row { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .delta { font-size: .82rem; font-weight: 650; }
+  .delta.down { color: var(--good-fg); }
+  .delta.up { color: var(--warn-fg); }
+  .delta.flat { color: var(--text-3); font-weight: 450; }
+  .verdict { margin-top: 8px; font-size: .86rem; }
+  .verdict .urgent { color: var(--warn-fg); font-weight: 650; }
+
+  /* ---- stat tiles ---- */
+  .strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+           gap: 10px; margin-top: 12px; }
+  .tile { background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+          padding: 11px 13px; box-shadow: var(--shadow); }
+  .tile .t-label { color: var(--text-2); font-size: .72rem; line-height: 1.3; }
+  .tile .t-num { font-size: 1.3rem; font-weight: 700; margin-top: 2px; letter-spacing: -.01em; }
+  .tile .t-delta { font-size: .72rem; font-weight: 600; margin-top: 1px; }
+
+  /* ---- tabs ---- */
+  .tabs { display: flex; gap: 6px; margin-top: 18px; background: var(--card);
+          border: 1px solid var(--border); border-radius: 99px; padding: 4px; width: max-content;
+          max-width: 100%; overflow-x: auto; }
+  .tabs button { background: transparent; border: 0; font: inherit; color: var(--text-2);
+                 padding: 7px 15px; cursor: pointer; border-radius: 99px; font-size: .86rem;
+                 min-height: 36px; white-space: nowrap; }
+  .tabs button:hover { color: var(--text); }
+  .tabs button.active { color: var(--accent-ink); background: var(--accent); font-weight: 650; }
+  .tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---- chips / badges / legs ---- */
+  .chip { background: var(--card); border: 1px solid var(--border); border-radius: 99px;
+          padding: 3px 11px; font-size: .8rem; white-space: nowrap; }
+  .badge { display: inline-block; font-size: .73rem; font-weight: 600;
+           padding: 2px 9px; border-radius: 99px; vertical-align: middle; }
   .badge.good { background: var(--good-bg); color: var(--good-fg); }
   .badge.warn { background: var(--warn-bg); color: var(--warn-fg); }
-  .leg { display: flex; gap: 8px; padding: 10px 0; border-top: 1px solid var(--border);
-         font-size: .9rem; align-items: center; }
+  .leg { display: flex; gap: 9px; padding: 11px 0; border-top: 1px solid var(--border);
+         font-size: .88rem; align-items: center; }
   .leg:first-of-type { border-top: none; }
   .leg .em { flex: none; }
-  .leg .price { margin-left: auto; font-weight: 600; white-space: nowrap;
+  .leg .price { margin-left: auto; font-weight: 650; white-space: nowrap;
                 display: flex; align-items: center; gap: 8px; }
-  a { color: var(--s1); text-decoration: none; font-weight: 600; }
-  .btn { display: inline-block; background: var(--btn-bg); color: var(--btn-fg) !important;
-         border-radius: 8px; padding: 5px 12px; font-size: .8rem; font-weight: 700; }
-  .btn.big { padding: 10px 18px; font-size: .95rem; margin-top: 10px; }
-  .muted { color: var(--text-2); font-size: .8rem; }
-  table { width: 100%; border-collapse: collapse; font-size: .85rem; }
-  th, td { text-align: left; padding: 6px 8px 6px 0; border-top: 1px solid var(--border); white-space: nowrap; }
-  th { color: var(--text-3); font-weight: 600; border-top: none; }
-  td.num, th.num { text-align: right; padding-right: 8px; }
+
+  a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  a:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .btn { display: inline-block; background: var(--accent); color: var(--accent-ink) !important;
+         border-radius: 99px; padding: 5px 14px; font-size: .78rem; font-weight: 650;
+         min-height: 28px; }
+  .btn.big { padding: 10px 20px; font-size: .92rem; margin-top: 10px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .btn, .tabs button { transition: transform .1s ease, background .15s ease, color .15s ease; }
+    .btn:active { transform: translateY(1px) scale(.98); }
+  }
+
+  /* ---- tables ---- */
+  table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+  th, td { text-align: left; padding: 7px 10px 7px 0; border-top: 1px solid var(--border);
+           white-space: nowrap; }
+  th { color: var(--text-3); font-weight: 600; border-top: none; font-size: .76rem; }
+  td.num, th.num { text-align: right; padding-right: 10px;
+                   font-variant-numeric: tabular-nums; }
   td.wrap { white-space: normal; }
-  tr.chosen td { background: color-mix(in srgb, var(--s2) 10%, transparent); }
+  tr.chosen td { background: color-mix(in srgb, var(--accent) 8%, transparent); }
   .scroll-x { overflow-x: auto; }
-  .legend { display: flex; gap: 16px; font-size: .8rem; color: var(--text-2); margin: 8px 0 2px; flex-wrap: wrap; }
-  .legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px;
-                 margin-right: 5px; vertical-align: -1px; }
-  #err { color: var(--warn-fg); background: var(--warn-bg); border-radius: 8px;
-         padding: 10px 12px; margin-top: 16px; display: none; }
-  footer { margin-top: 28px; color: var(--text-3); font-size: .75rem; }
-  /* stat strip */
-  .strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
-  .tile { background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-          padding: 10px 12px; }
-  .tile .t-label { color: var(--text-2); font-size: .72rem; line-height: 1.25; }
-  .tile .t-num { font-size: 1.25rem; font-weight: 700; margin-top: 2px; }
-  .tile .t-delta { font-size: .72rem; font-weight: 600; margin-top: 1px; }
-  .t-delta.down { color: var(--good-fg); }
-  .t-delta.up { color: var(--warn-fg); }
-  .t-delta.flat { color: var(--text-3); font-weight: 400; }
-  /* tabs — pill style */
-  .tabs { display: flex; gap: 8px; margin-top: 16px; border-bottom: none; }
-  .tabs button { background: var(--card); border: 1px solid var(--border); font: inherit;
-                 color: var(--text-2); padding: 7px 14px; cursor: pointer;
-                 border-radius: 99px; font-size: .88rem; transition: all .15s; }
-  .tabs button:hover { color: var(--text); border-color: var(--text-3); }
-  .tabs button.active { color: var(--btn-fg); background: var(--btn-bg);
-                        border-color: var(--btn-bg); font-weight: 700; }
-  .tile.main { border: 1.5px solid var(--s1); box-shadow: 0 0 0 3px color-mix(in srgb, var(--s1) 12%, transparent); }
-  /* collapsible sections */
-  details.sec { margin-top: 16px; border: none; }
+
+  /* ---- trip plan ---- */
+  .plan td, .plan th { white-space: normal; vertical-align: top; }
+  .plan td.when { white-space: nowrap; font-weight: 600; width: 92px;
+                  font-variant-numeric: tabular-nums; }
+  .plan tr.stay td { background: color-mix(in srgb, var(--s3) 7%, transparent); }
+  .tk { display: inline-block; font-size: .67rem; font-weight: 700; border-radius: 6px;
+        padding: 1px 6px; vertical-align: 1px; }
+  .tk.t1 { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
+  .tk.t2 { background: color-mix(in srgb, var(--s4) 22%, transparent); color: var(--warn-fg); }
+  .bag { margin-top: 3px; font-size: .78rem; color: var(--text-2); }
+  .bag b { color: var(--text); }
+  .bag.unknown { color: var(--warn-fg); }
+
+  /* ---- collapsible sections ---- */
+  details.sec { margin-top: 18px; }
   details.sec > summary { list-style: none; cursor: pointer; display: flex; align-items: center;
-    gap: 8px; font-size: .95rem; color: var(--text-2); text-transform: uppercase;
-    letter-spacing: .04em; font-weight: 600; padding: 6px 0; user-select: none; }
+    gap: 8px; font-size: .8rem; color: var(--text-2); text-transform: uppercase;
+    letter-spacing: .05em; font-weight: 650; padding: 8px 0; user-select: none;
+    border-top: 1px solid var(--border); min-height: 40px; }
+  details.sec.no-rule > summary { border-top: none; }
   details.sec > summary::-webkit-details-marker { display: none; }
-  details.sec > summary::after { content: "▸"; margin-left: auto; color: var(--text-3);
-    transition: transform .15s; font-size: 1rem; }
-  details.sec[open] > summary::after { transform: rotate(90deg); }
+  details.sec > summary::after { content: "▸"; margin-left: auto; color: var(--text-3); font-size: 1rem; }
+  details.sec[open] > summary::after { content: "▾"; }
   details.inner { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 8px; }
-  details.inner > summary { list-style: none; cursor: pointer; font-weight: 700; font-size: .9rem;
-    display: flex; align-items: center; }
+  details.inner > summary { list-style: none; cursor: pointer; font-weight: 650; font-size: .88rem;
+    display: flex; align-items: center; min-height: 36px; }
   details.inner > summary::-webkit-details-marker { display: none; }
   details.inner > summary::after { content: "▸"; margin-left: auto; color: var(--text-3); }
   details.inner[open] > summary::after { content: "▾"; }
-  details.inner ul, details.inner ol { padding-left: 20px; font-size: .88rem; margin-top: 6px; }
+  details.inner ul, details.inner ol { padding-left: 20px; font-size: .86rem; margin-top: 6px; }
   details.inner li { margin: 6px 0; }
-  /* info button + modal */
+  ol.playbook { padding-left: 20px; font-size: .86rem; }
+  ol.playbook li { margin: 7px 0; }
+
+  /* ---- notices ---- */
+  #err { color: var(--warn-fg); background: var(--warn-bg); border-radius: 10px;
+         padding: 10px 14px; margin-top: 14px; display: none; font-size: .86rem; }
+  #warnbox { display: none; color: var(--warn-fg); background: var(--warn-bg);
+             border-radius: 10px; padding: 10px 14px; margin-top: 12px; font-size: .84rem; }
+
+  /* ---- chart ---- */
+  .chart-wrap { position: relative; }
+  .legend { display: flex; gap: 14px; font-size: .78rem; color: var(--text-2);
+            margin: 6px 0 4px; flex-wrap: wrap; }
+  .legend .dot { display: inline-block; width: 9px; height: 9px; border-radius: 99px;
+                 margin-right: 5px; vertical-align: -1px; }
+  .chart-tip { position: absolute; pointer-events: none; background: var(--card);
+               border: 1px solid var(--border); border-radius: 10px; padding: 8px 11px;
+               font-size: .76rem; box-shadow: 0 4px 14px rgb(0 0 0 / .14);
+               display: none; z-index: 3; min-width: 140px; }
+  .chart-tip .tip-date { font-weight: 650; margin-bottom: 3px; }
+  .chart-tip .tip-row { display: flex; align-items: center; gap: 6px; margin-top: 2px;
+                        font-variant-numeric: tabular-nums; }
+  .chart-tip .dot { width: 8px; height: 8px; border-radius: 99px; flex: none; }
+  .chart-tip .tip-v { margin-left: auto; font-weight: 600; padding-left: 10px; }
+
+  /* ---- info modal ---- */
   #infoBtn { background: none; border: 1px solid var(--border); color: var(--text-3);
-             width: 22px; height: 22px; border-radius: 50%; font-size: .75rem; font-weight: 600;
+             width: 24px; height: 24px; border-radius: 50%; font-size: .75rem; font-weight: 600;
              cursor: pointer; line-height: 1; flex: none; }
   #infoBtn:hover { color: var(--text); border-color: var(--text-3); }
   dialog { background: var(--card); color: var(--text); border: 1px solid var(--border);
            border-radius: 14px; max-width: 640px; width: calc(100vw - 28px);
-           max-height: 85vh; padding: 16px 18px; }
+           max-height: 85vh; padding: 18px 20px; }
   dialog::backdrop { background: rgba(0,0,0,.45); }
   dialog .close { float: right; background: none; border: none; color: var(--text-3);
                   font-size: 1.3rem; cursor: pointer; margin: -4px -6px 0 0; }
-  /* sortable history table */
+
+  /* ---- history table ---- */
   th.sortable { cursor: pointer; user-select: none; }
   th.sortable:hover { color: var(--text); }
   th .arrow { font-size: .7rem; }
   tr.detail-row td { white-space: normal; background: var(--surface); }
   tr.clickable { cursor: pointer; }
-  ol.playbook { padding-left: 20px; font-size: .88rem; }
-  ol.playbook li { margin: 6px 0; }
+  .h2 { font-size: .8rem; margin: 20px 0 0; color: var(--text-2); text-transform: uppercase;
+        letter-spacing: .05em; font-weight: 650; }
+
+  footer { margin-top: 32px; color: var(--text-3); font-size: .75rem; }
 </style>
 </head>
 <body>
-  <h1>✈️ Boston → Istanbul → Dhaka → Bangkok + Singapore
-    <button id="infoBtn" title="Booking, baggage, cancellation & visa info" aria-label="Trip info">i</button>
-  </h1>
-  <div class="sub" id="rules"></div>
-  <div class="sub" id="updated"></div>
+  <header>
+    <h1>✈️ Boston → Istanbul → Dhaka → Bangkok + Singapore
+      <button id="infoBtn" title="Booking, baggage, cancellation & visa handbook" aria-label="Trip handbook">i</button>
+    </h1>
+    <div class="sub" id="rules"></div>
+    <div class="meta-line"><span id="updated"></span><span id="verifiedBadge"></span></div>
+  </header>
   <div id="err"></div>
-  <div id="warnbox" style="display:none;color:var(--warn-fg);background:var(--warn-bg);border-radius:8px;padding:10px 12px;margin-top:12px;font-size:.85rem"></div>
+  <div id="warnbox"></div>
+
+  <div id="decision"></div>
   <div class="strip" id="strip"></div>
-  <div class="tabs" role="tablist">
-    <button id="tab-today" class="active" role="tab">⭐ The Trip</button>
-    <button id="tab-bali" role="tab">🌴 Bali (old)</button>
-    <button id="tab-history" role="tab">📈 History</button>
+
+  <div class="tabs" role="tablist" aria-label="Views">
+    <button id="tab-today" class="active" role="tab" aria-selected="true">⭐ The Trip</button>
+    <button id="tab-bali" role="tab" aria-selected="false">🌴 Bali (old)</button>
+    <button id="tab-history" role="tab" aria-selected="false">📈 History</button>
   </div>
   <div id="view-today"></div>
   <div id="view-bali" style="display:none"></div>
@@ -164,39 +242,39 @@
       <ol>
         <li><b>Passports first</b> — all 3 (child too) valid <b>6+ months past Feb 2027</b> (into Aug 2027) with 2+ blank pages each.</li>
         <li><b>Ticket ①</b> (Boston→Istanbul→Dhaka + the return from whichever city comes last) on the <b>airline's US website/app</b>. Booking there starts the federal 24-hour free-cancel window and keeps refunds simple. Avoid third-party sites.</li>
-        <li><b>Same day: Bangkok Marriott on points</b> (5 nights, 5th free). Points rates usually cancel free until a few days out — if the hotel doesn't work, cancel the flight within 24h at $0.</li>
+        <li><b>Same day: Bangkok Marriott on points</b> (5 nights, 5th free). Points rates usually cancel free until a few days out. If the hotel doesn't work, cancel the flight within 24h at $0.</li>
         <li><b>Bangladesh visas</b> — see Visas below. Do this before buying Ticket ②.</li>
-        <li><b>Ticket ② last</b> (the Dhaka→Bangkok/Singapore middle, in whichever order won). It never touches the US so the 24-hour rule does <b>not</b> apply — treat it as non-refundable and buy it only once everything else is locked.</li>
-        <li><b>≤3 days before landing:</b> Thailand's TDAC digital arrival card + Singapore's SG Arrival Card — both free and online; no visas needed on US passports.</li>
+        <li><b>Ticket ② last</b> (the Dhaka→Bangkok/Singapore middle, in whichever order won). It never touches the US so the 24-hour rule does <b>not</b> apply. Treat it as non-refundable and buy it only once everything else is locked.</li>
+        <li><b>≤3 days before landing:</b> Thailand's TDAC digital arrival card + Singapore's SG Arrival Card, both free and online; no visas needed on US passports.</li>
       </ol>
     </details>
     <details class="inner">
       <summary>🧳 Baggage — why it's all over the place</summary>
       <ul>
-        <li><b>Two different rulebooks.</b> Ticket ① starts in the USA, so it's counted in <b>bags</b> (piece concept) — Turkish and the Gulf carriers give 2 × 23 kg per person, most European carriers give only 1. Ticket ② never touches the US, so it's counted in <b>kilos</b>, and the number changes by airline <i>and</i> by route.</li>
-        <li><b>Nothing is through-checked between the two tickets.</b> You collect the bags in Dhaka and check them in again for Ticket ②; same again in Singapore if the middle is two separate tickets.</li>
-        <li><b>Low-cost carriers (AirAsia, Scoot, Jetstar) include no free checked bag at all</b> — the fare looks cheaper until you add 20 kg, and buying at the airport costs roughly double.</li>
+        <li><b>Two different rulebooks.</b> Ticket ① starts in the USA, so it's counted in <b>bags</b> (piece concept). Turkish and the Gulf carriers give 2 × 23 kg per person, most European and US carriers give only 1. Ticket ② never touches the US, so it's counted in <b>kilos</b>, and the number changes by airline <i>and</i> by route.</li>
+        <li><b>Nothing is through-checked between the two tickets.</b> You collect the bags in Dhaka and check them in again for Ticket ②; same again at the middle stop if the middle is two separate tickets.</li>
+        <li><b>Low-cost carriers (AirAsia, Scoot, Jetstar, Thai LCCs) include no free checked bag at all.</b> The fare looks cheaper until you add 20 kg, and buying at the airport costs roughly double.</li>
         <li><b>The child with a seat</b> normally gets the full adult allowance. Infants on a lap do not.</li>
-        <li>The figures on the Trip tab come from each airline's own baggage page. Fare brands (EcoFly, Economy Lite, Basic) can cut them — <b>the number on the checkout page is the one you actually bought</b>.</li>
+        <li>The figures on the Trip tab come from each airline's own baggage page. Fare brands (EcoFly, Economy Lite, Basic) can cut them. <b>The number on the checkout page is the one you actually bought.</b></li>
       </ul>
     </details>
     <details class="inner">
       <summary>💳 Cancellations & refunds</summary>
       <ul>
         <li><b>24-hour rule (US DOT):</b> any ticket that touches the US — Ticket ① — is fully refundable for <b>24 hours after booking</b> if departure is 7+ days away. This is the main safety valve; Turkish honors it only when booked via its own site/app.</li>
-        <li><b>After 24h on Turkish:</b> economy cancel fee roughly <b>$70–200+ per person</b>; the cheapest "EcoFly" promo fares are non-refundable. If unsure, pay the small step-up to a flexible economy fare — the exact rule shows at checkout. No cancellations in the last 12h before departure.</li>
+        <li><b>After 24h on Turkish:</b> economy cancel fee roughly <b>$70–200+ per person</b>; the cheapest "EcoFly" promo fares are non-refundable. If unsure, pay the small step-up to a flexible economy fare. The exact rule shows at checkout. No cancellations in the last 12h before departure.</li>
         <li><b>Ticket ② (the Dhaka→Bangkok/Singapore middle):</b> no US protection. AirAsia/Scoot/Thai LCCs are effectively non-refundable; full-service carriers charge fare-rule fees. Assume this money is spent once booked.</li>
         <li><b>Airline-initiated changes:</b> if the airline significantly changes or cancels any flight, you're owed a <b>full refund</b> regardless of fare type.</li>
         <li>Card refunds must arrive within 7 business days (DOT). Pay with a credit card that has trip protection.</li>
-        <li><b>Chase UR points:</b> portal bookings get real Turkish (235-) ticket numbers, so the stopover hotel usually still works — but N/R fare classes are excluded, and changes route through Chase. Cleanest: book the airline direct with the card, spend UR on Ticket ② instead.</li>
+        <li><b>Chase UR points:</b> portal bookings get real Turkish (235-) ticket numbers, so the stopover hotel usually still works. N/R fare classes are excluded, and changes route through Chase. Cleanest: book the airline direct with the card, spend UR on Ticket ② instead.</li>
       </ul>
     </details>
     <details class="inner">
       <summary>🛂 Visas & borders</summary>
       <ul>
-        <li><b>Bangladesh:</b> US passports get a <b>30-day visa on arrival</b> at Dhaka — <b>$50 cash USD per person</b> (child too; carry $150 crisp), onward ticket + proof of funds (~$500), and it's granted at the officer's discretion — getting tourist visas <b>in advance</b> from the mission is the safer play. Your stay keeps a buffer: never let the departure slip past day 30.</li>
+        <li><b>Bangladesh:</b> US passports get a <b>30-day visa on arrival</b> at Dhaka — <b>$50 cash USD per person</b> (child too; carry $150 crisp), onward ticket + proof of funds (~$500), and it's granted at the officer's discretion. Getting tourist visas <b>in advance</b> from the mission is the safer play. Your stay keeps a buffer: never let the departure slip past day 30.</li>
         <li><b>Thailand:</b> US passports enter <b>visa-exempt</b> (30+ days — a 5-night stay is well inside; no fee). File the free <b>TDAC digital arrival card online ≤3 days before</b> landing, kids included.</li>
-        <li><b>Istanbul stopover:</b> US citizens are <b>visa-free in Türkiye</b> (90 days/180) — leaving the airport for the 2 nights is fine, no visa needed.</li>
+        <li><b>Istanbul stopover:</b> US citizens are <b>visa-free in Türkiye</b> (90 days/180). Leaving the airport for the 2 nights is fine, no visa needed.</li>
         <li><b>Singapore:</b> visa-free for US passports; file the free <b>SG Arrival Card online ≤3 days before</b> landing.</li>
         <li><b>Transit airside</b> on a single ticket needs no visa. Only if a hop is booked as two separate tickets would you clear immigration in the connecting country.</li>
       </ul>
@@ -204,14 +282,14 @@
     <details class="inner">
       <summary>🕌 The Istanbul stopover perk</summary>
       <ul>
-        <li>Turkish gives economy passengers a <b>FREE 4-star hotel night</b> when the connection is 20 hr–7 days on one reservation: book Ticket ①, then apply at their Stopover "Booker" page <b>≥72 hr before the flight</b>. Not valid on N/R fare classes — check the booking-class letter before paying. On the 2-night version, night 2 is on you.</li>
-        <li>IST→DAC flies <b>once daily</b>, which is why the Istanbul stop costs so little extra — you'd be waiting for that flight anyway.</li>
+        <li>Turkish gives economy passengers a <b>FREE 4-star hotel night</b> when the connection is 20 hr–7 days on one reservation: book Ticket ①, then apply at their Stopover "Booker" page <b>≥72 hr before the flight</b>. Not valid on N/R fare classes. Check the booking-class letter before paying. On the 2-night version, night 2 is on you.</li>
+        <li>IST→DAC flies <b>once daily</b>, which is why the Istanbul stop costs so little extra. You'd be waiting for that flight anyway.</li>
       </ul>
     </details>
     <details class="inner">
       <summary>🧾 Small stuff that bites</summary>
       <ul>
-        <li>Prices here are Google Flights <b>totals for all 3 travelers</b>; fares aren't held — book on the airline site when ready.</li>
+        <li>Prices here are Google Flights <b>totals for all 3 travelers</b>; fares aren't held. Book on the airline site when ready.</li>
         <li>Request bassinet/child meal at booking and re-confirm at check-in.</li>
         <li>Carry printed copies of the onward tickets — both borders ask.</li>
         <li>The "home" date assumes the return leg lands the next day; confirm the exact landing time before buying.</li>
@@ -219,7 +297,7 @@
     </details>
   </dialog>
 
-  <footer>Prices are Google Flights totals for all travelers. Data updates with the
+  <footer>Prices are Google Flights totals for all 3 travelers. Data updates with the
     midnight scrape; reload to get the latest.</footer>
 <script>
 const RAW = "https://raw.githubusercontent.com/jalalchowdhury1/dhaka-flights/main/site/data.json";
@@ -230,6 +308,7 @@ const EMOJI = {"BOS→DAC":"🇧🇩","DAC→DPS":"🌴","DPS→BOS":"🏠",
                "DAC→SIN":"🇸🇬","SIN→DPS":"🌴","DAC→SIN→DPS":"🇸🇬",
                "DAC→BKK":"🇹🇭","BKK→SIN":"🇸🇬","SIN→BKK":"🇹🇭",
                "DAC→BKK→SIN":"🇹🇭","DAC→SIN→BKK":"🇸🇬",
+               "DPS→SIN":"🇸🇬","DAC→DPS→SIN":"🌴",
                "BKK→BOS":"🏠","SIN→BOS":"🏠",
                "BOS→IST":"🇺🇸","IST→DAC":"🕌"};
 const CITY = {BKK:"Bangkok", SIN:"Singapore", DPS:"Bali", DAC:"Dhaka",
@@ -241,19 +320,23 @@ const STAY_NOTE = {
   DPS: "Marriott 5th-night-free · e-VOA needs the onward booking as proof",
 };
 /* Which cities the trip's middle visits, in order. Bangkok-era entries carry
-   `order` + `bkk_nights`; Bali-era history entries fall back to the old shape. */
+   `order` + `bkk_nights`; Bali entries are either forward (no order) or the
+   reversed benchmark (`order: "bali-rev"`). */
 const orderInfo = (s) => s && s.bkk_nights != null
   ? (s.order === "BKK-first"
       ? {r1:"DAC→BKK", r2:"BKK→SIN", ret:"SIN→BOS",
          c1:{code:"BKK", n:s.bkk_nights}, c2:{code:"SIN", n:s.sg_nights}}
       : {r1:"DAC→SIN", r2:"SIN→BKK", ret:"BKK→BOS",
          c1:{code:"SIN", n:s.sg_nights}, c2:{code:"BKK", n:s.bkk_nights}})
+  : s && s.order === "bali-rev"
+  ? {r1:"DAC→DPS", r2:"DPS→SIN", ret:"SIN→BOS",
+     c1:{code:"DPS", n:s.bali_nights}, c2:{code:"SIN", n:s.sg_nights}}
   : {r1:"DAC→SIN", r2:"SIN→DPS", ret:"DPS→BOS",
      c1:{code:"SIN", n:s ? s.sg_nights : null}, c2:{code:"DPS", n:s ? s.bali_nights : null}};
-/* One trip is tracked (2026-07-25). `main_total` is the number; `combined_total`
-   is the same figure under its pre-rewrite name, kept so the chart and the
-   history table run continuously across the change. */
+/* main_total is the Bangkok trip from 1 Aug 2026; combined_total is the same
+   figure under its pre-rewrite name, kept so history stays continuous. */
 const mainTotal = (h) => h.main_total ?? h.combined_total ?? null;
+const plain = s => esc(String(s).replace(/\*/g, ""));
 
 async function load() {
   let data;
@@ -285,33 +368,84 @@ async function load() {
     err.innerHTML = `<b>⚠️ This data is ${Math.round((Date.now() - _ts) / 86400000 * 10) / 10} days old.</b> ` +
       `The nightly tracker may be down — check the Mac is on and see cron.log in the Dhaka flights folder.`;
   }
+  renderHeader(data);
+  renderDecision(data);
   renderStrip(data);
   renderToday(data);
   renderBali(data);
   hRows = flattenHistory(data.history);
   renderHistory();
+  bindChartHover(document);
 }
 
-/* ---------- glance strip with day-over-day change ---------- */
-function deltaHTML(hist, get) {
+function renderHeader(d) {
+  const ago = (() => {
+    const t = Date.parse(String(d.updated || "").replace(" ", "T"));
+    if (isNaN(t)) return "";
+    const h = Math.round((Date.now() - t) / 3600000);
+    return h <= 1 ? " (just now)" : ` (${h} h ago)`;
+  })();
+  document.getElementById("rules").textContent = `${d.trip.travelers} · ${d.trip.rules}`;
+  document.getElementById("updated").textContent = `Last scrape: ${d.updated}${ago}`;
+  document.getElementById("verifiedBadge").innerHTML =
+    d.verified ? `<span class="ok-pill">🔎 re-check ✓</span>` : "";
+}
+
+/* ---- The answer, first: tonight's number + what to do about it ---- */
+function renderDecision(d) {
+  const m = d.main;
+  const el = document.getElementById("decision");
+  if (!m) {
+    el.innerHTML = `<div class="card">No trip could be priced in the latest run.
+      The retry slots try again automatically — check the self-check notes above.</div>`;
+    return;
+  }
+  const hist = d.history || [];
+  const vals = hist.map(mainTotal).filter(v => v != null);
+  let deltaHtml = `<span class="delta flat">first day of this trip</span>`;
+  if (vals.length >= 2) {
+    const dd = vals[vals.length - 1] - vals[vals.length - 2];
+    deltaHtml = dd === 0 ? `<span class="delta flat">unchanged vs yesterday</span>`
+      : dd < 0 ? `<span class="delta down">▼ ${usd(-dd)} vs yesterday</span>`
+               : `<span class="delta up">▲ ${usd(dd)} vs yesterday</span>`;
+  }
+  const flag = m.valid ? "" : ` <span class="badge warn">⚠️ ${esc(m.flag || "check dates")}</span>`;
+  const alerts = (d.alerts || []).map(a =>
+    `<div class="${a.includes("🚨") ? "urgent" : ""}">${plain(a)}</div>`).join("");
+  const ctx = [d.price_context, d.countdown && String(d.countdown).replace(/📅 /, "")]
+    .filter(Boolean).map(plain).join(" · ");
+  el.innerHTML = `<div class="card">
+    <div class="hero-label">Tonight's cheapest trip · ${esc(m.order_label || "")}${flag}</div>
+    <div class="hero-row"><span class="hero-num">${usd(m.total)}</span>${deltaHtml}</div>
+    ${alerts ? `<div class="verdict">${alerts}</div>` : ""}
+    ${ctx ? `<div class="small" style="margin-top:6px">📅 ${ctx}</div>` : ""}
+  </div>`;
+}
+
+/* ---- stat tiles: label / value / delta (vs yesterday, or vs Bangkok) ---- */
+function tileDelta(hist, get) {
   const vals = hist.map(get).filter(v => v != null);
-  if (vals.length < 2) return `<div class="t-delta flat">first day tracked</div>`;
+  if (vals.length < 2) return `<div class="t-delta delta flat">first day</div>`;
   const d = vals[vals.length - 1] - vals[vals.length - 2];
-  if (d === 0) return `<div class="t-delta flat">= no change</div>`;
-  return d < 0 ? `<div class="t-delta down">▼ ${usd(-d)} cheaper</div>`
-               : `<div class="t-delta up">▲ ${usd(d)} pricier</div>`;
+  if (d === 0) return `<div class="t-delta delta flat">no change</div>`;
+  return d < 0 ? `<div class="t-delta delta down">▼ ${usd(-d)}</div>`
+               : `<div class="t-delta delta up">▲ ${usd(d)}</div>`;
 }
 function renderStrip(d) {
   const hist = d.history || [];
   const last = hist[hist.length - 1] || {};
-  const tiles = [
-    {label: "⭐ Whole trip", get: mainTotal, val: mainTotal(last)},
-    {label: "🎫 Ticket ① BOS·IST·DAC + return", get: h => h.ticket1_total ?? null, val: last.ticket1_total},
-    {label: "✈️ Ticket ② BKK/SIN middle", get: h => h.ticket2_total ?? null, val: last.ticket2_total},
-  ];
-  document.getElementById("strip").innerHTML = tiles.map((t, i) =>
-    `<div class="tile${i === 0 ? " main" : ""}"><div class="t-label">${t.label}</div>
-     <div class="t-num">${usd(t.val)}</div>${deltaHTML(hist, t.get)}</div>`).join("");
+  const baliDelta = last.bali_total != null && last.main_total != null
+    ? last.bali_total - last.main_total : null;
+  document.getElementById("strip").innerHTML = `
+    <div class="tile"><div class="t-label">🎫 Ticket ① long haul + Istanbul</div>
+      <div class="t-num">${usd(last.ticket1_total)}</div>${tileDelta(hist, h => h.ticket1_total ?? null)}</div>
+    <div class="tile"><div class="t-label">✈️ Ticket ② Asia middle</div>
+      <div class="t-num">${usd(last.ticket2_total)}</div>${tileDelta(hist, h => h.ticket2_total ?? null)}</div>
+    <div class="tile"><div class="t-label">🌴 Old Bali trip tonight</div>
+      <div class="t-num">${usd(last.bali_total)}</div>
+      <div class="t-delta delta ${baliDelta == null ? "flat" : baliDelta >= 0 ? "down" : "up"}">${
+        baliDelta == null ? "no comparison" :
+        baliDelta >= 0 ? `Bangkok saves ${usd(baliDelta)}` : `Bali cheaper by ${usd(-baliDelta)}`}</div></div>`;
 }
 
 function bookBtn(link, big) {
@@ -354,12 +488,26 @@ function hotelCard(h) {
     ${h.points_note ? `<div class="muted" style="margin-top:6px">${esc(h.points_note)}</div>` : ""}
     <div class="muted" style="margin-top:6px">${esc(h.note || "")}</div>
     ${h.runner_up ? `<div class="muted" style="margin-top:4px">Runners-up: ${esc(h.runner_up)}</div>` : ""}
-    <div class="muted" style="margin-top:6px">Cash reference: ${esc(h.cash_ref || "—")} ·
+    <div class="small" style="margin-top:6px">Cash reference: ${esc(h.cash_ref || "—")} ·
       award pricing is dynamic — figures live-checked ${esc(h.checked)}; confirm on marriott.com before booking.</div>
   </div>`;
 }
 
-/* 🌴 The retired trip, still scraped nightly as a benchmark (2026-08-01). */
+/* The losing order — always shown with its Δ, never hidden. */
+function otherOrderCard(o) {
+  if (!o) return "";
+  const gap = o.delta > 0 ? `+${usd(o.delta)}` : o.delta === 0 ? "same price" : `−${usd(-o.delta)}`;
+  const badge = o.valid ? "" : ` <span class="badge warn">⚠️ ${esc(o.flag || "check dates")}</span>`;
+  return `<div class="card"><b style="font-size:.95rem">🔁 ${esc(o.order_label)} instead: ${usd(o.total)}</b>
+    <span class="muted">(${gap})</span>${badge}
+    <div class="muted" style="margin-top:4px">① ${esc(o.ticket1_airline || "?")} ${usd(o.ticket1_total)}
+      + ② ${esc(o.ticket2_airlines || "?")} ${usd(o.ticket2_total)} (${esc(o.ticket2_kind || "")})
+      · Bangkok ${o.bkk_nights ?? "–"}n · Singapore ${o.sg_nights ?? "–"}n</div>
+    <div class="small" style="margin-top:2px">Both orders are scraped nightly — the cheaper valid trip headlines.</div>
+  </div>`;
+}
+
+/* 🌴 The retired trip, still scraped nightly as a benchmark — both orders. */
 function renderBali(d) {
   const b = d.bali;
   let html;
@@ -373,38 +521,28 @@ function renderBali(d) {
       delta > 0 ? `The old Bali trip costs <b>${usd(delta)} more</b> than the Bangkok trip tonight.` :
       delta < 0 ? `The old Bali trip is <b>${usd(-delta)} cheaper</b> than the Bangkok trip tonight.` :
       `Both trips price identically tonight.`;
+    const ob = b.other_bali;
+    const obLine = ob ? `<div class="muted" style="margin-top:4px">🔁 Other Bali order
+        (${esc(ob.order_label)}): ${usd(ob.total)} (${ob.delta > 0 ? "+" + usd(ob.delta) : usd(ob.delta)})</div>` : "";
     html = `<div class="card" style="margin-top:16px"><b>🌴 The original trip, kept as a benchmark</b>
-      <div class="muted" style="margin-top:4px">BOS → Istanbul 2n → Dhaka → Singapore 2n → Bali 5n → BOS —
-      dropped 2026-08-01 (dengue tail risk) but still scraped nightly so the price gap stays visible.
-      Flight totals are cash; add the hotel below for the full picture.</div>
-      ${line ? `<div style="margin-top:8px">${line}</div>` : ""}</div>`
+      <div class="muted" style="margin-top:4px">BOS → Istanbul 2n → Dhaka → Bali + Singapore → BOS —
+      dropped 2026-08-01 (dengue tail risk) but still scraped nightly, in BOTH orders, so the
+      price gap stays visible. Tonight's cheaper Bali order: <b>${esc(b.order_label || "Singapore → Bali")}</b>.</div>
+      ${line ? `<div style="margin-top:8px">${line}</div>` : ""}${obLine}</div>`
       + timeline(b) + structureCard(b, true) + hotelCard(b.hotel);
   }
   document.getElementById("view-bali").innerHTML = html;
 }
 
-/* The losing order — always shown with its Δ, never hidden (2026-08-01). */
-function otherOrderCard(o) {
-  if (!o) return "";
-  const gap = o.delta > 0 ? `+${usd(o.delta)}` : o.delta === 0 ? "same price" : `−${usd(-o.delta)}`;
-  const badge = o.valid ? "" : ` <span class="badge warn">⚠️ ${esc(o.flag || "check dates")}</span>`;
-  return `<div class="card"><b style="font-size:1rem">🔁 ${esc(o.order_label)} instead: ${usd(o.total)}</b>
-    <span class="muted">(${gap})</span>${badge}
-    <div class="muted" style="margin-top:4px">① ${esc(o.ticket1_airline || "?")} ${usd(o.ticket1_total)}
-      + ② ${esc(o.ticket2_airlines || "?")} ${usd(o.ticket2_total)} (${esc(o.ticket2_kind || "")})
-      · Bangkok ${o.bkk_nights ?? "–"}n · Singapore ${o.sg_nights ?? "–"}n</div>
-    <div class="muted" style="margin-top:2px">Both orders are scraped nightly — the cheaper valid trip headlines.</div>
-  </div>`;
-}
-
 function structureCard(s, hero) {
   const badge = s.valid ? `<span class="badge good">home ${esc(s.home)} ✓</span>`
                         : `<span class="badge warn">⚠️ ${esc(s.flag || "check dates")}</span>`;
-  const num = hero ? `<div class="hero-num">${usd(s.total)}</div>` : `<b style="font-size:1.15rem">${usd(s.total)}</b>`;
   const o = orderInfo(s);
   const stays = [o.c1, o.c2].map(c => `${CITY[c.code]} ${c.n ?? "?"} nights`).join(" · ");
   const ist = s.ist_nights != null ? `Istanbul ${s.ist_nights} nights · ` : "";
-  return `<div class="card${hero ? " hero" : ""}">
+  const num = hero ? `<div style="font-size:1.7rem;font-weight:750;letter-spacing:-.02em">${usd(s.total)}</div>`
+                   : `<b style="font-size:1.15rem">${usd(s.total)}</b>`;
+  return `<div class="card">
     ${num}
     <div style="margin:2px 0 8px">${esc(s.name)} ${badge}</div>
     <div class="muted" style="margin-bottom:6px">${ist}Dhaka ${s.dhaka_days} days · ${stays}</div>
@@ -415,56 +553,111 @@ function structureCard(s, hero) {
   </div>`;
 }
 
-function chart(history) {
-  /* The ⭐ line is the Bangkok trip (from 1 Aug 2026); the 🌴 line stitches the
-     pre-swap era (when main WAS the Bali trip) to the nightly Bali watch, so
-     the two trips stay comparable on one axis. */
-  const series = [
-    {label: "⭐ Bangkok trip", color: "#0ea5a3",
-     get: h => h.date >= "2026-08-01" ? mainTotal(h) : null},
-    {label: "🌴 Bali (old)", color: "#e0653f",
-     get: h => h.bali_total ?? (h.date < "2026-08-01" ? mainTotal(h) : null)},
-    {label: "Ticket ①", color: "var(--s1)", get: h => h.ticket1_total ?? null},
-    {label: "Ticket ②", color: "var(--s3)", get: h => h.ticket2_total ?? null},
-  ];
-  const pts = history.filter(h => series.some(s => s.get(h) != null));
-  if (pts.length < 2) return `<div class="muted" style="margin-top:8px">Price history chart appears after a couple of days of data.</div>`;
-  const W = Math.max(320, Math.min(680, pts.length * 60)), H = 220,
-        L = 44, R = 76, T = 12, B = 26;
-  const vals = pts.flatMap(p => series.map(s => s.get(p)).filter(v => v != null));
-  const lo = Math.min(...vals), hi = Math.max(...vals), pad = Math.max(100, (hi - lo) * .15);
-  const y = v => T + (H - T - B) * (1 - (v - (lo - pad)) / ((hi + pad) - (lo - pad)));
-  const x = i => L + (W - L - R) * (pts.length === 1 ? .5 : i / (pts.length - 1));
-  let g = "";
-  const ticks = 4;
-  for (let t = 0; t <= ticks; t++) {
-    const v = (lo - pad) + ((hi + pad) - (lo - pad)) * t / ticks;
-    g += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--border)" stroke-width="1"/>
-          <text x="${L-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--text-3)">$${Math.round(v/100)/10}k</text>`;
-  }
-  for (const s of series) {
-    const sp = pts.map((p, i) => s.get(p) != null ? [x(i), y(s.get(p))] : null).filter(Boolean);
-    if (!sp.length) continue;
-    g += `<polyline points="${sp.map(p => p.join(",")).join(" ")}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round"/>`;
-    for (const [px, py] of sp) g += `<circle cx="${px}" cy="${py}" r="3" fill="${s.color}"/>`;
-    const last = sp[sp.length - 1];
-    const lastVal = s.get([...pts].reverse().find(p => s.get(p) != null));
-    g += `<text x="${last[0]+8}" y="${last[1]+4}" font-size="11" font-weight="600" fill="var(--text)">${usd(lastVal)}</text>`;
-  }
-  pts.forEach((p, i) => {
-    const lbl = p.date.slice(5).replace("-", "/");
-    if (i === 0 || i === pts.length - 1 || pts.length <= 7 || i % Math.ceil(pts.length / 6) === 0)
-      g += `<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="10" fill="var(--text-3)">${lbl}</text>`;
-    const tip = series.map(s => s.get(p) != null ? `${s.label}: ${usd(s.get(p))}` : null).filter(Boolean).join("\n");
-    g += `<rect x="${x(i)-14}" y="${T}" width="28" height="${H-T-B}" fill="transparent"><title>${p.date}\n${tip}</title></rect>`;
-  });
-  return `<div class="legend">${series.map(s => `<span><span class="dot" style="background:${s.color}"></span>${s.label}</span>`).join("")}</div>
-    <div class="scroll-x"><svg width="${W}" height="${H}" role="img" aria-label="Price history">${g}</svg></div>
-    <div class="muted" style="margin-top:6px">Ticket ① / ② lines start 25 Jul 2026 (single-trip narrowing). Before 1 Aug 2026 the trip visited Bali instead of Bangkok — same skeleton, different last stop.</div>`;
+/* ---------- price-history chart ----------
+   Categorical slots in fixed order (validated for CVD in both modes):
+   1 blue = Bangkok trip · 2 orange = Bali · 3 aqua = ① · 4 yellow = ②.
+   2px lines, ring-marked endpoints, hairline gridlines, clean $ ticks,
+   legend always, selective end labels, hover tooltip per date. */
+const SERIES = [
+  {key:"trip", label:"⭐ Bangkok trip", v:"--s1", story:true,
+   get: h => h.date >= "2026-08-01" ? mainTotal(h) : null},
+  {key:"bali", label:"🌴 Bali (old)", v:"--s2", story:true,
+   get: h => h.bali_total ?? (h.date < "2026-08-01" ? mainTotal(h) : null)},
+  {key:"t1", label:"Ticket ①", v:"--s3", get: h => h.ticket1_total ?? null},
+  {key:"t2", label:"Ticket ②", v:"--s4", get: h => h.ticket2_total ?? null},
+];
+
+function niceTicks(lo, hi) {
+  const span = Math.max(hi - lo, 1);
+  const step = [250, 500, 1000, 2000, 5000].find(s => span / s <= 6) || 5000;
+  const start = Math.floor(lo / step) * step, end = Math.ceil(hi / step) * step;
+  const ticks = [];
+  for (let v = start; v <= end; v += step) ticks.push(v);
+  return {ticks, start, end};
 }
 
-function sec(title, body, open) {
-  return `<details class="sec"${open ? " open" : ""}><summary>${title}</summary>${body}</details>`;
+function chart(history) {
+  const pts = (history || []).filter(h => SERIES.some(s => s.get(h) != null));
+  if (pts.length < 2) return `<div class="muted" style="margin-top:8px">Price history appears after a couple of days of data.</div>`;
+  const W = Math.max(340, Math.min(720, pts.length * 56)), H = 230,
+        L = 52, R = 14, T = 12, B = 26;
+  const vals = pts.flatMap(p => SERIES.map(s => s.get(p)).filter(v => v != null));
+  const {ticks, start, end} = niceTicks(Math.min(...vals), Math.max(...vals));
+  const y = v => T + (H - T - B) * (1 - (v - start) / (end - start || 1));
+  const x = i => L + (W - L - R) * (pts.length === 1 ? .5 : i / (pts.length - 1));
+  let g = "";
+  for (const v of ticks) {
+    g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)" stroke-width="1"/>
+          <text x="${L - 7}" y="${y(v) + 3.5}" text-anchor="end" font-size="10.5" fill="var(--text-3)"
+            style="font-variant-numeric:tabular-nums">$${v.toLocaleString()}</text>`;
+  }
+  for (const s of SERIES) {
+    const sp = pts.map((p, i) => s.get(p) != null ? [x(i), y(s.get(p))] : null).filter(Boolean);
+    if (!sp.length) continue;
+    g += `<polyline points="${sp.map(p => p.join(",")).join(" ")}" fill="none"
+          stroke="var(${s.v})" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    const [ex, ey] = sp[sp.length - 1];
+    g += `<circle cx="${ex}" cy="${ey}" r="4.5" fill="var(${s.v})" stroke="var(--card)" stroke-width="2"/>`;
+  }
+  // Selective end labels: only the two story series, collision-nudged apart.
+  const labs = SERIES.filter(s => s.story)
+    .map(s => { const lastVal = [...pts].reverse().map(p => s.get(p)).find(v => v != null);
+                return lastVal != null ? {s, v: lastVal, y: y(lastVal)} : null; })
+    .filter(Boolean).sort((a, b) => a.y - b.y);
+  for (let i = 1; i < labs.length; i++)
+    if (labs[i].y - labs[i - 1].y < 14) labs[i].y = labs[i - 1].y + 14;
+  for (const l of labs) {
+    g += `<text x="${W - R - 2}" y="${Math.max(T + 9, l.y - 8)}" font-size="11" font-weight="650"
+          fill="var(--text)" text-anchor="end"
+          style="font-variant-numeric:tabular-nums">${usd(l.v)}</text>`;
+  }
+  // Hover targets: one column per date, tooltip built from data attributes.
+  pts.forEach((p, i) => {
+    if (i === 0 || i === pts.length - 1 || pts.length <= 8 || i % Math.ceil(pts.length / 7) === 0)
+      g += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle" font-size="10" fill="var(--text-3)">${p.date.slice(5).replace("-", "/")}</text>`;
+    const rows = SERIES.map(s => s.get(p) != null
+      ? `<div class="tip-row"><span class="dot" style="background:var(${s.v})"></span>${esc(s.label)}<span class="tip-v">${usd(s.get(p))}</span></div>` : "").join("");
+    const half = (W - L - R) / Math.max(pts.length - 1, 1) / 2;
+    g += `<rect class="chart-hit" x="${x(i) - half}" y="${T}" width="${half * 2}" height="${H - T - B}"
+          fill="transparent" data-px="${x(i)}" data-tip="${esc(`<div class='tip-date'>${p.date}</div>` + rows)}"/>`;
+  });
+  const legend = `<div class="legend">${SERIES.map(s =>
+    `<span><span class="dot" style="background:var(${s.v})"></span>${esc(s.label)}</span>`).join("")}</div>`;
+  return `${legend}<div class="chart-wrap"><div class="scroll-x">
+    <svg width="${W}" height="${H}" role="img" aria-label="Price history: Bangkok trip, Bali benchmark, and both tickets">
+      <line class="chart-vline" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="var(--text-3)" stroke-width="1" visibility="hidden"/>
+      ${g}</svg></div><div class="chart-tip"></div></div>
+    <div class="small" style="margin-top:6px">Before 1 Aug 2026 the tracked trip visited Bali instead of Bangkok —
+      the 🌴 line carries that history forward. Ticket ① / ② lines start 25 Jul 2026. Hover or tap a date for every value;
+      the History tab has the full table.</div>`;
+}
+
+function bindChartHover(root) {
+  root.querySelectorAll(".chart-wrap").forEach(w => {
+    const tip = w.querySelector(".chart-tip");
+    const vline = w.querySelector(".chart-vline");
+    if (!tip || !vline) return;
+    w.querySelectorAll(".chart-hit").forEach(r => {
+      r.addEventListener("mouseenter", () => {
+        tip.innerHTML = r.dataset.tip;
+        tip.style.display = "block";
+        const px = parseFloat(r.dataset.px);
+        vline.setAttribute("x1", px); vline.setAttribute("x2", px);
+        vline.setAttribute("visibility", "visible");
+        const wrapW = w.clientWidth, tipW = tip.offsetWidth || 150;
+        tip.style.left = Math.max(0, Math.min(px + 12, wrapW - tipW - 4)) + "px";
+        tip.style.top = "8px";
+      });
+      r.addEventListener("mouseleave", () => {
+        tip.style.display = "none";
+        vline.setAttribute("visibility", "hidden");
+      });
+    });
+  });
+}
+
+function sec(title, body, open, noRule) {
+  return `<details class="sec${noRule ? " no-rule" : ""}"${open ? " open" : ""}><summary>${title}</summary>${body}</details>`;
 }
 
 function timeline(s) {
@@ -477,7 +670,7 @@ function timeline(s) {
     [STAY_EMOJI[o.c2.code], CITY[o.c2.code], stop(o.c2.n)],
     ["🏠", `home ${esc(s.home)}`, ""],
   ];
-  return `<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:10px 0 4px">` +
+  return `<div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:12px 0 4px">` +
     chips.map(([e, name, n], i) =>
       `${i ? '<span style="color:var(--text-3)">→</span>' : ""}<span class="chip">${e} <b>${name}</b>${n ? ` <span style="color:var(--text-2)">${n}</span>` : ""}</span>`
     ).join("") + `</div>`;
@@ -489,8 +682,6 @@ const addDays = (d, n) => d ? new Date(d.getTime() + n * 86400000) : null;
 const fd = d => d ? d.toLocaleDateString("en-US", {month: "short", day: "numeric"}) : "—";
 const fr = (a, b) => a && b ? `${fd(a)}–${fd(b)}` : "—";
 
-/* Per-leg baggage line inside the plan — the allowance changes leg by leg and
-   that's exactly what's easy to get wrong (Jalal, 2026-07-25). */
 function bagLine(bag) {
   if (!bag) return "";
   const cls = bag.confidence === "unknown" ? "bag unknown" : "bag";
@@ -584,9 +775,9 @@ function baggageCard(s) {
   const warns = (s.baggage_warnings || []).map(w => `<div style="margin-top:6px">⚠️ ${esc(w)}</div>`).join("");
   return `<div class="card scroll-x">
     <table><tr><th>Leg</th><th>On</th><th>Airline</th><th>Checked, per person</th><th></th></tr>${body}</table>
-    <div style="margin-top:10px;font-size:.85rem;color:var(--warn-fg);background:var(--warn-bg);border-radius:8px;padding:10px 12px">
+    <div style="margin-top:10px;font-size:.84rem;color:var(--warn-fg);background:var(--warn-bg);border-radius:10px;padding:10px 12px">
       ${warns || "⚠️ Confirm every allowance on the fare page before paying."}</div>
-    <div class="muted" style="margin-top:8px">Reference figures from each airline's own baggage page (checked ${esc(s.baggage_checked || "")}).
+    <div class="small" style="margin-top:8px">Reference figures from each airline's own baggage page (checked ${esc(s.baggage_checked || "")}).
       Fare brands — EcoFly, Economy Lite, Basic — can cut them, and Google never shows the brand. <b>The checkout page is the authority.</b></div>
   </div>`;
 }
@@ -602,7 +793,6 @@ function altTable(options, note, legRoutes) {
       d < 0 ? `<span style="color:var(--good-fg)">−${usd(-d).slice(1)}</span>` : `+${usd(d).slice(1)}`;
     const b = o.baggage || {};
     const bag = b.summary || b.checked || "";
-    // "2 tickets" = two separate purchases = two Book buttons, one per ticket.
     const btn = (l, t) => l ? `<a class="btn" href="${esc(l)}" target="_blank" rel="noopener">${t}</a>` : "";
     const books = o.link2 && legRoutes
       ? btn(o.link, `Book ${legRoutes[0]}`) +
@@ -619,37 +809,16 @@ function altTable(options, note, legRoutes) {
   return `<div class="card scroll-x"><table>
     <tr><th>Airline</th><th>How</th><th class="num">Price</th><th class="num">vs chosen</th>
         <th>Checked bags</th><th></th></tr>${body}</table>
-    <div class="muted" style="margin-top:8px"><b>Prices are totals for all 3 travelers</b> (2 adults + 1 child) —
+    <div class="small" style="margin-top:8px"><b>Prices are totals for all 3 travelers</b> (2 adults + 1 child) —
     "vs chosen" is how much more the whole family pays. ${note}</div></div>`;
 }
 
 function renderToday(d) {
-  const ago = (() => {
-    const t = Date.parse(d.updated.replace(" ", "T"));
-    if (isNaN(t)) return "";
-    const h = Math.round((Date.now() - t) / 3600000);
-    return h <= 1 ? " (just now)" : ` (${h} h ago)`;
-  })();
-  document.getElementById("rules").textContent = `${d.trip.travelers} · ${d.trip.rules}`;
-  document.getElementById("updated").textContent = `Last scrape: ${d.updated}${ago}` +
-    (d.verified ? " · 🔎 re-check ✓" : "");
   let html = "";
-
-  // Buy-signal layer: alert lines lead the page exactly like they lead the
-  // Telegram message (the * markdown is stripped for HTML).
-  const plain = s => esc(String(s).replace(/\*/g, ""));
-  const alerts = d.alerts || [];
-  if (alerts.length) {
-    const urgent = alerts.some(a => a.includes("🚨"));
-    html += `<div class="card" style="border-color:${urgent ? "var(--warn-fg)" : "var(--good-fg)"}">
-      ${alerts.map(a => `<div style="font-weight:600">${plain(a)}</div>`).join("")}</div>`;
-  }
-  if (d.countdown) html += `<div class="sub" style="margin-top:8px">${plain(d.countdown)}</div>`;
   if ((d.changes || []).length) {
-    html += `<div class="card"><b style="font-size:.9rem">ℹ️ Changed since yesterday</b>` +
+    html += `<div class="card"><b style="font-size:.88rem">ℹ️ Changed since yesterday</b>` +
       d.changes.map(c => `<div class="muted" style="margin-top:4px">${plain(c)}</div>`).join("") + `</div>`;
   }
-
   const main = d.main;
   if (main) {
     const oi = orderInfo(main);
@@ -657,34 +826,32 @@ function renderToday(d) {
       timeline(main) + structureCard(main, true) +
       (main.alt_note ? `<div class="muted" style="margin-top:6px">💸 ${esc(main.alt_note)}</div>` : "") +
       otherOrderCard(main.other_order),
-      true);
+      true, true);
     const budget = d.budget;
     if (budget) {
       html += sec(`💸 Cheaper if you're flexible — ${usd(budget.total)} (save ${usd(budget.savings)})`,
         `<div class="muted" style="margin:8px 0 2px">Same Ticket ① (same order) and the same 5-night Bangkok block —
-         the minimum-2-Singapore-nights rule is waived and the Dhaka dates shift to whatever prices best.` +
+         the Singapore-nights band is waived and the Dhaka dates shift to whatever prices best.` +
         ((budget.diffs || []).length ? ` What changes: <b>${budget.diffs.map(esc).join(" · ")}</b>.` : "") +
         `</div>` + timeline(budget) + structureCard(budget, false),
         true);
     }
-    html += sec("🗓 Trip plan — dates, flights, layovers, baggage & stays", tripPlan(main), true);
+    html += sec("🗓 Trip plan — dates, flights, layovers & stays", tripPlan(main), true);
     if (d.hotel) html += sec("🏨 Hotel — Marriott points, 5th night free", hotelCard(d.hotel), true);
-    html += sec("🧳 Baggage, leg by leg", baggageCard(main), true);
+    html += sec("🧳 Baggage, leg by leg", baggageCard(main), false);
 
     const t2 = d.ticket2_options || [];
-    const t2dates = main.sg_ticket ? `${short(main.sg_ticket.out_date)} + ${short(main.sg_ticket.ret_date)}` : "the same dates";
-    html += sec(`🔀 Ticket ② alternatives — Dhaka→${CITY[oi.c1.code]}→${CITY[oi.c2.code]} (${t2dates})`,
+    const t2dates = main.sg_ticket ? `${short(main.sg_ticket.out_date)} + ${short(main.sg_ticket.ret_date)}` : "same dates";
+    html += sec(`🔀 Ticket ② alternatives (${t2dates})`,
       altTable(t2, `Same dates, so the ${CITY[oi.c1.code]} and ${CITY[oi.c2.code]} nights are identical — the price gap is the whole story. ` +
                    `"1 ticket" = one multi-city booking; "2 tickets" = the two hops bought separately ` +
                    `(sometimes cheaper, but you re-check bags in ${CITY[oi.c1.code]} and a delay on the first leg is your problem, not the airline's). ` +
                    "Two-ticket rows have one Book button per purchase.", [oi.r1, oi.r2]),
-      true);
-    html += sec(`🎫 Ticket ① alternatives — Boston→Istanbul→Dhaka + ${CITY[oi.c2.code]}→Boston`,
-      altTable(d.ticket1_options || [], "Same three flights and dates, different airline. Watch the bag column: " +
-               "European carriers usually give one 23 kg bag where Turkish and the Gulf carriers give two."),
       false);
-  } else {
-    html += `<div class="card">No trip could be priced in today's data. The retry slots will try again — check the self-check notes above.</div>`;
+    html += sec(`🎫 Ticket ① alternatives — return from ${CITY[oi.c2.code]}`,
+      altTable(d.ticket1_options || [], "Same three flights and dates, different airline. Watch the bag column: " +
+               "Turkish and the Gulf carriers give two 23 kg bags each where European and US carriers give one."),
+      false);
   }
 
   html += sec("📋 How to book it (short version)", `<div class="card">
@@ -704,10 +871,10 @@ function renderToday(d) {
   const flights = d.flights || [];
   if (flights.length) {
     const rows = flights.map(f => `<tr><td>${esc(f.route)}</td><td>${short(f.depart)}</td>
-      <td>${esc(f.airline)}</td><td>${esc(f.stops)}</td><td class="num">${usd(f.price_total)}</td></tr>`).join("");
+      <td class="wrap">${esc(f.airline)}</td><td>${esc(f.stops)}</td><td class="num">${usd(f.price_total)}</td></tr>`).join("");
     html += sec(`🗂 All ${flights.length} one-way fares scraped tonight`,
       `<div class="card scroll-x"><table><tr><th>Leg</th><th>Depart</th><th>Airline</th><th>Stops</th><th class="num">Total</th></tr>${rows}</table>
-       <div class="muted" style="margin-top:6px">Only the Ticket ② one-way legs (both orders) are scraped as singles; the long legs are only ever priced as Ticket ①.</div></div>`, false);
+       <div class="small" style="margin-top:6px">Only the Ticket ② one-way legs (both orders) are scraped as singles; the long legs are only ever priced as Ticket ①.</div></div>`, false);
   }
   document.getElementById("view-today").innerHTML = html;
 }
@@ -716,8 +883,8 @@ function renderToday(d) {
 const HCOLS = [
   {key: "date",            label: "Date",            num: false},
   {key: "_main",           label: "⭐ Trip $",        num: true},
-  {key: "ticket1_total",   label: "Ticket ① $",      num: true},
-  {key: "ticket2_total",   label: "Ticket ② $",      num: true},
+  {key: "ticket1_total",   label: "① $",             num: true},
+  {key: "ticket2_total",   label: "② $",             num: true},
   {key: "ticket1_airline", label: "① airline",       num: false},
   {key: "ticket2_airline", label: "② airline",       num: false},
   {key: "order",           label: "Order",           num: false},
@@ -742,10 +909,10 @@ function flattenHistory(history) {
 function detailHTML(h) {
   const d = h.best_detail;
   if (!d) return `<span class="muted">No trip was priced this day.</span>`;
-  const bags = (d.baggage || []).map(b =>
-    `<div class="muted">🧳 ${esc(b.route)} · ${esc(b.carrier)}: ${esc(b.checked)}</div>`).join("");
   const oi = orderInfo(d);
   const stays = [oi.c1, oi.c2].map(c => `${CITY[c.code]} ${c.n ?? "–"} nights`).join(" · ");
+  const bags = (d.baggage || []).map(b =>
+    `<div class="muted">🧳 ${esc(b.route)} · ${esc(b.carrier)}: ${esc(b.checked)}</div>`).join("");
   return `<div class="muted" style="margin-bottom:4px">${esc(d.name)} · Istanbul ${d.ist_nights ?? "–"} nights · Dhaka ${d.dhaka_days} days · ${stays} · home ${esc(d.home)}</div>`
     + (d.openjaw ? ojLine(d.openjaw) : "") + (d.sg_ticket ? sgTicketLine(d.sg_ticket) : "")
     + (d.legs || []).map(legLine).join("") + bags;
@@ -756,10 +923,10 @@ function trendSummary(history) {
   const md = s => { const t = Date.parse(s + "T12:00"); return isNaN(t) ? s :
     new Date(t).toLocaleDateString("en-US", {month: "short", day: "numeric"}); };
   const series = [
-    {label: "⭐ Whole trip", get: mainTotal},
+    {label: "⭐ Bangkok trip", get: h => h.date >= "2026-08-01" ? mainTotal(h) : null},
     {label: "🌴 Bali (old)", get: h => h.bali_total ?? null},
     {label: "🎫 Ticket ①", get: h => h.ticket1_total ?? null},
-    {label: "🇸🇬 Ticket ②", get: h => h.ticket2_total ?? null},
+    {label: "✈️ Ticket ②", get: h => h.ticket2_total ?? null},
   ];
   const rows = series.map(s => {
     const pts = history.map(h => ({d: h.date, v: s.get(h)})).filter(p => p.v != null);
@@ -776,7 +943,7 @@ function trendSummary(history) {
     return `<div style="margin-top:4px">${s.label}: <b>${usd(cur.v)}</b> · ${dir}
       <span class="muted">· low ${usd(lo.v)} (${md(lo.d)}) · high ${usd(hi.v)} (${md(hi.d)})</span></div>`;
   }).join("");
-  return `<div style="font-size:.85rem;margin-top:10px;border-top:1px solid var(--border);padding-top:8px">${rows}</div>`;
+  return `<div style="font-size:.84rem;margin-top:10px;border-top:1px solid var(--border);padding-top:8px">${rows}</div>`;
 }
 
 function renderHistory() {
@@ -796,17 +963,18 @@ function renderHistory() {
     HCOLS.map(c => `<td class="${c.num ? "num" : ""}">${c.num ? usd(h[c.key]) : esc(h[c.key] ?? "—")}</td>`).join("") +
     `</tr><tr class="detail-row" style="display:none"><td colspan="${HCOLS.length}">${detailHTML(h)}</td></tr>`).join("");
   document.getElementById("view-history").innerHTML =
-    `<h2 style="font-size:.95rem;margin:16px 0 0;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;font-weight:600">📈 Price trend</h2>
+    `<h2 class="h2">📈 Price trend</h2>
      <div class="card">${chart(hRows)}${trendSummary(hRows)}</div>
-     <h2 style="font-size:.95rem;margin:16px 0 0;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;font-weight:600">The trip, day by day</h2>
+     <h2 class="h2">The trip, day by day</h2>
      <div class="card scroll-x"><table id="htable"><tr>${head}</tr>${body}</table>
-     <div class="muted" style="margin-top:8px">Tap a column header to sort · tap a row for that day's airlines, layovers, baggage and booking links.
+     <div class="small" style="margin-top:8px">Tap a column header to sort · tap a row for that day's airlines, layovers, baggage and booking links.
      Dollar figures are totals for all 3 travelers. Days before 18 Jul 2026 predate this trip definition and show “—”;
      the Ticket ① / ② split starts 25 Jul 2026; Bangkok replaced Bali on 1 Aug 2026.</div></div>`;
   document.querySelectorAll("#htable th.sortable").forEach(th => th.onclick = () => {
     const key = th.dataset.key;
     hSort = {key, dir: hSort.key === key ? -hSort.dir : (key === "date" ? -1 : 1)};
     renderHistory();
+    bindChartHover(document.getElementById("view-history"));
   });
   document.querySelectorAll("#htable tr.clickable").forEach(tr => tr.onclick = () => {
     const next = tr.nextElementSibling;
@@ -816,7 +984,9 @@ function renderHistory() {
 
 function setTab(which) {
   for (const t of ["today", "bali", "history"]) {
-    document.getElementById("tab-" + t).classList.toggle("active", which === t);
+    const btn = document.getElementById("tab-" + t);
+    btn.classList.toggle("active", which === t);
+    btn.setAttribute("aria-selected", which === t ? "true" : "false");
     document.getElementById("view-" + t).style.display = which === t ? "" : "none";
   }
 }
