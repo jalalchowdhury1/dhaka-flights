@@ -192,6 +192,11 @@ launchd 12:00am + 2:00am retry slot (com.jalal.dhaka-flights.plist, parallel wit
 - One search interactively: `python3 -c "from scraper import scrape_route; print(scrape_route('DAC','SIN','January 30, 2027'))"`.
 - Dashboard deploy (only when site/index.html changes): `cd site && vercel --prod --yes`
   (project `dhaka-flights`, account `jalalchowdhury-8053`). Data updates need NO deploy.
+- **Rollback the site to the pre-overhaul version** (tagged `v1-pre-overhaul`,
+  2026-08-02): `git checkout v1-pre-overhaul -- site/index.html && git commit
+  -m "Rollback site to v1" && git push && cd site && vercel --prod --yes`.
+  Plan B: Vercel dashboard → Deployments → pick an older one → Promote to
+  Production.
 
 ## 4. Secrets & env
 
