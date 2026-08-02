@@ -101,6 +101,7 @@
            padding: 2px 9px; border-radius: 99px; vertical-align: middle; }
   .badge.good { background: var(--good-bg); color: var(--good-fg); }
   .badge.warn { background: var(--warn-bg); color: var(--warn-fg); }
+  .badge.dim { background: var(--surface); color: var(--text-2); border: 1px solid var(--border); }
   .leg { display: flex; gap: 9px; padding: 11px 0; border-top: 1px solid var(--border);
          font-size: .88rem; align-items: center; }
   .leg:first-of-type { border-top: none; }
@@ -899,27 +900,28 @@ function renderToday(d) {
         ($550). FHR's guaranteed 4pm checkout matters most in Istanbul: the IST→DAC flight leaves
         in the evening of Jan 7.</div></div>
       <div class="scroll-x" style="margin-top:10px"><table>
-        <tr><th>🕌 Istanbul · Jan 5–7 (2n)</th><th>Program</th><th class="num">Nightly (live 8/1)</th><th class="num">Offset</th><th>Angle</th></tr>
+        <tr><th>🕌 Istanbul · Jan 5–7 (2n)</th><th>Program</th><th class="num">Nightly</th><th class="num">Offset</th><th>Angle</th></tr>
         <tr><td>Sanasaryan Han (Lux. Coll.)</td><td>FHR</td><td class="num">$270</td>
-          <td class="num"><b>~86%</b> ✅</td><td class="wrap">Old-city boutique · Bonvoy stacks</td></tr>
+          <td class="num"><span class="badge good">~86%</span></td><td class="wrap">Old-city boutique · Bonvoy stacks</td></tr>
         <tr><td><b>Ritz-Carlton Istanbul</b></td><td>FHR</td><td class="num">$314</td>
-          <td class="num"><b>~74%</b> ✅</td><td class="wrap">Value pick — Bonvoy Platinum stacks (points + elite nights)</td></tr>
+          <td class="num"><span class="badge good">~74%</span></td><td class="wrap">Value pick · Bonvoy Platinum stacks (points + elite nights)</td></tr>
         <tr><td>St. Regis Istanbul</td><td>FHR</td><td class="num">$525</td>
-          <td class="num">~44%</td><td class="wrap">Butler with every room · Bonvoy stacks</td></tr>
+          <td class="num"><span class="badge dim">~44%</span></td><td class="wrap">Butler with every room · Bonvoy stacks</td></tr>
         <tr><td>Çırağan Palace Kempinski</td><td>FHR</td><td class="num">$726</td>
-          <td class="num">~32%</td><td class="wrap">The sentimental splurge — Bosphorus palace, the favorite brand</td></tr>
+          <td class="num"><span class="badge dim">~32%</span></td><td class="wrap">The sentimental splurge · Bosphorus palace, the favorite brand</td></tr>
       </table></div>
       <div class="scroll-x" style="margin-top:10px"><table>
-        <tr><th>🇸🇬 Singapore · follows winning order (currently 4n)</th><th>Program</th><th class="num">Nightly (live 8/1)</th><th class="num">Offset</th><th>Angle</th></tr>
+        <tr><th>🇸🇬 Singapore · follows winning order (4n)</th><th>Program</th><th class="num">Nightly</th><th class="num">Offset</th><th>Angle</th></tr>
         <tr><td>Pan Pacific Orchard</td><td>THC + Edit</td><td class="num">$252</td>
-          <td class="num">~52% (<b>~74%</b> ✅ if the select-hotels credit stacks)</td>
-          <td class="wrap">Wildcard: may ALSO take CSR's separate $250 "select hotels" credit — confirm in portal</td></tr>
+          <td class="num"><span class="badge dim">~52%</span></td>
+          <td class="wrap">Wildcard: jumps to <span class="badge good">~74%</span> if CSR's separate
+            $250 select-hotels credit stacks · confirm in portal</td></tr>
         <tr><td><b>St. Regis Singapore</b></td><td>FHR</td><td class="num">$329</td>
-          <td class="num">~43%</td><td class="wrap">Butler standard · Bonvoy stacks · cheap for SIN luxury</td></tr>
+          <td class="num"><span class="badge dim">~43%</span></td><td class="wrap">Butler standard · Bonvoy stacks · cheap for SIN luxury</td></tr>
         <tr><td>Ritz-Carlton Millenia</td><td>FHR</td><td class="num">$420</td>
-          <td class="num">~34%</td><td class="wrap">Marina views · Bonvoy stacks</td></tr>
+          <td class="num"><span class="badge dim">~34%</span></td><td class="wrap">Marina views · Bonvoy stacks</td></tr>
         <tr><td>JW Marriott South Beach</td><td>The Edit only</td><td class="num">$497</td>
-          <td class="num">~27%</td><td class="wrap">Best Edit-exclusive if the fallback strategy is needed</td></tr>
+          <td class="num"><span class="badge dim">~27%</span></td><td class="wrap">Best Edit-exclusive if the fallback strategy is needed</td></tr>
       </table></div>
       <div class="small" style="margin-top:8px"><b>Offset</b> = credits used ÷ (room + ~12% tax):
         IST 2n assumes $300 Amex + $100 property + $60/day breakfast = $520 of credits;
