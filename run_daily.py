@@ -40,6 +40,16 @@ def mark_ran_today():
         f.write(datetime.date.today().isoformat())
 
 
+def should_stamp(payload: dict, notify_status: str) -> bool:
+    """Only mark tonight as done when there's a trip AND the brief reached a
+    rung a person actually reads. notify_status "minimal" means
+    build_message and send_message both failed all the way down to the
+    static fallback — that's the same "come back later" situation as a
+    catastrophic no-trip night, so it must not block the 2:00/4:00 retry
+    slots either."""
+    return bool(payload.get("main")) and notify_status != "minimal"
+
+
 def _check(label, fn):
     """A check layer must never kill the run — a crash becomes a finding."""
     try:
@@ -145,7 +155,7 @@ def main():
         + multicity_as_rows(bali_fwd + bali_rev, "🌴② Bali middle")
         + flights,
         tab_name="Google Flights")
-    notify_cheapest(payload)
+    notify_status = notify_cheapest(payload)
     publish.write_payload(payload)
 
     # Cloud-redundant history: one appended row per day in the Google Sheet,
@@ -156,12 +166,18 @@ def main():
     except Exception as e:                     # noqa: BLE001 — never kill the run
         print(f"WARN: history-sheet append failed (run continues): {e}")
 
-    if payload["main"]:
+    if should_stamp(payload, notify_status):
         mark_ran_today()
-    else:
+    elif not payload["main"]:
         # Catastrophic day (fares but no priceable trip): DON'T stamp, so the
         # 2:00 / 4:00 retry slots automatically try again.
         print("NOT marking success — no trip was built; retry slots will re-run")
+    else:
+        # A trip was built, but the brief never got past the minimal static
+        # fallback (build_message and send_message both failed) — same
+        # "come back later" situation, so the retry slots get another shot.
+        print("NOT marking success — tonight's brief never got past the "
+              "minimal fallback; retry slots will re-run")
     print("=== Done ===")
 
 

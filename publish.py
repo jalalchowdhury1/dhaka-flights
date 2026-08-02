@@ -16,15 +16,22 @@ from combo import budget_trip, main_trip, ticket1_options, ticket2_options
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(REPO_DIR, "site", "data.json")
 
-PUSH_ATTEMPTS = 3
 PUSH_BACKOFF_S = [10, 30]          # sleeps between attempts 1→2 and 2→3
+# Derived, not duplicated: a future bump of attempts without extending the
+# backoff list would IndexError inside write_payload's own outer except —
+# silently swallowing the warning it was trying to send.
+PUSH_ATTEMPTS = len(PUSH_BACKOFF_S) + 1
 
 
 def _telegram_warn(msg: str) -> None:
-    """Best-effort Telegram warning — publish must survive notify failures."""
+    """Best-effort Telegram warning — publish must survive notify failures.
+    send_message signals failure by returning False (not raising), so that
+    has to be checked too — the network-down case is exactly the trigger
+    that would otherwise make the warning vanish without a trace."""
     try:
         from notify_telegram import send_message
-        send_message(msg)
+        if not send_message(msg):
+            print("WARN: stale-dashboard warning did not reach Telegram")
     except Exception as e:  # noqa: BLE001
         print(f"WARN: telegram warn failed too: {e}")
 
@@ -200,9 +207,16 @@ def write_payload(payload: dict) -> None:
                     os.remove(os.path.join(bdir, old))
         except OSError as e:
             print(f"WARN: data.json backup failed: {e}")
+        # Serialize BEFORE opening the file: json.dumps must run to
+        # completion (or raise) before the live file is truncated, so an
+        # unserializable payload leaves yesterday's good file on disk
+        # instead of half- (or fully-) overwritten with garbage. allow_nan
+        # =False agrees with schema_check's own probe — NaN/Infinity would
+        # otherwise write "successfully" into JSON no parser can read back.
+        text = json.dumps(payload, indent=1, default=_jsonable, allow_nan=False)
         os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
         with open(DATA_FILE, "w") as f:
-            json.dump(payload, f, indent=1, default=_jsonable)
+            f.write(text)
         print(f"Wrote {DATA_FILE}")
 
         def git(*args):
@@ -213,21 +227,37 @@ def write_payload(payload: dict) -> None:
         commit = git("commit", "-m", f"Daily data: {today}")
         if commit.returncode != 0 and "nothing to commit" not in commit.stdout:
             print(f"WARN: git commit failed: {commit.stderr.strip()[:200]}")
+            _telegram_warn(
+                "⚠️ dhaka-flights: git commit failed — tonight's data was "
+                "written locally but not committed; the dashboard will be "
+                "stale. Check for a stray index.lock in the repo.")
             return
         for attempt in range(1, PUSH_ATTEMPTS + 1):
             push = git("push")
             if push.returncode == 0:
                 print("Pushed data.json — dashboard will show it on next load.")
                 break
+            stderr = push.stderr or ""
             print(f"WARN: git push failed (attempt {attempt}/{PUSH_ATTEMPTS}): "
-                  f"{push.stderr.strip()[:200]}")
+                  f"{stderr.strip()[:200]}")
+            # A non-fast-forward rejection can't be fixed by waiting and
+            # retrying — only a pull fixes it — so burning the remaining
+            # backoff on more of the same rejection just delays the warning
+            # that actually tells the user what to do.
+            if "rejected" in stderr or "non-fast-forward" in stderr:
+                _telegram_warn(
+                    "⚠️ dhaka-flights: origin/main has commits this Mac "
+                    "doesn't have — run `git pull --rebase` in the repo, "
+                    "then the next nightly push will succeed.")
+                break
             if attempt < PUSH_ATTEMPTS:
                 time.sleep(PUSH_BACKOFF_S[attempt - 1])
         else:
             _telegram_warn(
-                "⚠️ dhaka-flights: git push failed 3× — tonight's data is "
-                "committed locally but the dashboard will be stale until the "
-                "next successful push. Check network/GitHub creds on the Mac mini.")
+                f"⚠️ dhaka-flights: git push failed {PUSH_ATTEMPTS}× — "
+                "tonight's data is committed locally but the dashboard will "
+                "be stale until the next successful push. Check network/"
+                "GitHub creds on the Mac mini.")
     except Exception as e:
         print(f"WARN: publish failed (daily run continues): {e}")
 
