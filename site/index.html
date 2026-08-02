@@ -878,6 +878,33 @@ function renderToday(d) {
       <div class="small" style="margin-top:8px">Captured 2026-08-01. One pre-arrival email in
         September asks for both supplements (suite + Club) on the same award stay.</div>
     </div>`, false);
+    html += sec("🏨 Istanbul & Singapore hotels — the card play (deciding)", `<div class="card">
+      <div class="muted">Bangkok is the Marriott-points stay. The other two hotel stops ride the
+        premium-card programs instead — likely one city per program, since both stays fall inside
+        the Jan–Jun 2027 credit windows of both cards.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin:10px 0 2px">
+        <span class="chip">🕌 <b>Istanbul</b> Jan 5–7 · 2 nights</span>
+        <span class="chip">🇸🇬 <b>Singapore</b> follows the winning order · currently ${
+          main && main.order === "BKK-first" ? "the last stop before home" : "the first stop after Dhaka"} ·
+          ${main ? (orderInfo(main).c2.code === "SIN" || orderInfo(main).c1.code === "SIN"
+            ? (main.order === "BKK-first" ? `${main.sg_nights ?? "?"} nights before the Feb 6 flight home` : `${main.sg_nights ?? "?"} nights`) : "") : ""}</span>
+      </div>
+      <div class="scroll-x" style="margin-top:8px"><table>
+        <tr><th>Program</th><th>Card</th><th>Stay gives you</th><th class="num">Credit window (Jan–Jun '27)</th></tr>
+        <tr><td><b>The Edit</b></td><td>Sapphire Reserve</td>
+          <td class="wrap">Daily breakfast for 2 · ~$100 property credit · upgrade + early/late checkout when available</td>
+          <td class="num">$250 statement credit</td></tr>
+        <tr><td><b>FHR</b></td><td>Amex Platinum</td>
+          <td class="wrap">Daily breakfast for 2 · ~$100 property credit · guaranteed 4pm checkout · no minimum stay</td>
+          <td class="num">$300 prepaid-hotel credit</td></tr>
+        <tr><td><b>THC</b></td><td>Amex Platinum</td>
+          <td class="wrap">$100 property credit · $60/day breakfast credit · 2-night minimum</td>
+          <td class="num">same $300 pool</td></tr>
+      </table></div>
+      <div class="small" style="margin-top:8px">Shortlists and live Jan/Feb pricing are in research
+        (started 2026-08-01). The picks — which city goes on which program, and which hotels —
+        land here when decided. Marriott-family properties on FHR also stack Bonvoy Platinum status.</div>
+    </div>`, false);
     html += sec("🧳 Baggage, leg by leg", baggageCard(main), false);
 
     const t2 = d.ticket2_options || [];
