@@ -533,9 +533,130 @@ function route() {
 window.addEventListener("hashchange", route);
 
 /* ======================= screens (Tasks 6–9 fill these) =================== */
+const add = (root, fn) => { const n = renderSafe(fn); if (n) root.appendChild(n); };
+
+/* ---- Tonight (#/) — the 5-second phone glance -------------------------- */
+function verdictPass(d) {
+  const m = d.main;
+  if (!m) {
+    const reason = (d.warnings || []).length
+      ? `<div class="small" style="margin-top:6px">⚠️ ${esc(d.warnings[0])}</div>` : "";
+    return el(`
+      <div class="pass-head"><span>Tonight's cheapest</span><span>—</span></div>
+      <b>No trip could be priced in the latest run.</b>
+      <div class="muted" style="margin-top:4px">The retry slots try again
+      automatically — the 🧪 self-check at the bottom has the details.</div>
+      ${reason}`, "pass");
+  }
+  const o = orderInfo(m);
+  const routeStr = ["BOS", "IST", "DAC", o.c1.code, o.c2.code, "BOS"].join(" ✈ ");
+  const hist = d.history || [];
+  const vals = hist.map(mainTotal).filter(v => v != null);
+  let deltaHtml = `<span class="delta flat">first day of this trip</span>`;
+  if (vals.length >= 2) {
+    const dd = vals[vals.length - 1] - vals[vals.length - 2];
+    deltaHtml = dd === 0 ? `<span class="delta flat">unchanged vs yesterday</span>`
+      : dd < 0 ? `<span class="delta down">▼ ${usd(-dd)} vs yesterday</span>`
+               : `<span class="delta up">▲ ${usd(dd)} vs yesterday</span>`;
+  }
+  const chips = [];
+  for (const a of (d.alerts || []))
+    chips.push(`<span class="chip ${a.includes("🚨") ? "chip-bad" : "chip-warn"}">${plain(a)}</span>`);
+  if (!chips.length && d.countdown)
+    chips.push(`<span class="chip chip-warn">👀 ${plain(String(d.countdown).replace(/📅 /, ""))}</span>`);
+  if (d.price_context) chips.push(`<span class="chip">${plain(d.price_context)}</span>`);
+  if (!m.valid) chips.push(`<span class="badge warn">⚠️ ${esc(m.flag || "check dates")}</span>`);
+  const h = hist.length ? hist[hist.length - 1] : {};
+  return el(`
+    <div class="pass-head"><span>Tonight's cheapest</span><span>${esc(m.order_label || "")}</span></div>
+    <div class="mono-route">${routeStr}</div>
+    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:4px">
+      <span class="price-lg">${usd(m.total)}</span>${deltaHtml}
+    </div>
+    ${chips.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">${chips.join("")}</div>` : ""}
+    <div class="perf"></div>
+    <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:.84rem">
+      <span>① ${esc(h.ticket1_airline || "?")} <b>${usd(h.ticket1_total)}</b></span>
+      <span>② ${esc(h.ticket2_airline || "?")} <b>${usd(h.ticket2_total)}</b></span>
+    </div>`, "pass");
+}
+
+function budgetTeaser(d) {
+  const b = d.budget;
+  if (!b) return null;
+  return el(`<a class="tile" href="#/flights" style="margin-top:10px">💸
+    Same trip <b style="display:inline">${usd(b.total)}</b> with looser dates
+    · save ${usd(b.savings)} →</a>`).firstElementChild;
+}
+
+function changesCard(d) {
+  if (!(d.changes || []).length) return null;
+  return el(`<span class="micro">Since yesterday</span>` +
+    d.changes.map(c => `<div class="muted" style="margin-top:4px">${plain(c)}</div>`).join(""),
+    "pass");
+}
+
+function sparkline(hist) {
+  const pts = (hist || []).map(h => ({d: h.date, v: mainTotal(h)}))
+    .filter(p => p.v != null).slice(-30);
+  if (pts.length < 2)
+    return `<div class="small" style="margin-top:4px">Price history appears after a couple of days of data.</div>`;
+  const W = 280, H = 46, P = 4;
+  const lo = Math.min(...pts.map(p => p.v)), hi = Math.max(...pts.map(p => p.v));
+  const x = i => P + (W - 2 * P) * i / (pts.length - 1);
+  const y = v => P + (H - 2 * P) * (1 - (v - lo) / ((hi - lo) || 1));
+  const points = pts.map((p, i) => `${x(i).toFixed(1)},${y(p.v).toFixed(1)}`).join(" ");
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;margin-top:6px" role="img"
+    aria-label="Trip total, last ${pts.length} nights">
+    <polyline fill="none" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"
+      stroke-linecap="round" points="${points}"/>
+    <circle cx="${x(pts.length - 1).toFixed(1)}" cy="${y(pts[pts.length - 1].v).toFixed(1)}"
+      r="3.5" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/></svg>`;
+}
+
+function sparklineCard(d) {
+  const n = (d.history || []).filter(h => mainTotal(h) != null).length;
+  const card = el(`
+    <div style="display:flex;justify-content:space-between;align-items:baseline">
+      <span class="micro">${n} night${n === 1 ? "" : "s"} tracked</span>
+      <span class="micro" style="color:var(--ink)">history →</span>
+    </div>${sparkline(d.history)}`);
+  const a = document.createElement("a");
+  a.className = "tile"; a.href = "#/history"; a.setAttribute("aria-label", "Open price history");
+  a.append(...card.childNodes);
+  return a;
+}
+
+function tonightTiles(d) {
+  const b = d.bali;
+  const baliDelta = b && b.delta_vs_main != null ? b.delta_vs_main : null;
+  const baliLine = !b ? "scraped nightly · appears after the next run"
+    : baliDelta == null ? `tonight: <b style="display:inline">${usd(b.total)}</b>`
+    : baliDelta >= 0
+      ? `tonight: <b style="display:inline">${usd(b.total)}</b> · <span style="color:var(--good);font-weight:650">+${usd(baliDelta)} vs yours</span>`
+      : `tonight: <b style="display:inline">${usd(b.total)}</b> · <span style="color:var(--warn);font-weight:650">−${usd(-baliDelta)} cheaper than yours</span>`;
+  return el(`
+    <a class="tile" href="#/flights"><span style="font-size:1.15rem">✈️</span>
+      <b>Flights →</b><span class="small">both tickets · bags · alternatives · playbook</span></a>
+    <a class="tile" href="#/stays"><span style="font-size:1.15rem">🏨</span>
+      <b>Stays →</b><span class="small">The Athenee 5n free-night · IST/SIN card play</span></a>
+    <a class="tile" href="#/history"><span style="font-size:1.15rem">📈</span>
+      <b>History →</b><span class="small">full chart · every night's detail</span></a>
+    <a class="tile" href="#/history"><span style="font-size:1.15rem">🌴</span>
+      <b>Bali watch →</b><span class="small">${baliLine}</span></a>`, "tiles");
+}
+
 function renderTonight(d) {
-  return el(`<div class="pass"><span class="micro">Tonight</span>
-    <div class="muted" style="margin-top:6px">Screen under construction.</div></div>`);
+  const root = el("");
+  add(root, () => verdictPass(d));
+  add(root, () => budgetTeaser(d));
+  add(root, () => changesCard(d));
+  add(root, () => sparklineCard(d));
+  add(root, () => tonightTiles(d));
+  if (d.trip && d.trip.rules)
+    root.appendChild(el(`<div class="small" style="margin-top:12px">${esc(d.trip.travelers || "")}
+      · ${esc(d.trip.rules)}</div>`));
+  return root;
 }
 function renderFlights(d) {
   return el(`<div class="pass"><span class="micro">Flights</span>
