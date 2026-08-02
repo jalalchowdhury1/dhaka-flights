@@ -114,6 +114,20 @@ def main():
         payload["verified"] = ("independent re-check ✓ (recompute · "
                                "arithmetic · trip contract)")
 
+    # 📐 Contract check: the payload must match the shape the site renders.
+    # Violations are warnings (they must reach Telegram + the 🧪 line) —
+    # publishing is never blocked.
+    try:
+        import schema_check
+        contract = schema_check.validate(payload)
+    except Exception as e:                     # noqa: BLE001 — never kill the run
+        contract = [f"contract check crashed: {e}"]
+    if contract:
+        for p in contract:
+            print(f"CONTRACT: {p}")
+        payload["warnings"] = list(payload.get("warnings") or []) + \
+            [f"📐 {p}" for p in contract]
+
     write_to_sheet(
         multicity_as_rows(tickets1, "① BOS→IST→DAC + return")
         + multicity_as_rows(sg_tickets, "② Dhaka→BKK/SIN middle")
