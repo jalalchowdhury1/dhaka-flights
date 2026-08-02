@@ -2,6 +2,8 @@
 keys; publish-time validation makes drift loud instead of silent. Violations
 are returned as human strings (they ride to Telegram + the site's 🧪 line) —
 validation must NEVER raise and NEVER block publishing."""
+import datetime
+import json
 
 # Top-level keys → allowed types (tuple). None is allowed everywhere a day
 # can legitimately lack the thing (no trip, no budget, no bali...).
@@ -44,9 +46,32 @@ HISTORY_NUMERIC = ["main_total", "ticket1_total", "ticket2_total",
 MAIN_NUMERIC = ["total"]
 MAIN_REQUIRED = ["total", "order_label"]
 
+# Cap on per-history-row findings that ride to Telegram. A systemic drift
+# (e.g. every numeric silently turns into a string) can otherwise emit one
+# violation per history row — up to 114 strings today — blowing past
+# Telegram's 4096-char message limit and silently degrading the nightly
+# brief to a warnings-free core message: the check would go quiet exactly
+# when it matters most. One summary line beats per-row noise.
+HISTORY_VIOLATION_CAP = 3
+
 
 def _type_name(t):
     return "null" if t is type(None) else t.__name__
+
+
+def _is_number(v):
+    # bool is a subclass of int in Python — True/False must not sneak past
+    # this check as a valid number.
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def _default(o):
+    """Mirrors publish._jsonable's datetime rule without importing publish —
+    this checker must stay independent of the module it's checking, so a bug
+    in publish can never blind the checker to it."""
+    if isinstance(o, datetime.datetime):
+        return o.strftime("%B %d, %Y")
+    raise TypeError(f"not JSON-serializable: {type(o)}")
 
 
 def validate(payload) -> list:
@@ -54,38 +79,61 @@ def validate(payload) -> list:
     probs = []
     try:
         if not isinstance(payload, dict):
-            return [f"contract: payload is {type(payload).__name__}, not an object"]
+            return [f"payload shape: payload is {type(payload).__name__}, "
+                    f"not an object"]
         for key, types in TOP.items():
             if key not in payload:
-                probs.append(f"contract: top-level key '{key}' is missing")
+                probs.append(f"payload shape: top-level key '{key}' is missing")
             elif not isinstance(payload[key], types):
                 want = "/".join(_type_name(t) for t in types)
-                probs.append(f"contract: '{key}' is "
+                probs.append(f"payload shape: '{key}' is "
                              f"{type(payload[key]).__name__}, expected {want}")
 
+        # History rows are gathered separately and capped (HISTORY_VIOLATION_CAP)
+        # before joining the main list — see the constant's comment above.
+        hist_probs = []
         for i, h in enumerate(payload.get("history") or []):
             if not isinstance(h, dict):
-                probs.append(f"contract: history[{i}] is not an object")
+                hist_probs.append(f"payload shape: history[{i}] is not an object")
                 continue
             for k in HISTORY_REQUIRED:
                 if k not in h:
-                    probs.append(f"contract: history[{i}] ({h.get('date', '?')}) "
-                                 f"is missing '{k}'")
+                    hist_probs.append(f"payload shape: history[{i}] "
+                                      f"({h.get('date', '?')}) is missing '{k}'")
             for k in HISTORY_NUMERIC:
                 v = h.get(k)
-                if v is not None and not isinstance(v, (int, float)):
-                    probs.append(f"contract: history[{i}].{k} is "
-                                 f"{type(v).__name__}, expected number/null")
+                if v is not None and not _is_number(v):
+                    hist_probs.append(f"payload shape: history[{i}].{k} is "
+                                      f"{type(v).__name__}, expected number/null")
+        if len(hist_probs) > HISTORY_VIOLATION_CAP:
+            probs.extend(hist_probs[:HISTORY_VIOLATION_CAP])
+            probs.append(f"payload shape: …and "
+                         f"{len(hist_probs) - HISTORY_VIOLATION_CAP} more "
+                         f"history-row violations")
+        else:
+            probs.extend(hist_probs)
 
         main = payload.get("main")
         if isinstance(main, dict):
             for k in MAIN_REQUIRED:
                 if k not in main:
-                    probs.append(f"contract: main is missing '{k}'")
+                    probs.append(f"payload shape: main is missing '{k}'")
             for k in MAIN_NUMERIC:
-                if k in main and not isinstance(main.get(k), (int, float)):
-                    probs.append(f"contract: main.{k} is "
+                if k in main and not _is_number(main.get(k)):
+                    probs.append(f"payload shape: main.{k} is "
                                  f"{type(main.get(k)).__name__}, expected number")
+
+        # 🧬 Serializability probe: json.dump writes data.json incrementally,
+        # so one non-serializable value nested anywhere in the payload
+        # truncates the file mid-write — the exact corruption this layer
+        # exists to prevent, and the type table above can't see it (it
+        # checks shape, not every nested leaf). Independent of publish.py on
+        # purpose: this checker must not trust the thing it's checking.
+        try:
+            json.dumps(payload, default=_default)
+        except (TypeError, ValueError) as e:
+            probs.append(f"payload shape: payload will not serialize to JSON "
+                         f"({e}) — data.json would be written truncated")
     except Exception as e:  # noqa: BLE001 — the checker must never take down a run
-        probs.append(f"contract: checker crashed: {e}")
+        probs.append(f"payload shape: checker crashed: {e}")
     return probs

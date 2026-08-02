@@ -40,6 +40,22 @@ def mark_ran_today():
         f.write(datetime.date.today().isoformat())
 
 
+def _check(label, fn):
+    """A check layer must never kill the run — a crash becomes a finding."""
+    try:
+        return fn()
+    except Exception as e:                     # noqa: BLE001
+        return [f"{label} crashed: {e}"]
+
+
+def _fold_warnings(payload, findings, mark, log_prefix):
+    for f in findings:
+        print(f"{log_prefix}: {f}")
+    if findings:
+        payload["warnings"] = list(payload.get("warnings") or []) + \
+            [f"{mark} {f}" for f in findings]
+
+
 def main():
     if already_ran_today():
         print("=== Already ran today, skipping ===")
@@ -98,35 +114,29 @@ def main():
     payload = publish.build_today(flights, tickets1, warnings, sg_tickets,
                                   bali=bali)
 
+    # 📐 Payload-shape check: the payload must match the shape the site
+    # renders. Runs BEFORE the independent re-check below — when the payload
+    # is structurally broken, verify.py crashes with a useless "unsupported
+    # format string" message, so the shape diagnosis should lead and the
+    # crash note should follow. Violations are warnings (they must reach
+    # Telegram + the 🧪 line) — publishing is never blocked.
+    def _run_shape_check():
+        import schema_check
+        return schema_check.validate(payload)
+    shape_issues = _check("payload-shape check", _run_shape_check)
+    _fold_warnings(payload, shape_issues, "📐", "PAYLOAD-SHAPE")
+
     # 🔎 Independent re-check (2026-08-01: "once done verify. Multiple times.
     # take different perspectives.") — recompute / arithmetic / contract.
     # Findings join the self-check block; a clean pass adds a footer line.
-    try:
+    def _run_verify():
         import verify
-        issues = verify.verify_payload(payload, flights, tickets1, sg_tickets)
-    except Exception as e:                     # noqa: BLE001 — never kill the run
-        issues = [f"re-check crashed: {e}"]
-    if issues:
-        for p in issues:
-            print(f"VERIFY: {p}")
-        payload["warnings"] = list(payload.get("warnings") or []) +             [f"🔎 {p}" for p in issues]
-    else:
+        return verify.verify_payload(payload, flights, tickets1, sg_tickets)
+    issues = _check("re-check", _run_verify)
+    _fold_warnings(payload, issues, "🔎", "VERIFY")
+    if not issues:
         payload["verified"] = ("independent re-check ✓ (recompute · "
                                "arithmetic · trip contract)")
-
-    # 📐 Contract check: the payload must match the shape the site renders.
-    # Violations are warnings (they must reach Telegram + the 🧪 line) —
-    # publishing is never blocked.
-    try:
-        import schema_check
-        contract = schema_check.validate(payload)
-    except Exception as e:                     # noqa: BLE001 — never kill the run
-        contract = [f"contract check crashed: {e}"]
-    if contract:
-        for p in contract:
-            print(f"CONTRACT: {p}")
-        payload["warnings"] = list(payload.get("warnings") or []) + \
-            [f"📐 {p}" for p in contract]
 
     write_to_sheet(
         multicity_as_rows(tickets1, "① BOS→IST→DAC + return")
