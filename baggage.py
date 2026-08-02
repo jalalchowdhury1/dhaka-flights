@@ -117,6 +117,20 @@ CARRIERS = {
         "checked_asia": "2 × 23 kg", "cabin": "1 × 7 kg",
         "confidence": "typical", "note": "",
         "url": "https://www.saudia.com/before-flying/baggage/baggage-allowance"},
+    "delta": {
+        "name": "Delta", "checked_us": "1 × 23 kg (Main; 2nd bag charged on most Europe/Asia itineraries)",
+        "checked_asia": None, "cabin": "1 bag + personal item",
+        "confidence": "typical",
+        "note": "Showed up as the Ticket ① winner 2026-08-01 (Delta + Air France codeshare) — the operating carrier's rule applies per leg; confirm at checkout.",
+        "url": "https://www.delta.com/us/en/baggage/checked-baggage"},
+    "united": {
+        "name": "United", "checked_us": "1 × 23 kg (Economy; Basic has no free bag on some routes)",
+        "checked_asia": None, "cabin": "1 bag + personal item", "confidence": "typical",
+        "note": "", "url": "https://www.united.com/en/us/fly/baggage.html"},
+    "american": {
+        "name": "American Airlines", "checked_us": "1 × 23 kg (Main Cabin international)",
+        "checked_asia": None, "cabin": "1 bag + personal item", "confidence": "typical",
+        "note": "", "url": "https://www.aa.com/i18n/travel-info/baggage/checked-baggage-policy.jsp"},
     "air india": {
         "name": "Air India", "checked_us": "2 × 23 kg per person",
         "checked_asia": "25–30 kg", "cabin": "1 × 8 kg",
