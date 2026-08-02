@@ -271,14 +271,45 @@ def build_message(payload: dict, core_only: bool = False) -> str:
     return "\n".join(parts)
 
 
+def _safe_build(*args, **kwargs) -> str:
+    """build_message assumes a well-formed payload (main['total'] etc.) — a
+    structurally broken one must degrade like a send failure, not raise and
+    take write_payload's turn to run with it."""
+    try:
+        return build_message(*args, **kwargs)
+    except Exception as e:  # noqa: BLE001
+        print(f"build_message failed: {e}")
+        return None
+
+
+def _safe_send(text: str) -> bool:
+    """send_message already swallows its own network errors, but callers
+    (tests, or a future patch) can replace it with something that doesn't —
+    this is the last line of defense before notify_cheapest itself."""
+    try:
+        return send_message(text)
+    except Exception as e:  # noqa: BLE001
+        print(f"send_message raised: {e}")
+        return False
+
+
 def notify_cheapest(payload: dict) -> None:
-    """Send the brief; on failure (length overflow, parse hiccup) degrade to
-    the core-only version rather than losing the night's message."""
-    if send_message(build_message(payload)):
+    """Send the brief; on failure (length overflow, parse hiccup, or a
+    broken payload build_message can't render) degrade step by step —
+    core-only, then a minimal static line — rather than losing the night's
+    message or raising and costing the run its publish step."""
+    full = _safe_build(payload)
+    if full is not None and _safe_send(full):
         print("Telegram notification sent.")
         return
     print("Full brief failed — sending core-only fallback...")
-    if send_message(build_message(payload, core_only=True)):
+    core = _safe_build(payload, core_only=True)
+    if core is not None and _safe_send(core):
         print("Telegram notification sent (core-only fallback).")
+        return
+    print("Core-only fallback failed too — sending minimal static message...")
+    if _safe_send("⚠️ tonight's brief could not be built — see cron.log; "
+                  "data may still have published."):
+        print("Telegram notification sent (minimal fallback).")
     else:
         print("Telegram notification failed.")

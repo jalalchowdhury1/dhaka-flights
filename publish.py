@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 import subprocess
+import time
 
 import alerts
 import baggage
@@ -14,6 +15,18 @@ from combo import budget_trip, main_trip, ticket1_options, ticket2_options
 
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(REPO_DIR, "site", "data.json")
+
+PUSH_ATTEMPTS = 3
+PUSH_BACKOFF_S = [10, 30]          # sleeps between attempts 1→2 and 2→3
+
+
+def _telegram_warn(msg: str) -> None:
+    """Best-effort Telegram warning — publish must survive notify failures."""
+    try:
+        from notify_telegram import send_message
+        send_message(msg)
+    except Exception as e:  # noqa: BLE001
+        print(f"WARN: telegram warn failed too: {e}")
 
 
 def _load_history() -> list:
@@ -201,11 +214,20 @@ def write_payload(payload: dict) -> None:
         if commit.returncode != 0 and "nothing to commit" not in commit.stdout:
             print(f"WARN: git commit failed: {commit.stderr.strip()[:200]}")
             return
-        push = git("push")
-        if push.returncode != 0:
-            print(f"WARN: git push failed: {push.stderr.strip()[:200]}")
+        for attempt in range(1, PUSH_ATTEMPTS + 1):
+            push = git("push")
+            if push.returncode == 0:
+                print("Pushed data.json — dashboard will show it on next load.")
+                break
+            print(f"WARN: git push failed (attempt {attempt}/{PUSH_ATTEMPTS}): "
+                  f"{push.stderr.strip()[:200]}")
+            if attempt < PUSH_ATTEMPTS:
+                time.sleep(PUSH_BACKOFF_S[attempt - 1])
         else:
-            print("Pushed data.json — dashboard will show it on next load.")
+            _telegram_warn(
+                "⚠️ dhaka-flights: git push failed 3× — tonight's data is "
+                "committed locally but the dashboard will be stale until the "
+                "next successful push. Check network/GitHub creds on the Mac mini.")
     except Exception as e:
         print(f"WARN: publish failed (daily run continues): {e}")
 

@@ -99,22 +99,35 @@ def test_non_serializable_value_is_reported():
     assert "serialize" in out[0]
 
 
+def test_nan_value_is_reported():
+    # NaN/Infinity serialize "successfully" with json.dumps's default
+    # settings into JSON no standard parser can read back — same blank-site
+    # outcome as truncation, just silent instead of raising on its own.
+    p = _payload()
+    p["flights"] = [{"price_total": float("nan")}]
+    out = schema_check.validate(p)
+    assert len(out) == 1
+    assert "serialize" in out[0]
+
+
 def test_history_violations_are_capped():
     # A systemic drift (every history row's numerics turn into strings) must
     # fold into one summary line, not one violation per row — that's the
     # difference between a Telegram message that arrives and one that
     # silently overflows into a warnings-free core message.
     p = _payload()
+    broken_rows = 10
     p["history"] = [{"date": f"2026-08-{i:02d}", "main_total": "bad"}
-                    for i in range(1, 11)]
+                    for i in range(1, broken_rows + 1)]
     out = schema_check.validate(p)
     assert len(out) == schema_check.HISTORY_VIOLATION_CAP + 1
-    assert "7 more history-row violations" in out[-1]
+    expected_more = broken_rows - schema_check.HISTORY_VIOLATION_CAP
+    assert f"{expected_more} more history-row violations" in out[-1]
 
 
 def test_validate_never_raises_on_garbage():
     out1 = schema_check.validate({"nonsense": True})
-    assert isinstance(out1, list) and len(out1) == 16
+    assert isinstance(out1, list) and len(out1) == len(schema_check.TOP)
     out2 = schema_check.validate(None)
     assert isinstance(out2, list) and len(out2) == 1
 

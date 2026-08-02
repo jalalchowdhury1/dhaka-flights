@@ -129,8 +129,12 @@ def validate(payload) -> list:
         # exists to prevent, and the type table above can't see it (it
         # checks shape, not every nested leaf). Independent of publish.py on
         # purpose: this checker must not trust the thing it's checking.
+        # allow_nan=False: a NaN/Infinity leaf serializes "successfully" into
+        # JSON that no standard parser can read back — same blank-site
+        # outcome as truncation, just without the TypeError this probe would
+        # otherwise rely on to catch it.
         try:
-            json.dumps(payload, default=_default)
+            json.dumps(payload, default=_default, allow_nan=False)
         except (TypeError, ValueError) as e:
             probs.append(f"payload shape: payload will not serialize to JSON "
                          f"({e}) — data.json would be written truncated")
