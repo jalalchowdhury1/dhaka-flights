@@ -850,18 +850,40 @@ def scrape_sg_tickets_all() -> list:
 # return) + the two one-ticket middle pairs around the ideal shape — 3
 # searches, no one-way middles. It's a BENCHMARK, not a bookable product;
 # a consistent yardstick beats exhaustive coverage here.
+# BOTH Bali orders are probed, mirroring the Bangkok logic (2026-08-01 late,
+# Jalal: "make the Bali watch mirror the Bangkok logic — probe both Bali
+# orders nightly and show whichever is cheaper"):
+#   fwd — DAC→SIN + SIN→DPS (2 SIN nights then the 5-night Bali block,
+#         return DPS→BOS on the watch's own Ticket ①)
+#   rev — DAC→DPS + DPS→SIN (Bali first, 2 SIN nights last, return SIN→BOS
+#         on the Bangkok-first Ticket ① that is ALREADY scraped nightly)
+# DAC→DPS runs mostly arrive next-day (overnight via KUL), so the rev pair
+# departs Jan 29 to land ~Jan 30 = 5 Bali nights before the Feb 4 hop.
 BALI_WATCH_PAIRS = [
-    ("January 29, 2027", "January 31, 2027"),
-    ("January 30, 2027", "February 1, 2027"),   # the ideal 2-SIN/5-Bali pair
+    ("fwd", "January 30, 2027", "February 1, 2027"),   # ideal 2-SIN/5-Bali
+    ("rev", "January 29, 2027", "February 4, 2027"),   # ideal 5-Bali/2-SIN
 ]
 
 
+def scrape_bali_rev_ticket(d1: str, d2: str) -> list:
+    """Multi-city DAC→DPS + DPS→SIN on one ticket (the REVERSED Bali order)."""
+    legs = [("DAC", "DPS", d1), ("DPS", "SIN", d2)]
+
+    def parse(tree, url):
+        out = []
+        for f in _parse_openjaw_results(tree, d1, d2, url):
+            f.update(kind="sg-ticket", route="DAC→DPS→SIN")
+            out.append(f)
+        return out
+
+    return _scrape_multicity(legs, parse,
+                             f"bali-rev: DAC->DPS {d1} + DPS->SIN {d2}")
+
+
 def scrape_bali_watch():
-    """(tickets1, sg_tickets, legs) for the retired Bali trip: Ticket ① with
-    the DPS→BOS return + the BALI_WATCH_PAIRS one-ticket middles. Runs LAST
-    in the nightly order — the Bangkok trip is the product, so a throttled
-    night degrades the comparison before the headline. legs is always [] —
-    the one-way SIN→DPS middles were dropped for speed."""
+    """(tickets1, fwd_tickets, rev_tickets) for the retired Bali trip, both
+    orders. Runs LAST in the nightly order — the Bangkok trip is the product,
+    so a throttled night degrades the comparison before the headline."""
     print("[bali-watch] Ticket ① (DPS return)")
     tickets1 = []
     for attempt in range(1, TICKET1_ATTEMPTS + 1):
@@ -870,15 +892,16 @@ def scrape_bali_watch():
             break
         print(f"  0 results (attempt {attempt}/{TICKET1_ATTEMPTS}) — retrying...")
         time.sleep(5)
-    sg = []
-    for i, (d1, d2) in enumerate(BALI_WATCH_PAIRS, 1):
-        print(f"[bali-watch sg-ticket {i}/{len(BALI_WATCH_PAIRS)}] {d1} + {d2}")
-        r = scrape_sg_ticket(d1, d2)
+    fwd, rev = [], []
+    for i, (direction, d1, d2) in enumerate(BALI_WATCH_PAIRS, 1):
+        print(f"[bali-watch {direction} {i}/{len(BALI_WATCH_PAIRS)}] {d1} + {d2}")
+        fn = scrape_sg_ticket if direction == "fwd" else scrape_bali_rev_ticket
+        r = fn(d1, d2)
         if not r:
             time.sleep(5)
-            r = scrape_sg_ticket(d1, d2)
-        sg += r
-    return tickets1, sg, []
+            r = fn(d1, d2)
+        (fwd if direction == "fwd" else rev).extend(r)
+    return tickets1, fwd, rev
 
 
 def scrape_tickets_all() -> list:

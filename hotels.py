@@ -93,7 +93,8 @@ def hotel_plan(trip, hotel=None):
     hotel = hotel or (BALI_HOTEL if is_bali else BKK_HOTEL)
     nights = trip.get("bali_nights") if is_bali else trip.get("bkk_nights")
     if is_bali:
-        position = "final"                    # Bali always ran to the return
+        # forward Bali runs to the return; reversed puts Bali in the middle
+        position = "middle" if trip.get("order") == "bali-rev" else "final"
     else:
         position = ("middle" if trip.get("order") == "BKK-first" else "final")
     checkin, checkout = _stay_dates(trip, position)

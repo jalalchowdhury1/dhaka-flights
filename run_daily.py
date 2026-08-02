@@ -54,8 +54,7 @@ def main():
     flights = scrape_all()                    # Ticket ② as two one-ways
     # 🌴 comparison watch: the retired Bali trip, scraped LAST so a throttled
     # night hurts the benchmark before it hurts the product.
-    bali_t1, bali_sg, bali_legs = scrape_bali_watch()
-    flights += bali_legs
+    bali_t1, bali_fwd, bali_rev = scrape_bali_watch()
     from scraper import end_session
     end_session()                             # one browser session per run
 
@@ -85,10 +84,10 @@ def main():
 
     # Self-check: any invariant violation rides along to Telegram + the site,
     # so data losses are loud instead of silent (see sanity.py).
-    from combo import main_trip, main_trip_bali
+    from combo import main_trip, bali_watch_trip
     from sanity import self_check
     trip = main_trip(flights, tickets1, sg_tickets)
-    bali = main_trip_bali(flights, bali_t1, bali_sg)
+    bali = bali_watch_trip(flights, bali_t1, bali_fwd, bali_rev, tickets1)
     warnings = self_check(flights, tickets1, trip, publish.last_history_entry(),
                           sg_tickets=sg_tickets, bali=bali, bali_t1=bali_t1)
     for w in warnings:
@@ -119,7 +118,7 @@ def main():
         multicity_as_rows(tickets1, "① BOS→IST→DAC + return")
         + multicity_as_rows(sg_tickets, "② Dhaka→BKK/SIN middle")
         + multicity_as_rows(bali_t1, "🌴① BOS→IST→DAC + DPS→BOS")
-        + multicity_as_rows(bali_sg, "🌴② DAC→SIN→DPS")
+        + multicity_as_rows(bali_fwd + bali_rev, "🌴② Bali middle")
         + flights,
         tab_name="Google Flights")
     notify_cheapest(payload)

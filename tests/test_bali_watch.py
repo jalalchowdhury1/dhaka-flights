@@ -74,3 +74,55 @@ def test_history_row_appends_bali_column():
                        "bali_total": 4450})
     assert row[-1] == 4450
     assert history_row({"date": "x"})[-1] == ""
+
+
+# ── Both Bali orders (2026-08-01 late: "probe both Bali orders nightly") ─────
+from combo import bali_watch_trip
+from tests.test_main_trip import TICKET1_SIN
+
+BALI_REV = {"kind": "sg-ticket", "route": "DAC→DPS→SIN",
+            "out_date": "January 29, 2027", "ret_date": "February 4, 2027",
+            "out_arrive": "January 30, 2027", "price_total": 1200,
+            "airline": "Batik Air", "stops": "1 stop", "duration": "9 hr",
+            "layovers": "KUL", "link": "http://brev"}
+
+
+def test_reversed_bali_shares_the_bangkok_first_ticket1():
+    b = bali_watch_trip([], [], [], [BALI_REV], [TICKET1_SIN])
+    assert b is not None
+    assert b["order"] == "bali-rev" and b["order_label"] == "Bali → Singapore"
+    assert b["total"] == 3800 + 1200          # TICKET1_SIN + rev middle
+    assert b["bali_nights"] == 5              # Jan 30 arrival → Feb 4 hop
+    assert b["sg_nights"] == 2                # Feb 4 → Feb 6 return
+    assert b["valid"] is True
+    assert b["openjaw"]["ret_city"] == "SIN"
+
+
+def test_cheaper_bali_order_wins_and_other_rides_along():
+    b = bali_watch_trip(FLIGHTS, [BALI_T1], [BALI_SG], [BALI_REV], [TICKET1_SIN])
+    # fwd = 3500+950 = 4450 · rev = 3800+1200 = 5000 → forward wins
+    assert b["bali_order"] == "fwd" and b["total"] == 4450
+    assert b["other_bali"]["order_label"] == "Bali → Singapore"
+    assert b["other_bali"]["total"] == 5000 and b["other_bali"]["delta"] == 550
+    # make the reversed order cheaper → it must win
+    cheap_rev = dict(BALI_REV, price_total=500)
+    b2 = bali_watch_trip(FLIGHTS, [BALI_T1], [BALI_SG], [cheap_rev], [TICKET1_SIN])
+    assert b2["bali_order"] == "rev" and b2["total"] == 4300
+    assert b2["other_bali"]["total"] == 4450
+
+
+def test_benchmark_survives_a_missing_forward_ticket1():
+    b = bali_watch_trip(FLIGHTS, [], [BALI_SG], [BALI_REV], [TICKET1_SIN])
+    assert b is not None and b["bali_order"] == "rev"
+
+
+def test_reversed_bali_baggage_and_hotel_follow_the_reversed_shape():
+    import baggage, hotels
+    b = bali_watch_trip([], [], [], [BALI_REV], [TICKET1_SIN])
+    rows = baggage.annotate(b)
+    assert [r["route"] for r in rows] == ["BOS→IST", "IST→DAC", "DAC→DPS",
+                                          "DPS→SIN", "SIN→BOS"]
+    h = hotels.hotel_plan(b)
+    assert "Laguna" in h["property"]
+    assert (h["checkin"], h["checkout"]) == ("Jan 30", "Feb 4")
+    assert h["nights"] == 5

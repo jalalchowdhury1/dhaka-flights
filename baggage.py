@@ -290,7 +290,8 @@ CITY_NAMES = {"DAC": "Dhaka", "SIN": "Singapore", "BKK": "Bangkok",
 _ORDER_T2 = {
     "BKK-first": (("DAC→BKK", "BKK→SIN"), "SIN→BOS"),
     "SIN-first": (("DAC→SIN", "SIN→BKK"), "BKK→BOS"),
-    None:        (("DAC→SIN", "SIN→DPS"), "DPS→BOS"),   # Bali era
+    "bali-rev":  (("DAC→DPS", "DPS→SIN"), "SIN→BOS"),   # reversed benchmark
+    None:        (("DAC→SIN", "SIN→DPS"), "DPS→BOS"),   # forward Bali
 }
 
 

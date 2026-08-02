@@ -11,7 +11,8 @@ TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 LEG_EMOJI = {"BOS→DAC": "🇧🇩", "DAC→DPS": "🌴", "DPS→BOS": "🏠",
              "DAC→SIN": "🇸🇬", "SIN→DPS": "🌴", "DAC→SIN→DPS": "🇸🇬",
              "DAC→BKK": "🇹🇭", "BKK→SIN": "🇸🇬", "SIN→BKK": "🇹🇭",
-             "DAC→BKK→SIN": "🇹🇭", "DAC→SIN→BKK": "🇸🇬"}
+             "DAC→BKK→SIN": "🇹🇭", "DAC→SIN→BKK": "🇸🇬",
+             "DPS→SIN": "🇸🇬", "DAC→DPS→SIN": "🌴"}
 
 
 def send_message(text: str) -> bool:
@@ -197,7 +198,15 @@ def build_message(payload: dict) -> str:
                else f"+${d:,} more than Bangkok" if d > 0
                else f"−${-d:,} CHEAPER than Bangkok")
         lines.append("")
-        lines.append(f"🌴 *Original Bali trip (benchmark):* ${bali['total']:,} — {gap}")
+        lines.append(f"🌴 *Original Bali trip (benchmark):* ${bali['total']:,} · "
+                     f"{bali.get('order_label', '')} — {gap}")
+        ob = bali.get("other_bali")
+        if ob:
+            lines.append(f"  🔁 other Bali order ({ob['order_label']}): "
+                         f"${ob['total']:,} (+${ob['delta']:,})"
+                         if ob["delta"] > 0 else
+                         f"  🔁 other Bali order ({ob['order_label']}): "
+                         f"${ob['total']:,} ({ob['delta']:+,})")
 
     changes = payload.get("changes") or []
     if changes:

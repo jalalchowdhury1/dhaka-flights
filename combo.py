@@ -620,6 +620,81 @@ def budget_trip(flights, sg_tickets, main):
     }
 
 
+# ── 🌴 The Bali benchmark, in either order (2026-08-01 late) ────────────────
+def bali_watch_trip(flights, bali_t1, fwd_tickets, rev_tickets, main_t1s):
+    """The benchmark, mirroring the Bangkok logic: BOTH Bali orders priced,
+    the cheaper valid one wins, the loser rides along as `other_bali`.
+    Forward = SIN 2n then Bali 5n (its own DPS-return Ticket ①); reversed =
+    Bali 5n then SIN 2n, reusing the Bangkok-first SIN→BOS Ticket ① that the
+    main scrape already collected."""
+    fwd = main_trip_bali(flights, bali_t1, fwd_tickets)
+    if fwd:
+        fwd = dict(fwd, bali_order="fwd", order_label="Singapore → Bali")
+    rev = _bali_rev_trip(rev_tickets, main_t1s)
+    trips = [t for t in (fwd, rev) if t]
+    if not trips:
+        return None
+    trips.sort(key=lambda s: (not s["valid"], s["total"]))
+    win = dict(trips[0])
+    if len(trips) > 1:
+        lose = trips[1]
+        win["other_bali"] = {"order_label": lose["order_label"],
+                             "total": lose["total"],
+                             "delta": lose["total"] - win["total"],
+                             "valid": lose["valid"], "flag": lose["flag"]}
+    return win
+
+
+def _bali_rev_trip(rev_tickets, main_t1s):
+    """Reversed Bali order from a DAC→DPS→SIN one-ticket middle + the
+    already-scraped SIN→BOS Ticket ①."""
+    ojs = [o for o in main_t1s or []
+           if o.get("kind") == "stopover2" and o.get("ret_city") == "SIN"
+           and isinstance(o.get("price_total"), (int, float))]
+    cands = [t for t in rev_tickets or []
+             if isinstance(t.get("price_total"), (int, float))]
+    if not (ojs and cands):
+        return None
+    oj = min(ojs, key=lambda o: o["price_total"])
+    ret = _date(oj["ret_date"])
+    dac_in = _date(oj.get("out_arrive", "")) or (_date(oj["out_date"]) + timedelta(days=1))
+    if not ret:
+        return None
+    best = None
+    for t in cands:
+        d1, d2 = _date(t.get("out_date", "")), _date(t.get("ret_date", ""))
+        if not (d1 and d2):
+            continue
+        arr = _date(t.get("out_arrive", "")) or d1
+        bali_n = (d2 - arr).days
+        sin_n = (ret - d2).days
+        dhaka = (d1 - dac_in).days + 1
+        if bali_n < 1 or sin_n < 1 or not 1 <= dhaka <= MAX_DHAKA_DAYS:
+            continue
+        total = oj["price_total"] + t["price_total"]
+        if best is not None and total >= best["total"]:
+            continue
+        flags = []
+        if bali_n != IDEAL_BALI_NIGHTS:
+            flags.append(f"only a {bali_n}-night Bali pairing today")
+        if sin_n < MIN_SG_NIGHTS:
+            flags.append(f"only a {sin_n}-night Singapore pairing today")
+        best = {
+            "name": "Bali first · 1 ticket middle",
+            "kind": "sg-stopover2", "trip": "DAC→DPS→SIN→BOS",
+            "order": "bali-rev", "order_label": "Bali → Singapore",
+            "bali_order": "rev",
+            "total": total, "valid": not flags,
+            "flag": " · ".join(flags) or None,
+            "home": (ret + timedelta(days=1)).strftime("%b %-d"),
+            "dhaka_days": dhaka, "bali_nights": bali_n, "sg_nights": sin_n,
+            "ist_nights": oj.get("ist_nights"),
+            "sg_airlines": t.get("airline", ""), "sg_preferred": False,
+            "alt_note": None, "legs": [], "sg_ticket": t, "openjaw": oj,
+        }
+    return best
+
+
 # Bali-era versions, RETIRED 2026-08-01 — kept working + tested like the other
 # retired paths (re-adding is a call-site swap, and the old history's
 # best_detail entries still make sense to code that reads them).

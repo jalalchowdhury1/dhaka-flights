@@ -119,15 +119,16 @@ def self_check(flights, openjaws, main, prev_entry=None, sg_tickets=None,
                             f"{len(priced)} fares — Google may have changed its "
                             f"wording; combo math is falling back to estimates")
 
-    # 🌴 Bali comparison watch (2026-08-01): a missing benchmark must be
-    # visible, not silent — but it's ONE warning, not per-search noise.
+    # 🌴 Bali comparison watch (2026-08-01; both orders since the same
+    # evening): a missing benchmark must be visible, not silent — but it's
+    # ONE warning, not per-search noise.
     if bali_t1 is not None or bali is not None:
-        if not _priced(bali_t1 or []):
-            warnings.append("🌴 Bali watch: Ticket ① (DPS return) returned no "
-                            "fares — no Bali comparison today")
-        elif not bali:
-            warnings.append("🌴 Bali watch: fares exist but no Bali trip was "
-                            "built — check the retired pairing rules")
+        if not bali:
+            warnings.append("🌴 Bali watch: no benchmark could be built — "
+                            "both Bali orders came back empty")
+        elif not _priced(bali_t1 or []):
+            warnings.append("🌴 Bali watch: the forward (DPS-return) Ticket ① "
+                            "was empty — the benchmark is the reversed order only")
 
     # 7. Shape drift — the trip is 2 IST / 5 BKK nights, with Singapore a
     # 2-4-night FLEX BAND (Jalal 2026-08-01: "isn't a hardline. you can take
