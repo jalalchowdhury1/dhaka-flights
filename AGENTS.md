@@ -352,7 +352,16 @@ reason.
   independent of combo.py; that's the point)
 - `publish.py` — `build_today` → payload → `write_payload` (backup, write, push)
 - `sheet_writer.py`, `notify_telegram.py` — outputs
-- `site/` — static dashboard (index.html) + data.json (machine-written)
+- `site/` — static dashboard (index.html) + data.json (machine-written).
+  REDESIGNED 2026-08-01 late via the design-taste + dataviz skills: token
+  system (one blue UI accent; 4 validated categorical series slots for the
+  chart — order is the CVD-safety mechanism, don't reshuffle), decision-first
+  layout (hero verdict card → stat tiles → tabs), chart follows the dataviz
+  spec (2px lines, ring endpoints, hairline grid, clean $ ticks, legend,
+  selective end labels, crosshair tooltip via bindChartHover), aria'd tabs,
+  focus-visible + prefers-reduced-motion guards, AA-contrast muted text,
+  light AND dark verified. `orderInfo()` maps every trip shape incl.
+  `bali-rev`; keep it in sync with combo.ORDERS when orders change.
 - `main.py` — manual run: scrape + sheet + terminal summary (no Telegram/publish)
 - `tests/` — pytest suite (152 tests; `test_main_trip.py` holds the shared trip
   fixtures, `test_baggage.py` guards the allowance table's honesty)
