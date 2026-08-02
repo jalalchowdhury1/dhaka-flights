@@ -361,6 +361,20 @@ let DATA = null, DATA_SOURCE = "live";   // live | local | cache
 let CLIENT_FINDINGS = [];
 
 async function loadData() {
+  // Dev hook: ?qa=<name> serves ./qa/<name>.json instead of live data —
+  // only activates with the explicit query param (degraded-data QA matrix).
+  const qa = new URLSearchParams(location.search).get("qa");
+  if (qa) {
+    try {
+      DATA = await (await fetch("./qa/" + qa + ".json")).json();
+    } catch (e) {
+      console.warn("qa fetch failed", e);
+      const c = loadLastGood();
+      if (c && c.payload) { DATA = c.payload; DATA_SOURCE = "cache"; }
+      else DATA = null;
+    }
+    return;
+  }
   // 1. GitHub raw (fresh)  2. same-origin copy  3. last-good localStorage
   try {
     const r = await fetch(RAW, {cache: "no-store"});
@@ -418,6 +432,16 @@ function validatePayload(d) {
   for (const k of ["main", "budget", "bali", "hotel"])
     if (d[k] !== null && d[k] !== undefined && typeof d[k] !== "object")
       probs.push(`'${k}' should be object or null`);
+  // Numeric checks, mirroring schema_check.py's MAIN_NUMERIC/HISTORY_NUMERIC.
+  if (d.main && typeof d.main === "object" &&
+      d.main.total != null && typeof d.main.total !== "number")
+    probs.push(`main.total is ${typeof d.main.total}, expected number`);
+  const lastH = Array.isArray(d.history) && d.history.length
+    ? d.history[d.history.length - 1] : null;
+  if (lastH && typeof lastH === "object")
+    for (const k of ["main_total", "ticket1_total", "ticket2_total", "bali_total", "budget_total"])
+      if (lastH[k] != null && typeof lastH[k] !== "number")
+        probs.push(`history[last].${k} is ${typeof lastH[k]}, expected number`);
   return probs;
 }
 
@@ -499,6 +523,11 @@ function renderBanners() {
 }
 
 function renderSelfcheck() {
+  if (DATA === null) {
+    document.getElementById("selfcheck").innerHTML =
+      `<div class="small">🧪 Self-check unavailable — no data loaded.</div>`;
+    return;
+  }
   const notes = [
     ...(DATA && DATA.warnings || []).map(w => "⚠️ " + esc(w)),
     ...CLIENT_FINDINGS.map(esc),
