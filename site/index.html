@@ -155,7 +155,7 @@
   th { color: var(--ink-3); font-weight: 650; border-top: none; font-size: .72rem;
        text-transform: uppercase; letter-spacing: .06em; }
   td.num, th.num { text-align: right; padding-right: 10px; }
-  td.wrap { white-space: normal; }
+  td.wrap { white-space: normal; min-width: 150px; }
   tr.chosen td { background: color-mix(in srgb, var(--ink) 8%, transparent); }
   .scroll-x { overflow-x: auto; }
 
@@ -1053,12 +1053,11 @@ function renderStays(d) {
           <td class="num"><span class="badge dim">~32%</span></td><td class="wrap">The sentimental splurge · Bosphorus palace, the favorite brand</td></tr>
       </table></div>
       <div class="scroll-x" style="margin-top:10px"><table>
-        <tr><th>🇸🇬 Singapore · nights follow the winning order</th><th>Program</th><th class="num">Nightly</th><th class="num">2n</th><th class="num">4n</th><th>Angle</th></tr>
+        <tr><th>🇸🇬 Singapore · 2–4n</th><th>Program</th><th class="num">Nightly</th><th class="num">2n</th><th class="num">4n</th><th>Angle</th></tr>
         <tr><td>Pan Pacific Orchard</td><td>THC + Edit</td><td class="num">$252</td>
           <td class="num"><span class="badge good">~83%</span></td>
           <td class="num"><span class="badge dim">~52%</span></td>
-          <td class="wrap">Wildcard: near-free at 2n / <span class="badge good">~74%</span> at 4n
-            if CSR's separate $250 select-hotels credit stacks · confirm in portal</td></tr>
+          <td class="wrap">Wildcard · CSR select-hotels credit may stack (see note)</td></tr>
         <tr><td><b>St. Regis Singapore</b></td><td>FHR</td><td class="num">$329</td>
           <td class="num"><span class="badge good">~71%</span></td>
           <td class="num"><span class="badge dim">~43%</span></td>
@@ -1079,7 +1078,9 @@ function renderStays(d) {
         a ban — it just means you're paying mostly cash for the luxury, so want it for its own
         sake (Kempinski, St. Regis). Note the lever: the flight engine picks the Singapore
         nights (2–4, cheapest wins), but when pairings are near-tied, a 2-night stay is where
-        the hotel credits concentrate.</div>
+        the hotel credits concentrate. Pan Pacific wildcard: if CSR's separate $250
+        select-hotels credit stacks (confirm in the portal), 2 nights is near-free
+        and 4 nights reaches about 74%.</div>
       <div class="small" style="margin-top:10px">Good to know: CNY is Feb 6, 2027 — Singapore hasn't
         loaded holiday premiums yet, so book early once dates firm. Program breakfasts cover 2;
         the kid's is chargeable unless kids-eat-free. FHR at Marriott brands earns points + elite
