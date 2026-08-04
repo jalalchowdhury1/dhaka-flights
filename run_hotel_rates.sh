@@ -1,0 +1,27 @@
+#!/bin/bash
+# Wrapper for launchd — same environment setup as run_daily.sh.
+#
+# Runs at 5:00 AM, deliberately AFTER every flight slot (0:00 / 2:00 / 4:00) so
+# the two jobs never scrape at the same time (Google throttles a busy IP — see
+# AGENTS.md §4b.3b) and never race on a git push.
+
+source /Users/jalalchowdhury/.bash_profile 2>/dev/null || true
+source /Users/jalalchowdhury/.zshrc 2>/dev/null || true
+
+export HOME=/Users/jalalchowdhury
+export USER=jalalchowdhury
+export DISPLAY=:0
+export PATH="/Users/jalalchowdhury/.nvm/versions/node/v24.15.0/bin:/usr/local/bin:/opt/homebrew/bin:/Library/Developer/CommandLineTools/usr/bin:$PATH"
+
+cd "/Users/jalalchowdhury/PycharmProjects/Dhaka flights"
+
+# If a flight run is still going (a slow night), stand down rather than fight it
+# for the browser session — tomorrow's rates are worth less than tonight's fares.
+if pgrep -f "run_daily.py" > /dev/null; then
+  echo "$(date): flight run still active — skipping hotel refresh today"
+  exit 0
+fi
+
+echo "===== $(date) hotel rate refresh ====="
+python3 -u run_hotel_rates.py
+echo "===== $(date) done (exit $?) ====="

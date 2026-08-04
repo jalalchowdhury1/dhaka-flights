@@ -357,8 +357,34 @@ const el = (html, cls) => { const d = document.createElement("div");
 
 /* ============ bulletproof data layer — the core robustness code ============ */
 const LS_KEY = "dhaka-flights:last-good";
+const RATES_RAW = "https://raw.githubusercontent.com/jalalchowdhury1/dhaka-flights/main/site/hotel_rates.json";
+const RATES_LS = "dhaka-flights:rates-last-good";
 let DATA = null, DATA_SOURCE = "live";   // live | local | cache
+let RATES = null;                        // hotel_rates.json (own nightly job)
 let CLIENT_FINDINGS = [];
+
+/* Hotel rates ride in their own file written by a separate nightly job, so a
+   hotel-scrape failure can never delay or corrupt the flight payload. Missing
+   rates degrade the Stays table to a note, never to a blank screen. */
+async function loadRates() {
+  const qa = new URLSearchParams(location.search).get("qa");
+  if (qa) return;                        // QA fixtures cover data.json only
+  for (const url of [RATES_RAW, "./hotel_rates.json"]) {
+    try {
+      const r = await fetch(url, {cache: "no-store"});
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      RATES = await r.json();
+      try { localStorage.setItem(RATES_LS, JSON.stringify(RATES)); } catch (e) {}
+      return;
+    } catch (e) { console.warn("rates fetch failed", url, e); }
+  }
+  try { RATES = JSON.parse(localStorage.getItem(RATES_LS)); } catch (e) { RATES = null; }
+}
+
+const daysSince = (iso) => {
+  const t = Date.parse(String(iso || "") + "T12:00");
+  return isNaN(t) ? null : Math.floor((Date.now() - t) / 86400000);
+};
 
 async function loadData() {
   // Dev hook: ?qa=<name> serves ./qa/<name>.json instead of live data —
@@ -1011,6 +1037,63 @@ function hotelPass(h) {
   </div>`;
 }
 
+/* The IST/SIN shortlist tables, rendered from hotel_rates.json so the numbers
+   carry their own check dates instead of being frozen in this file (they were
+   ~30% stale by 2026-08-03). A missing file degrades to a note. */
+function stayHeading(city, fallback) {
+  const s = RATES && RATES.stays && RATES.stays[city];
+  if (!s) return fallback;
+  const MON = ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const [, m1, d1] = s.checkin.split("-"), [, m2, d2] = s.checkout.split("-");
+  const end = m1 === m2 ? +d2 : `${MON[+m2]} ${+d2}`;   // 'Jan 5–7', 'Jan 31–Feb 2'
+  return `${MON[+m1]} ${+d1}–${end} (${s.nights}n)`;
+}
+
+function rateCell(row) {
+  if (row.rate == null) return `<td class="num">—</td>`;
+  const age = daysSince(row.checked);
+  const stale = age != null && age > 3
+    ? ` <span class="badge warn" title="last confirmed ${esc(row.checked)}">${age}d</span>` : "";
+  return `<td class="num">$${row.rate.toLocaleString()}${stale}</td>`;
+}
+const offCell = (o) => `<td class="num">${o && o.pct != null
+  ? `<span class="badge ${o.band}">~${o.pct}%</span>` : "—"}</td>`;
+
+function cardPlayTables() {
+  if (!RATES || !Array.isArray(RATES.rows) || !RATES.rows.length)
+    return `<div class="small" style="margin-top:10px">Nightly rates are refreshed
+      by their own job and weren't reachable just now — reload, or see the
+      shortlist notes below.</div>`;
+  const ist = RATES.rows.filter(r => r.city === "IST");
+  const sin = RATES.rows.filter(r => r.city === "SIN");
+  const nameCell = r => `<td>${r.bold ? `<b>${esc(r.name)}</b>` : esc(r.name)}</td>`;
+  const istRows = ist.map(r => `<tr>${nameCell(r)}<td>${esc(r.program)}</td>
+      ${rateCell(r)}${offCell(r.offsets && r.offsets[0])}
+      <td class="wrap">${esc(r.angle)}</td></tr>`).join("");
+  const sinRows = sin.map(r => `<tr>${nameCell(r)}<td>${esc(r.program)}</td>
+      ${rateCell(r)}${offCell(r.offsets && r.offsets[0])}${offCell(r.offsets && r.offsets[1])}
+      <td class="wrap">${esc(r.angle)}</td></tr>`).join("");
+  const oldest = Math.max(...RATES.rows.map(r => daysSince(r.checked) ?? 0));
+  const freshness = oldest > 3
+    ? `<div class="small" style="margin-top:6px">⚠️ Oldest rate here was last
+       confirmed ${oldest} days ago — the nightly refresh has not reached every
+       property since.</div>` : "";
+  return `<div class="scroll-x" style="margin-top:10px"><table>
+      <tr><th>🕌 Istanbul · ${stayHeading("IST", "Jan 5–7 (2n)")}</th><th>Program</th>
+          <th class="num">Nightly</th><th class="num">Offset</th><th>Angle</th></tr>
+      ${istRows}</table></div>
+    <div class="scroll-x" style="margin-top:10px"><table>
+      <tr><th>🇸🇬 Singapore · ${stayHeading("SIN", "2–4n")}</th><th>Program</th>
+          <th class="num">Nightly</th><th class="num">2n</th><th class="num">4n</th><th>Angle</th></tr>
+      ${sinRows}</table></div>${freshness}
+    <div class="small" style="margin-top:6px">Nightly figures are the <b>public
+      rate including fees</b> for these exact dates, re-checked automatically each
+      night (last run ${esc(RATES.updated || "—")}). FHR and Chase Edit rates sit
+      behind cardholder logins and can't be read from here — they normally track
+      the public flexible rate, but confirm the real number in the portal before
+      booking.</div>`;
+}
+
 function renderStays(d) {
   const root = el("");
   add(root, () => {
@@ -1041,36 +1124,7 @@ function renderStays(d) {
         in reserve. Fallback if a 2026 Amex credit is already spent: FHR→Istanbul + Edit→Singapore
         ($550). FHR's guaranteed 4pm checkout matters most in Istanbul: the IST→DAC flight leaves
         in the evening of Jan 7.</div></div>
-      <div class="scroll-x" style="margin-top:10px"><table>
-        <tr><th>🕌 Istanbul · Jan 5–7 (2n)</th><th>Program</th><th class="num">Nightly</th><th class="num">Offset</th><th>Angle</th></tr>
-        <tr><td>Sanasaryan Han (Lux. Coll.)</td><td>FHR</td><td class="num">$270</td>
-          <td class="num"><span class="badge good">~86%</span></td><td class="wrap">Old-city boutique · Bonvoy stacks</td></tr>
-        <tr><td><b>Ritz-Carlton Istanbul</b></td><td>FHR</td><td class="num">$314</td>
-          <td class="num"><span class="badge good">~74%</span></td><td class="wrap">Value pick · Bonvoy Platinum stacks (points + elite nights)</td></tr>
-        <tr><td>St. Regis Istanbul</td><td>FHR</td><td class="num">$525</td>
-          <td class="num"><span class="badge dim">~44%</span></td><td class="wrap">Butler with every room · Bonvoy stacks</td></tr>
-        <tr><td>Çırağan Palace Kempinski</td><td>FHR</td><td class="num">$726</td>
-          <td class="num"><span class="badge dim">~32%</span></td><td class="wrap">The sentimental splurge · Bosphorus palace, the favorite brand</td></tr>
-      </table></div>
-      <div class="scroll-x" style="margin-top:10px"><table>
-        <tr><th>🇸🇬 Singapore · 2–4n</th><th>Program</th><th class="num">Nightly</th><th class="num">2n</th><th class="num">4n</th><th>Angle</th></tr>
-        <tr><td>Pan Pacific Orchard</td><td>THC + Edit</td><td class="num">$252</td>
-          <td class="num"><span class="badge good">~83%</span></td>
-          <td class="num"><span class="badge dim">~52%</span></td>
-          <td class="wrap">Wildcard · CSR select-hotels credit may stack (see note)</td></tr>
-        <tr><td><b>St. Regis Singapore</b></td><td>FHR</td><td class="num">$329</td>
-          <td class="num"><span class="badge good">~71%</span></td>
-          <td class="num"><span class="badge dim">~43%</span></td>
-          <td class="wrap">Butler standard · Bonvoy stacks · cheap for SIN luxury</td></tr>
-        <tr><td>Ritz-Carlton Millenia</td><td>FHR</td><td class="num">$420</td>
-          <td class="num"><span class="badge dim">~55%</span></td>
-          <td class="num"><span class="badge dim">~34%</span></td>
-          <td class="wrap">Marina views · Bonvoy stacks</td></tr>
-        <tr><td>JW Marriott South Beach</td><td>The Edit only</td><td class="num">$497</td>
-          <td class="num"><span class="badge dim">~42%</span></td>
-          <td class="num"><span class="badge dim">~27%</span></td>
-          <td class="wrap">Best Edit-exclusive if the fallback strategy is needed</td></tr>
-      </table></div>
+      ${cardPlayTables()}
       <div class="small" style="margin-top:8px"><b>Offset</b> = credits used ÷ (room + ~12% tax).
         Credits assumed: $300 Amex (or $250 Edit) + $100 property + $60/day breakfast —
         so IST 2n = $520 · SIN 2n = $520 FHR / $470 Edit · SIN 4n = $640 / $590. Bands:
@@ -1408,7 +1462,7 @@ modal.onclick = (e) => { if (e.target === modal) modal.close(); };
 
 (async function boot() {
   applyTheme(localStorage.getItem(THEME_KEY) || "auto");
-  await loadData();
+  await Promise.all([loadData(), loadRates().catch(() => {})]);
   renderTopbar();
   if (DATA === null) { renderNoDataScreen(); renderSelfcheck(); return; }
   CLIENT_FINDINGS = [

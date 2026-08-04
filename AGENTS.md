@@ -74,6 +74,36 @@ the user will actually use ÷ (room + ~12% tax) — with the July deal-
 calculator bands (≥70% book now · 50–70% solid · <50% wait). Keep the
 assumption line (which credits were counted) next to every table.
 
+**Nightly hotel rates (`hotel_rates.py` + `run_hotel_rates.py`, 2026-08-03).**
+Jalal caught the IST/SIN shortlist showing rates that no longer matched
+("Ritz carlton is more like $500 a night"): they had been hand-researched on
+2026-08-01 and frozen into the HTML with no provenance, and by 2026-08-03 two
+were ~30% low (Ritz-Carlton Istanbul $314→$425, Sanasaryan Han $270→$348),
+which pushed both out of the ≥70% "book now" band they were being recommended
+from. Rules now:
+1. **No hotel number lives in the HTML.** The tables render from
+   `site/hotel_rates.json`, and every rate carries its own `checked` date;
+   anything older than 3 days is badged on the row.
+2. **What is tracked is the PUBLIC nightly rate incl. fees** (Google Hotels,
+   the real stay dates). The rates the card play books — Amex FHR and Chase
+   Edit — are behind CARDHOLDER LOGINS and are not scrapable from here, ever.
+   The site says so next to the table; treat the public rate as a drift alarm
+   and an offset denominator, not as the booking rate.
+3. **The date guard is the point.** A Google Hotels query can land on a
+   no-results search page with the dates silently unbound, or resolve to a
+   different property, and still render plausible prices (both observed
+   2026-08-03). A scrape is accepted ONLY when the page proves the property
+   AND the requested date range; otherwise the previous rate is kept with its
+   ORIGINAL date. Keep queries SHORT — "Sanasaryan Han Istanbul" resolves,
+   "Sanasaryan Han Luxury Collection Istanbul" returns no results.
+4. **Own job, own file, own slot** (`com.jalal.dhaka-hotels`, 5:00 AM): eight
+   hotel searches would push the flight run past its 25-min budget and into
+   the 35-min overrun guard. It writes only `hotel_rates.json` (never
+   data.json, so no race with publish.py), pulls --rebase before pushing, and
+   stands down entirely if a flight run is still active.
+5. Google throttles hotel searches noticeably faster than flights — a run that
+   returns 0 live rates Telegrams once and leaves the table honestly stale.
+
 **🏨 Hotel integration (`hotels.py`, 2026-08-01 evening):** the Marriott
 award stay rides with the trip — payload `hotel` (Bangkok: The Athenee,
 Luxury Collection; quality bar = "top notch … we did the kempinsky last
@@ -376,6 +406,10 @@ reason.
 - `baggage.py` — sourced per-carrier allowance table; `annotate`, `warnings` (§4c)
 - `hotels.py` — curated Marriott award-stay references + `hotel_plan(trip)`
   (order-aware stay dates; points are checked references, never scraped)
+- `hotel_rates.py` / `run_hotel_rates.py` / `run_hotel_rates.sh` — the nightly
+  IST/SIN public-rate refresh (§1 "Nightly hotel rates"): shortlist config,
+  fail-closed date/property guard, offset math, and the 5 AM launchd job that
+  writes `site/hotel_rates.json`. A miss keeps the last good rate and its date
 - `alerts.py` — buy-signal stages, price context, countdown, change diff (§4d)
 - `verify.py` — the nightly 3-perspective independent re-check (keep it
   independent of combo.py; that's the point)
