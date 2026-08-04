@@ -22,13 +22,13 @@
    "program": "FHR",
    "angle": "Old-city boutique \u00b7 Bonvoy stacks",
    "bold": false,
-   "rate": 348,
+   "rate": 327,
    "checked": "2026-08-03",
    "offsets": [
     {
      "label": "2n",
-     "pct": 67,
-     "band": "warn"
+     "pct": 71,
+     "band": "good"
     }
    ]
   },
@@ -56,12 +56,12 @@
    "program": "FHR",
    "angle": "Butler with every room \u00b7 Bonvoy stacks",
    "bold": false,
-   "rate": 525,
-   "checked": "2026-08-01",
+   "rate": 538,
+   "checked": "2026-08-03",
    "offsets": [
     {
      "label": "2n",
-     "pct": 44,
+     "pct": 43,
      "band": "dim"
     }
    ]
@@ -112,17 +112,17 @@
    "program": "FHR",
    "angle": "Butler standard \u00b7 Bonvoy stacks \u00b7 cheap for SIN luxury",
    "bold": true,
-   "rate": 329,
-   "checked": "2026-08-01",
+   "rate": 514,
+   "checked": "2026-08-03",
    "offsets": [
     {
      "label": "2n",
-     "pct": 71,
-     "band": "good"
+     "pct": 45,
+     "band": "dim"
     },
     {
      "label": "4n",
-     "pct": 43,
+     "pct": 28,
      "band": "dim"
     }
    ]
@@ -134,17 +134,17 @@
    "program": "FHR",
    "angle": "Marina views \u00b7 Bonvoy stacks",
    "bold": false,
-   "rate": 420,
-   "checked": "2026-08-01",
+   "rate": 482,
+   "checked": "2026-08-03",
    "offsets": [
     {
      "label": "2n",
-     "pct": 55,
-     "band": "warn"
+     "pct": 48,
+     "band": "dim"
     },
     {
      "label": "4n",
-     "pct": 34,
+     "pct": 30,
      "band": "dim"
     }
    ]
@@ -156,21 +156,24 @@
    "program": "The Edit only",
    "angle": "Best Edit-exclusive if the fallback strategy is needed",
    "bold": false,
-   "rate": 497,
-   "checked": "2026-08-01",
+   "rate": 467,
+   "checked": "2026-08-03",
    "offsets": [
     {
      "label": "2n",
-     "pct": 42,
+     "pct": 45,
      "band": "dim"
     },
     {
      "label": "4n",
-     "pct": 26,
+     "pct": 28,
      "band": "dim"
     }
    ]
   }
  ],
- "notes": []
+ "notes": [
+  "\u00c7\u0131ra\u011fan Palace Kempinski: dates bound but no price anchored to them",
+  "Pan Pacific Orchard: dates bound but no price anchored to them"
+ ]
 }
