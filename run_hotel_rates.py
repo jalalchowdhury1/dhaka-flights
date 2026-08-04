@@ -21,11 +21,40 @@ import subprocess
 import sys
 import time
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+REPO = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, REPO)
+
+# Own browser identity, never shared with the flight run (carmax-scraper does
+# the same with BROWSE_SESSION=carmax). Must be set BEFORE scraper is imported.
+os.environ.setdefault("BROWSE_SESSION", "hotels")
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(REPO, ".env"))
+except Exception:                                # noqa: BLE001
+    pass
+
 import hotel_rates
 
-REPO = os.path.dirname(os.path.abspath(__file__))
 PAYLOAD = os.path.join(REPO, "site", "data.json")
+
+
+def start_session(scraper):
+    """Prefer Browserbase. Its residential IPs mean the HOME ip is never spent
+    on hotel scraping — which is what got Google to slow-walk us on 2026-08-03
+    and is the one thing that can also degrade the midnight flight run. Local
+    Chrome stays as the fallback so a missing key never means no rates."""
+    scraper._run("browse stop")
+    time.sleep(1)
+    if os.environ.get("BROWSERBASE_API_KEY"):
+        out = scraper._run("browse env remote")
+        if '"mode":"remote"' in (out or ""):
+            print("  browser: Browserbase remote (home IP not used)")
+            return "remote"
+        print(f"  WARN: Browserbase unavailable ({(out or '')[:120]}) — using local Chrome")
+    else:
+        print("  WARN: no BROWSERBASE_API_KEY — using local Chrome (home IP)")
+    scraper._run("browse env local")
+    return "local"
 
 
 def _git(*args):
@@ -50,11 +79,12 @@ def main():
         print(f"  {city} stay: {w[0]} -> {w[1]} ({w[2]}n)" if w else
               f"  {city} stay: UNKNOWN (falling back to previous rates)")
 
+    import random
     import scraper
     scraped = {}
     try:
-        scraper._ensure_session(fresh=True)
-        for e in hotel_rates.SHORTLIST:
+        mode = start_session(scraper)
+        for i, e in enumerate(hotel_rates.SHORTLIST):
             win = windows.get(e["city"])
             if not win:
                 scraped[e["key"]] = (None, f"no {e['city']} stay dates tonight")
@@ -62,7 +92,10 @@ def main():
             rate, note = hotel_rates.scrape_rate(e, win[0], win[1], scraper=scraper)
             print(f"  [{e['key']}] {'$' + str(rate) if rate else 'MISS'} — {note}")
             scraped[e["key"]] = (rate, note)
-            time.sleep(3)          # be a polite guest; Google throttles hotels
+            if i < len(hotel_rates.SHORTLIST) - 1:
+                # Jittered, not a metronome — a fixed cadence is itself a
+                # bot signature, and 8 requests/night is already tiny.
+                time.sleep(random.uniform(4, 11))
     finally:
         try:
             scraper.end_session()
@@ -70,7 +103,9 @@ def main():
             print(f"WARN: session cleanup failed: {e}")
 
     data = hotel_rates.build(payload, scraped=scraped)
-    hit = sum(1 for r in data["rows"] if r.get("checked") == data["updated"])
+    # Count what THIS run actually fetched. Counting rows whose checked-date is
+    # today would also count a successful earlier run and hide a total failure.
+    hit = sum(1 for v in scraped.values() if v and v[0])
     print(f"Refreshed {hit}/{len(data['rows'])} rates")
     for n in data["notes"]:
         print(f"  NOTE: {n}")

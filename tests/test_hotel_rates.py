@@ -1,6 +1,11 @@
 """The hotel-rate refresh must be FAIL-CLOSED: a page that doesn't prove both
 the property and the dates may never yield a number, because a plausible-but-
-wrong nightly rate silently corrupts every offset band on the Stays screen."""
+wrong nightly rate silently corrupts every offset band on the Stays screen.
+
+The date proof reads Google's OWN check-in/check-out fields. Verified live
+2026-08-03: with only &checkin=/&checkout= in the URL a clean browser session
+silently prices TONIGHT while still rendering a believable number."""
+import base64
 import datetime
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -12,81 +17,101 @@ ENTRY = {"key": "ritz_ist", "city": "IST", "name": "Ritz-Carlton Istanbul",
          "query": "Ritz Carlton Istanbul", "match": "Ritz-Carlton",
          "program": "FHR", "angle": "x"}
 
-GOOD_TREE = "\n".join([
-    "[0-1] RootWebArea: The Ritz-Carlton, Istanbul - Google hotels",
-] + [f"[0-{i}] div" for i in range(60)] + [
-    "[0-900] StaticText: $425",
-    "Jan 5 – 7, 2027",
-])
+def page(**kw):
+    base = {"title": "The Ritz-Carlton, Istanbul - Google hotels",
+            "checkin": "Tue, Jan 5", "checkout": "Thu, Jan 7",
+            "price": "425", "len": 11695}
+    base.update(kw)
+    return base
 
 
 def test_good_page_yields_rate():
-    rate, note = hr.parse_rate(GOOD_TREE, "The Ritz-Carlton, Istanbul - Google hotels",
-                               ENTRY, JAN5, JAN7)
-    assert rate == 425 and note == "ok"
+    assert hr.parse_rate(page(), ENTRY, JAN5, JAN7) == (425, "ok")
 
 
-def test_wrong_dates_are_rejected():
-    tree = GOOD_TREE.replace("Jan 5 – 7, 2027", "Aug 9 – 10, 2026")
-    rate, note = hr.parse_rate(tree, "The Ritz-Carlton, Istanbul", ENTRY, JAN5, JAN7)
+def test_silently_defaulted_dates_are_rejected():
+    """The exact live failure: URL asked for Jan 2027, page priced tonight."""
+    rate, note = hr.parse_rate(
+        page(checkin="Sun, Aug 9", checkout="Mon, Aug 10", price="253"),
+        ENTRY, JAN5, JAN7)
     assert rate is None and "did not bind" in note
 
 
 def test_wrong_hotel_is_rejected():
-    rate, note = hr.parse_rate(GOOD_TREE, "Hilton Istanbul - Google hotels",
-                               ENTRY, JAN5, JAN7)
+    rate, note = hr.parse_rate(page(title="Hilton Istanbul"), ENTRY, JAN5, JAN7)
     assert rate is None and "expected Ritz-Carlton" in note
 
 
-def test_no_results_page_is_rejected():
-    tree = GOOD_TREE + "\nNo results"
-    rate, note = hr.parse_rate(tree, "The Ritz-Carlton, Istanbul", ENTRY, JAN5, JAN7)
-    assert rate is None
-
-
-def test_empty_page_is_rejected():
-    rate, note = hr.parse_rate("", "", ENTRY, JAN5, JAN7)
+def test_empty_render_is_rejected():
+    rate, note = hr.parse_rate(page(len=0), ENTRY, JAN5, JAN7)
     assert rate is None and "empty" in note
 
 
-def test_sidebar_price_alone_is_not_accepted():
-    """Other hotels' prices litter the sidebar; without the date anchor next to
-    a price we must return nothing rather than grab the first dollar figure."""
-    tree = "\n".join([
-        "[0-1] RootWebArea: The Ritz-Carlton, Istanbul - Google hotels",
-    ] + [f"[0-{i}] div" for i in range(60)] + [
-        "[0-500] link: $141 InterContinental Istanbul",
-        "Jan 5 – 7, 2027 is your stay",   # dates present, but no price beside them
-    ])
-    rate, _ = hr.parse_rate(tree, "The Ritz-Carlton, Istanbul", ENTRY, JAN5, JAN7)
-    assert rate != 141
+def test_missing_payload_is_rejected():
+    rate, note = hr.parse_rate(None, ENTRY, JAN5, JAN7)
+    assert rate is None and "no page payload" in note
 
 
-def test_cross_month_stay_matches_googles_long_form():
-    """A Jan 31 -> Feb 2 stay renders as 'Jan 31 – Feb 2'; the same-month
-    shorthand would never match and every night would look like a mismatch."""
-    e = dict(ENTRY, match="St. Regis")
-    tree = "\n".join([
-        "[0-1] RootWebArea: The St. Regis Singapore - Google hotels",
-    ] + [f"[0-{i}] div" for i in range(60)] + [
-        "[0-900] StaticText: $329", "Jan 31 – Feb 2, 2027",
-    ])
-    rate, note = hr.parse_rate(tree, "The St. Regis Singapore", e,
-                               datetime.date(2027, 1, 31), datetime.date(2027, 2, 2))
-    assert rate == 329, note
+def test_dates_bound_but_no_price_is_rejected():
+    rate, note = hr.parse_rate(page(price=None), ENTRY, JAN5, JAN7)
+    assert rate is None and "no price" in note
 
 
-def test_same_month_shorthand_does_not_match_a_different_day():
-    """'Feb 2 – 6' must not satisfy a request for Feb 2 – 16."""
-    e = dict(ENTRY, match="Pan Pacific")
-    tree = "\n".join([
-        "[0-1] RootWebArea: Pan Pacific Orchard - Google hotels",
-    ] + [f"[0-{i}] div" for i in range(60)] + [
-        "[0-900] StaticText: $252", "Feb 2 – 6, 2027",
-    ])
-    rate, _ = hr.parse_rate(tree, "Pan Pacific Orchard", e,
-                            datetime.date(2027, 2, 2), datetime.date(2027, 2, 16))
-    assert rate is None
+def test_implausible_rate_is_rejected():
+    """A parse that grabs a review count or a phone fragment must not ship."""
+    assert hr.parse_rate(page(price="4"), ENTRY, JAN5, JAN7)[0] is None
+    assert hr.parse_rate(page(price="99999"), ENTRY, JAN5, JAN7)[0] is None
+
+
+def test_ts_param_round_trips_to_a_known_good_google_url():
+    """Byte-for-byte against a ts captured from a session where Jan 5-7 bound.
+    If this breaks, dates stop binding and every rate silently becomes tonight."""
+    assert hr.ts_param(JAN5, JAN7, guests=2) == \
+        "CAAaGhIYEhIKBwjrDxABGAUSBwjrDxABGAcyAggCKgcKBToDVVNE"
+
+
+def test_ts_param_encodes_the_dates_it_was_given():
+    blob = base64.urlsafe_b64decode(
+        hr.ts_param(datetime.date(2027, 2, 2), datetime.date(2027, 2, 6)) + "==")
+    # 2027 = 0x7EB -> varint EB 0F; months/days follow as single bytes.
+    assert bytes([0xEB, 0x0F, 0x10, 0x02, 0x18, 0x02]) in blob   # Feb 2
+    assert bytes([0xEB, 0x0F, 0x10, 0x02, 0x18, 0x06]) in blob   # Feb 6
+
+
+def test_google_url_carries_ts_and_not_raw_date_params():
+    u = hr.google_url("Ritz Carlton Istanbul", JAN5, JAN7)
+    assert "ts=" in u and "checkin=" not in u and "checkout=" not in u
+
+
+def test_extract_js_survives_being_flattened_to_one_line():
+    """The JS is newline-stripped and shell-quoted before it reaches `browse
+    eval`. A // comment would then silently comment out the REST of the
+    function (observed live: every property returned "no page payload"), and an
+    apostrophe would fight the shell quoting."""
+    assert "//" not in hr.EXTRACT_JS, "// comment would swallow the flattened JS"
+    assert "'" not in hr.EXTRACT_JS, "apostrophe breaks shell quoting"
+    flat = hr.EXTRACT_JS.replace("\n", " ")
+    assert flat.rstrip().endswith("})()")
+    assert flat.count("{") == flat.count("}")
+
+
+def test_price_may_carry_a_badge_before_the_date_chip():
+    """Cirağan renders '$475 / GREAT DEAL / Jan 5 - 7' — the badge sits
+    between the price and the dates, which broke the first anchor."""
+    import re as _re
+    js_re = (hr.EXTRACT_JS % hr._range_pattern(JAN5, JAN7)).replace("\\\\", "\\")
+    m = _re.search(r'RegExp\("(.+?)"\)', js_re)
+    pattern = m.group(1).replace("\\\\", "\\")
+    text = "Ciragan Palace Kempinski\n$475\nGREAT DEAL\n•\nJan 5 – 7, 2027"
+    assert _re.search(pattern, text).group(1) == "475"
+
+
+def test_price_anchor_will_not_jump_over_another_price():
+    import re as _re
+    js_re = (hr.EXTRACT_JS % hr._range_pattern(JAN5, JAN7)).replace("\\\\", "\\")
+    pattern = _re.search(r'RegExp\("(.+?)"\)', js_re).group(1).replace("\\\\", "\\")
+    text = "$141 InterContinental\n$425\nJan 5 – 7, 2027"
+    assert _re.search(pattern, text).group(1) == "425"   # nearest, not the first
 
 
 def test_offset_math_matches_the_published_bands():

@@ -26,10 +26,14 @@ Luxury Collection Istanbul" → "No results" with empty date fields, while
 price is accepted ONLY when the page proves BOTH the property and the dates.
 Anything else returns None and the previous value is kept.
 """
+import base64
 import datetime
 import json
 import os
+import random
 import re
+import time
+import urllib.parse
 
 CREDITS_NOTE = ("$300 Amex (or $250 Edit) + $100 property + $60/day breakfast")
 TAX_RATE = 0.12          # the ~12% the offset math has always assumed
@@ -127,68 +131,158 @@ def _range_pattern(checkin, checkout):
     return rf"{m1}\s+{d1}\s*[–—-]\s*{m2}\s+{d2}\b"
 
 
-def google_url(query, checkin, checkout):
-    q = query.replace(" ", "+")
+GUESTS = 2          # the shortlist has always been quoted at 2-guest rates;
+                    # keep it fixed so night-over-night drift is comparable.
+
+
+def _varint(n):
+    out = b""
+    while True:
+        b_ = n & 0x7F
+        n >>= 7
+        out += bytes([b_ | (0x80 if n else 0)])
+        if not n:
+            return out
+
+
+def _field(num, payload, wire=2):
+    head = bytes([num << 3 | wire])
+    return head + (_varint(len(payload)) + payload if wire == 2 else payload)
+
+
+def _date_msg(d):
+    return (_field(1, _varint(d.year), 0) + _field(2, _varint(d.month), 0)
+            + _field(3, _varint(d.day), 0))
+
+
+def ts_param(checkin, checkout, guests=GUESTS):
+    """Google Hotels' `ts` parameter, built from scratch.
+
+    THIS IS THE FIX for the silent-wrong-dates bug. `&checkin=/&checkout=` are
+    honoured only in a browser that already carries Google session state; in a
+    clean automated session they are DROPPED and the page quietly prices
+    TONIGHT instead (verified 2026-08-03: a Jan-2027 request rendered
+    "Sun, Aug 9 / Mon, Aug 10"). `ts` is a protobuf that carries the dates
+    inside the URL, so it binds with no cookies at all — decoded from a working
+    URL and re-encoded byte-identically before being trusted."""
+    dates = _field(1, _date_msg(checkin)) + _field(2, _date_msg(checkout))
+    inner = _field(2, dates) + _field(6, _field(1, _varint(guests), 0))
+    body = _field(3, _field(2, inner))
+    currency = _field(5, _field(1, _field(7, b"USD")))
+    blob = _field(1, _varint(0), 0) + body + currency
+    return base64.urlsafe_b64encode(blob).decode().rstrip("=")
+
+
+def google_url(query, checkin, checkout, guests=GUESTS):
+    q = urllib.parse.quote_plus(query)
     return (f"https://www.google.com/travel/search?q={q}"
-            f"&checkin={checkin.isoformat()}&checkout={checkout.isoformat()}"
+            f"&ts={ts_param(checkin, checkout, guests)}"
             f"&hl=en&curr=USD&gl=us")
 
 
-def parse_rate(tree, title, entry, checkin, checkout):
-    """Return (rate, note). rate is None unless the page proves BOTH the
-    property and the requested dates — a page that merely *looks* like a hotel
-    result is exactly how a wrong number gets published."""
-    if not tree or len(tree.splitlines()) < 40:
-        return None, "empty page (throttled or still loading)"
-    if entry["match"].lower() not in (title or "").lower():
-        return None, f"resolved to '{(title or '?')[:40]}', expected {entry['match']}"
-    if re.search(r"\bNo results\b", tree):
-        return None, "search returned no results"
+# Read the page through ONE tiny eval rather than a full accessibility
+# snapshot. The snapshot of a Google Hotels page is ~5 MB and repeatedly blew
+# the 30 s CLI timeout; this returns ~150 bytes. (carmax-scraper learned the
+# same lesson on kbb.com: read via `browse eval` + innerText, never a dump.)
+EXTRACT_JS = """(function(){
+  var t = document.body.innerText || "";
+  var inp = [].slice.call(document.querySelectorAll("input"))
+              .map(function(i){return i.value}).filter(Boolean);
+  /* Allow a short badge between the price and the date chip ("GREAT DEAL"),
+     but never skip over another "$" — that would let a sidebar hotel price
+     attach itself to our date range. Use ONLY block comments here and no
+     apostrophes: this source is flattened to a single line and shell-quoted,
+     so a line comment would swallow the rest of the function. */
+  var m = t.match(new RegExp("\\\\$([\\\\d,]+)[^$]{0,40}?%s"));
+  return JSON.stringify({title: document.title,
+                         checkin: inp[0] || "", checkout: inp[1] || "",
+                         price: m ? m[1] : null, len: t.length});
+})()"""
 
-    want = _range_pattern(checkin, checkout)
-    if not re.search(want, tree):
-        return None, (f"page never showed {_label(checkin)}–{_label(checkout)}; "
-                      "dates did not bind")
-    # Price must sit next to the confirmed date range, never picked up loose
-    # from the sidebar (which lists OTHER hotels' prices).
-    m = re.search(r"\$([\d,]+)\s*\n?\s*" + want, tree)
-    if not m:
-        m = re.search(want + r"[^$\n]{0,40}\$([\d,]+)", tree)
-    if not m:
-        return None, "dates confirmed but no price anchored to them"
+
+def parse_rate(payload, entry, checkin, checkout):
+    """Return (rate, note) from the EXTRACT_JS payload.
+
+    rate is None unless the page proves BOTH the property and the requested
+    dates. The date proof reads Google's own check-in/check-out fields, which
+    is the only signal that survives a silently-defaulted URL: the page still
+    renders a perfectly plausible price for tonight, so trusting the price
+    alone is how a wrong number gets published."""
+    if not isinstance(payload, dict):
+        return None, "no page payload (throttled, blocked or still loading)"
+    if not payload.get("len"):
+        return None, "page rendered empty (throttled or blocked)"
+    title = payload.get("title") or ""
+    if entry["match"].lower() not in title.lower():
+        return None, f"resolved to '{title[:40]}', expected {entry['match']}"
+
+    want_in, want_out = _label(checkin), _label(checkout)
+    got_in = payload.get("checkin") or ""
+    got_out = payload.get("checkout") or ""
+    if want_in not in got_in or want_out not in got_out:
+        return None, (f"dates did not bind — page shows "
+                      f"'{got_in or '?'}'→'{got_out or '?'}', wanted "
+                      f"{want_in}→{want_out}")
+    price = payload.get("price")
+    if not price:
+        return None, "dates bound but no price anchored to them"
     try:
-        return int(m.group(1).replace(",", "")), "ok"
+        rate = int(str(price).replace(",", ""))
     except ValueError:
-        return None, f"unparseable price {m.group(1)!r}"
+        return None, f"unparseable price {price!r}"
+    if not 20 <= rate <= 20000:
+        return None, f"implausible nightly rate ${rate}"
+    return rate, "ok"
 
 
-def scrape_rate(entry, checkin, checkout, scraper=None):
-    """One property. Never raises — a failure is a (None, reason) pair."""
+def _eval_payload(scraper, checkin, checkout):
+    """Run EXTRACT_JS and decode it. browse wraps the result as {"result": str}."""
+    js = EXTRACT_JS % _range_pattern(checkin, checkout).replace("\\", "\\\\")
+    raw = scraper._run("browse eval " + _shquote(js.replace("\n", " ")))
+    if not raw:
+        return None
+    try:
+        outer = json.loads(raw)
+        inner = outer.get("result") if isinstance(outer, dict) else outer
+        return json.loads(inner) if isinstance(inner, str) else inner
+    except Exception:                            # noqa: BLE001
+        return None
+
+
+def _shquote(s):
+    return "'" + s.replace("'", "'\\''") + "'"
+
+
+def scrape_rate(entry, checkin, checkout, scraper=None, attempts=2):
+    """One property. Never raises — a failure is a (None, reason) pair.
+
+    Retries once on an empty render: a first-hit cold page is common and is
+    NOT the same thing as being blocked."""
     if scraper is None:
         import scraper as scraper_mod
         scraper = scraper_mod
     url = google_url(entry["query"], checkin, checkout)
+    note = "never ran"
+    for attempt in range(1, attempts + 1):
+        try:
+            scraper._run(f'browse open "{url}"')
+            time.sleep(7 + random.uniform(0, 3))   # jitter: never a metronome
+            payload = _eval_payload(scraper, checkin, checkout)
+            rate, note = parse_rate(payload, entry, checkin, checkout)
+            if rate is not None:
+                return rate, note
+            if "empty" not in note and "no page payload" not in note:
+                break                              # a real mismatch: don't retry
+        except Exception as e:                     # noqa: BLE001 — never kill a run
+            note = f"crashed: {e}"
+        if attempt < attempts:
+            time.sleep(4 + random.uniform(0, 4))
     try:
-        scraper._run(f'browse open "{url}"')
-        import time
-        time.sleep(8)
-        raw = scraper._snap()
-        tree = scraper._get_tree(raw)
-        title = ""
-        for line in tree.splitlines():
-            if "RootWebArea" in line:
-                title = line.split("RootWebArea:", 1)[-1].strip()
-                break
-        rate, note = parse_rate(tree, title, entry, checkin, checkout)
-        if rate is None:
-            try:
-                with open(DEBUG_FILE, "w") as f:
-                    f.write(f"{entry['key']} :: {note}\n{url}\n\n{tree[:20000]}")
-            except Exception:
-                pass
-        return rate, note
-    except Exception as e:                       # noqa: BLE001 — never kill a run
-        return None, f"crashed: {e}"
+        with open(DEBUG_FILE, "w") as f:
+            f.write(f"{entry['key']} :: {note}\n{url}\n")
+    except Exception:                              # noqa: BLE001
+        pass
+    return None, note
 
 
 def stay_windows(payload):

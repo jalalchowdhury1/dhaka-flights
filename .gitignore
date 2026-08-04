@@ -8,3 +8,4 @@ cron.log
 debug_last_zero.txt
 backups/
 .superpowers/
+debug_last_hotel.txt

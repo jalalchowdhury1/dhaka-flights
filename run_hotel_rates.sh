@@ -15,6 +15,12 @@ export PATH="/Users/jalalchowdhury/.nvm/versions/node/v24.15.0/bin:/usr/local/bi
 
 cd "/Users/jalalchowdhury/PycharmProjects/Dhaka flights"
 
+# Own browser identity so hotel traffic never shares a session with the flight
+# run, and the Browserbase key so scraping leaves from their residential IPs
+# rather than this house's (see AGENTS.md §1 "Nightly hotel rates").
+export BROWSE_SESSION=hotels
+set -a; [ -f .env ] && . ./.env; set +a
+
 # If a flight run is still going (a slow night), stand down rather than fight it
 # for the browser session — tomorrow's rates are worth less than tonight's fares.
 if pgrep -f "run_daily.py" > /dev/null; then

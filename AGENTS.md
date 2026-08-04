@@ -89,20 +89,46 @@ from. Rules now:
    Edit — are behind CARDHOLDER LOGINS and are not scrapable from here, ever.
    The site says so next to the table; treat the public rate as a drift alarm
    and an offset denominator, not as the booking rate.
-3. **The date guard is the point.** A Google Hotels query can land on a
-   no-results search page with the dates silently unbound, or resolve to a
-   different property, and still render plausible prices (both observed
-   2026-08-03). A scrape is accepted ONLY when the page proves the property
-   AND the requested date range; otherwise the previous rate is kept with its
+3. **`ts=`, never `checkin=`/`checkout=`.** This is the single most important
+   rule here. The plain date params are honoured only by a browser that
+   already carries Google session state; in a clean automated session they are
+   DROPPED and the page silently prices TONIGHT while still rendering a
+   believable number (verified 2026-08-03: a Jan-2027 request came back
+   showing "Sun, Aug 9"). `hotel_rates.ts_param()` builds Google's protobuf
+   `ts` parameter — checkin/checkout/guests/currency — which binds with no
+   cookies at all. A test pins it byte-for-byte against a known-good URL; if
+   that test ever fails, every rate silently becomes tonight's.
+4. **The date guard is the backstop.** A scrape is accepted ONLY when the page
+   proves the property AND the requested dates, read from Google's own
+   check-in/check-out fields; otherwise the previous rate is kept with its
    ORIGINAL date. Keep queries SHORT — "Sanasaryan Han Istanbul" resolves,
    "Sanasaryan Han Luxury Collection Istanbul" returns no results.
-4. **Own job, own file, own slot** (`com.jalal.dhaka-hotels`, 5:00 AM): eight
+5. **Read with `browse eval`, never `browse snapshot`.** A Google Hotels a11y
+   snapshot is ~5 MB and repeatedly blew the 30 s CLI timeout; the eval
+   returns ~150 bytes. carmax-scraper learned the same on kbb.com. The JS is
+   flattened to ONE line and shell-quoted before it runs, so it must contain
+   no line comments and no apostrophes — a line comment silently swallows the
+   rest of the function and every property returns "no page payload" (this
+   exact bug shipped and was caught by a live run). A test enforces both.
+6. **Scrape from Browserbase, not from this house.** `run_hotel_rates.py`
+   switches the CLI to `browse env remote` (key in the gitignored `.env`), so
+   hotel traffic leaves from Browserbase residential IPs and the home IP is
+   never spent — Google slow-walked it on 2026-08-03 after ~10 hotel searches,
+   and that same IP is what the midnight flight run depends on. Local Chrome
+   remains the fallback so a missing key still yields rates. This is the first
+   repo in the ecosystem to actually wire Browserbase in; carmax-scraper and
+   sentiment-scraper both document it as an unused escape hatch.
+7. **Own browser identity**: `BROWSE_SESSION=hotels` (carmax uses `carmax`),
+   set before `scraper` is imported, so hotel and flight runs can never share
+   or wedge each other's session.
+8. **Own job, own file, own slot** (`com.jalal.dhaka-hotels`, 5:00 AM): eight
    hotel searches would push the flight run past its 25-min budget and into
    the 35-min overrun guard. It writes only `hotel_rates.json` (never
    data.json, so no race with publish.py), pulls --rebase before pushing, and
-   stands down entirely if a flight run is still active.
-5. Google throttles hotel searches noticeably faster than flights — a run that
-   returns 0 live rates Telegrams once and leaves the table honestly stale.
+   stands down entirely if a flight run is still active. Delays between
+   properties are jittered (4–11 s), not a fixed cadence.
+9. A run that returns 0 live rates Telegrams once and leaves the table
+   honestly stale rather than guessing.
 
 **🏨 Hotel integration (`hotels.py`, 2026-08-01 evening):** the Marriott
 award stay rides with the trip — payload `hotel` (Bangkok: The Athenee,
