@@ -22,13 +22,13 @@
    "program": "FHR",
    "angle": "Old-city boutique \u00b7 Bonvoy stacks",
    "bold": false,
-   "rate": 327,
+   "rate": 347,
    "checked": "2026-08-03",
    "offsets": [
     {
      "label": "2n",
-     "pct": 71,
-     "band": "good"
+     "pct": 67,
+     "band": "warn"
     }
    ]
   },
@@ -73,12 +73,12 @@
    "program": "FHR",
    "angle": "The sentimental splurge \u00b7 Bosphorus palace, the favorite brand",
    "bold": false,
-   "rate": 726,
-   "checked": "2026-08-01",
+   "rate": 475,
+   "checked": "2026-08-03",
    "offsets": [
     {
      "label": "2n",
-     "pct": 32,
+     "pct": 49,
      "band": "dim"
     }
    ]
@@ -90,17 +90,17 @@
    "program": "THC + Edit",
    "angle": "Wildcard \u00b7 CSR select-hotels credit may stack (see note)",
    "bold": false,
-   "rate": 252,
-   "checked": "2026-08-01",
+   "rate": 233,
+   "checked": "2026-08-03",
    "offsets": [
     {
      "label": "2n",
-     "pct": 83,
+     "pct": 90,
      "band": "good"
     },
     {
      "label": "4n",
-     "pct": 52,
+     "pct": 57,
      "band": "warn"
     }
    ]
@@ -172,14 +172,5 @@
    ]
   }
  ],
- "notes": [
-  "Sanasaryan Han (Lux. Coll.): no page payload (throttled, blocked or still loading)",
-  "Ritz-Carlton Istanbul: no page payload (throttled, blocked or still loading)",
-  "St. Regis Istanbul: no page payload (throttled, blocked or still loading)",
-  "\u00c7\u0131ra\u011fan Palace Kempinski: no page payload (throttled, blocked or still loading)",
-  "Pan Pacific Orchard: no page payload (throttled, blocked or still loading)",
-  "St. Regis Singapore: no page payload (throttled, blocked or still loading)",
-  "Ritz-Carlton Millenia: no page payload (throttled, blocked or still loading)",
-  "JW Marriott South Beach: no page payload (throttled, blocked or still loading)"
- ]
+ "notes": []
 }
