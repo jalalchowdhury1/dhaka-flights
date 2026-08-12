@@ -1,5 +1,5 @@
 {
- "updated": "2026-08-11",
+ "updated": "2026-08-12",
  "stays": {
   "IST": {
    "checkin": "2027-01-05",
@@ -173,6 +173,12 @@
   }
  ],
  "notes": [
+  "Sanasaryan Han (Lux. Coll.): no page payload (throttled, blocked or still loading)",
+  "Ritz-Carlton Istanbul: no page payload (throttled, blocked or still loading)",
+  "St. Regis Istanbul: no page payload (throttled, blocked or still loading)",
+  "\u00c7\u0131ra\u011fan Palace Kempinski: no page payload (throttled, blocked or still loading)",
+  "Pan Pacific Orchard: no page payload (throttled, blocked or still loading)",
+  "St. Regis Singapore: no page payload (throttled, blocked or still loading)",
   "Ritz-Carlton Millenia: no page payload (throttled, blocked or still loading)",
   "JW Marriott South Beach: no page payload (throttled, blocked or still loading)"
  ]
