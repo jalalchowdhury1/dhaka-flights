@@ -22,8 +22,8 @@
    "program": "FHR",
    "angle": "Old-city boutique \u00b7 Bonvoy stacks",
    "bold": false,
-   "rate": 348,
-   "checked": "2026-08-11",
+   "rate": 346,
+   "checked": "2026-08-16",
    "offsets": [
     {
      "label": "2n",
@@ -39,8 +39,8 @@
    "program": "FHR",
    "angle": "Value pick \u00b7 Bonvoy Platinum stacks (points + elite nights)",
    "bold": true,
-   "rate": 441,
-   "checked": "2026-08-11",
+   "rate": 439,
+   "checked": "2026-08-16",
    "offsets": [
     {
      "label": "2n",
@@ -56,8 +56,8 @@
    "program": "FHR",
    "angle": "Butler with every room \u00b7 Bonvoy stacks",
    "bold": false,
-   "rate": 539,
-   "checked": "2026-08-11",
+   "rate": 536,
+   "checked": "2026-08-16",
    "offsets": [
     {
      "label": "2n",
@@ -73,8 +73,8 @@
    "program": "FHR",
    "angle": "The sentimental splurge \u00b7 Bosphorus palace, the favorite brand",
    "bold": false,
-   "rate": 466,
-   "checked": "2026-08-11",
+   "rate": 468,
+   "checked": "2026-08-16",
    "offsets": [
     {
      "label": "2n",
@@ -90,17 +90,17 @@
    "program": "THC + Edit",
    "angle": "Wildcard \u00b7 CSR select-hotels credit may stack (see note)",
    "bold": false,
-   "rate": 241,
-   "checked": "2026-08-11",
+   "rate": 265,
+   "checked": "2026-08-16",
    "offsets": [
     {
      "label": "2n",
-     "pct": 87,
+     "pct": 79,
      "band": "good"
     },
     {
      "label": "4n",
-     "pct": 55,
+     "pct": 50,
      "band": "warn"
     }
    ]
@@ -112,18 +112,18 @@
    "program": "FHR",
    "angle": "Butler standard \u00b7 Bonvoy stacks \u00b7 cheap for SIN luxury",
    "bold": true,
-   "rate": 455,
-   "checked": "2026-08-11",
+   "rate": 225,
+   "checked": "2026-08-16",
    "offsets": [
     {
      "label": "2n",
-     "pct": 51,
-     "band": "warn"
+     "pct": 103,
+     "band": "good"
     },
     {
      "label": "4n",
-     "pct": 31,
-     "band": "dim"
+     "pct": 63,
+     "band": "warn"
     }
    ]
   },
@@ -134,17 +134,17 @@
    "program": "FHR",
    "angle": "Marina views \u00b7 Bonvoy stacks",
    "bold": false,
-   "rate": 487,
-   "checked": "2026-08-10",
+   "rate": 431,
+   "checked": "2026-08-16",
    "offsets": [
     {
      "label": "2n",
-     "pct": 48,
-     "band": "dim"
+     "pct": 54,
+     "band": "warn"
     },
     {
      "label": "4n",
-     "pct": 29,
+     "pct": 33,
      "band": "dim"
     }
    ]
@@ -156,30 +156,21 @@
    "program": "The Edit only",
    "angle": "Best Edit-exclusive if the fallback strategy is needed",
    "bold": false,
-   "rate": 458,
-   "checked": "2026-08-10",
+   "rate": 433,
+   "checked": "2026-08-16",
    "offsets": [
     {
      "label": "2n",
-     "pct": 46,
+     "pct": 48,
      "band": "dim"
     },
     {
      "label": "4n",
-     "pct": 29,
+     "pct": 30,
      "band": "dim"
     }
    ]
   }
  ],
- "notes": [
-  "Sanasaryan Han (Lux. Coll.): no page payload (throttled, blocked or still loading)",
-  "Ritz-Carlton Istanbul: no page payload (throttled, blocked or still loading)",
-  "St. Regis Istanbul: no page payload (throttled, blocked or still loading)",
-  "\u00c7\u0131ra\u011fan Palace Kempinski: no page payload (throttled, blocked or still loading)",
-  "Pan Pacific Orchard: no page payload (throttled, blocked or still loading)",
-  "St. Regis Singapore: no page payload (throttled, blocked or still loading)",
-  "Ritz-Carlton Millenia: no page payload (throttled, blocked or still loading)",
-  "JW Marriott South Beach: no page payload (throttled, blocked or still loading)"
- ]
+ "notes": []
 }
