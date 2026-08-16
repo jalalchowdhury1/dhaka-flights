@@ -117,17 +117,46 @@ from. Rules now:
    and that same IP is what the midnight flight run depends on. This is the
    first repo in the ecosystem to actually wire Browserbase in; carmax-scraper
    and sentiment-scraper both document it as an unused escape hatch.
-6b. **The free tier is 60 browser-minutes per CALENDAR month, and this job is
-   sized to fit inside it.** The counter resets on the 1st (verified
-   2026-08-16: August's sessions summed to 60.91 min against a usage endpoint
-   reporting 61 — monthly, not lifetime). Budget ≈ 1.5 min/night ⇒ ~45
-   min/month, which leaves headroom for a bad night. Two things protect it:
-   `browse eval` is POLLED, never slept on (`_wait_for_page`), and the
-   inter-property jitter is 2-5 s rather than 4-11 s. A remote session bills by
-   wall-clock, so every idle second in this job is money. **Before adding any
-   sleep to this path, price it: 1 s × 8 properties × 30 nights = 4 min/month.**
-   `run_hotel_rates.browserbase_usage()` reads the live counter over plain REST
-   (zero browser minutes) and prints `used/cap` at the top of every run.
+6b. **The free tier is 60 browser-minutes per CALENDAR month, and demand
+   slightly EXCEEDS it.** The counter resets on the 1st (verified 2026-08-16:
+   August's sessions summed to 60.91 min against a usage endpoint reporting 61
+   — monthly, not lifetime). A full 8-property remote run bills **2.25-2.32 min
+   measured**, so 30 nights ≈ 69 min against a 60-min cap. Nightly is what
+   Jalal wants ("i want to see every miniscule change"), so the shortfall is
+   paced, not eliminated — see 6d. A remote session bills by WALL-CLOCK, so
+   every idle second is money: `browse eval` is POLLED, never slept on
+   (`_wait_for_page`), and the inter-property gap is mode-aware (6e).
+   **Before adding any sleep to this path, price it: 1 s × 8 properties × 30
+   nights = 4 min/month.** `browserbase_usage()` reads the live counter over
+   plain REST (zero browser minutes) and prints `used/cap` every run — but it
+   LAGS (it still read 0 after three runs on 2026-08-16), so treat it as a
+   coarse signal and never as a precise ledger.
+6d. **Pacing (`should_conserve`) picks WHICH nights fall back, and that matters
+   more than how many.** Letting the quota simply run dry puts every local
+   night in one consecutive block at month-end, and a multi-night burst of
+   hotel searches from the home IP is exactly the shape Google slow-walked on
+   2026-08-03; a single isolated night is not. So the choice is random, weighted
+   by how far behind pace the month is, which scatters ~4 local nights through
+   the month and self-corrects (a local night spends no quota, putting the next
+   night back ahead of pace). `EST_RUN_MINUTES` is set ABOVE the measured max on
+   purpose — overestimating costs a few needless local nights, underestimating
+   dries the quota out mid-month. Re-derive it after a full month of real data;
+   n=2 is thin. Tests: `tests/test_hotel_pacing.py`.
+6e. **The inter-property gap is per-mode (`JITTER`), because the same pause is
+   expensive-and-pointless on one and free-and-valuable on the other.** Remote
+   1-3 s (billed; a rotating residential IP doing 8 requests is not a throttle
+   shape), local 4-11 s (free, and it is the home IP the flight run depends on).
+   `mode` is re-read every iteration so a mid-run `to_local()` widens the gap
+   immediately. **Measured caution:** tightening the remote gap was predicted to
+   take a run to ~2.0 min and did NOT — the ~10 s saved sits inside Google's
+   page-load variance (2.25 then 2.32 measured). Directionally right, not
+   decisive; do not re-assert a cost saving here without new numbers.
+6f. **Start time is jittered 0-35 min LATER than 05:00, never earlier**
+   (`run_hotel_rates.sh`). Earlier would walk back into the 04:00 flight slot
+   and its git push. It is applied EVERY night, not only on local-Chrome
+   nights, because jittering only those would make the jitter itself the tell.
+   The sleep runs BEFORE the `pgrep run_daily.py` stand-down so a slow flight
+   run gets extra time to finish rather than costing us the night.
 6c. **Local Chrome is the fallback, and it must cover BOTH failure shapes.** A
    MISSING key was handled from day one; an EXHAUSTED key was not, and that gap
    cost five silent nights (see the 2026-08-11 postmortem below). Quota is now
@@ -138,6 +167,19 @@ from. Rules now:
 7. **Own browser identity**: `BROWSE_SESSION=hotels` (carmax uses `carmax`),
    set before `scraper` is imported, so hotel and flight runs can never share
    or wedge each other's session.
+7b. **NEVER run this job concurrently with the flight run, and never move it to
+   00:00.** The browsers genuinely do not care — `BROWSE_SESSION` gives each an
+   isolated daemon on its own port, and `browse stop --force` is session-scoped
+   (all verified 2026-08-16). **Git is what breaks.** The two jobs share ONE
+   working tree, and two things were reproduced that day: concurrent
+   `add`/`commit` dies on `.git/index.lock` (79 of 80 in a stress loop, and
+   only `push` has retry logic here), and — the dangerous one — a `git commit`
+   from one job SILENTLY sweeps up the other's staged file, so `data.json` gets
+   committed under "Hotel rates refreshed (8/8 live)" and the flight run's own
+   `diff --cached --quiet` then reports nothing to publish. No error either
+   time. The `pgrep -f run_daily.py` stand-down in `run_hotel_rates.sh` is what
+   prevents this; removing it would also mean the job never runs at all at
+   00:00, since the flight run is always active then — silently, with exit 0.
 8. **Own job, own file, own slot** (`com.jalal.dhaka-hotels`, 5:00 AM): eight
    hotel searches would push the flight run past its 25-min budget and into
    the 35-min overrun guard. It writes only `hotel_rates.json` (never
