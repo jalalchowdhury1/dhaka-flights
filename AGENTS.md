@@ -114,10 +114,27 @@ from. Rules now:
    switches the CLI to `browse env remote` (key in the gitignored `.env`), so
    hotel traffic leaves from Browserbase residential IPs and the home IP is
    never spent — Google slow-walked it on 2026-08-03 after ~10 hotel searches,
-   and that same IP is what the midnight flight run depends on. Local Chrome
-   remains the fallback so a missing key still yields rates. This is the first
-   repo in the ecosystem to actually wire Browserbase in; carmax-scraper and
-   sentiment-scraper both document it as an unused escape hatch.
+   and that same IP is what the midnight flight run depends on. This is the
+   first repo in the ecosystem to actually wire Browserbase in; carmax-scraper
+   and sentiment-scraper both document it as an unused escape hatch.
+6b. **The free tier is 60 browser-minutes per CALENDAR month, and this job is
+   sized to fit inside it.** The counter resets on the 1st (verified
+   2026-08-16: August's sessions summed to 60.91 min against a usage endpoint
+   reporting 61 — monthly, not lifetime). Budget ≈ 1.5 min/night ⇒ ~45
+   min/month, which leaves headroom for a bad night. Two things protect it:
+   `browse eval` is POLLED, never slept on (`_wait_for_page`), and the
+   inter-property jitter is 2-5 s rather than 4-11 s. A remote session bills by
+   wall-clock, so every idle second in this job is money. **Before adding any
+   sleep to this path, price it: 1 s × 8 properties × 30 nights = 4 min/month.**
+   `run_hotel_rates.browserbase_usage()` reads the live counter over plain REST
+   (zero browser minutes) and prints `used/cap` at the top of every run.
+6c. **Local Chrome is the fallback, and it must cover BOTH failure shapes.** A
+   MISSING key was handled from day one; an EXHAUSTED key was not, and that gap
+   cost five silent nights (see the 2026-08-11 postmortem below). Quota is now
+   checked before the session opens, and `to_local()` demotes mid-run if the
+   402 arrives between properties — which is exactly how it failed, at property
+   7 of 8. Falling back spends the home IP, so it prints loudly when it happens;
+   that is the intended trade, because publishing nothing is worse.
 7. **Own browser identity**: `BROWSE_SESSION=hotels` (carmax uses `carmax`),
    set before `scraper` is imported, so hotel and flight runs can never share
    or wedge each other's session.
@@ -128,7 +145,32 @@ from. Rules now:
    stands down entirely if a flight run is still active. Delays between
    properties are jittered (4–11 s), not a fixed cadence.
 9. A run that returns 0 live rates Telegrams once and leaves the table
-   honestly stale rather than guessing.
+   honestly stale rather than guessing. **The alert states the reason it
+   actually observed** — it must never hardcode a cause. It did until
+   2026-08-16 ("Google likely throttling", sent whatever had happened), and
+   that one sentence is the entire reason the outage below ran for five days.
+   An infra failure carries the `browser backend: ` prefix
+   (`hotel_rates.is_infra_note`) so the runner and the alert can tell "our
+   browser never started" apart from "Google refused us".
+
+**📉 Postmortem — the five silent nights (2026-08-11 → 08-16).** Browserbase's
+free 60 min/month ran out mid-run on 08-11 (6/8 that night, 0/8 for the next
+five). Every `browse` command returned `402 Free plan browser minutes limit
+reached`; `scraper._run()` printed that sentence to cron.log and returned `""`;
+`parse_rate(None)` mapped the empty result to "no page payload (throttled,
+blocked or still loading)"; and the 0-rate alert then hardcoded "Google likely
+throttling". Four layers, each individually reasonable, that together converted
+a precise machine-readable error into a confident wrong diagnosis. **The
+scraper.py header already warned about this exact shape** ("2026-07-15: the
+browse daemon wedged mid-run … the Telegram alert wrongly blamed Google") — the
+lesson was written down and then re-learned on a different substrate. What
+changed: `DIAG["last_stderr"]` keeps the CLI's own words; `classify_stderr()`
+promotes them to the note; infra failures skip the pointless retry; quota is
+checked up front; and fleet-health now grades the oldest ROW stamp instead of
+the file's `updated` field, which was green the entire time (see
+github-notion-sync AGENTS.md). **Rule of thumb this repo keeps failing on:
+never let a diagnosis be more confident than the evidence that produced it —
+if the layer below said why, carry the sentence up.**
 
 **🏨 Hotel integration (`hotels.py`, 2026-08-01 evening):** the Marriott
 award stay rides with the trip — payload `hotel` (Bangkok: The Athenee,

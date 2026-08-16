@@ -7,6 +7,7 @@ The date proof reads Google's OWN check-in/check-out fields. Verified live
 silently prices TONIGHT while still rendering a believable number."""
 import base64
 import datetime
+import json
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import hotel_rates as hr
@@ -183,3 +184,110 @@ def test_scrape_rate_never_raises(monkeypatch):
         _snap = _get_tree = staticmethod(lambda *a: "")
     rate, note = hr.scrape_rate(ENTRY, JAN5, JAN7, scraper=Boom)
     assert rate is None and "crashed" in note
+
+
+# ── Infrastructure failures must never be reported as Google failures ───────
+# 2026-08-11 → 08-16: Browserbase's free tier ran out, every `browse` command
+# returned "402 Free plan browser minutes limit reached", and all eight
+# properties came back as "no page payload (throttled, blocked or still
+# loading)". Five nights were spent believing Google had blocked us.
+
+QUOTA_STDERR = ("Error: 402 Free plan browser minutes limit reached. "
+                "Please upgrade your account at https://browserbase.com/plans")
+
+
+def test_classify_stderr_names_the_quota():
+    note = hr.classify_stderr(QUOTA_STDERR)
+    assert note and "quota" in note.lower() and hr.is_infra_note(note)
+
+
+def test_classify_stderr_ignores_ordinary_noise():
+    """A page that merely disappointed us must keep its fail-closed note."""
+    assert hr.classify_stderr("") is None
+    assert hr.classify_stderr(None) is None
+    assert hr.classify_stderr("DevTools listening on ws://127.0.0.1:9222") is None
+
+
+def test_quota_failure_is_reported_as_itself_not_as_google(monkeypatch):
+    monkeypatch.setattr(hr.time, "sleep", lambda *_: None)
+
+    class Dead:
+        DIAG = {"last_stderr": ""}
+        @staticmethod
+        def _run(cmd):
+            Dead.DIAG["last_stderr"] = QUOTA_STDERR
+            return ""
+
+    rate, note = hr.scrape_rate(ENTRY, JAN5, JAN7, scraper=Dead)
+    assert rate is None
+    assert hr.is_infra_note(note), f"not flagged as infra: {note!r}"
+    assert "quota" in note.lower()
+    assert "throttl" not in note.lower(), "must not blame Google for our quota"
+
+
+def test_quota_failure_does_not_burn_the_retry(monkeypatch):
+    """Retrying a 402 cannot help and costs a second page load every time."""
+    monkeypatch.setattr(hr.time, "sleep", lambda *_: None)
+    opens = []
+
+    class Dead:
+        DIAG = {"last_stderr": ""}
+        @staticmethod
+        def _run(cmd):
+            if cmd.startswith("browse open"):
+                opens.append(cmd)
+            Dead.DIAG["last_stderr"] = QUOTA_STDERR
+            return ""
+
+    hr.scrape_rate(ENTRY, JAN5, JAN7, scraper=Dead, attempts=2)
+    assert len(opens) == 1, f"retried an unretryable failure: {len(opens)} opens"
+
+
+def test_stale_stderr_from_a_previous_property_is_not_reused(monkeypatch):
+    """DIAG holds the LAST stderr process-wide. Without clearing it per
+    property, one 402 would mislabel every later property in the run."""
+    monkeypatch.setattr(hr.time, "sleep", lambda *_: None)
+
+    class Recovered:
+        DIAG = {"last_stderr": QUOTA_STDERR}       # left over from earlier
+        @staticmethod
+        def _run(cmd):
+            if "eval" in cmd:
+                return json.dumps({"result": json.dumps(page())})
+            return ""
+
+    rate, note = hr.scrape_rate(ENTRY, JAN5, JAN7, scraper=Recovered)
+    assert rate == 425 and note == "ok"
+
+
+def test_wait_for_page_stops_as_soon_as_the_dates_bind(monkeypatch):
+    """Every extra poll is a billed second on a remote session."""
+    monkeypatch.setattr(hr.time, "sleep", lambda *_: None)
+    calls = []
+
+    class Fast:
+        @staticmethod
+        def _run(cmd):
+            calls.append(cmd)
+            return json.dumps({"result": json.dumps(page())})
+
+    got = hr._wait_for_page(Fast, JAN5, JAN7)
+    assert got["price"] == "425"
+    assert len(calls) == 1, f"kept polling after the page bound: {len(calls)}"
+
+
+def test_wait_for_page_gives_up_and_returns_the_last_bad_payload(monkeypatch):
+    """A page that never binds still has to reach parse_rate, so the run can
+    say WHICH way it failed instead of just 'no payload'."""
+    monkeypatch.setattr(hr.time, "sleep", lambda *_: None)
+    wrong = page(checkin="Sun, Aug 9", checkout="Mon, Aug 10")
+
+    class Wrong:
+        @staticmethod
+        def _run(cmd):
+            return json.dumps({"result": json.dumps(wrong)})
+
+    got = hr._wait_for_page(Wrong, JAN5, JAN7)
+    assert got["checkin"] == "Sun, Aug 9"
+    rate, note = hr.parse_rate(got, ENTRY, JAN5, JAN7)
+    assert rate is None and "did not bind" in note

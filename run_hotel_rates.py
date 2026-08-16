@@ -38,21 +38,84 @@ import hotel_rates
 PAYLOAD = os.path.join(REPO, "site", "data.json")
 
 
+# Browserbase's free plan allows 60 browser-minutes a CALENDAR month; the
+# counter resets on the 1st. Verified 2026-08-16 by summing August's sessions
+# (35.30 min completed + 25.61 min timed-out = 60.91) against the usage
+# endpoint's reported 61 — it is a monthly figure, not a lifetime one.
+FREE_TIER_MINUTES = 60
+
+
+def browserbase_usage(timeout=10):
+    """(minutes_used_this_month, cap) for the key in the environment.
+
+    Costs ZERO browser minutes — it is a plain REST call. Reading this BEFORE
+    opening a session is what turns "eight identical mystery failures" into
+    one honest line, and it is cheap enough to do every night."""
+    key = os.environ.get("BROWSERBASE_API_KEY")
+    if not key:
+        return None, None
+    import urllib.request
+
+    def _get(path):
+        req = urllib.request.Request(f"https://api.browserbase.com/v1{path}",
+                                     headers={"X-BB-API-Key": key})
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return json.loads(r.read().decode())
+
+    try:
+        pid = _get("/projects")[0]["id"]
+        used = _get(f"/projects/{pid}/usage").get("browserMinutes")
+        return (int(used) if used is not None else None), FREE_TIER_MINUTES
+    except Exception as e:                           # noqa: BLE001
+        print(f"  WARN: could not read Browserbase usage ({e})")
+        return None, None
+
+
 def start_session(scraper):
     """Prefer Browserbase. Its residential IPs mean the HOME ip is never spent
     on hotel scraping — which is what got Google to slow-walk us on 2026-08-03
-    and is the one thing that can also degrade the midnight flight run. Local
-    Chrome stays as the fallback so a missing key never means no rates."""
-    scraper._run("browse stop")
-    time.sleep(1)
+    and is the one thing that can also degrade the midnight flight run.
+
+    Local Chrome is the fallback, and it must cover BOTH ways the key can fail:
+    missing, and out of quota. Only the first was handled until 2026-08-16, so
+    when the free tier ran dry on 08-11 the fallback never fired and five
+    nights published nothing while reporting a Google block."""
+    # `browse stop --force`, NOT `browse stop`. The daemon caches
+    # BROWSERBASE_API_KEY from the environment it was STARTED with and never
+    # re-reads it; plain `browse stop` leaves that daemon alive, and the
+    # following `browse env remote` cheerfully answers {"restarted":true}
+    # while still holding the old key. Proved 2026-08-16: a daemon started
+    # with a bogus key returned 401 for every later command even with a valid
+    # key exported. This is why swapping the key in .env appeared to do
+    # nothing — the 5 AM run's daemon was still up with the exhausted one.
+    scraper._run("browse stop --force")
+    time.sleep(2)
     if os.environ.get("BROWSERBASE_API_KEY"):
-        out = scraper._run("browse env remote")
-        if '"mode":"remote"' in (out or ""):
-            print("  browser: Browserbase remote (home IP not used)")
-            return "remote"
-        print(f"  WARN: Browserbase unavailable ({(out or '')[:120]}) — using local Chrome")
+        used, cap = browserbase_usage()
+        if used is not None:
+            print(f"  Browserbase: {used}/{cap} min used this month")
+            if used >= cap * 0.8:
+                print(f"  NOTE: {cap - used} min left — local Chrome takes over "
+                      f"when it runs out; resets on the 1st")
+        if used is not None and used >= cap:
+            print("  Browserbase quota exhausted — falling back to local Chrome")
+        else:
+            out = scraper._run("browse env remote")
+            if '"mode":"remote"' in (out or ""):
+                print("  browser: Browserbase remote (home IP not used)")
+                return "remote"
+            print(f"  WARN: Browserbase unavailable ({(out or '')[:120]}) — using local Chrome")
     else:
         print("  WARN: no BROWSERBASE_API_KEY — using local Chrome (home IP)")
+    scraper._run("browse env local")
+    return "local"
+
+
+def to_local(scraper, why):
+    """Mid-run demotion to local Chrome. The quota can die BETWEEN properties
+    (it did on 2026-08-11, at property 7 of 8); finishing the night on the home
+    IP beats publishing nothing."""
+    print(f"  {why} — switching to local Chrome for the rest of the run")
     scraper._run("browse env local")
     return "local"
 
@@ -90,12 +153,19 @@ def main():
                 scraped[e["key"]] = (None, f"no {e['city']} stay dates tonight")
                 continue
             rate, note = hotel_rates.scrape_rate(e, win[0], win[1], scraper=scraper)
+            # An infra failure is not a Google failure: demote to local Chrome
+            # and give this property a second, real chance on the way past.
+            if rate is None and mode == "remote" and hotel_rates.is_infra_note(note):
+                mode = to_local(scraper, note)
+                rate, note = hotel_rates.scrape_rate(e, win[0], win[1], scraper=scraper)
             print(f"  [{e['key']}] {'$' + str(rate) if rate else 'MISS'} — {note}")
             scraped[e["key"]] = (rate, note)
             if i < len(hotel_rates.SHORTLIST) - 1:
-                # Jittered, not a metronome — a fixed cadence is itself a
-                # bot signature, and 8 requests/night is already tiny.
-                time.sleep(random.uniform(4, 11))
+                # Jittered, not a metronome — a fixed cadence is itself a bot
+                # signature. Trimmed 4-11 s → 2-5 s on 2026-08-16: on a remote
+                # session every one of these seconds is billed, and 8 requests
+                # a night was never the shape Google throttles anyway.
+                time.sleep(random.uniform(2, 5))
     finally:
         try:
             scraper.end_session()
@@ -135,11 +205,25 @@ def main():
     # A whole night with zero live rates means the scrape path is broken, not
     # just noisy — say so once, rather than letting the table quietly age.
     if hit == 0:
+        # Say WHY, from what actually happened, never from a guess. The old
+        # message hardcoded "Google likely throttling" and sent it whatever the
+        # cause was; on 2026-08-11 the cause was an exhausted Browserbase quota
+        # and that sentence sent five days of debugging at the wrong target.
+        infra = [n for _, n in scraped.values()
+                 if hotel_rates.is_infra_note(n)]
+        if infra:
+            why = infra[0].split(hotel_rates.INFRA_PREFIX, 1)[-1]
+        else:
+            notes = " ".join(str(n) for _, n in scraped.values()).lower()
+            why = ("dates would not bind" if "did not bind" in notes else
+                   "Google returned empty pages (throttling or a block)"
+                   if "empty" in notes or "no page payload" in notes else
+                   "see cron.log for the per-property notes")
         try:
             from notify_telegram import send_message
-            send_message("⚠️ dhaka-flights: hotel-rate refresh got 0 live rates "
-                         "tonight (Google likely throttling). The Stays table is "
-                         "showing its last known figures with their check dates.")
+            send_message(f"⚠️ dhaka-flights: hotel-rate refresh got 0 live rates "
+                         f"tonight — {why}. The Stays table is showing its last "
+                         f"known figures with their check dates.")
         except Exception as e:                   # noqa: BLE001
             print(f"WARN: telegram warn failed: {e}")
     print("=== Done ===")

@@ -253,30 +253,110 @@ def _shquote(s):
     return "'" + s.replace("'", "'\\''") + "'"
 
 
+# Substrings that mean "no browser ever ran", not "the page misbehaved".
+# Browserbase answers an out-of-quota account with HTTP 402 on EVERY command,
+# so all eight properties fail identically and the night looks exactly like a
+# Google block. It is not one. Telling the two apart is the difference between
+# "wait for the quota to reset" and "go fight Google" — 2026-08-11 → 08-16 was
+# spent believing the second one, because the CLI said "402 Free plan browser
+# minutes limit reached" in plain words and nothing kept the sentence.
+QUOTA_MARKERS = ("browser minutes limit", "402", "upgrade your account")
+AUTH_MARKERS = ("api key", "unauthorized", "401", "forbidden")
+
+
+# Every infra note starts with this, so a caller can recognise one without
+# re-parsing prose. (Matching on "402" inside the rendered note happened to
+# work and would have broken the first time the wording changed.)
+INFRA_PREFIX = "browser backend: "
+
+
+def classify_stderr(err):
+    """A human reason when stderr proves the failure was on OUR side.
+
+    None means nothing in stderr explains it — the page really did load and
+    disappoint us, so the normal fail-closed notes stand."""
+    low = (err or "").lower()
+    if any(m in low for m in QUOTA_MARKERS):
+        return INFRA_PREFIX + "Browserbase quota exhausted (402), no browser ran"
+    if any(m in low for m in AUTH_MARKERS):
+        return INFRA_PREFIX + f"key rejected ({(err or '').strip()[:60]})"
+    return None
+
+
+def is_infra_note(note):
+    """True when a (None, note) failure was the browser backend, not Google."""
+    return str(note or "").startswith(INFRA_PREFIX)
+
+
+# Poll for the page instead of sleeping a flat 7-10 s. scraper.py already
+# learned this on the flight side ("A FIXED sleep snapshots an empty list
+# whenever the Mac is busy"). Here it is also money: a remote session bills by
+# wall-clock, so a fixed sleep bills the idle seconds too. A warm Google Hotels
+# page settles in ~2 s, so the old sleep spent ~5 s per property doing nothing
+# — ~40 s a night, ~20 min a month against a 60-min free cap.
+PAGE_WAIT_SECONDS = 12
+PAGE_POLL_SECONDS = 2
+
+
+def _wait_for_page(scraper, checkin, checkout, deadline=PAGE_WAIT_SECONDS):
+    """Eval until the page proves its dates, or the budget runs out.
+
+    Returns the first payload carrying BOTH dates; otherwise the last payload
+    seen, so parse_rate still gets to render its specific complaint."""
+    waited, last = 0.0, None
+    want_in, want_out = _label(checkin), _label(checkout)
+    while waited < deadline:
+        payload = _eval_payload(scraper, checkin, checkout)
+        if isinstance(payload, dict):
+            last = payload
+            if (want_in in (payload.get("checkin") or "")
+                    and want_out in (payload.get("checkout") or "")):
+                return payload                     # bound: stop paying to wait
+        time.sleep(PAGE_POLL_SECONDS)
+        waited += PAGE_POLL_SECONDS
+    return last
+
+
 def scrape_rate(entry, checkin, checkout, scraper=None, attempts=2):
     """One property. Never raises — a failure is a (None, reason) pair.
 
     Retries once on an empty render: a first-hit cold page is common and is
-    NOT the same thing as being blocked."""
+    NOT the same thing as being blocked. An infrastructure failure (no quota,
+    bad key) is neither, and is reported as itself instead of as a guess."""
     if scraper is None:
         import scraper as scraper_mod
         scraper = scraper_mod
+    diag = getattr(scraper, "DIAG", None)
     url = google_url(entry["query"], checkin, checkout)
     note = "never ran"
     for attempt in range(1, attempts + 1):
         try:
+            if isinstance(diag, dict):
+                diag["last_stderr"] = ""           # only THIS property's error
             scraper._run(f'browse open "{url}"')
-            time.sleep(7 + random.uniform(0, 3))   # jitter: never a metronome
-            payload = _eval_payload(scraper, checkin, checkout)
+            # Check the OPEN before polling. When the backend refuses (402),
+            # the follow-up eval has nothing to talk to and burns the CLI's
+            # full 30 s timeout before returning empty — observed live
+            # 2026-08-16. Bailing here turns a 30 s hang into an instant note.
+            infra = classify_stderr(
+                diag.get("last_stderr") if isinstance(diag, dict) else "")
+            if infra:
+                return None, infra
+            time.sleep(1)                          # let the navigation commit
+            payload = _wait_for_page(scraper, checkin, checkout)
             rate, note = parse_rate(payload, entry, checkin, checkout)
             if rate is not None:
                 return rate, note
+            infra = classify_stderr(
+                diag.get("last_stderr") if isinstance(diag, dict) else "")
+            if infra:
+                return None, infra                 # retrying cannot fix this
             if "empty" not in note and "no page payload" not in note:
                 break                              # a real mismatch: don't retry
         except Exception as e:                     # noqa: BLE001 — never kill a run
             note = f"crashed: {e}"
         if attempt < attempts:
-            time.sleep(4 + random.uniform(0, 4))
+            time.sleep(2 + random.uniform(0, 2))
     try:
         with open(DEBUG_FILE, "w") as f:
             f.write(f"{entry['key']} :: {note}\n{url}\n")

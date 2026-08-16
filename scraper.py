@@ -89,7 +89,7 @@ def parse_price(raw: str) -> Union[int, str]:
 # (2026-07-15: the browse daemon wedged mid-run; every page after that was a
 # silent about:blank stub and the Telegram alert wrongly blamed Google.)
 DIAG = {"timeouts": 0, "blank_pages": 0, "aborted_early": False,
-        "deadline_skips": []}
+        "deadline_skips": [], "last_stderr": ""}
 
 # ⏱ Soft wall-clock deadline (2026-08-02): past this, skippable searches are
 # dropped in reverse priority (Bali watch, then remaining one-way legs) so a
@@ -123,8 +123,15 @@ def _run(cmd: str) -> str:
         DIAG["timeouts"] += 1
         print(f"  WARN: command timed out after 30s: {cmd}")
         return ""
-    if not result.stdout.strip() and result.stderr.strip():
-        print(f"  WARN: '{cmd}' empty stdout, stderr: {result.stderr.strip()[:200]}")
+    err = result.stderr.strip()
+    if not result.stdout.strip() and err:
+        # Keep the LAST stderr where callers can read it. Printing it and then
+        # dropping it is how the 2026-08-11 Browserbase quota outage spent five
+        # nights reported as "Google likely throttling": the CLI said, in plain
+        # words, "402 Free plan browser minutes limit reached", and the only
+        # copy of that sentence went to cron.log where nothing was watching.
+        DIAG["last_stderr"] = err
+        print(f"  WARN: '{cmd}' empty stdout, stderr: {err[:200]}")
     return result.stdout.strip()
 
 
