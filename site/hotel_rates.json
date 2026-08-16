@@ -90,18 +90,18 @@
    "program": "THC + Edit",
    "angle": "Wildcard \u00b7 CSR select-hotels credit may stack (see note)",
    "bold": false,
-   "rate": 265,
+   "rate": 286,
    "checked": "2026-08-16",
    "offsets": [
     {
      "label": "2n",
-     "pct": 79,
+     "pct": 73,
      "band": "good"
     },
     {
      "label": "4n",
-     "pct": 50,
-     "band": "warn"
+     "pct": 46,
+     "band": "dim"
     }
    ]
   },
