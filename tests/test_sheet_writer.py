@@ -92,3 +92,12 @@ def test_multicity_rows_are_sheet_shaped():
     assert rows[1][0] == "① BOS→IST→DAC + DPS→BOS"
     assert rows[1][1] == "January 4, 2027" and rows[1][7] == 3647
     assert multicity_as_rows([], "x") == [] and multicity_as_rows(None, "x") == []
+
+
+def test_history_row_carries_the_stay_allin_column():
+    from sheet_writer import HISTORY_HEADERS, history_row
+    assert HISTORY_HEADERS[-1] == "🛏️ SIN all-in"
+    row = history_row({"date": "2026-08-19", "sg_nights": 4, "sg_allin": 4997})
+    assert len(row) == len(HISTORY_HEADERS)
+    assert row[-1] == "4N $4,997"
+    assert history_row({"date": "2026-08-19"})[-1] == ""

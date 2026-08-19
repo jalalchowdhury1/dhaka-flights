@@ -69,11 +69,11 @@ def test_missing_bali_watch_warns_once():
 
 def test_history_row_appends_bali_column():
     from sheet_writer import history_row, HISTORY_HEADERS
-    assert HISTORY_HEADERS[-1] == "🌴 Bali $"
+    assert HISTORY_HEADERS[-2] == "🌴 Bali $"
     row = history_row({"date": "2026-08-01", "main_total": 4600,
                        "bali_total": 4450})
-    assert row[-1] == 4450
-    assert history_row({"date": "x"})[-1] == ""
+    assert row[-2] == 4450
+    assert row[-1] == ""
 
 
 # ── Both Bali orders (2026-08-01 late: "probe both Bali orders nightly") ─────

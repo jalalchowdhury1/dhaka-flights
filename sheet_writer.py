@@ -67,7 +67,8 @@ HISTORY_HEADERS = ["Date", "⭐ IST+SIN main", "Direct OJ + hop", "SIN only",
                    "IST only", "TK 30h stopover", "3 one-ways", "Best $",
                    "Best structure",
                    "Ticket ① $", "Ticket ② $", "① airline", "② airline",
-                   "IST/DAC/SIN/5n-city", "💸 Budget $", "Order", "🌴 Bali $"]
+                   "IST/DAC/SIN/5n-city", "💸 Budget $", "Order", "🌴 Bali $",
+                   "🛏️ SIN all-in"]
 
 
 def history_row(entry: dict) -> list:
@@ -78,6 +79,9 @@ def history_row(entry: dict) -> list:
     nights = "/".join(str(v if v is not None else "–")
                       for v in (e.get("ist_nights"), e.get("dhaka_days"),
                                 e.get("sg_nights"), five_city))
+    allin = e.get("sg_allin")
+    stay_cell = (f"{e.get('sg_nights', '?')}N ${allin:,}"
+                 if isinstance(allin, (int, float)) else "")
     return [
         e.get("date", ""),
         main,
@@ -91,6 +95,7 @@ def history_row(entry: dict) -> list:
         e.get("budget_total") if e.get("budget_total") is not None else "",
         e.get("order", ""),
         e.get("bali_total") if e.get("bali_total") is not None else "",
+        stay_cell,
     ]
 
 
