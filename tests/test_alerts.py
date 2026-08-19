@@ -161,9 +161,16 @@ def test_old_format_yesterday_is_skipped_gracefully():
 def test_sg_nights_change_is_tagged_when_hotel_aware():
     import alerts
     prev = {"ticket1_total": 3600, "sg_nights": 2}
-    cur = {"ticket1_total": 3600, "sg_nights": 4, "sg_allin": 4997}
+    cur = {"ticket1_total": 3600, "sg_nights": 4, "sg_allin": 4997,
+           "stay_mode": "steering"}
     out = alerts.changes_since(prev, cur)
     assert any("Singapore nights: 2 → 4 (hotel-aware pick)" in c for c in out)
-    cur_plain = {"ticket1_total": 3600, "sg_nights": 4}
-    out2 = alerts.changes_since(prev, cur_plain)
+    # advisory mode: sg_allin present but the pick was flight-only — NO tag
+    cur_adv = {"ticket1_total": 3600, "sg_nights": 4, "sg_allin": 4997,
+               "stay_mode": "advisory"}
+    out2 = alerts.changes_since(prev, cur_adv)
     assert any(c == "Singapore nights: 2 → 4" for c in out2)
+    assert not any("hotel-aware" in c for c in out2)
+    cur_plain = {"ticket1_total": 3600, "sg_nights": 4}
+    out3 = alerts.changes_since(prev, cur_plain)
+    assert any(c == "Singapore nights: 2 → 4" for c in out3)

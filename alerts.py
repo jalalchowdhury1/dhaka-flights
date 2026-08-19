@@ -190,7 +190,7 @@ def changes_since(prev, cur) -> list:
         if (prev.get(key) is not None and cur.get(key) is not None
                 and prev[key] != cur[key]):
             suffix = (" (hotel-aware pick)"
-                      if key == "sg_nights" and cur.get("sg_allin") is not None
+                      if key == "sg_nights" and cur.get("stay_mode") == "steering"
                       else "")
             out.append(f"{label}: {prev[key]} → {cur[key]}{suffix}")
 

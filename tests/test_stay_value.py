@@ -187,6 +187,7 @@ def test_build_payload_steers_and_records_stay_value():
     assert sv["picked_n"] == 4 and sv["trip_n"] == 4 and sv["warning"] is None
     assert p["main"]["total"] == 4660             # flights-only, always
     assert p["history"][-1]["sg_allin"] == 4660 + 337
+    assert p["history"][-1]["stay_mode"] == "steering"
     assert not any("🛏️" in w for w in p["warnings"])
 
 
@@ -196,6 +197,7 @@ def test_build_payload_without_rates_is_tonights_old_behavior():
     assert p["stay_value"] is None
     assert p["main"]["sg_nights"] == 2
     assert p["history"][-1]["sg_allin"] is None
+    assert p["history"][-1]["stay_mode"] is None
 
 
 def test_build_payload_advisory_shows_table_but_does_not_steer():

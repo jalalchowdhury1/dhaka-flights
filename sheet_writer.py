@@ -63,6 +63,7 @@ def multicity_as_rows(tickets: list, route_label: str) -> list:
 # place, holding their old values, and are written blank from now on. The nights
 # column's last figure is Bali before 2026-08-01 and Bangkok after (same slot —
 # both are the trip's 5-night Marriott block); "Order" appended 2026-08-01.
+# "🛏️ SIN all-in" appended 2026-08-19 (stay-math layer).
 HISTORY_HEADERS = ["Date", "⭐ IST+SIN main", "Direct OJ + hop", "SIN only",
                    "IST only", "TK 30h stopover", "3 one-ways", "Best $",
                    "Best structure",
@@ -80,7 +81,7 @@ def history_row(entry: dict) -> list:
                       for v in (e.get("ist_nights"), e.get("dhaka_days"),
                                 e.get("sg_nights"), five_city))
     allin = e.get("sg_allin")
-    stay_cell = (f"{e.get('sg_nights', '?')}N ${allin:,}"
+    stay_cell = (f"{(e.get('sg_nights') or '?')}N ${allin:,}"
                  if isinstance(allin, (int, float)) else "")
     return [
         e.get("date", ""),
