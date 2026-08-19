@@ -336,6 +336,7 @@
   "warn": null,
   "checked": "2026-08-01"
  },
+ "stay_value": null,
  "ticket1_options": [
   {
    "kind": "1 ticket",

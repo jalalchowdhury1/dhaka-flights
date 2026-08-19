@@ -21,6 +21,7 @@ TOP = {
     "budget": (dict, type(None)),
     "bali": (dict, type(None)),
     "hotel": (dict, type(None)),
+    "stay_value": (dict, type(None)),
     "ticket1_options": (list,),
     "ticket2_options": (list,),
     "sg_tickets": (list,),
@@ -37,7 +38,8 @@ TOP = {
 # throughout treat that as normal, so the contract does too.
 HISTORY_REQUIRED = ["date"]
 HISTORY_NUMERIC = ["main_total", "ticket1_total", "ticket2_total",
-                   "bali_total", "budget_total", "other_order_total"]
+                   "bali_total", "budget_total", "other_order_total",
+                   "sg_allin"]
 
 # When main exists these must be present (str/dict); "total" must also be
 # numeric. legs_text is NOT part of the real shape (main carries "legs", a

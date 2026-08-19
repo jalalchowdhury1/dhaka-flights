@@ -140,3 +140,9 @@ def test_real_data_json_passes():
     except FileNotFoundError:
         pytest.skip("site/data.json not present in this environment")
     assert schema_check.validate(real) == []
+
+
+def test_stay_value_key_is_part_of_the_contract():
+    import schema_check
+    assert "stay_value" in schema_check.TOP
+    assert "sg_allin" in schema_check.HISTORY_NUMERIC

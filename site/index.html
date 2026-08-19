@@ -455,7 +455,7 @@ function validatePayload(d) {
              : typeof v === t && v !== null;
     if (!ok) probs.push(`'${k}' missing or not ${t}`);
   }
-  for (const k of ["main", "budget", "bali", "hotel"])
+  for (const k of ["main", "budget", "bali", "hotel", "stay_value"])
     if (d[k] !== null && d[k] !== undefined && typeof d[k] !== "object")
       probs.push(`'${k}' should be object or null`);
   // Numeric checks, mirroring schema_check.py's MAIN_NUMERIC/HISTORY_NUMERIC.
@@ -465,7 +465,7 @@ function validatePayload(d) {
   const lastH = Array.isArray(d.history) && d.history.length
     ? d.history[d.history.length - 1] : null;
   if (lastH && typeof lastH === "object")
-    for (const k of ["main_total", "ticket1_total", "ticket2_total", "bali_total", "budget_total"])
+    for (const k of ["main_total", "ticket1_total", "ticket2_total", "bali_total", "budget_total", "sg_allin"])
       if (lastH[k] != null && typeof lastH[k] !== "number")
         probs.push(`history[last].${k} is ${typeof lastH[k]}, expected number`);
   return probs;
