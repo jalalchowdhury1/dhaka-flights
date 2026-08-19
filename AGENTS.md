@@ -235,6 +235,30 @@ vs main. Surfaces as a 💸 block in Telegram, a collapsible card on the site,
 `budget_total` in history/data.json, and the Sheet History column "💸 Budget $"
 (appended, per the append-only rule).
 
+**🛏️ Stay math (`stay_value.py`, 2026-08-19):** the SIN night count (2-4
+band) is picked ALL-IN — flights + the bold SIN hotel's net out-of-pocket
+(rate ×1.12 tax − credits: $400/stay FHR or $350 Edit + $60/day, floored at
+0) — with each extra night valued at `EXTRA_NIGHT_WORTH = 225` (Jalal
+2026-08-19, derived from his own ≥70% book-now band / Athenee points-value /
+replacement cost) and a `DEAD_BAND = 25` incumbent bonus against nightly
+flapping (incumbent = last history entry's sg_nights, passed EXPLICITLY to
+verify — payload history dedupes same-day entries and cannot reproduce it).
+Implemented as an optional `hotel_cost` hook on `combo.order_trip`/
+`main_trip` (hookless callers behave exactly as before; `total` stays
+FLIGHTS-ONLY everywhere — history, chart, buy-signal). Mode ladder:
+**steering** (bold rate ≤3 days old) / **advisory** (stale — table renders,
+pick stays flight-only; the hotel job has gone 5 nights dark before) /
+**off** (no data; malformed rates also degrade to off — never raise, the
+2026-08-19 review's `_rows()` hardening). The block rides as
+`payload["stay_value"]`, history gains `sg_allin` + `stay_mode` (the
+"(hotel-aware pick)" changes tag fires ONLY on stay_mode="steering"),
+Telegram a 🛏️ line, the site a #/stays card + a Tonight chip, the Sheet an
+appended "🛏️ SIN all-in" column. A >$50/night cheaper non-bold SIN hotel
+triggers a re-bold watchdog note. verify.py re-derives the pick with its OWN
+duplicated constants (keep them in sync deliberately — second implementation
+is the point). Knobs live at the top of stay_value.py like alerts.BUY_BELOW.
+Spec: `docs/superpowers/specs/2026-08-19-hotel-aware-sin-nights-design.md`.
+
 **Hard rules:** 5 Bangkok nights, 2 Istanbul nights, **Singapore 2–4 nights
 (a FLEX BAND, not a fixed number)** — `MIN_SG_NIGHTS`/`MAX_SG_NIGHTS`; Jalal
 2026-07-27 "minimum of 2 nights" (an overnight first hop had priced a 1-night
@@ -511,18 +535,22 @@ reason.
   `DIAG["deadline_skips"]`; Ticket ①/② multi-city searches are never skipped.
   Interactive use has no deadline (`begin_run` is opt-in)
 - `combo.py` — trip rules, `ORDERS`, `order_trip`, `main_trip`, `budget_trip`,
-  `ticket1_options`, `ticket2_options` (+ retired `best_structures` /
-  `best_combos` / `best_singapore` / `cheapest_by_leg` / `*_bali`)
+  `ticket1_options`, `ticket2_options`, `sin_night_flight_totals` (+ retired
+  `best_structures` / `best_combos` / `best_singapore` / `cheapest_by_leg` /
+  `*_bali`)
 - `baggage.py` — sourced per-carrier allowance table; `annotate`, `warnings` (§4c)
 - `hotels.py` — curated Marriott award-stay references + `hotel_plan(trip)`
   (order-aware stay dates; points are checked references, never scraped)
+- `stay_value.py` — 🛏️ hotel-aware SIN night-count layer (§1 Stay math):
+  knobs, mode ladder, the combo hook, the payload block, the re-bold watchdog
 - `hotel_rates.py` / `run_hotel_rates.py` / `run_hotel_rates.sh` — the nightly
   IST/SIN public-rate refresh (§1 "Nightly hotel rates"): shortlist config,
   fail-closed date/property guard, offset math, and the 5 AM launchd job that
   writes `site/hotel_rates.json`. A miss keeps the last good rate and its date
 - `alerts.py` — buy-signal stages, price context, countdown, change diff (§4d)
 - `verify.py` — the nightly 3-perspective independent re-check (keep it
-  independent of combo.py; that's the point)
+  independent of combo.py; that's the point) + the 🛏️ stay-math
+  re-derivation with deliberately duplicated constants
 - `publish.py` — `build_today` → payload → `write_payload` (backup, atomic
   write, push). git push retries 3× (10s/30s backoff) then warns Telegram via
   `_telegram_warn` — a failed push can no longer leave the site silently stale
@@ -553,5 +581,5 @@ reason.
   - `orderInfo()` maps every trip shape incl. `bali-rev`; keep it in sync
     with combo.ORDERS when orders change.
 - `main.py` — manual run: scrape + sheet + terminal summary (no Telegram/publish)
-- `tests/` — pytest suite (152 tests; `test_main_trip.py` holds the shared trip
+- `tests/` — pytest suite (287 tests; `test_main_trip.py` holds the shared trip
   fixtures, `test_baggage.py` guards the allowance table's honesty)
