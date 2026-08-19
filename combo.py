@@ -454,12 +454,16 @@ def _split_nights(cfg, mid_nights, final_nights):
     return final_nights, mid_nights
 
 
-def order_trip(flights, openjaws, tickets2, order_key):
+def order_trip(flights, openjaws, tickets2, order_key, hotel_cost=None):
     """Best complete trip for ONE order (Ticket ① with the right return city +
     the cheapest valid middle), or None. Tier rules as agreed:
       - 5 Bangkok nights ideal; 4/6 rank below and get flagged
       - ≥2 Singapore nights always outrank fewer; <2 survives only flagged
-      - nothing is dropped silently."""
+      - nothing is dropped silently.
+    hotel_cost (2026-08-19 stay math): optional f(sin_nights) → $ adjustment
+    added to a candidate's flight cost when ranking WITHIN the selected pool —
+    the validity tiers above still run first, and the returned `total` stays
+    flights-only (history/chart rule)."""
     cfg = ORDERS[order_key]
     ojs = [o for o in (openjaws or [])
            if o.get("kind") == "stopover2" and o.get("ret_city") == cfg["ret_city"]
@@ -491,7 +495,9 @@ def order_trip(flights, openjaws, tickets2, order_key):
     pool = _sg_ok(exact) or _sg_ok(near) or exact or near
     if not pool:
         return None
-    m, bkk_nights, sin_nights, dhaka_days = min(pool, key=lambda t: t[0]["cost"])
+    cost_key = ((lambda t: t[0]["cost"] + hotel_cost(t[2])) if hotel_cost
+                else (lambda t: t[0]["cost"]))
+    m, bkk_nights, sin_nights, dhaka_days = min(pool, key=cost_key)
 
     alt_note = None
     pref = [t for t in pool if t[0]["preferred"]]
@@ -528,15 +534,20 @@ def order_trip(flights, openjaws, tickets2, order_key):
     }
 
 
-def main_trip(flights, openjaws, sg_tickets):
+def main_trip(flights, openjaws, sg_tickets, hotel_cost=None):
     """THE trip: both orders priced, the cheaper VALID one wins (a flagged day
     never outranks a clean one). The losing order rides along as
-    `other_order` (slim dict with its Δ) so it's surfaced, never hidden."""
-    trips = [t for t in (order_trip(flights, openjaws, sg_tickets or [], k)
-                         for k in ORDERS) if t]
+    `other_order` (slim dict with its Δ) so it's surfaced, never hidden.
+    With hotel_cost, both the within-band pick and the cross-order comparison
+    are judged all-in (flights + hook), so a 4N-SIN order isn't unfairly
+    penalized for its hotel-justified shape; totals stay flights-only."""
+    trips = [t for t in (order_trip(flights, openjaws, sg_tickets or [], k,
+                                    hotel_cost=hotel_cost) for k in ORDERS) if t]
     if not trips:
         return None
-    trips.sort(key=lambda s: (not s["valid"], s["total"]))
+    adj = ((lambda s: s["total"] + hotel_cost(s["sg_nights"])) if hotel_cost
+           else (lambda s: s["total"]))
+    trips.sort(key=lambda s: (not s["valid"], adj(s)))
     win = dict(trips[0])
     if len(trips) > 1:
         o = trips[1]

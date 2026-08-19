@@ -208,3 +208,46 @@ def test_five_singapore_nights_survive_only_flagged():
     # …but never beats an in-band option, even a pricier one:
     t2 = main_trip(FLIGHTS, [TICKET1], SG_TICKETS + [five_night])
     assert t2["sg_nights"] == 2 and t2["total"] == 4600
+
+
+def test_hotel_hook_flips_the_pick_within_the_band():
+    # 4N shape is $60 pricier on flights; the hook (worth-it knob) flips it.
+    four_night = dict(TICKET2, out_date="January 28, 2027",
+                      out_arrive="January 28, 2027", price_total=1060,
+                      airline="Biman", link="http://t2flex")
+    tickets2 = SG_TICKETS + [four_night]
+    flat = main_trip(FLIGHTS, [TICKET1], tickets2)
+    assert flat["sg_nights"] == 2 and flat["total"] == 4600   # flight-only pick
+    hook = lambda n: {2: 0, 3: -73, 4: -113}.get(n, 0)        # St.Regis@218 math
+    t = main_trip(FLIGHTS, [TICKET1], tickets2, hotel_cost=hook)
+    assert t["sg_nights"] == 4
+    assert t["total"] == 3600 + 1060      # total stays FLIGHTS-ONLY — history rule
+
+
+def test_hotel_hook_cannot_pull_an_out_of_band_shape_in():
+    # Validity tiers run BEFORE the hook: a 5-night SIN shape stays a flagged
+    # fallback even if a (buggy) hook rewards it hugely.
+    five_night = dict(TICKET2, out_date="January 27, 2027",
+                      out_arrive="January 27, 2027", price_total=500,
+                      airline="Biman", link="http://t2long")
+    hook = lambda n: -10_000 if n == 5 else 0
+    t = main_trip(FLIGHTS, [TICKET1], SG_TICKETS + [five_night], hotel_cost=hook)
+    assert t["sg_nights"] == 2 and t["valid"] is True
+
+
+def test_cross_order_winner_is_judged_all_in_too():
+    # Flights-only: SIN-first 2N wins ($4,600 < $4,700). All-in with the hook:
+    # BKK-first's 4N SIN shape wins (4700−113=4587 < 4600).
+    dac_bkk28 = dict(_f("DAC→BKK", "January 28, 2027", "January 28, 2027", 600),
+                     airline="US-Bangla Airlines", link="http://db28")
+    bkk_sin2 = dict(_f("BKK→SIN", "February 2, 2027", "February 2, 2027", 300),
+                    airline="Scoot", link="http://bs2")
+    flights = FLIGHTS + [dac_bkk28, bkk_sin2]
+    t1s = [TICKET1, TICKET1_SIN]
+    flat = main_trip(flights, t1s, SG_TICKETS)
+    assert flat["order"] == "SIN-first" and flat["total"] == 4600
+    hook = lambda n: {2: 0, 3: -73, 4: -113}.get(n, 0)
+    t = main_trip(flights, t1s, SG_TICKETS, hotel_cost=hook)
+    assert t["order"] == "BKK-first"
+    assert t["sg_nights"] == 4 and t["bkk_nights"] == 5
+    assert t["total"] == 3800 + 900       # flights-only total of the 4N shape
