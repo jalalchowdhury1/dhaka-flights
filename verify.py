@@ -22,6 +22,13 @@ SG_BAND = (2, 4)
 BKK_IDEAL = 5
 MAX_DHAKA = 29
 
+# 🛏️ Stay-math constants — deliberately DUPLICATED from stay_value.py (this
+# file's value is being a second implementation; keep the numbers in sync).
+STAY_WORTH = 225
+STAY_DEAD_BAND = 25
+STAY_TAX = 0.12
+STAY_FHR_FIXED, STAY_EDIT_FIXED, STAY_DAILY = 400, 350, 60
+
 _ORDER_SPEC = {
     "BKK-first": ("DAC→BKK", "BKK→SIN", "SIN", True),
     "SIN-first": ("DAC→SIN", "SIN→BKK", "BKK", False),
@@ -81,19 +88,20 @@ def _middles(flights, tickets2, r1, r2, order_key):
     return out
 
 
-def strict_best(flights, tickets1, tickets2, order_key):
-    """Cheapest trip total in the EXACT asked-for shape for one order
-    (5 BKK nights, 2-4 SIN nights, visa + deadline), or None."""
+def strict_by_sg(flights, tickets1, tickets2, order_key):
+    """{sin_nights: cheapest strict-shape total} for one order (5 BKK nights,
+    in-band SIN, visa + deadline) — independent re-derivation of combo's
+    candidate table."""
     r1, r2, ret_city, bkk_is_mid = _ORDER_SPEC[order_key]
     ojs = [o for o in tickets1 or []
            if o.get("ret_city") == ret_city and _priced(o)]
     if not ojs:
-        return None
+        return {}
     oj = min(ojs, key=lambda o: o["price_total"])
     ret, dac_in = _d(oj.get("ret_date", "")), _d(oj.get("out_arrive", ""))
     if not (ret and dac_in):
-        return None
-    best = None
+        return {}
+    best = {}
     for m in _middles(flights, tickets2, r1, r2, order_key):
         dhaka = (m["dhaka_out"] - dac_in).days + 1
         if not 1 <= dhaka <= MAX_DHAKA:
@@ -105,12 +113,47 @@ def strict_best(flights, tickets1, tickets2, order_key):
         if bkk != BKK_IDEAL or not SG_BAND[0] <= sg <= SG_BAND[1]:
             continue
         total = oj["price_total"] + m["cost"]
-        if best is None or total < best:
-            best = total
+        if sg not in best or total < best[sg]:
+            best[sg] = total
     return best
 
 
-def verify_payload(payload, flights, tickets1, sg_tickets):
+def strict_best(flights, tickets1, tickets2, order_key):
+    """Cheapest trip total in the EXACT asked-for shape for one order, or None."""
+    by = strict_by_sg(flights, tickets1, tickets2, order_key)
+    return min(by.values()) if by else None
+
+
+def _stay_adj(payload, rates):
+    """The stay-math score adjuster, re-derived from the raw rates dict with
+    this module's own constants — None unless the payload claims steering AND
+    the rates carry a usable bold SIN row. Incumbent = the sg_nights of the
+    PREVIOUS history entry (today's entry is last). Defensive on the rates
+    shape: malformed input degrades to None (flight-only checks), never raises."""
+    if ((payload.get("stay_value") or {}).get("mode") != "steering"
+            or not isinstance(rates, dict)):
+        return None
+    rows = rates.get("rows")
+    row = next((r for r in (rows if isinstance(rows, list) else [])
+                if isinstance(r, dict) and r.get("city") == "SIN"
+                and r.get("bold")
+                and isinstance(r.get("rate"), (int, float))), None)
+    if not row:
+        return None
+    hist = payload.get("history") or []
+    incumbent = hist[-2].get("sg_nights") if len(hist) >= 2 else None
+    fixed = (STAY_FHR_FIXED if "FHR" in (row.get("program") or "")
+             else STAY_EDIT_FIXED)
+
+    def adj(n):
+        net = max(0, round(n * row["rate"] * (1 + STAY_TAX)
+                           - (fixed + STAY_DAILY * n)))
+        return (net - STAY_WORTH * (n - SG_BAND[0])
+                - (STAY_DEAD_BAND if n == incumbent else 0))
+    return adj
+
+
+def verify_payload(payload, flights, tickets1, sg_tickets, rates=None):
     """Return a list of human-readable discrepancy strings (empty = verified)."""
     problems = []
     main = payload.get("main")
@@ -118,12 +161,17 @@ def verify_payload(payload, flights, tickets1, sg_tickets):
         return []                     # nothing priced; sanity already screams
 
     # ── 1. RECOMPUTE ────────────────────────────────────────────────────────
+    adj = _stay_adj(payload, rates)
     claimed = {main.get("order"): (main.get("total"), main.get("valid"))}
     other = main.get("other_order") or {}
     if other:
         claimed[other.get("order")] = (other.get("total"), other.get("valid"))
+    claimed_n = {main.get("order"): main.get("sg_nights")}
+    if other:
+        claimed_n[other.get("order")] = other.get("sg_nights")
     for order in _ORDER_SPEC:
-        strict = strict_best(flights, tickets1, sg_tickets, order)
+        by_n = strict_by_sg(flights, tickets1, sg_tickets, order)
+        strict = min(by_n.values()) if by_n else None
         if order not in claimed:
             if strict is not None:
                 problems.append(f"re-check: a strict-shape {order} trip exists "
@@ -135,15 +183,28 @@ def verify_payload(payload, flights, tickets1, sg_tickets):
             if strict is None:
                 problems.append(f"re-check: {order} claims a clean shape but "
                                 f"the independent recompute finds none")
+            elif adj:
+                exp_n = min(by_n, key=lambda n: by_n[n] + adj(n))
+                got_n = claimed_n.get(order)
+                if got_n != exp_n:
+                    problems.append(f"re-check: {order} picked {got_n} SIN "
+                                    f"nights but the hotel-aware recompute "
+                                    f"picks {exp_n} SIN nights")
+                elif total != by_n.get(got_n):
+                    problems.append(f"re-check: {order} total ${total:,} ≠ "
+                                    f"independent recompute "
+                                    f"${by_n[got_n]:,} at {got_n} SIN nights")
             elif total != strict:
                 problems.append(f"re-check: {order} total ${total:,} ≠ "
                                 f"independent recompute ${strict:,}")
         elif strict is not None and strict <= total:
             problems.append(f"re-check: {order} is flagged, but a strict-shape "
                             f"trip exists at ${strict:,}")
-    if (other and other.get("valid") and main.get("valid")
-            and other["total"] < main["total"]):
-        problems.append("re-check: the losing order is cheaper than the winner")
+    if other and other.get("valid") and main.get("valid"):
+        a = adj or (lambda n: 0)
+        if (other["total"] + a(other.get("sg_nights"))
+                < main["total"] + a(main.get("sg_nights"))):
+            problems.append("re-check: the losing order is cheaper than the winner")
 
     # ── 2. ARITHMETIC ───────────────────────────────────────────────────────
     oj = main.get("openjaw") or {}
@@ -164,6 +225,13 @@ def verify_payload(payload, flights, tickets1, sg_tickets):
     hist = payload.get("history") or []
     if hist and hist[-1].get("main_total") != main.get("total"):
         problems.append("re-check: the history entry doesn't mirror the trip total")
+    sv = payload.get("stay_value") or {}
+    for r in sv.get("rows") or []:
+        if (isinstance(r.get("flights"), (int, float))
+                and isinstance(r.get("hotel_net"), (int, float))
+                and r.get("allin") != r["flights"] + r["hotel_net"]):
+            problems.append(f"re-check: stay-math row {r.get('n')}N all-in "
+                            f"≠ flights + hotel net")
 
     # ── 3. CONTRACT ─────────────────────────────────────────────────────────
     if main.get("valid"):
