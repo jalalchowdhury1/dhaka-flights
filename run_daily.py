@@ -121,9 +121,12 @@ def main():
     # 🛏️ Stay math: one rates load for the whole run — the same dict feeds
     # the pick (via publish), this sanity-path trip, and verify's independent
     # re-derivation. hotel_hook is None unless the bold SIN rate is fresh.
+    # hotel_hook defaults today=date.today(); publish passes its own as_of —
+    # they can only differ across a midnight boundary mid-run, which the
+    # 25-min budget makes irrelevant.
     stay_rates = stay_value.load_rates()
-    stay_hook = stay_value.hotel_hook(
-        stay_rates, (publish.last_history_entry() or {}).get("sg_nights"))
+    stay_incumbent = (publish.last_history_entry() or {}).get("sg_nights")
+    stay_hook = stay_value.hotel_hook(stay_rates, stay_incumbent)
     trip = main_trip(flights, tickets1, sg_tickets, hotel_cost=stay_hook)
     bali = bali_watch_trip(flights, bali_t1, bali_fwd, bali_rev, tickets1)
     warnings = self_check(flights, tickets1, trip, publish.last_history_entry(),
@@ -158,7 +161,8 @@ def main():
     def _run_verify():
         import verify
         return verify.verify_payload(payload, flights, tickets1, sg_tickets,
-                                     rates=stay_rates)
+                                     rates=stay_rates,
+                                     incumbent_n=stay_incumbent)
     issues = _check("re-check", _run_verify)
     _fold_warnings(payload, issues, "🔎", "VERIFY")
     if not issues:

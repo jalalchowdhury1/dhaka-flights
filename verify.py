@@ -118,18 +118,14 @@ def strict_by_sg(flights, tickets1, tickets2, order_key):
     return best
 
 
-def strict_best(flights, tickets1, tickets2, order_key):
-    """Cheapest trip total in the EXACT asked-for shape for one order, or None."""
-    by = strict_by_sg(flights, tickets1, tickets2, order_key)
-    return min(by.values()) if by else None
-
-
-def _stay_adj(payload, rates):
+def _stay_adj(payload, rates, incumbent_n):
     """The stay-math score adjuster, re-derived from the raw rates dict with
     this module's own constants — None unless the payload claims steering AND
-    the rates carry a usable bold SIN row. Incumbent = the sg_nights of the
-    PREVIOUS history entry (today's entry is last). Defensive on the rates
-    shape: malformed input degrades to None (flight-only checks), never raises."""
+    the rates carry a usable bold SIN row. incumbent_n: the sg_nights of the
+    last on-disk history entry BEFORE tonight's write — passed by the caller
+    because payload['history'] dedupes same-day entries and cannot reliably
+    reproduce it. Defensive on the rates shape: malformed input degrades to
+    None (flight-only checks), never raises."""
     if ((payload.get("stay_value") or {}).get("mode") != "steering"
             or not isinstance(rates, dict)):
         return None
@@ -140,8 +136,6 @@ def _stay_adj(payload, rates):
                 and isinstance(r.get("rate"), (int, float))), None)
     if not row:
         return None
-    hist = payload.get("history") or []
-    incumbent = hist[-2].get("sg_nights") if len(hist) >= 2 else None
     fixed = (STAY_FHR_FIXED if "FHR" in (row.get("program") or "")
              else STAY_EDIT_FIXED)
 
@@ -149,11 +143,12 @@ def _stay_adj(payload, rates):
         net = max(0, round(n * row["rate"] * (1 + STAY_TAX)
                            - (fixed + STAY_DAILY * n)))
         return (net - STAY_WORTH * (n - SG_BAND[0])
-                - (STAY_DEAD_BAND if n == incumbent else 0))
+                - (STAY_DEAD_BAND if n == incumbent_n else 0))
     return adj
 
 
-def verify_payload(payload, flights, tickets1, sg_tickets, rates=None):
+def verify_payload(payload, flights, tickets1, sg_tickets, rates=None,
+                   incumbent_n=None):
     """Return a list of human-readable discrepancy strings (empty = verified)."""
     problems = []
     main = payload.get("main")
@@ -161,7 +156,7 @@ def verify_payload(payload, flights, tickets1, sg_tickets, rates=None):
         return []                     # nothing priced; sanity already screams
 
     # ── 1. RECOMPUTE ────────────────────────────────────────────────────────
-    adj = _stay_adj(payload, rates)
+    adj = _stay_adj(payload, rates, incumbent_n)
     claimed = {main.get("order"): (main.get("total"), main.get("valid"))}
     other = main.get("other_order") or {}
     if other:

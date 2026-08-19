@@ -129,3 +129,31 @@ def test_malformed_rates_degrade_verify_not_crash():
     probs = _verify.verify_payload(payload, _MT_FLIGHTS, [_MT_T1], t2,
                                    rates={"rows": None})
     assert probs == []
+
+
+def test_incumbent_is_explicit_input_not_history_reconstruction():
+    # Same-day-rerun shape: tonight's earlier run picked 4N (that entry is
+    # deduped OUT of payload history), yesterday was 2N. The 4N price is set
+    # so ONLY the incumbent=4 dead-band keeps 4N winning.
+    from combo import main_trip
+    pricier_four = dict(_MT_T2, out_date="January 28, 2027",
+                        out_arrive="January 28, 2027", price_total=1123,
+                        airline="Biman", link="http://t2flex")
+    t2 = _MT_SG + [pricier_four]
+    hook = _sv.hotel_hook(_RATES, 4, today=_dt.date(2026, 8, 19))
+    main = main_trip(_MT_FLIGHTS, [_MT_T1], t2, hotel_cost=hook)
+    assert main["sg_nights"] == 4                 # dead-band held the shape
+    payload = {
+        "main": main,
+        "history": [{"date": "2026-08-18", "sg_nights": 2, "main_total": 4600},
+                    {"date": "2026-08-19", "main_total": main["total"]}],
+        "stay_value": {"mode": "steering"},
+    }
+    # With the REAL incumbent (4), verify agrees:
+    assert _verify.verify_payload(payload, _MT_FLIGHTS, [_MT_T1], t2,
+                                  rates=_RATES, incumbent_n=4) == []
+    # With the history-[-2]-style wrong incumbent (2), verify would cry wolf —
+    # proving the reconstruction it no longer does was genuinely dangerous:
+    probs = _verify.verify_payload(payload, _MT_FLIGHTS, [_MT_T1], t2,
+                                   rates=_RATES, incumbent_n=2)
+    assert any("picked 4" in p for p in probs)
