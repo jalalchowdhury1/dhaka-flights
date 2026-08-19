@@ -1508,3 +1508,156 @@ git push
 - [ ] **Step 4: Confirm the tree is safe for tonight's jobs**
 
 `git status` must be clean; suite green. The midnight flight run + 5am hotel run will exercise the layer live — tomorrow's Telegram brief should carry the 🛏️ line (steering, since rates were fresh today).
+
+---
+
+### Task 15: 🏨 Hotel rate-moves morning alert (added mid-execution, 2026-08-19)
+
+> Jalal, 2026-08-19 morning: "The morning telegram message that I get, it
+> should also give me any major changes in hotel prices please."
+> Design decision: the alert lives in the **5am hotel job**, not the midnight
+> flight brief — the brief is built ~5h before the rates refresh, so anything
+> it said would be a day stale; the 5am job holds old + new rates in hand and
+> lands in the same chat before he wakes. Silent when nothing major moved.
+
+**Files:**
+- Modify: `hotel_rates.py` (constants + two pure functions, near the other knobs)
+- Modify: `run_hotel_rates.py:227-236` (capture prev before build; send after write)
+- Modify: `tests/test_hotel_rates.py` (append)
+
+- [ ] **Step 1: Write the failing tests** (append to `tests/test_hotel_rates.py`)
+
+```python
+# ── 🏨 rate-moves morning alert (2026-08-19) ────────────────────────────────
+def _rates_file(rows):
+    return {"updated": "2026-08-19", "rows": rows}
+
+
+def test_rate_moves_fires_on_abs_and_pct_thresholds():
+    prev = _rates_file([
+        {"key": "stregis_sin", "name": "St. Regis Singapore", "rate": 248},
+        {"key": "ritz_ist", "name": "Ritz-Carlton Istanbul", "rate": 439},
+        {"key": "panpacific", "name": "Pan Pacific Orchard", "rate": 255},
+    ])
+    new = _rates_file([
+        {"key": "stregis_sin", "name": "St. Regis Singapore", "rate": 218},  # −$30, −12.1% → pct fires
+        {"key": "ritz_ist", "name": "Ritz-Carlton Istanbul", "rate": 484},   # +$45, +10.3% → both fire
+        {"key": "panpacific", "name": "Pan Pacific Orchard", "rate": 262},   # +$7, +2.7% → quiet
+    ])
+    moves = hotel_rates.rate_moves(prev, new)
+    assert [(m[0], m[1], m[2]) for m in moves] == [
+        ("St. Regis Singapore", 248, 218),
+        ("Ritz-Carlton Istanbul", 439, 484),
+    ]
+
+
+def test_rate_moves_ignores_stale_missing_and_new_rows():
+    prev = _rates_file([
+        {"key": "a", "name": "A", "rate": 300},
+        {"key": "b", "name": "B", "rate": None},
+    ])
+    new = _rates_file([
+        {"key": "a", "name": "A", "rate": 300},          # unchanged (kept-stale shape)
+        {"key": "b", "name": "B", "rate": 200},          # no prior number → no move
+        {"key": "c", "name": "C", "rate": 100},          # new row → no move
+    ])
+    assert hotel_rates.rate_moves(prev, new) == []
+    assert hotel_rates.rate_moves(None, new) == []
+    assert hotel_rates.rate_moves(prev, None) == []
+
+
+def test_moves_message_format_and_silence():
+    assert hotel_rates.moves_message([]) is None
+    msg = hotel_rates.moves_message([("St. Regis Singapore", 248, 218),
+                                     ("Ritz-Carlton Istanbul", 439, 484)])
+    assert msg == ("🏨 Hotel rate moves: St. Regis Singapore $248→$218 (▼12%) · "
+                   "Ritz-Carlton Istanbul $439→$484 (▲10%)")
+```
+
+- [ ] **Step 2: Run to verify failure**
+
+Run: `python3 -m pytest tests/test_hotel_rates.py -q`
+Expected: FAIL — `AttributeError: ... no attribute 'rate_moves'`
+
+- [ ] **Step 3: Implement** (add to `hotel_rates.py`, after the CREDIT_POOL block)
+
+```python
+# 🏨 Morning movers alert (Jalal 2026-08-19: "give me any major changes in
+# hotel prices"). A mover = the rate changed ≥ MOVE_ALERT_PCT% of its old
+# value OR ≥ $MOVE_ALERT_ABS/night — either fires. Lives in this job (not the
+# midnight brief) because rates refresh at 5am, hours after the brief is
+# built; here old and new are both in hand and the alert lands pre-wake-up.
+MOVE_ALERT_PCT = 10
+MOVE_ALERT_ABS = 40
+
+
+def rate_moves(prev, new):
+    """Major nightly movers: [(name, old_rate, new_rate)]. A kept-stale row
+    never registers (fail-closed keeps the old number verbatim), so this only
+    ever reports genuinely re-checked rates. None-safe on both sides."""
+    old = {r.get("key"): r.get("rate") for r in (prev or {}).get("rows", [])}
+    out = []
+    for r in (new or {}).get("rows", []):
+        o, n = old.get(r.get("key")), r.get("rate")
+        if not (isinstance(o, (int, float)) and isinstance(n, (int, float))):
+            continue
+        if abs(n - o) >= MOVE_ALERT_ABS or abs(n - o) / o * 100 >= MOVE_ALERT_PCT:
+            out.append((r.get("name") or r.get("key"), o, n))
+    return out
+
+
+def moves_message(moves):
+    """One compact Telegram line for the movers, or None when quiet."""
+    if not moves:
+        return None
+    parts = []
+    for name, o, n in moves:
+        pct = round(abs(n - o) / o * 100)
+        arrow = "▼" if n < o else "▲"
+        parts.append(f"{name} ${o:,.0f}→${n:,.0f} ({arrow}{pct}%)")
+    return "🏨 Hotel rate moves: " + " · ".join(parts)
+```
+
+(Division safety: `o` is a numeric rate from a written rates file; the
+shortlist never writes 0 — but `isinstance` already excludes None, and a
+0 rate would mean a parse bug that the date-guard rejects. If paranoia wins,
+guard `o and` before the division.)
+
+- [ ] **Step 4: Wire into `run_hotel_rates.main`**
+
+Capture the previous file BEFORE build, right above `data = hotel_rates.build(...)`:
+
+```python
+    prev = hotel_rates.load_previous()
+    data = hotel_rates.build(payload, scraped=scraped)
+```
+
+(If `main` doesn't currently call `load_previous` at that point, add the call —
+it's a read-only json load of site/hotel_rates.json; check `build`'s own use of
+previous data is unaffected.)
+
+Then right AFTER `hotel_rates.write(data)` (before the git block, so a push
+failure can't suppress the alert):
+
+```python
+    # 🏨 Morning movers alert (2026-08-19): major overnight changes land in
+    # Telegram at ~5am, before wake-up — silent when nothing moved.
+    moves = hotel_rates.rate_moves(prev, data)
+    if moves:
+        try:
+            from notify_telegram import send_message
+            send_message(hotel_rates.moves_message(moves))
+        except Exception as e:                   # noqa: BLE001
+            print(f"WARN: telegram moves alert failed: {e}")
+```
+
+- [ ] **Step 5: Run tests + full suite**
+
+Run: `python3 -m pytest tests/test_hotel_rates.py -q` → PASS, then `python3 -m pytest tests/ -q` → green.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add hotel_rates.py run_hotel_rates.py tests/test_hotel_rates.py
+git commit -m "feat: 🏨 morning Telegram alert on major hotel-rate moves (≥10% or ≥\$40)"
+```
