@@ -3,6 +3,8 @@ Spec: docs/superpowers/specs/2026-08-19-hotel-aware-sin-nights-design.md"""
 import sys, os, datetime
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import stay_value
+import publish
+from tests.test_main_trip import FLIGHTS, TICKET1, SG_TICKETS, TICKET2
 
 TODAY = datetime.date(2026, 8, 19)
 
@@ -171,10 +173,6 @@ def test_watchdog_zero_nights_guard():
     assert stay_value._watchdog(RATES, stay_value.bold_row(RATES), 0) is None
 
 
-from tests.test_main_trip import FLIGHTS, TICKET1, SG_TICKETS, TICKET2
-import publish
-
-
 def test_build_payload_steers_and_records_stay_value():
     four_night = dict(TICKET2, out_date="January 28, 2027",
                       out_arrive="January 28, 2027", price_total=1060,
@@ -224,3 +222,22 @@ def test_incumbent_comes_from_the_last_history_entry():
                               sg_tickets=SG_TICKETS + [four_night],
                               stay_rates=RATES)
     assert p["main"]["sg_nights"] == 4
+
+
+def test_malformed_rates_never_crash_publish():
+    for bad in ({"rows": None}, {"rows": "x"}, {"rows": [1, 2]}, [], "junk", 123):
+        p = publish.build_payload(FLIGHTS, [TICKET1], [], "2026-08-19",
+                                  sg_tickets=SG_TICKETS, stay_rates=bad)
+        assert p["main"]["sg_nights"] == 2          # degraded, not crashed
+        assert (p["stay_value"] or {}).get("mode") in (None, "off")
+
+
+def test_mismatch_warning_folds_into_payload(monkeypatch):
+    import stay_value as sv_mod
+    real_build = sv_mod.build
+    def fake_build(*a, **k):
+        return dict(real_build(*a, **k), warning="synthetic mismatch for test")
+    monkeypatch.setattr(sv_mod, "build", fake_build)
+    p = publish.build_payload(FLIGHTS, [TICKET1], [], "2026-08-19",
+                              sg_tickets=SG_TICKETS, stay_rates=RATES)
+    assert any(w == "🛏️ synthetic mismatch for test" for w in p["warnings"])

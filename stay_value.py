@@ -48,11 +48,19 @@ def load_rates(path=RATES_FILE):
         return None
 
 
+def _rows(rates):
+    """The shortlist rows, defensively: anything but a list of dicts is [] —
+    garbage input must degrade to mode 'off', never raise (publish calls this
+    inside the nightly run; AGENTS.md: publish must never crash the run)."""
+    rows = rates.get("rows") if isinstance(rates, dict) else None
+    return [r for r in rows if isinstance(r, dict)] if isinstance(rows, list) else []
+
+
 def bold_row(rates, city="SIN"):
     """The curated play — the bold row for the city, rate present. The bold
     flag is hand-set in hotel_rates.SHORTLIST (2026-08-01 research); re-bolding
     a row switches the decision hotel with no logic change here."""
-    for r in (rates or {}).get("rows", []):
+    for r in _rows(rates):
         if (r.get("city") == city and r.get("bold")
                 and isinstance(r.get("rate"), (int, float))):
             return r
@@ -122,7 +130,7 @@ def _watchdog(rates, row, n):
         return None
     bold_pn = hotel_net(row["rate"], n, row.get("program", "FHR")) / n
     best = None
-    for r in (rates or {}).get("rows", []):
+    for r in _rows(rates):
         if (r.get("city") != "SIN" or r.get("bold")
                 or not isinstance(r.get("rate"), (int, float))):
             continue

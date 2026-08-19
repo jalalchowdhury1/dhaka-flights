@@ -81,7 +81,7 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
         as_of = datetime.date.today()
     incumbent_n = (history[-1] or {}).get("sg_nights") if history else None
     hook = (stay_value.hotel_hook(stay_rates, incumbent_n, today=as_of)
-            if stay_rates else None)
+            if stay_rates is not None else None)
     main = main_trip(flights, openjaws, sg_tickets or [], hotel_cost=hook)
     if main:
         # Baggage rides inside the trip so history keeps the rules that applied
