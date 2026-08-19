@@ -46,6 +46,41 @@ CREDIT_POOL = {
 }
 CREDIT_POOL_EDIT = {("SIN", 2): 470, ("SIN", 4): 590}
 
+# 🏨 Morning movers alert (Jalal 2026-08-19: "give me any major changes in
+# hotel prices"). A mover = the rate changed ≥ MOVE_ALERT_PCT% of its old
+# value OR ≥ $MOVE_ALERT_ABS/night — either fires. Lives in this job (not the
+# midnight brief) because rates refresh at 5am, hours after the brief is
+# built; here old and new are both in hand and the alert lands pre-wake-up.
+MOVE_ALERT_PCT = 10
+MOVE_ALERT_ABS = 40
+
+
+def rate_moves(prev, new):
+    """Major nightly movers: [(name, old_rate, new_rate)]. A kept-stale row
+    never registers (fail-closed keeps the old number verbatim), so this only
+    ever reports genuinely re-checked rates. None-safe on both sides."""
+    old = {r.get("key"): r.get("rate") for r in (prev or {}).get("rows", [])}
+    out = []
+    for r in (new or {}).get("rows", []):
+        o, n = old.get(r.get("key")), r.get("rate")
+        if not (isinstance(o, (int, float)) and isinstance(n, (int, float))):
+            continue
+        if abs(n - o) >= MOVE_ALERT_ABS or abs(n - o) / o * 100 >= MOVE_ALERT_PCT:
+            out.append((r.get("name") or r.get("key"), o, n))
+    return out
+
+
+def moves_message(moves):
+    """One compact Telegram line for the movers, or None when quiet."""
+    if not moves:
+        return None
+    parts = []
+    for name, o, n in moves:
+        pct = round(abs(n - o) / o * 100)
+        arrow = "▼" if n < o else "▲"
+        parts.append(f"{name} ${o:,.0f}→${n:,.0f} ({arrow}{pct}%)")
+    return "🏨 Hotel rate moves: " + " · ".join(parts)
+
 # The shortlist. `query` is the Google Hotels search string — keep it SHORT;
 # long official names fall through to a no-results search page (proven
 # 2026-08-03). `match` is the substring the resolved page title must contain,

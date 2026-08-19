@@ -224,6 +224,11 @@ def main():
         except Exception as e:                   # noqa: BLE001
             print(f"WARN: session cleanup failed: {e}")
 
+    # 🏨 Morning movers alert (2026-08-19): captured BEFORE build() overwrites
+    # the in-memory picture, so old and new can be diffed after write().
+    # load_previous() returns {key: row}, not the file's {"rows": [...]}
+    # shape that rate_moves()/build() use — reshape it here to match.
+    prev = {"rows": list(hotel_rates.load_previous().values())}
     data = hotel_rates.build(payload, scraped=scraped)
     # Count what THIS run actually fetched. Counting rows whose checked-date is
     # today would also count a successful earlier run and hide a total failure.
@@ -233,6 +238,16 @@ def main():
         print(f"  NOTE: {n}")
 
     hotel_rates.write(data)
+
+    # 🏨 Morning movers alert (2026-08-19): major overnight changes land in
+    # Telegram at ~5am, before wake-up — silent when nothing moved.
+    moves = hotel_rates.rate_moves(prev, data)
+    if moves:
+        try:
+            from notify_telegram import send_message
+            send_message(hotel_rates.moves_message(moves))
+        except Exception as e:                   # noqa: BLE001
+            print(f"WARN: telegram moves alert failed: {e}")
 
     _git("add", "site/hotel_rates.json")
     if not _git("diff", "--cached", "--quiet").returncode:

@@ -11,6 +11,7 @@ import json
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import hotel_rates as hr
+import hotel_rates
 
 JAN5 = datetime.date(2027, 1, 5)
 JAN7 = datetime.date(2027, 1, 7)
@@ -291,3 +292,49 @@ def test_wait_for_page_gives_up_and_returns_the_last_bad_payload(monkeypatch):
     assert got["checkin"] == "Sun, Aug 9"
     rate, note = hr.parse_rate(got, ENTRY, JAN5, JAN7)
     assert rate is None and "did not bind" in note
+
+
+# ── 🏨 rate-moves morning alert (2026-08-19) ────────────────────────────────
+def _rates_file(rows):
+    return {"updated": "2026-08-19", "rows": rows}
+
+
+def test_rate_moves_fires_on_abs_and_pct_thresholds():
+    prev = _rates_file([
+        {"key": "stregis_sin", "name": "St. Regis Singapore", "rate": 248},
+        {"key": "ritz_ist", "name": "Ritz-Carlton Istanbul", "rate": 439},
+        {"key": "panpacific", "name": "Pan Pacific Orchard", "rate": 255},
+    ])
+    new = _rates_file([
+        {"key": "stregis_sin", "name": "St. Regis Singapore", "rate": 218},  # −$30, −12.1% → pct fires
+        {"key": "ritz_ist", "name": "Ritz-Carlton Istanbul", "rate": 484},   # +$45, +10.3% → both fire
+        {"key": "panpacific", "name": "Pan Pacific Orchard", "rate": 262},   # +$7, +2.7% → quiet
+    ])
+    moves = hotel_rates.rate_moves(prev, new)
+    assert [(m[0], m[1], m[2]) for m in moves] == [
+        ("St. Regis Singapore", 248, 218),
+        ("Ritz-Carlton Istanbul", 439, 484),
+    ]
+
+
+def test_rate_moves_ignores_stale_missing_and_new_rows():
+    prev = _rates_file([
+        {"key": "a", "name": "A", "rate": 300},
+        {"key": "b", "name": "B", "rate": None},
+    ])
+    new = _rates_file([
+        {"key": "a", "name": "A", "rate": 300},          # unchanged (kept-stale shape)
+        {"key": "b", "name": "B", "rate": 200},          # no prior number → no move
+        {"key": "c", "name": "C", "rate": 100},          # new row → no move
+    ])
+    assert hotel_rates.rate_moves(prev, new) == []
+    assert hotel_rates.rate_moves(None, new) == []
+    assert hotel_rates.rate_moves(prev, None) == []
+
+
+def test_moves_message_format_and_silence():
+    assert hotel_rates.moves_message([]) is None
+    msg = hotel_rates.moves_message([("St. Regis Singapore", 248, 218),
+                                     ("Ritz-Carlton Istanbul", 439, 484)])
+    assert msg == ("🏨 Hotel rate moves: St. Regis Singapore $248→$218 (▼12%) · "
+                   "Ritz-Carlton Istanbul $439→$484 (▲10%)")
