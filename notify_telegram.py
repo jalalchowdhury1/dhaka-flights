@@ -234,8 +234,11 @@ def build_message(payload: dict, core_only: bool = False) -> str:
             + (" ←" if r["n"] == sv.get("picked_n") else "")
             for r in sv["rows"])
         sh = sv.get("hotel") or {}
+        checked = str(sh.get("checked") or "")
+        tick = (f" ✓{int(checked[5:7])}/{int(checked[8:10])}"
+                if len(checked) == 10 and checked[4] == "-" else "")
         parts.append(f"🛏️ Stay math: {seg} · {esc_html(sh.get('name', '?'))} "
-                     f"${sh.get('rate', 0):,}/n")
+                     f"${sh.get('rate', 0):,}/n{tick}")
         if sv.get("mode") == "advisory" and sv.get("note"):
             parts.append(f"⚠️ {esc_html(sv['note'])}")
         if sv.get("watchdog"):

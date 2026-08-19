@@ -581,5 +581,5 @@ reason.
   - `orderInfo()` maps every trip shape incl. `bali-rev`; keep it in sync
     with combo.ORDERS when orders change.
 - `main.py` — manual run: scrape + sheet + terminal summary (no Telegram/publish)
-- `tests/` — pytest suite (287 tests; `test_main_trip.py` holds the shared trip
+- `tests/` — pytest suite (291 tests; `test_main_trip.py` holds the shared trip
   fixtures, `test_baggage.py` guards the allowance table's honesty)
