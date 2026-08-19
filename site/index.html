@@ -465,7 +465,7 @@ function validatePayload(d) {
   const lastH = Array.isArray(d.history) && d.history.length
     ? d.history[d.history.length - 1] : null;
   if (lastH && typeof lastH === "object")
-    for (const k of ["main_total", "ticket1_total", "ticket2_total", "bali_total", "budget_total", "sg_allin"])
+    for (const k of ["main_total", "ticket1_total", "ticket2_total", "bali_total", "budget_total", "other_order_total", "sg_allin"])
       if (lastH[k] != null && typeof lastH[k] !== "number")
         probs.push(`history[last].${k} is ${typeof lastH[k]}, expected number`);
   return probs;
@@ -621,6 +621,9 @@ function verdictPass(d) {
     chips.push(`<span class="chip chip-warn">👀 ${plain(String(d.countdown).replace(/📅 /, ""))}</span>`);
   if (d.price_context) chips.push(`<span class="chip">${plain(d.price_context)}</span>`);
   if (!m.valid) chips.push(`<span class="badge warn">⚠️ ${esc(m.flag || "check dates")}</span>`);
+  const svc = d.stay_value;
+  if (svc && svc.mode === "steering" && typeof m.sg_nights === "number" && m.sg_nights > 2)
+    chips.push(`<span class="chip chip-good">🛏️ ${m.sg_nights}N SIN · hotel math</span>`);
   const h = hist.length ? hist[hist.length - 1] : {};
   return el(`
     <div class="pass-head"><span>Tonight's cheapest</span><span>${esc(m.order_label || "")}</span></div>
@@ -1094,6 +1097,32 @@ function cardPlayTables() {
       booking.</div>`;
 }
 
+/* 🛏️ Stay math (2026-08-19): the all-in SIN night-count table — flights +
+   net hotel after credits, $knob/extra-night. Steers the pick only on fresh
+   rates; advisory/off modes say so instead of pretending. */
+function stayValueCard(d) {
+  const sv = d && d.stay_value;
+  if (!sv || !Array.isArray(sv.rows) || !sv.rows.length) return "";
+  const rows = sv.rows.map(r => `<tr${r.n === sv.picked_n ? ' style="font-weight:700"' : ""}>
+      <td>${r.n}N</td><td class="num">${usd(r.flights)}</td>
+      <td class="num">${usd(r.hotel_net)}</td><td class="num">${usd(r.allin)}</td>
+      <td>${r.n === sv.picked_n ? '<span class="badge good">picked by the math</span>' : ""}</td></tr>`).join("");
+  const modeNote = sv.mode === "steering"
+    ? `Steering tonight's pick — worth-it knob $${sv.knob}/extra night, ±$${sv.dead_band} dead-band.`
+    : sv.mode === "advisory"
+      ? `⚠️ Advisory only — ${esc(sv.note || "the hotel rate is stale; the pick stayed flight-only.")}`
+      : `Off — ${esc(sv.note || "no usable hotel rate.")}`;
+  return `<span class="micro" style="display:block;margin-top:18px">Singapore nights — the all-in math</span>
+    <div class="pass">
+      <div class="scroll-x"><table>
+        <tr><th>SIN</th><th class="num">Flights</th><th class="num">Hotel net</th><th class="num">All-in</th><th></th></tr>
+        ${rows}</table></div>
+      ${sv.watchdog ? `<div style="margin-top:8px"><span class="chip chip-warn">👀 ${esc(sv.watchdog)}</span></div>` : ""}
+      <div class="small" style="margin-top:8px">${modeNote}</div>
+      ${sv.assumption ? `<div class="small" style="margin-top:4px">${esc(sv.assumption)}</div>` : ""}
+    </div>`;
+}
+
 function renderStays(d) {
   const root = el("");
   add(root, () => {
@@ -1103,6 +1132,9 @@ function renderStays(d) {
     return el(`<span class="micro">The Bangkok stay — rides with tonight's winning order</span>`
       + hotelPass(d.hotel));
   });
+
+  if (d.stay_value && Array.isArray(d.stay_value.rows) && d.stay_value.rows.length)
+    add(root, () => el(stayValueCard(d)));
 
   if (d.bali && d.bali.hotel) add(root, () => {
     const bh = d.bali.hotel;
