@@ -89,3 +89,26 @@ def mode(rates, today):
     if age is None or age > STALE_DAYS:
         return "advisory"
     return "steering"
+
+
+def score_adjust(rate, n, incumbent_n, program="FHR"):
+    """What the combo hook adds to a candidate's flight cost: its net hotel
+    bill, minus the value of its extra nights, minus the incumbent shape's
+    dead-band bonus (so the pick only flips when the challenger clearly
+    wins — no 4N-Monday/2N-Tuesday whiplash from volatile flex fares)."""
+    return (hotel_net(rate, n, program)
+            - EXTRA_NIGHT_WORTH * (n - MIN_N)
+            - (DEAD_BAND if n == incumbent_n else 0))
+
+
+def hotel_hook(rates, incumbent_n, today=None):
+    """combo.py's optional hotel_cost hook: f(sin_nights) → $ adjustment,
+    or None unless mode is steering. combo adds f(n) to each candidate's
+    flight cost, so the in-band winner minimizes
+    flights + net_hotel − WORTH×extra_nights (− dead-band on the incumbent)."""
+    today = today or datetime.date.today()
+    if mode(rates, today) != "steering":
+        return None
+    row = bold_row(rates)
+    rate, program = row["rate"], row.get("program", "FHR")
+    return lambda n: score_adjust(rate, n, incumbent_n, program)

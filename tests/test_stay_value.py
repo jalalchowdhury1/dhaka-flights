@@ -60,3 +60,28 @@ def test_mode_ladder():
     assert stay_value.mode(RATES, datetime.date(2026, 8, 23)) == "advisory"  # 4d = stale
     assert stay_value.mode(None, TODAY) == "off"
     assert stay_value.mode({"rows": []}, TODAY) == "off"
+
+
+def test_score_adjust_values_extra_nights_at_the_knob():
+    # f(n) = net − 225×(n−2) − dead-band bonus
+    assert stay_value.score_adjust(218, 2, None) == 0
+    assert stay_value.score_adjust(218, 3, None) == 152 - 225      # −73
+    assert stay_value.score_adjust(218, 4, None) == 337 - 450      # −113
+
+
+def test_score_adjust_gives_the_incumbent_the_dead_band():
+    assert stay_value.score_adjust(218, 2, 2) == -25
+    assert stay_value.score_adjust(218, 4, 2) == -113              # not incumbent
+
+
+def test_hook_none_unless_steering():
+    assert stay_value.hotel_hook(None, None, today=TODAY) is None
+    stale = {"rows": [dict(RATES["rows"][1], checked="2026-08-10")]}
+    assert stay_value.hotel_hook(stale, None, today=TODAY) is None
+
+
+def test_hook_returns_the_adjuster_when_fresh():
+    h = stay_value.hotel_hook(RATES, None, today=TODAY)
+    assert h(2) == 0 and h(3) == -73 and h(4) == -113
+    h2 = stay_value.hotel_hook(RATES, 2, today=TODAY)
+    assert h2(2) == -25
