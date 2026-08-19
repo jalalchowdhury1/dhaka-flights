@@ -65,7 +65,7 @@ def rate_moves(prev, new):
         o, n = old.get(r.get("key")), r.get("rate")
         if not (isinstance(o, (int, float)) and isinstance(n, (int, float))):
             continue
-        if abs(n - o) >= MOVE_ALERT_ABS or abs(n - o) / o * 100 >= MOVE_ALERT_PCT:
+        if abs(n - o) >= MOVE_ALERT_ABS or (o and abs(n - o) / o * 100 >= MOVE_ALERT_PCT):
             out.append((r.get("name") or r.get("key"), o, n))
     return out
 

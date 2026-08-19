@@ -240,14 +240,16 @@ def main():
     hotel_rates.write(data)
 
     # 🏨 Morning movers alert (2026-08-19): major overnight changes land in
-    # Telegram at ~5am, before wake-up — silent when nothing moved.
-    moves = hotel_rates.rate_moves(prev, data)
-    if moves:
-        try:
+    # Telegram at ~5am, before wake-up — silent when nothing moved. The whole
+    # path (including rate_moves itself) is shielded, so a bad/garbage rate
+    # can never abort main() before the push.
+    try:
+        moves = hotel_rates.rate_moves(prev, data)
+        if moves:
             from notify_telegram import send_message
             send_message(hotel_rates.moves_message(moves))
-        except Exception as e:                   # noqa: BLE001
-            print(f"WARN: telegram moves alert failed: {e}")
+    except Exception as e:                       # noqa: BLE001
+        print(f"WARN: telegram moves alert failed: {e}")
 
     _git("add", "site/hotel_rates.json")
     if not _git("diff", "--cached", "--quiet").returncode:

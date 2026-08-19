@@ -338,3 +338,9 @@ def test_moves_message_format_and_silence():
                                      ("Ritz-Carlton Istanbul", 439, 484)])
     assert msg == ("🏨 Hotel rate moves: St. Regis Singapore $248→$218 (▼12%) · "
                    "Ritz-Carlton Istanbul $439→$484 (▲10%)")
+
+
+def test_rate_moves_zero_old_rate_never_divides():
+    prev = _rates_file([{"key": "x", "name": "X", "rate": 0}])
+    new = _rates_file([{"key": "x", "name": "X", "rate": 5}])
+    assert hotel_rates.rate_moves(prev, new) == []   # $5 < $40, pct guard skipped
