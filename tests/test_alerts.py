@@ -156,3 +156,14 @@ def test_old_format_yesterday_is_skipped_gracefully():
     cur = _entry("2026-07-25", 4666, t1=3647, t2=1019, detail=T2_ONE_TICKET)
     assert changes_since(old, cur) == []
     assert changes_since(None, cur) == []
+
+
+def test_sg_nights_change_is_tagged_when_hotel_aware():
+    import alerts
+    prev = {"ticket1_total": 3600, "sg_nights": 2}
+    cur = {"ticket1_total": 3600, "sg_nights": 4, "sg_allin": 4997}
+    out = alerts.changes_since(prev, cur)
+    assert any("Singapore nights: 2 → 4 (hotel-aware pick)" in c for c in out)
+    cur_plain = {"ticket1_total": 3600, "sg_nights": 4}
+    out2 = alerts.changes_since(prev, cur_plain)
+    assert any(c == "Singapore nights: 2 → 4" for c in out2)

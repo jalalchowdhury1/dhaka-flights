@@ -189,7 +189,10 @@ def changes_since(prev, cur) -> list:
                        ("home", "home date")):
         if (prev.get(key) is not None and cur.get(key) is not None
                 and prev[key] != cur[key]):
-            out.append(f"{label}: {prev[key]} → {cur[key]}")
+            suffix = (" (hotel-aware pick)"
+                      if key == "sg_nights" and cur.get("sg_allin") is not None
+                      else "")
+            out.append(f"{label}: {prev[key]} → {cur[key]}{suffix}")
 
     if bag_impact:
         out.append("🧳⚠️ Airline/composition changed — baggage rules changed "
