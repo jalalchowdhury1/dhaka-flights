@@ -226,6 +226,21 @@ def build_message(payload: dict, core_only: bool = False) -> str:
         if hotel.get("warn"):
             parts.append(f"⚠️ {esc_html(hotel['warn'])}")
 
+    # 🛏️ Stay math (2026-08-19): the all-in night-count table, one line.
+    sv = payload.get("stay_value")
+    if sv and sv.get("rows"):
+        seg = " · ".join(
+            f"{r['n']}N ${r['allin']:,}"
+            + (" ←" if r["n"] == sv.get("picked_n") else "")
+            for r in sv["rows"])
+        sh = sv.get("hotel") or {}
+        parts.append(f"🛏️ Stay math: {seg} · {esc_html(sh.get('name', '?'))} "
+                     f"${sh.get('rate', 0):,}/n")
+        if sv.get("mode") == "advisory" and sv.get("note"):
+            parts.append(f"⚠️ {esc_html(sv['note'])}")
+        if sv.get("watchdog"):
+            parts.append(f"👀 {esc_html(sv['watchdog'])}")
+
     budget = payload.get("budget")
     if budget:
         diffs = f" — <i>{esc_html(' · '.join(budget.get('diffs') or []))}</i>" \

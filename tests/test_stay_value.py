@@ -4,6 +4,7 @@ import sys, os, datetime
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import stay_value
 import publish
+import notify_telegram
 from tests.test_main_trip import FLIGHTS, TICKET1, SG_TICKETS, TICKET2
 
 TODAY = datetime.date(2026, 8, 19)
@@ -241,3 +242,34 @@ def test_mismatch_warning_folds_into_payload(monkeypatch):
     p = publish.build_payload(FLIGHTS, [TICKET1], [], "2026-08-19",
                               sg_tickets=SG_TICKETS, stay_rates=RATES)
     assert any(w == "🛏️ synthetic mismatch for test" for w in p["warnings"])
+
+
+def _steering_payload():
+    four_night = dict(TICKET2, out_date="January 28, 2027",
+                      out_arrive="January 28, 2027", price_total=1060,
+                      airline="Biman", link="http://t2flex")
+    return publish.build_payload(FLIGHTS, [TICKET1], [], "2026-08-19",
+                                 sg_tickets=SG_TICKETS + [four_night],
+                                 stay_rates=RATES)
+
+
+def test_brief_carries_the_stay_math_line():
+    msg = notify_telegram.build_message(_steering_payload())
+    assert "🛏️" in msg
+    assert "2N $4,600" in msg
+    assert "4N $4,997 ←" in msg            # 4660 flights + 337 net, picked
+    assert "St. Regis Singapore" in msg
+
+
+def test_brief_flags_advisory_mode():
+    stale = {"rows": [dict(RATES["rows"][1], checked="2026-08-10")]}
+    p = publish.build_payload(FLIGHTS, [TICKET1], [], "2026-08-19",
+                              sg_tickets=SG_TICKETS, stay_rates=stale)
+    msg = notify_telegram.build_message(p)
+    assert "advisory only" in msg
+
+
+def test_brief_without_stay_value_is_unchanged():
+    p = publish.build_payload(FLIGHTS, [TICKET1], [], "2026-08-19",
+                              sg_tickets=SG_TICKETS)
+    assert "🛏️" not in notify_telegram.build_message(p)
