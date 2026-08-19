@@ -117,7 +117,14 @@ def main():
     # so data losses are loud instead of silent (see sanity.py).
     from combo import main_trip, bali_watch_trip
     from sanity import self_check
-    trip = main_trip(flights, tickets1, sg_tickets)
+    import stay_value
+    # 🛏️ Stay math: one rates load for the whole run — the same dict feeds
+    # the pick (via publish), this sanity-path trip, and verify's independent
+    # re-derivation. hotel_hook is None unless the bold SIN rate is fresh.
+    stay_rates = stay_value.load_rates()
+    stay_hook = stay_value.hotel_hook(
+        stay_rates, (publish.last_history_entry() or {}).get("sg_nights"))
+    trip = main_trip(flights, tickets1, sg_tickets, hotel_cost=stay_hook)
     bali = bali_watch_trip(flights, bali_t1, bali_fwd, bali_rev, tickets1)
     warnings = self_check(flights, tickets1, trip, publish.last_history_entry(),
                           sg_tickets=sg_tickets, bali=bali, bali_t1=bali_t1)
@@ -131,7 +138,7 @@ def main():
     # Build the payload BEFORE notifying, so Telegram and the dashboard quote
     # the same numbers, alternatives and baggage rules.
     payload = publish.build_today(flights, tickets1, warnings, sg_tickets,
-                                  bali=bali)
+                                  bali=bali, stay_rates=stay_rates)
 
     # 📐 Payload-shape check: the payload must match the shape the site
     # renders. Runs BEFORE the independent re-check below — when the payload
@@ -150,7 +157,8 @@ def main():
     # Findings join the self-check block; a clean pass adds a footer line.
     def _run_verify():
         import verify
-        return verify.verify_payload(payload, flights, tickets1, sg_tickets)
+        return verify.verify_payload(payload, flights, tickets1, sg_tickets,
+                                     rates=stay_rates)
     issues = _check("re-check", _run_verify)
     _fold_warnings(payload, issues, "🔎", "VERIFY")
     if not issues:
