@@ -454,6 +454,23 @@ def _split_nights(cfg, mid_nights, final_nights):
     return final_nights, mid_nights
 
 
+def _resolve_ticket1(openjaws, cfg):
+    """Cheapest Ticket ① for one order + its return/Dhaka-arrival dates, or
+    None. Shared by order_trip and sin_night_flight_totals so the two can
+    never drift apart on how ① is chosen."""
+    ojs = [o for o in (openjaws or [])
+           if o.get("kind") == "stopover2" and o.get("ret_city") == cfg["ret_city"]
+           and isinstance(o.get("price_total"), (int, float)) and _airline_ok(o)]
+    if not ojs:
+        return None
+    oj = min(ojs, key=lambda o: o["price_total"])
+    ret = _date(oj["ret_date"])
+    dac_in = _date(oj.get("out_arrive", "")) or (_date(oj["out_date"]) + timedelta(days=1))
+    if not ret:
+        return None
+    return oj, ret, dac_in
+
+
 def order_trip(flights, openjaws, tickets2, order_key, hotel_cost=None):
     """Best complete trip for ONE order (Ticket ① with the right return city +
     the cheapest valid middle), or None. Tier rules as agreed:
@@ -465,16 +482,10 @@ def order_trip(flights, openjaws, tickets2, order_key, hotel_cost=None):
     the validity tiers above still run first, and the returned `total` stays
     flights-only (history/chart rule)."""
     cfg = ORDERS[order_key]
-    ojs = [o for o in (openjaws or [])
-           if o.get("kind") == "stopover2" and o.get("ret_city") == cfg["ret_city"]
-           and isinstance(o.get("price_total"), (int, float)) and _airline_ok(o)]
-    if not ojs:
+    resolved = _resolve_ticket1(openjaws, cfg)
+    if not resolved:
         return None
-    oj = min(ojs, key=lambda o: o["price_total"])
-    ret = _date(oj["ret_date"])
-    dac_in = _date(oj.get("out_arrive", "")) or (_date(oj["out_date"]) + timedelta(days=1))
-    if not ret:
-        return None
+    oj, ret, dac_in = resolved
 
     exact, near = [], []
     for m in _order_middles(flights, tickets2, order_key):
@@ -537,18 +548,13 @@ def order_trip(flights, openjaws, tickets2, order_key, hotel_cost=None):
 def sin_night_flight_totals(flights, openjaws, tickets2, order_key):
     """{sin_nights: cheapest flight total} across tonight's strict-shape
     candidates (5 BKK nights, in-band SIN) for one order — the per-night-count
-    table the stay-math layer renders. Mirrors order_trip's `exact` pool."""
+    table the stay-math layer renders. Mirrors order_trip's in-band `exact`
+    pool (`_sg_ok(exact)`)."""
     cfg = ORDERS[order_key]
-    ojs = [o for o in (openjaws or [])
-           if o.get("kind") == "stopover2" and o.get("ret_city") == cfg["ret_city"]
-           and isinstance(o.get("price_total"), (int, float)) and _airline_ok(o)]
-    if not ojs:
+    resolved = _resolve_ticket1(openjaws, cfg)
+    if not resolved:
         return {}
-    oj = min(ojs, key=lambda o: o["price_total"])
-    ret = _date(oj["ret_date"])
-    dac_in = _date(oj.get("out_arrive", "")) or (_date(oj["out_date"]) + timedelta(days=1))
-    if not ret:
-        return {}
+    oj, ret, dac_in = resolved
     best = {}
     for m in _order_middles(flights, tickets2, order_key):
         dhaka_days = (m["dhaka_out"] - dac_in).days + 1

@@ -264,3 +264,13 @@ def test_sin_night_flight_totals_by_band():
     # TICKET2_OTHER_DATES pairs to a 4-night Bangkok block → excluded (strict 5).
     assert totals == {2: 4600, 4: 4660}
     assert sin_night_flight_totals(FLIGHTS, [], SG_TICKETS, "SIN-first") == {}
+
+
+def test_sin_night_flight_totals_excludes_out_of_band():
+    from combo import sin_night_flight_totals
+    five_night = dict(TICKET2, out_date="January 27, 2027",
+                      out_arrive="January 27, 2027", price_total=500,
+                      airline="Biman", link="http://t2long")
+    totals = sin_night_flight_totals(FLIGHTS, [TICKET1],
+                                     SG_TICKETS + [five_night], "SIN-first")
+    assert 5 not in totals and totals[2] == 4600
