@@ -85,3 +85,51 @@ def test_hook_returns_the_adjuster_when_fresh():
     assert h(2) == 0 and h(3) == -73 and h(4) == -113
     h2 = stay_value.hotel_hook(RATES, 2, today=TODAY)
     assert h2(2) == -25
+
+
+TOTALS = {2: 4614, 3: 4660, 4: 4660}    # tonight's real 2026-08-19 flight totals
+
+
+def test_build_rows_and_pick():
+    sv = stay_value.build(RATES, TOTALS, None, 4, today=TODAY)
+    assert sv["mode"] == "steering"
+    assert [r["n"] for r in sv["rows"]] == [2, 3, 4]
+    assert [r["allin"] for r in sv["rows"]] == [4614, 4812, 4997]
+    assert [r["score"] for r in sv["rows"]] == [4614, 4587, 4547]
+    assert sv["picked_n"] == 4
+    assert sv["trip_n"] == 4 and sv["warning"] is None
+    assert sv["trip_allin"] == 4997
+    assert sv["hotel"]["key"] == "stregis_sin" and sv["knob"] == 225
+    assert "St. Regis" in sv["assumption"] and "218" in sv["assumption"]
+
+
+def test_build_warns_when_trip_ignored_the_math():
+    sv = stay_value.build(RATES, TOTALS, None, 2, today=TODAY)
+    assert sv["picked_n"] == 4 and sv["trip_n"] == 2
+    assert "hook was not applied" in sv["warning"]
+
+
+def test_build_advisory_never_warns_and_says_why():
+    stale = {"rows": [dict(RATES["rows"][1], checked="2026-08-14")]}
+    sv = stay_value.build(stale, TOTALS, None, 2, today=TODAY)
+    assert sv["mode"] == "advisory"
+    assert sv["warning"] is None
+    assert "days old" in sv["note"]
+
+
+def test_build_off_mode_degrades_cleanly():
+    sv = stay_value.build(None, TOTALS, None, 2, today=TODAY)
+    assert sv["mode"] == "off" and sv["rows"] == [] and sv["picked_n"] is None
+    assert sv["trip_allin"] is None
+
+
+def test_watchdog_barks_when_a_rival_beats_the_bold_pick():
+    rival = dict(RATES, rows=RATES["rows"] + [
+        {"key": "cheap", "city": "SIN", "name": "Cheap Palace",
+         "program": "FHR", "bold": False, "rate": 100, "checked": "2026-08-19"}])
+    sv = stay_value.build(rival, TOTALS, None, 4, today=TODAY)
+    # bold net at 4N = 337 → $84/n; Cheap Palace: 4×100×1.12−640 → 0 → $0/n
+    assert sv["watchdog"] is not None and "Cheap Palace" in sv["watchdog"]
+    # Pan Pacific at $255 does NOT trigger (it nets MORE than the bold pick)
+    sv2 = stay_value.build(RATES, TOTALS, None, 4, today=TODAY)
+    assert sv2["watchdog"] is None
