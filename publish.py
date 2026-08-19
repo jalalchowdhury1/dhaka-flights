@@ -11,7 +11,9 @@ import time
 import alerts
 import baggage
 import hotels
-from combo import budget_trip, main_trip, ticket1_options, ticket2_options
+import stay_value
+from combo import (budget_trip, main_trip, sin_night_flight_totals,
+                   ticket1_options, ticket2_options)
 
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(REPO_DIR, "site", "data.json")
@@ -64,11 +66,23 @@ def _with_baggage(options: list, ticket_type: str, route: str) -> list:
 
 def build_payload(flights: list, openjaws: list, history: list, today: str,
                   warnings: list = None, sg_tickets: list = None,
-                  bali: dict = None) -> dict:
+                  bali: dict = None, stay_rates: dict = None) -> dict:
     """One trip, one payload (2026-07-25). The alternative trips — direct
     open-jaw, three one-ways, Istanbul-only, Singapore-only — are no longer
-    scraped, tracked, or charted; `main` IS the product now."""
-    main = main_trip(flights, openjaws, sg_tickets or [])
+    scraped, tracked, or charted; `main` IS the product now.
+    stay_rates (2026-08-19): parsed hotel_rates.json. When present and fresh,
+    the 🛏️ stay-math hook steers the SIN night count all-in (flights + net
+    hotel after credits, $225/extra-night knob); the block always rides as
+    payload["stay_value"] and history gains sg_allin. None → exact pre-stay
+    behavior (manual runs, tests)."""
+    try:
+        as_of = datetime.date.fromisoformat(today)
+    except ValueError:
+        as_of = datetime.date.today()
+    incumbent_n = (history[-1] or {}).get("sg_nights") if history else None
+    hook = (stay_value.hotel_hook(stay_rates, incumbent_n, today=as_of)
+            if stay_rates else None)
+    main = main_trip(flights, openjaws, sg_tickets or [], hotel_cost=hook)
     if main:
         # Baggage rides inside the trip so history keeps the rules that applied
         # on the day, not just the price.
@@ -97,6 +111,18 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
         if main:
             bali["delta_vs_main"] = bali["total"] - main["total"]
 
+    # 🛏️ Stay math (2026-08-19): the per-night-count all-in table + what it
+    # picked. A steering-mode mismatch with the trip is a wiring bug — it
+    # rides to Telegram as a warning.
+    stay = None
+    if stay_rates is not None and main:
+        totals = sin_night_flight_totals(flights, openjaws, sg_tickets or [],
+                                         main["order"])
+        stay = stay_value.build(stay_rates, totals, incumbent_n,
+                                main.get("sg_nights"), today=as_of)
+        if stay.get("warning"):
+            warnings = list(warnings or []) + [f"🛏️ {stay['warning']}"]
+
     t1 = (main or {}).get("openjaw") or None
     t2 = (main or {}).get("sg_ticket") or None
     t1_total = t1.get("price_total") if t1 else None
@@ -118,6 +144,7 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
         "order": (main or {}).get("order_label"),
         "ist_nights": (main or {}).get("ist_nights"),
         "sg_nights": (main or {}).get("sg_nights"),
+        "sg_allin": (stay or {}).get("trip_allin"),
         "bkk_nights": (main or {}).get("bkk_nights"),
         "other_order_total": ((main or {}).get("other_order") or {}).get("total"),
         "bali_total": bali["total"] if bali else None,
@@ -136,10 +163,6 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
 
     # Buy-signal + diff layer: what leads the message, the perspective line,
     # the booking-window countdown, and what changed vs yesterday.
-    try:
-        as_of = datetime.date.fromisoformat(today)
-    except ValueError:
-        as_of = datetime.date.today()
     alert_lines = alerts.headlines(entry, history, as_of)
     context = alerts.price_context(entry, history)
     count = alerts.countdown(as_of)
@@ -167,6 +190,7 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
         # 🏨 the Marriott award stay rides with the trip: reference points
         # figures (hotels.CHECKED), stay dates derived from tonight's winner.
         "hotel": hotels.hotel_plan(main),
+        "stay_value": stay,
         # "how much more is the non-US-Bangla option?" — with each airline's bag
         # rule alongside, because a $60 saving that drops 40 kg isn't a saving.
         "ticket1_options": _with_baggage(ticket1_options(openjaws, t1),
@@ -182,12 +206,13 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
 
 
 def build_today(flights: list, openjaws: list, warnings: list = None,
-                sg_tickets: list = None, bali: dict = None) -> dict:
+                sg_tickets: list = None, bali: dict = None,
+                stay_rates: dict = None) -> dict:
     """Today's payload, history included — built BEFORE Telegram goes out so the
     message and the dashboard can't disagree about what the trip costs."""
     return build_payload(flights, openjaws, _load_history(),
                          datetime.date.today().isoformat(), warnings, sg_tickets,
-                         bali=bali)
+                         bali=bali, stay_rates=stay_rates)
 
 
 def write_payload(payload: dict) -> None:

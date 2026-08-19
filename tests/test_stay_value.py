@@ -169,3 +169,58 @@ def test_build_ignores_non_int_flight_total_keys():
 
 def test_watchdog_zero_nights_guard():
     assert stay_value._watchdog(RATES, stay_value.bold_row(RATES), 0) is None
+
+
+from tests.test_main_trip import FLIGHTS, TICKET1, SG_TICKETS, TICKET2
+import publish
+
+
+def test_build_payload_steers_and_records_stay_value():
+    four_night = dict(TICKET2, out_date="January 28, 2027",
+                      out_arrive="January 28, 2027", price_total=1060,
+                      airline="Biman", link="http://t2flex")
+    p = publish.build_payload(FLIGHTS, [TICKET1], [], "2026-08-19",
+                              sg_tickets=SG_TICKETS + [four_night],
+                              stay_rates=RATES)
+    sv = p["stay_value"]
+    assert sv["mode"] == "steering"
+    assert p["main"]["sg_nights"] == 4            # the hook steered the pick
+    assert sv["picked_n"] == 4 and sv["trip_n"] == 4 and sv["warning"] is None
+    assert p["main"]["total"] == 4660             # flights-only, always
+    assert p["history"][-1]["sg_allin"] == 4660 + 337
+    assert not any("🛏️" in w for w in p["warnings"])
+
+
+def test_build_payload_without_rates_is_tonights_old_behavior():
+    p = publish.build_payload(FLIGHTS, [TICKET1], [], "2026-08-19",
+                              sg_tickets=SG_TICKETS)
+    assert p["stay_value"] is None
+    assert p["main"]["sg_nights"] == 2
+    assert p["history"][-1]["sg_allin"] is None
+
+
+def test_build_payload_advisory_shows_table_but_does_not_steer():
+    four_night = dict(TICKET2, out_date="January 28, 2027",
+                      out_arrive="January 28, 2027", price_total=1060,
+                      airline="Biman", link="http://t2flex")
+    stale = {"rows": [dict(RATES["rows"][1], checked="2026-08-10")]}
+    p = publish.build_payload(FLIGHTS, [TICKET1], [], "2026-08-19",
+                              sg_tickets=SG_TICKETS + [four_night],
+                              stay_rates=stale)
+    assert p["main"]["sg_nights"] == 2            # pick stayed flight-only
+    assert p["stay_value"]["mode"] == "advisory"
+    assert p["stay_value"]["warning"] is None     # mismatch is EXPECTED here
+
+
+def test_incumbent_comes_from_the_last_history_entry():
+    # Yesterday picked 4N; today 2N is only $10 better adjusted → dead-band
+    # keeps 4N. (4N incumbent bonus −25 makes its score win.)
+    four_night = dict(TICKET2, out_date="January 28, 2027",
+                      out_arrive="January 28, 2027",
+                      price_total=1000 + 113 + 10,   # 2N would win by $10 raw
+                      airline="Biman", link="http://t2flex")
+    hist = [{"date": "2026-08-18", "sg_nights": 4, "main_total": 4700}]
+    p = publish.build_payload(FLIGHTS, [TICKET1], hist, "2026-08-19",
+                              sg_tickets=SG_TICKETS + [four_night],
+                              stay_rates=RATES)
+    assert p["main"]["sg_nights"] == 4
