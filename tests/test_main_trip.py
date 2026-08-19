@@ -251,3 +251,16 @@ def test_cross_order_winner_is_judged_all_in_too():
     assert t["order"] == "BKK-first"
     assert t["sg_nights"] == 4 and t["bkk_nights"] == 5
     assert t["total"] == 3800 + 900       # flights-only total of the 4N shape
+
+
+def test_sin_night_flight_totals_by_band():
+    from combo import sin_night_flight_totals
+    four_night = dict(TICKET2, out_date="January 28, 2027",
+                      out_arrive="January 28, 2027", price_total=1060,
+                      airline="Biman", link="http://t2flex")
+    totals = sin_night_flight_totals(FLIGHTS, [TICKET1],
+                                     SG_TICKETS + [four_night], "SIN-first")
+    # 2N: min(1000 one-ticket, 700+400 one-ways) + 3600 · 4N: 1060 + 3600.
+    # TICKET2_OTHER_DATES pairs to a 4-night Bangkok block → excluded (strict 5).
+    assert totals == {2: 4600, 4: 4660}
+    assert sin_night_flight_totals(FLIGHTS, [], SG_TICKETS, "SIN-first") == {}

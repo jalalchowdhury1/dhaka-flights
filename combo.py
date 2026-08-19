@@ -534,6 +534,40 @@ def order_trip(flights, openjaws, tickets2, order_key, hotel_cost=None):
     }
 
 
+def sin_night_flight_totals(flights, openjaws, tickets2, order_key):
+    """{sin_nights: cheapest flight total} across tonight's strict-shape
+    candidates (5 BKK nights, in-band SIN) for one order — the per-night-count
+    table the stay-math layer renders. Mirrors order_trip's `exact` pool."""
+    cfg = ORDERS[order_key]
+    ojs = [o for o in (openjaws or [])
+           if o.get("kind") == "stopover2" and o.get("ret_city") == cfg["ret_city"]
+           and isinstance(o.get("price_total"), (int, float)) and _airline_ok(o)]
+    if not ojs:
+        return {}
+    oj = min(ojs, key=lambda o: o["price_total"])
+    ret = _date(oj["ret_date"])
+    dac_in = _date(oj.get("out_arrive", "")) or (_date(oj["out_date"]) + timedelta(days=1))
+    if not ret:
+        return {}
+    best = {}
+    for m in _order_middles(flights, tickets2, order_key):
+        dhaka_days = (m["dhaka_out"] - dac_in).days + 1
+        if not 1 <= dhaka_days <= MAX_DHAKA_DAYS:
+            continue
+        final_nights = (ret - m["city2_in"]).days
+        if final_nights < 1:
+            continue
+        bkk_nights, sin_nights = _split_nights(cfg, m["mid_nights"], final_nights)
+        if bkk_nights != IDEAL_BKK_NIGHTS:
+            continue
+        if not MIN_SG_NIGHTS <= sin_nights <= MAX_SG_NIGHTS:
+            continue
+        total = oj["price_total"] + m["cost"]
+        if sin_nights not in best or total < best[sin_nights]:
+            best[sin_nights] = total
+    return best
+
+
 def main_trip(flights, openjaws, sg_tickets, hotel_cost=None):
     """THE trip: both orders priced, the cheaper VALID one wins (a flagged day
     never outranks a clean one). The losing order rides along as
