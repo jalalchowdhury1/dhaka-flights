@@ -118,13 +118,15 @@ def _watchdog(rates, row, n):
     """A non-bold SIN hotel netting >WATCHDOG_GAP/night less than the play
     can't stay silent — the bold flag is frozen human curation (2026-08-01)
     and the rates under it move nightly."""
+    if not n:
+        return None
     bold_pn = hotel_net(row["rate"], n, row.get("program", "FHR")) / n
     best = None
     for r in (rates or {}).get("rows", []):
         if (r.get("city") != "SIN" or r.get("bold")
                 or not isinstance(r.get("rate"), (int, float))):
             continue
-        pn = hotel_net(r["rate"], n, r.get("program", "")) / n
+        pn = hotel_net(r["rate"], n, r.get("program", "FHR")) / n
         if bold_pn - pn > WATCHDOG_GAP and (best is None or pn < best[1]):
             best = (r, pn)
     if not best:

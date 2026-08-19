@@ -133,3 +133,39 @@ def test_watchdog_barks_when_a_rival_beats_the_bold_pick():
     # Pan Pacific at $255 does NOT trigger (it nets MORE than the bold pick)
     sv2 = stay_value.build(RATES, TOTALS, None, 4, today=TODAY)
     assert sv2["watchdog"] is None
+
+
+def test_load_rates_degrades_to_none():
+    assert stay_value.load_rates("/nonexistent/path.json") is None
+    import tempfile
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+        f.write("{not json")
+        bad = f.name
+    try:
+        assert stay_value.load_rates(bad) is None
+    finally:
+        os.unlink(bad)
+
+
+def test_load_rates_reads_real_json():
+    import tempfile, json as _json
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+        _json.dump(RATES, f)
+        good = f.name
+    try:
+        assert stay_value.load_rates(good)["rows"][1]["key"] == "stregis_sin"
+    finally:
+        os.unlink(good)
+
+
+def test_bold_row_city_filter_both_directions():
+    assert stay_value.bold_row(RATES, "IST")["key"] == "ritz_ist"
+
+
+def test_build_ignores_non_int_flight_total_keys():
+    sv = stay_value.build(RATES, {2: 4614, "junk": 1}, None, 2, today=TODAY)
+    assert [r["n"] for r in sv["rows"]] == [2]
+
+
+def test_watchdog_zero_nights_guard():
+    assert stay_value._watchdog(RATES, stay_value.bold_row(RATES), 0) is None
