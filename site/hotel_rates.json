@@ -1,5 +1,5 @@
 {
- "updated": "2026-08-18",
+ "updated": "2026-08-19",
  "stays": {
   "IST": {
    "checkin": "2027-01-05",
@@ -22,12 +22,12 @@
    "program": "FHR",
    "angle": "Old-city boutique \u00b7 Bonvoy stacks",
    "bold": false,
-   "rate": 349,
-   "checked": "2026-08-18",
+   "rate": 350,
+   "checked": "2026-08-19",
    "offsets": [
     {
      "label": "2n",
-     "pct": 67,
+     "pct": 66,
      "band": "warn"
     }
    ]
@@ -39,12 +39,12 @@
    "program": "FHR",
    "angle": "Value pick \u00b7 Bonvoy Platinum stacks (points + elite nights)",
    "bold": true,
-   "rate": 443,
-   "checked": "2026-08-18",
+   "rate": 439,
+   "checked": "2026-08-19",
    "offsets": [
     {
      "label": "2n",
-     "pct": 52,
+     "pct": 53,
      "band": "warn"
     }
    ]
@@ -57,7 +57,7 @@
    "angle": "Butler with every room \u00b7 Bonvoy stacks",
    "bold": false,
    "rate": 541,
-   "checked": "2026-08-18",
+   "checked": "2026-08-19",
    "offsets": [
     {
      "label": "2n",
@@ -73,13 +73,13 @@
    "program": "FHR",
    "angle": "The sentimental splurge \u00b7 Bosphorus palace, the favorite brand",
    "bold": false,
-   "rate": 488,
-   "checked": "2026-08-18",
+   "rate": 468,
+   "checked": "2026-08-19",
    "offsets": [
     {
      "label": "2n",
-     "pct": 48,
-     "band": "dim"
+     "pct": 50,
+     "band": "warn"
     }
    ]
   },
@@ -90,17 +90,17 @@
    "program": "THC + Edit",
    "angle": "Wildcard \u00b7 CSR select-hotels credit may stack (see note)",
    "bold": false,
-   "rate": 227,
-   "checked": "2026-08-18",
+   "rate": 255,
+   "checked": "2026-08-19",
    "offsets": [
     {
      "label": "2n",
-     "pct": 92,
+     "pct": 82,
      "band": "good"
     },
     {
      "label": "4n",
-     "pct": 58,
+     "pct": 52,
      "band": "warn"
     }
    ]
@@ -112,18 +112,18 @@
    "program": "FHR",
    "angle": "Butler standard \u00b7 Bonvoy stacks \u00b7 cheap for SIN luxury",
    "bold": true,
-   "rate": 468,
-   "checked": "2026-08-18",
+   "rate": 218,
+   "checked": "2026-08-19",
    "offsets": [
     {
      "label": "2n",
-     "pct": 50,
-     "band": "warn"
+     "pct": 106,
+     "band": "good"
     },
     {
      "label": "4n",
-     "pct": 31,
-     "band": "dim"
+     "pct": 66,
+     "band": "warn"
     }
    ]
   },
@@ -134,12 +134,12 @@
    "program": "FHR",
    "angle": "Marina views \u00b7 Bonvoy stacks",
    "bold": false,
-   "rate": 437,
-   "checked": "2026-08-18",
+   "rate": 432,
+   "checked": "2026-08-19",
    "offsets": [
     {
      "label": "2n",
-     "pct": 53,
+     "pct": 54,
      "band": "warn"
     },
     {
@@ -157,7 +157,7 @@
    "angle": "Best Edit-exclusive if the fallback strategy is needed",
    "bold": false,
    "rate": 453,
-   "checked": "2026-08-18",
+   "checked": "2026-08-19",
    "offsets": [
     {
      "label": "2n",
