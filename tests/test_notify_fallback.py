@@ -122,3 +122,37 @@ def test_everything_fails_but_a_build_succeeded_reports_none(monkeypatch):
     payload = {"warnings": [], "history": [], "main": dict(VALID_MAIN)}
     status = notify_telegram.notify_cheapest(payload)
     assert status == "none"
+
+
+# ── Alert partition integration (2026-08-20 v4 core review) ─────────────────
+def test_bang_alert_leads_in_bold_before_the_price_line():
+    payload = {"warnings": [], "history": [], "main": dict(VALID_MAIN),
+              "alerts": ["🚨 BUY ZONE: $4,400 ≤ $4,500 target — book now"]}
+    msg = notify_telegram.build_message(payload)
+    lines = msg.split("\n")
+    assert lines[0] == "<b>🚨 BUY ZONE: $4,400 ≤ $4,500 target — book now</b>"
+    assert lines[1].startswith("🌟")
+
+
+def test_bang_leads_and_fire_folds_when_both_present():
+    payload = {"warnings": [], "history": [], "main": dict(VALID_MAIN),
+              "alerts": ["🚨 BUY ZONE: $4,400 ≤ $4,500 target — book now",
+                        "🔥 Ticket ① new low: $3,622 (prev $3,647)"]}
+    msg = notify_telegram.build_message(payload)
+    lines = msg.split("\n")
+    assert lines[0] == "<b>🚨 BUY ZONE: $4,400 ≤ $4,500 target — book now</b>"
+    assert "<b>🔥" not in msg                    # 🔥 never leads
+    core, _, rest = msg.partition("<blockquote")
+    assert "① new low 🔥" in core                # folded tag on the context line
+    assert "🔥 Ticket ① new low: $3,622 (prev $3,647)" in rest   # full text, in the quote
+
+
+def test_fire_alert_survives_with_no_other_expandable_content():
+    # No hotel/stay_value/budget/bali in VALID_MAIN's payload — the
+    # never-silently-drop guarantee must hold even when the 🛏️ Stay math
+    # quote would otherwise have nothing else to show.
+    payload = {"warnings": [], "history": [], "main": dict(VALID_MAIN),
+              "alerts": ["🔥 Ticket ① new low: $3,622 (prev $3,647)"]}
+    msg = notify_telegram.build_message(payload)
+    assert "<blockquote" in msg
+    assert "🔥 Ticket ① new low: $3,622 (prev $3,647)" in msg

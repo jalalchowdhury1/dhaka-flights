@@ -2,7 +2,7 @@
 and approved this shape) — conclusions-first core, arithmetic collapsed.
 
 Format rules:
-- The core is three blank-line-separated stanzas, each line ≤ ~44 visible
+- The core is two blank-line-separated stanzas, each line ≤ ~44 visible
   chars so nothing wraps on a phone: (1) PRICE — total + order + a compact
   price-context/fire-alert line + the trip shape (IST/DAC/stay nights/home)
   + the two ticket totals; (2) STAYS — the hotel line and a one-line stay-
@@ -239,8 +239,11 @@ def _stays_quote(payload: dict, main: dict, sv: Optional[dict],
         header_bits.append("💸 flexible")
         dd = (budget.get("dhaka_days") or 0) - (main.get("dhaka_days") or 0)
         dac_note = (f" · {'+' if dd > 0 else '−'}{abs(dd)} DAC days" if dd else "")
+        savings = budget.get("savings")
+        save_note = (f" — save ${savings:,}"
+                    if isinstance(savings, (int, float)) else "")
         body.append(f"💸 Flights-only ${budget['total']:,} "
-                    f"({budget.get('sg_nights')}N{dac_note})")
+                    f"({budget.get('sg_nights')}N{dac_note}){save_note}")
 
     bali = payload.get("bali")
     if bali:
@@ -387,7 +390,7 @@ def build_message(payload: dict, core_only: bool = False) -> str:
     foot = []
     cc = _compact_countdown(payload.get("countdown"))
     if cc:
-        foot.append(cc)
+        foot.append(esc_html(cc))
     if payload.get("verified"):
         foot.append("🔎 ✓")
     link = f'<a href="{SITE_URL}">dashboard</a>'
