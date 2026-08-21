@@ -154,5 +154,11 @@ def test_fire_alert_survives_with_no_other_expandable_content():
     payload = {"warnings": [], "history": [], "main": dict(VALID_MAIN),
               "alerts": ["🔥 Ticket ① new low: $3,622 (prev $3,647)"]}
     msg = notify_telegram.build_message(payload)
-    assert "<blockquote" in msg
-    assert "🔥 Ticket ① new low: $3,622 (prev $3,647)" in msg
+    # Partition-aware assertions (mutation-tested 2026-08-20): the fire text
+    # must land INSIDE a quote, not merely "somewhere while some unrelated
+    # quote also exists" — the flights/baggage quotes made the loose version
+    # pass even with the fold reverted.
+    assert "<b>🔥" not in msg
+    core, _, rest = msg.partition("<blockquote")
+    assert "🔥 Ticket ① new low" not in core
+    assert "🔥 Ticket ① new low: $3,622 (prev $3,647)" in rest
