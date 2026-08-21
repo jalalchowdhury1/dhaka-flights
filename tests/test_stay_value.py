@@ -1,6 +1,6 @@
 """Tests for the hotel-aware SIN night-count layer (stay math, 2026-08-19).
 Spec: docs/superpowers/specs/2026-08-19-hotel-aware-sin-nights-design.md"""
-import sys, os, datetime
+import sys, os, re, datetime
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import stay_value
 import publish
@@ -256,11 +256,14 @@ def _steering_payload():
 
 
 def test_brief_carries_the_stay_math_line():
+    # v4 redesign (2026-08-20): the core shows the CONCLUSION only ("St.
+    # Regis 4N ✓ · $4,997 all-in"); the per-night-count arithmetic moved
+    # into the 🛏️ Stay math expandable, "←" replaced by "✓picked".
     msg = notify_telegram.build_message(_steering_payload())
     assert "🛏️" in msg
+    assert "St. Regis <b>4N ✓</b>" in msg and "all-in" in msg
     assert "2N $4,600" in msg
-    assert "4N $4,997 ←" in msg            # 4660 flights + 337 net, picked
-    assert "St. Regis Singapore" in msg
+    assert "4N $4,997 ✓picked" in msg      # 4660 flights + 337 net, picked
 
 
 def test_brief_flags_advisory_mode():
@@ -268,10 +271,32 @@ def test_brief_flags_advisory_mode():
     p = publish.build_payload(FLIGHTS, [TICKET1], [], "2026-08-19",
                               sg_tickets=SG_TICKETS, stay_rates=stale)
     msg = notify_telegram.build_message(p)
-    assert "advisory only" in msg
+    assert "advisory only" in msg      # note text unchanged, now inside the quote
 
 
 def test_brief_without_stay_value_is_unchanged():
     p = publish.build_payload(FLIGHTS, [TICKET1], [], "2026-08-19",
                               sg_tickets=SG_TICKETS)
     assert "🛏️" not in notify_telegram.build_message(p)
+
+
+def test_brief_core_lines_fit_a_phone():
+    # Design principle (2026-08-20 v4): every core line fits a phone width
+    # (~44 chars incl. emoji) without wrapping.
+    msg = notify_telegram.build_message(_steering_payload())
+    core = msg.split("<blockquote", 1)[0]
+    lines = [re.sub(r"<[^>]+>", "", ln) for ln in core.split("\n")]
+    assert all(len(ln) <= 48 for ln in lines if ln)
+
+
+def test_fire_alerts_fold_into_context_not_core():
+    # 🔥 alerts (new lows) fold into a compact tag on the price-context
+    # line instead of leading the whole message in bold; their full text
+    # moves into the stays expandable so nothing is silently dropped.
+    p = dict(_steering_payload(),
+            alerts=["🔥 Ticket ① new low: $3,622 (prev $3,647)"])
+    msg = notify_telegram.build_message(p)
+    core, _, rest = msg.partition("<blockquote")
+    assert "① new low 🔥" in core
+    assert "🔥 Ticket ① new low: $3,622 (prev $3,647)" in rest
+    assert "<b>🔥" not in msg

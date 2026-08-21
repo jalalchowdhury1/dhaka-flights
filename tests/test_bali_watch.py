@@ -51,15 +51,16 @@ def test_payload_without_bali_stays_none():
 
 
 def test_telegram_shows_the_benchmark_line():
+    # v4 redesign (2026-08-20): the 🌴 Bali line moved out of the core into
+    # the 🛏️ Stay math expandable — the core only ever shows conclusions.
     p = publish.build_payload(list(FLIGHTS), [TICKET1], [], "2026-08-01",
                               warnings=[], sg_tickets=list(SG_TICKETS),
                               bali=_bali())
     msg = build_message(p)
-    assert "Original Bali trip" in msg
-    assert "CHEAPER than Bangkok" in msg          # 4450 vs 4600
+    assert "🌴 Bali: $4,450 (−$150 vs Bangkok)" in msg      # 4450 vs 4600
     p2 = publish.build_payload(list(FLIGHTS), [TICKET1], [], "2026-08-01",
                                warnings=[], sg_tickets=list(SG_TICKETS))
-    assert "Original Bali trip" not in build_message(p2)
+    assert "🌴 Bali" not in build_message(p2)
 
 
 def test_missing_bali_watch_warns_once():
@@ -130,11 +131,16 @@ def test_reversed_bali_baggage_and_hotel_follow_the_reversed_shape():
 
 def test_core_only_fallback_keeps_the_answer_and_drops_the_reference():
     # A busy night must degrade to the one-screen core, never to silence.
+    # v4 redesign (2026-08-20): the Bali comparison is arithmetic reference
+    # material now — it lives only in the 🛏️ Stay math expandable, so a
+    # core_only fallback (which drops ALL expandables) legitimately drops it
+    # too. The answer that must survive is the trip's own total.
     p = publish.build_payload(list(FLIGHTS), [TICKET1], [], "2026-08-01",
                               warnings=["x"], sg_tickets=list(SG_TICKETS),
                               bali=_bali())
     full = build_message(p)
     core = build_message(p, core_only=True)
     assert len(core) < len(full)
-    assert "$4,600" in core and "Original Bali trip" in core
+    assert "$4,600" in core
+    assert "🌴 Bali" not in core and "🌴 Bali" in full
     assert "blockquote" not in core and "blockquote" in full

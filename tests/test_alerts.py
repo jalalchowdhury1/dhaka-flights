@@ -76,14 +76,16 @@ def test_past_book_by_leads_and_retires_the_price_threshold():
 
 def test_price_context_ranks_within_tracked_era():
     # Only the two Aug entries + today count → 3 tracked days, not 5.
+    # Compact form (2026-08-20 v4 brief redesign): single source for the
+    # Telegram core AND the site's Tonight chip.
     e = _entry("2026-08-05", 4666)
     ctx = price_context(e, HIST + [e])
-    assert "2nd-cheapest of 3 days" in ctx and "$1 above the low" in ctx
+    assert ctx == "#2/3 · $1 over low"
 
 
 def test_price_context_at_the_low():
     e = _entry("2026-08-05", 4665)
-    assert "matches the all-time low" in price_context(e, HIST + [e])
+    assert price_context(e, HIST + [e]) == "#1/3 · at the low"
 
 
 def test_countdown_by_stage():

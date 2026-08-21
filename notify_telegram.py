@@ -1,17 +1,32 @@
-"""Telegram brief. REDESIGNED 2026-08-02 (Jalal: "looks too info dense") —
-one-phone-screen core + tap-to-expand blockquotes for reference material.
+"""Telegram brief. REDESIGNED 2026-08-20 v4 (Jalal iterated 4 phone previews
+and approved this shape) — conclusions-first core, arithmetic collapsed.
 
 Format rules:
-- The VISIBLE core answers "should I book, and did anything move?": alerts,
-  total + order + trend, the trip shape, the two tickets, the Bali gap, the
-  hotel, countdown. One line each.
-- Everything that repeats nightly (booking links, baggage rules,
-  alternatives, self-check detail) lives in <blockquote expandable> rows —
-  Telegram renders them collapsed with the first line as the row label.
+- The core is three blank-line-separated stanzas, each line ≤ ~44 visible
+  chars so nothing wraps on a phone: (1) PRICE — total + order + a compact
+  price-context/fire-alert line + the trip shape (IST/DAC/stay nights/home)
+  + the two ticket totals; (2) STAYS — the hotel line and a one-line stay-
+  math CONCLUSION ("St. Regis 4N ✓ · $4,954 all-in"), never the arithmetic
+  behind it.
+- The core answers "should I book, and did anything move?" in CONCLUSIONS
+  only. Every number's arithmetic — the per-night-count table, the flexible-
+  dates breakdown, the Bali comparison, folded 🔥 alert text — lives in the
+  🛏️ Stay math <blockquote expandable>, which rides FIRST among the
+  expandables because it's decision-adjacent. Nothing is silently dropped:
+  every fact that leaves the core has a home in that quote.
+- 🚨 alerts (and anything with neither 🚨 nor 🔥) still LEAD the message in
+  bold. 🔥 alerts (new lows) FOLD into a compact tag on the price-context
+  line ("① new low 🔥") — their full text moves into the stays quote instead
+  of leading, so a routine low doesn't cost a whole bold line.
+- Everything else that repeats nightly (booking links, baggage rules,
+  alternatives, self-check detail) lives in its own <blockquote expandable>
+  row, unchanged — Telegram renders them collapsed with the first line as
+  the row label.
 - parse_mode is HTML (expandable quotes don't exist in Markdown mode).
   EVERY dynamic string goes through esc_html; link hrefs too.
 """
 import os
+import re
 import urllib.request
 import json
 from typing import Optional
@@ -57,6 +72,31 @@ def _short_date(s: str) -> str:
     """'January 4, 2027' → 'Jan 4'"""
     parts = str(s).replace(",", "").split()
     return f"{parts[0][:3]} {parts[1]}" if len(parts) >= 2 else str(s)
+
+
+def _short_air(s):
+    """Display-only: 'US-Bangla Airlines + Scoot' → 'US-Bangla+Scoot'."""
+    return (str(s or "?").replace(" Airlines", "").replace(" Airways", "")
+            .replace(" + ", "+"))
+
+
+def _short_prop(s):
+    """Display-only hotel name: 'The Athenee Hotel, a Luxury Collection
+    Hotel' → 'Athenee'; 'St. Regis Singapore' → 'St. Regis'."""
+    s = str(s or "?").split(",")[0].strip()
+    for pre in ("The ",):
+        if s.startswith(pre):
+            s = s[len(pre):]
+    for suf in (" Hotel", " Singapore", " Istanbul"):
+        if s.endswith(suf):
+            s = s[:-len(suf)]
+    return s
+
+
+def _compact_countdown(s):
+    """'12 days to your usual booking window (booked …)' → '12 days'."""
+    m = re.search(r"(\d+) days?", str(s or ""))
+    return f"{m.group(1)} days" if m else None
 
 
 def _link(url, label="book") -> str:
@@ -163,20 +203,77 @@ def _alts_quote(payload: dict) -> str:
     return _quote(lines + t2 + t1)
 
 
+def _stays_quote(payload: dict, main: dict, sv: Optional[dict],
+                 fire_full: list) -> str:
+    """The FIRST expandable (2026-08-20 v4): the arithmetic behind the core's
+    stay-math CONCLUSION line — the per-night-count table, the rate, folded
+    🔥 alert text, the flexible-dates breakdown, and the Bali comparison.
+    Built from whatever exists; skipped entirely if it would only be its own
+    header (nothing to show)."""
+    header_bits = ["🛏️ Stay math"]
+    body = []
+
+    if sv and sv.get("rows"):
+        hotel = sv.get("hotel") or {}
+        picked_n = sv.get("picked_n")
+        body.append(" · ".join(
+            f"{r['n']}N ${r['allin']:,}" + (" ✓picked" if r["n"] == picked_n else "")
+            for r in sv["rows"]))
+        checked = str(hotel.get("checked") or "")
+        stamp = (f" ✓{int(checked[5:7])}/{int(checked[8:10])}"
+                if len(checked) == 10 and checked[4] == "-" else "")
+        two_free = any(r["n"] == 2 and r.get("hotel_net") == 0 for r in sv["rows"])
+        credit_note = " — credits cover the first 2N" if two_free else ""
+        body.append(f"{esc_html(_short_prop(hotel.get('name')))} "
+                    f"${hotel.get('rate', 0):,}/n{stamp}{credit_note}")
+        if sv.get("mode") == "advisory" and sv.get("note"):
+            body.append(f"⚠️ {esc_html(sv['note'])}")
+        if sv.get("watchdog"):
+            body.append(f"👀 {esc_html(sv['watchdog'])}")
+
+    for a in fire_full:
+        body.append(esc_html(a))
+
+    budget = payload.get("budget")
+    if budget:
+        header_bits.append("💸 flexible")
+        dd = (budget.get("dhaka_days") or 0) - (main.get("dhaka_days") or 0)
+        dac_note = (f" · {'+' if dd > 0 else '−'}{abs(dd)} DAC days" if dd else "")
+        body.append(f"💸 Flights-only ${budget['total']:,} "
+                    f"({budget.get('sg_nights')}N{dac_note})")
+
+    bali = payload.get("bali")
+    if bali:
+        header_bits.append("🌴 Bali")
+        d = bali.get("delta_vs_main")
+        if isinstance(d, (int, float)):
+            gap = (f"+${d:,}" if d > 0 else f"−${-d:,}" if d < 0 else "same price")
+        else:
+            gap = "n/a"
+        ob = bali.get("other_bali")
+        rev = f" · rev ${ob['total']:,}" if ob else ""
+        body.append(f"🌴 Bali: ${bali['total']:,} ({gap} vs Bangkok{rev})")
+
+    if not body:
+        return ""
+    return _quote([" · ".join(header_bits)] + body)
+
+
 def build_message(payload: dict, core_only: bool = False) -> str:
-    """The nightly brief: a one-screen core + expandable reference rows,
-    all built from the published payload so Telegram and the dashboard can
-    never disagree. core_only=True drops the expandable rows — the fallback
-    when a very busy night overflows Telegram's message limit."""
+    """The nightly brief (2026-08-20 v4): a one-screen core of two blank-
+    line-separated stanzas (price · stays) + expandable reference rows, all
+    built from the published payload so Telegram and the dashboard can never
+    disagree. core_only=True drops the expandable rows — the fallback when a
+    very busy night overflows Telegram's message limit."""
     main = payload.get("main")
     warnings = payload.get("warnings") or []
     parts = []
 
-    # ── Alerts lead, always visible ──
-    for a in payload.get("alerts") or []:
-        parts.append(f"<b>{esc_html(str(a).replace('*', ''))}</b>")
-
     if not main:
+        # ── Alerts lead, always visible (unchanged — no stays quote exists
+        # on a no-trip night, so there's nowhere for a folded 🔥 to go) ──
+        for a in payload.get("alerts") or []:
+            parts.append(f"<b>{esc_html(str(a).replace('*', ''))}</b>")
         parts.append("⚠️ <b>No trip could be priced today</b> — Ticket ① or the "
                      "Bangkok/Singapore middle came back empty in both orders. "
                      "Check cron.log; the retry slots will try again.")
@@ -187,74 +284,81 @@ def build_message(payload: dict, core_only: bool = False) -> str:
         parts.append(f'<a href="{SITE_URL}">dashboard</a>')
         return "\n".join(parts)
 
-    # ── The one-screen core ──
+    # ── Alert partition: 🚨 (and anything with neither marker) LEADS in
+    # bold, exactly as today. 🔥 (a new low) FOLDS into a compact tag on the
+    # price-context line instead — its full text moves into the stays quote
+    # below, never silently dropped. ──
+    lead_alerts, fire_tags, fire_full = [], [], []
+    for a in payload.get("alerts") or []:
+        s = str(a)
+        if "🚨" in s:
+            lead_alerts.append(s)
+        elif "🔥" in s:
+            fire_tags.append("① new low 🔥" if "Ticket ①" in s else "trip low 🔥")
+            fire_full.append(s)
+        else:
+            lead_alerts.append(s)
+    for a in lead_alerts:
+        parts.append(f"<b>{esc_html(a.replace('*', ''))}</b>")
+
+    # ── Price stanza ──
     flag = "" if main.get("valid") else f" ⚠️ {esc_html(main.get('flag') or 'check dates')}"
     parts.append(f"🌟 <b>${main['total']:,}</b> · {esc_html(main.get('order_label', '?'))}{flag}")
+
+    ctx_bits = []
     if payload.get("price_context"):
-        parts.append(f"<i>{esc_html(payload['price_context'])}</i>")
-    stays = (f"BKK {main.get('bkk_nights')}n · SIN {main.get('sg_nights')}n"
+        ctx_bits.append(esc_html(payload["price_context"]))
+    if fire_tags:
+        ctx_bits.append(" · ".join(fire_tags))
+    if ctx_bits:
+        parts.append(f"<i>{' · '.join(ctx_bits)}</i>")
+
+    stays = (f"🇹🇭 {main.get('bkk_nights')}n · 🇸🇬 {main.get('sg_nights')}n"
              if main.get("order") == "BKK-first" else
-             f"SIN {main.get('sg_nights')}n · BKK {main.get('bkk_nights')}n")
-    parts.append(f"🕌 IST {main.get('ist_nights') or 2}n · 🇧🇩 DAC {main['dhaka_days']}d · "
-                 f"{stays} · 🏠 home {esc_html(main['home'])}")
+             f"🇸🇬 {main.get('sg_nights')}n · 🇹🇭 {main.get('bkk_nights')}n")
+    parts.append(f"🕌 {main.get('ist_nights') or 2}n · 🇧🇩 {main['dhaka_days']}d · "
+                 f"{stays} · 🏠 {esc_html(main['home'])}")
 
     oj, t2 = main.get("openjaw") or {}, main.get("sg_ticket")
     t2_cost = (t2["price_total"] if t2 else
                sum(f.get("price_total", 0) for f in main.get("legs") or []))
-    t2_air = esc_html(main.get("sg_airlines", "?"))
-    parts.append(f"① {esc_html(oj.get('airline', '?'))} ${oj.get('price_total', 0):,} · "
-                 f"② {t2_air} ${t2_cost:,}")
+    parts.append(f"① {esc_html(_short_air(oj.get('airline', '?')))} "
+                 f"${oj.get('price_total', 0):,} · "
+                 f"② {esc_html(_short_air(main.get('sg_airlines', '?')))} ${t2_cost:,}")
 
-    bali = payload.get("bali")
-    if bali:
-        d = bali.get("delta_vs_main")
-        gap = ("no Bangkok trip to compare" if not isinstance(d, (int, float))
-               else "same price as Bangkok" if d == 0
-               else f"+${d:,} more than Bangkok" if d > 0
-               else f"−${-d:,} CHEAPER than Bangkok")
-        ob = bali.get("other_bali")
-        ob_note = (f" (other order ${ob['total']:,})" if ob else "")
-        parts.append(f"🌴 Original Bali trip: ${bali['total']:,} · "
-                     f"{esc_html(bali.get('order_label', ''))} — {gap}{ob_note}")
-
+    # ── Stays stanza ──
+    parts.append("")
     hotel = payload.get("hotel")
+    sv = payload.get("stay_value")
     if hotel:
-        pts = "–".join(f"{p // 1000}K" for p in sorted((hotel.get("points") or {}).values()))
-        parts.append(f"🏨 {esc_html(hotel['property'])} · {esc_html(hotel['checkin'])}–"
-                     f"{esc_html(hotel['checkout'])} ({hotel['nights']}n) · ~{pts} pts"
-                     f"{' · 5th night FREE ✓' if hotel.get('fifth_night_free') else ''}")
+        pts = hotel.get("points") or {}
+        pts_str = f"{min(pts.values()) // 1000}K pts" if pts else "? pts"
+        free = " · 5th night FREE" if hotel.get("fifth_night_free") else ""
+        parts.append(f"🏨 {esc_html(_short_prop(hotel.get('property')))} "
+                     f"{hotel.get('nights')}n · {pts_str}{free}")
         if hotel.get("warn"):
             parts.append(f"⚠️ {esc_html(hotel['warn'])}")
+    if sv and sv.get("mode") == "steering" and sv.get("rows"):
+        h = sv.get("hotel") or {}
+        parts.append(f"🛏️ {esc_html(_short_prop(h.get('name')))} "
+                     f"<b>{sv.get('picked_n')}N ✓</b> · "
+                     f"${sv.get('trip_allin') or 0:,} all-in")
+    elif sv and sv.get("mode") == "advisory":
+        parts.append(f"🛏️ SIN {main.get('sg_nights')}N · ⚠️ stay math advisory")
 
-    # 🛏️ Stay math (2026-08-19): the all-in night-count table, one line.
-    sv = payload.get("stay_value")
-    if sv and sv.get("rows"):
-        seg = " · ".join(
-            f"{r['n']}N ${r['allin']:,}"
-            + (" ←" if r["n"] == sv.get("picked_n") else "")
-            for r in sv["rows"])
-        sh = sv.get("hotel") or {}
-        checked = str(sh.get("checked") or "")
-        tick = (f" ✓{int(checked[5:7])}/{int(checked[8:10])}"
-                if len(checked) == 10 and checked[4] == "-" else "")
-        parts.append(f"🛏️ Stay math: {seg} · {esc_html(sh.get('name', '?'))} "
-                     f"${sh.get('rate', 0):,}/n{tick}")
-        if sv.get("mode") == "advisory" and sv.get("note"):
-            parts.append(f"⚠️ {esc_html(sv['note'])}")
-        if sv.get("watchdog"):
-            parts.append(f"👀 {esc_html(sv['watchdog'])}")
-
-    budget = payload.get("budget")
-    if budget:
-        diffs = f" — <i>{esc_html(' · '.join(budget.get('diffs') or []))}</i>" \
-            if budget.get("diffs") else ""
-        parts.append(f"💸 Cheaper if flexible: <b>${budget['total']:,}</b> · "
-                     f"save ${budget['savings']:,}{diffs}")
-
-    # ── Expandable reference rows ──
     if core_only:
         parts.append(f'<i>full detail on the</i> <a href="{SITE_URL}">dashboard</a>')
         return "\n".join(parts)
+
+    # ── Expandable reference rows: stays FIRST (decision-adjacent — it
+    # holds the arithmetic behind the stays stanza's conclusion, the folded
+    # 🔥 text, the budget breakdown, and the Bali comparison), then the
+    # self-check/changes/flights/baggage/alternatives/budget-detail rows in
+    # their existing order. ──
+    parts.append("")
+    stq = _stays_quote(payload, main, sv, fire_full)
+    if stq:
+        parts.append(stq)
     if warnings:
         parts.append(_quote([f"🧪 Self-check · {len(warnings)} note"
                              f"{'s' if len(warnings) != 1 else ''}"] +
@@ -270,6 +374,7 @@ def build_message(payload: dict, core_only: bool = False) -> str:
     alts_q = _alts_quote(payload)
     if alts_q:
         parts.append(alts_q)
+    budget = payload.get("budget")
     if budget and (budget.get("sg_ticket") or budget.get("legs")):
         blines = ["💸 The flexible-dates option, in full"]
         if budget.get("sg_ticket"):
@@ -280,13 +385,13 @@ def build_message(payload: dict, core_only: bool = False) -> str:
 
     # ── Footer ──
     foot = []
-    if payload.get("countdown"):
-        foot.append(esc_html(str(payload["countdown"]).replace("📅 ", "")))
+    cc = _compact_countdown(payload.get("countdown"))
+    if cc:
+        foot.append(cc)
     if payload.get("verified"):
-        foot.append("🔎 re-check ✓")
-    if foot:
-        parts.append(f"<i>📅 {' · '.join(foot)}</i>")
-    parts.append(f'<a href="{SITE_URL}">dashboard</a>')
+        foot.append("🔎 ✓")
+    link = f'<a href="{SITE_URL}">dashboard</a>'
+    parts.append(f"<i>📅 {' · '.join(foot)}</i> · {link}" if foot else link)
     return "\n".join(parts)
 
 

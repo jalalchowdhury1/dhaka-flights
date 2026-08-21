@@ -103,16 +103,21 @@ def test_publish_payload_carries_budget_and_history_total():
 
 
 def test_telegram_shows_budget_block_only_when_present():
+    # v4 redesign (2026-08-20): the budget figure moved out of the core into
+    # the 🛏️ Stay math expandable's 💸 line (the core only shows CONCLUSIONS
+    # — arithmetic like "save $X" now lives beside the two totals it's
+    # derived from, inside the quote).
     import publish
     from notify_telegram import build_message
     flights = [DAC_SIN_2N, SIN_BKK_F1]
     p = publish.build_payload(flights, [IST2_OJ], [], "2026-07-27",
                               warnings=[], sg_tickets=[ONE_NIGHT_TICKET])
     msg = build_message(p)
-    assert "Cheaper if flexible" in msg and "$4,300" in msg and "save $100" in msg
+    assert "💸 flexible" in msg and "💸 Flights-only $4,300 (1N)" in msg
     p2 = publish.build_payload(flights, [IST2_OJ], [], "2026-07-27",
                                warnings=[], sg_tickets=[])
-    assert "Cheaper if flexible" not in build_message(p2)
+    assert "💸 flexible" not in build_message(p2)
+    assert "Flights-only" not in build_message(p2)
 
 
 def test_history_row_appends_budget_and_order_columns():

@@ -89,16 +89,18 @@ def headlines(entry, history, today: datetime.date) -> list:
 
 
 def price_context(entry, history) -> str:
-    """One always-on line of perspective: rank, distance to the low."""
+    """One always-on line of perspective: rank, distance to the low. Compact
+    form (2026-08-20 v4 brief redesign) — single source for the Telegram
+    core AND the site's Tonight chip, so they can never disagree."""
     cur = _main(entry)
     pts = _mains(history)
     if not isinstance(cur, (int, float)) or len(pts) < 2:
         return None
     lo = min(v for _, v in pts)
     rank = 1 + sum(1 for _, v in pts if v < cur)
-    gap = ("matches the all-time low" if cur == lo
-           else f"${cur - lo:,} above the low")
-    return f"{_ordinal(rank)}-cheapest of {len(pts)} days tracked · {gap}"
+    if cur == lo:
+        return f"#{rank}/{len(pts)} · at the low"
+    return f"#{rank}/{len(pts)} · ${cur - lo:,} over low"
 
 
 def countdown(today: datetime.date) -> str:
