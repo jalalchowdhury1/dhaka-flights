@@ -200,16 +200,26 @@ from. Rules now:
     full IST/SIN rosters were read once for the real dates as 2 adults + 1
     child (`docs/research/2026-08-22-fhr-portal-snapshot.md`). Two things fell
     out: the Google public rate understates the FHR booking rate by 23–55 %
-    (3rd guest + flexible rate), and taxes/fees are ~19–20 % in BOTH cities, not
-    the 12 % every offset had assumed. So `hotel_rates.PORTAL` holds each
+    (3rd guest + flexible rate + Google's headline being PRE-tax), and the
+    real all-in multipliers are `TAX_MULT` = IST 1.12 / SIN 1.20 (read off
+    total ÷ avg × nights; the Ritz IST's 1.19 is the lone outlier — an
+    earlier note here said "19–20 % in both cities", which was wrong for
+    Istanbul). So `hotel_rates.PORTAL` holds each
     hotel's all-in stay total, nights, property credit and free-night promo;
     `build()` writes `anchor` (with the Google rate on the anchor day —
     seeded for the original 8, bootstrapped from the first live scrape for
     the rest), `est_allin_night` (portal all-in per PAID night × Google now ÷
     Google on anchor day) and `drift_pct`. Offsets, `stay_value`, `verify`
     and the Telegram 🛏️ line all price from `est_allin_night`; `rate` is the
-    drift alarm. `TAX_RATE = 0.19` is a FALLBACK for un-anchored rows only
-    (JW South Beach, Edit-only). A persisted Google baseline is trusted only
+    drift alarm. Rows also carry `avg_allin_night` (the FHR estimate averaged
+    over the tracked stay — what the table shows, so free-night hotels read
+    honestly), `public_allin_night` (Google pre-tax × `TAX_MULT`, the
+    apples-to-apples column) and `rank` (hand-curated VALUE ORDER per city in
+    `SHORTLIST`: net for the stay after credits, then quality; #1 = bold = the
+    play; the site sorts by it — it is a recommendation, not a price sort).
+    `TAX_MULT[city]` is the FALLBACK for un-anchored rows (JW South Beach,
+    Edit-only); stay_value/verify keep a 0.19 fallback that only SIN rows can
+    reach. A persisted Google baseline is trusted only
     while its `anchor.date` equals `PORTAL_DATE` (and the SEED baseline only
     while SEED's `checked` equals it), so bumping `PORTAL_DATE` self-
     invalidates every old baseline — no hand-clearing of the JSON. **Re-anchor
