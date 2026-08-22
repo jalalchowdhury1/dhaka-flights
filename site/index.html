@@ -1052,30 +1052,35 @@ function stayHeading(city, fallback) {
   return `${MON[+m1]} ${+d1}–${end} (${s.nights}n)`;
 }
 
-/* Public Google rate (2 adults, incl. fees) — the DRIFT ALARM, with how far
-   it has moved since the portal anchor date. */
-function rateCell(row) {
-  if (row.rate == null) return `<td class="num muted">— <span class="small">1st read tonight</span></td>`;
+/* Public all-in: Google's headline rate (2 adults, PRE-tax for a US viewer) with
+   the city's taxes/fees added by hotel_rates.py — same basis as the FHR column.
+   Carries the drift badge: how far the public rate has moved since anchor day. */
+function publicCell(row) {
+  if (row.public_allin_night == null)
+    return `<td class="num muted">— <span class="small">1st read tonight</span></td>`;
   const age = daysSince(row.checked);
   const stale = age != null && age > 3
     ? ` <span class="badge warn" title="last confirmed ${esc(row.checked)}">${age}d</span>` : "";
   const d = row.drift_pct;
   const drift = typeof d === "number" && d !== 0
-    ? ` <span class="badge ${d > 0 ? "warn" : "good"}" title="vs the public rate on ${esc((row.anchor || {}).google_date || "anchor day")}">${d > 0 ? "▲" : "▼"}${Math.abs(d)}%</span>` : "";
-  return `<td class="num">$${row.rate.toLocaleString()}${stale}${drift}</td>`;
+    ? ` <span class="badge ${d > 0 ? "warn" : "good"}" title="public rate vs ${esc((row.anchor || {}).google_date || "anchor day")}">${d > 0 ? "▲" : "▼"}${Math.abs(d)}%</span>` : "";
+  const tip = `Google ${esc(String(row.rate))} pre-tax × city taxes/fees, 2 adults, cheapest listed rate`;
+  return `<td class="num" title="${tip}">$${Math.round(row.public_allin_night).toLocaleString()}${stale}${drift}</td>`;
 }
-/* Estimated FHR all-in per paid night: the portal figure drifted by the public
-   rate. This is the number the offsets and the stay math use. */
+/* FHR all-in, AVERAGED per night over the tracked stay (a free-night hotel's
+   per-paid-night figure would read a third dearer than the stay averages).
+   The offsets and the stay math still use the per-paid-night estimate. */
 function allinCell(row) {
-  if (row.est_allin_night == null) return `<td class="num">—</td>`;
+  const v = row.avg_allin_night != null ? row.avg_allin_night : row.est_allin_night;
+  if (v == null) return `<td class="num">—</td>`;
   const a = row.anchor;
   const tip = a
     ? `Amex FHR portal ${a.date}: $${a.total.toLocaleString()} for ${a.nights}n incl. taxes` +
       (a.free_night_min ? ` · free night from ${a.free_night_min}n` : "") +
       (a.promo ? ` · ${a.promo}` : "") + ` · $${a.credit} property credit`
-    : "no portal anchor — public rate × ~19% tax";
+    : "no portal row (Edit-only) — public all-in used";
   const promo = a && a.free_night_min ? ` <span class="badge good" title="${esc(tip)}">free nt</span>` : "";
-  return `<td class="num" title="${esc(tip)}"><b>$${Math.round(row.est_allin_night).toLocaleString()}</b>${a ? "" : '<span class="small">*</span>'}${promo}</td>`;
+  return `<td class="num" title="${esc(tip)}"><b>$${Math.round(v).toLocaleString()}</b>${a ? "" : '<span class="small">*</span>'}${promo}</td>`;
 }
 const offCell = (o) => `<td class="num">${o && o.pct != null
   ? `<span class="badge ${o.band}">~${o.pct}%</span>` : "—"}</td>`;
@@ -1085,26 +1090,19 @@ function cardPlayTables() {
     return `<div class="small" style="margin-top:10px">Nightly rates are refreshed
       by their own job and weren't reachable just now — reload, or see the
       shortlist notes below.</div>`;
-  /* Sort by the estimated cost of the TRACKED STAY (paid nights × all-in), not
-     per night: a free-4th-night hotel bills 3 nights for 4, which is exactly
-     what makes the Capitol Kempinski cheaper for the stay than hotels with a
-     lower per-night figure. Same paid_nights rule as hotel_rates.py. */
-  const stayNights = city => (RATES.stays && RATES.stays[city] && RATES.stays[city].nights)
-    || (city === "IST" ? 2 : 4);
-  const stayCost = r => {
-    if (r.est_allin_night == null) return 1e9;
-    const n = stayNights(r.city), fm = r.anchor && r.anchor.free_night_min;
-    return r.est_allin_night * (fm && n >= fm ? n - 1 : n);
-  };
-  const byStay = (a, b) => stayCost(a) - stayCost(b);
-  const ist = RATES.rows.filter(r => r.city === "IST").sort(byStay);
-  const sin = RATES.rows.filter(r => r.city === "SIN").sort(byStay);
-  const nameCell = r => `<td>${r.bold ? `<b>${esc(r.name)}</b>` : esc(r.name)}</td>`;
+  /* Order = the hand-curated VALUE RANK from hotel_rates.SHORTLIST (net for the
+     tracked stay after credits, then quality) — a recommendation, not a price
+     sort. #1 is the bold play. Rows without a rank (older JSON) sort last. */
+  const byRank = (a, b) => (a.rank ?? 99) - (b.rank ?? 99);
+  const ist = RATES.rows.filter(r => r.city === "IST").sort(byRank);
+  const sin = RATES.rows.filter(r => r.city === "SIN").sort(byRank);
+  const nameCell = r => `<td><span class="muted small">${r.rank != null ? "#" + r.rank + " " : ""}</span>${
+      r.bold ? `<b>${esc(r.name)}</b>` : esc(r.name)}</td>`;
   const istRows = ist.map(r => `<tr>${nameCell(r)}<td>${esc(r.program)}</td>
-      ${allinCell(r)}${rateCell(r)}${offCell(r.offsets && r.offsets[0])}
+      ${allinCell(r)}${publicCell(r)}${offCell(r.offsets && r.offsets[0])}
       <td class="wrap">${esc(r.angle)}</td></tr>`).join("");
   const sinRows = sin.map(r => `<tr>${nameCell(r)}<td>${esc(r.program)}</td>
-      ${allinCell(r)}${rateCell(r)}${offCell(r.offsets && r.offsets[0])}${offCell(r.offsets && r.offsets[1])}
+      ${allinCell(r)}${publicCell(r)}${offCell(r.offsets && r.offsets[0])}${offCell(r.offsets && r.offsets[1])}
       <td class="wrap">${esc(r.angle)}</td></tr>`).join("");
   const aged = RATES.rows.filter(r => r.rate != null).map(r => daysSince(r.checked) ?? 0);
   const oldest = aged.length ? Math.max(...aged) : 0;
@@ -1115,20 +1113,23 @@ function cardPlayTables() {
   const anchorDate = esc(RATES.portal_date || "2026-08-22");
   return `<div class="scroll-x" style="margin-top:10px"><table>
       <tr><th>🕌 Istanbul · ${stayHeading("IST", "Jan 5–7 (2n)")}</th><th>Program</th>
-          <th class="num">FHR all-in/nt</th><th class="num">Public</th><th class="num">Offset</th><th>Angle</th></tr>
+          <th class="num">FHR all-in/nt</th><th class="num">Public all-in/nt</th><th class="num">Offset</th><th>Angle</th></tr>
       ${istRows}</table></div>
     <div class="scroll-x" style="margin-top:10px"><table>
       <tr><th>🇸🇬 Singapore · ${stayHeading("SIN", "2–4n")}</th><th>Program</th>
-          <th class="num">FHR all-in/nt</th><th class="num">Public</th><th class="num">2n</th><th class="num">4n</th><th>Angle</th></tr>
+          <th class="num">FHR all-in/nt</th><th class="num">Public all-in/nt</th><th class="num">2n</th><th class="num">4n</th><th>Angle</th></tr>
       ${sinRows}</table></div>${freshness}
-    <div class="small" style="margin-top:6px"><b>FHR all-in/nt</b> is the rate the card
-      play actually books: read once from the Amex FHR portal on ${anchorDate}
-      (2 adults + 1 child, taxes and fees in, per <i>paid</i> night — a free-night
-      promo shows as "free nt"), then moved each night by however far the
-      <b>public</b> Google rate (2 adults, incl. fees, re-checked nightly — last run
-      ${esc(RATES.updated || "—")}) has drifted since that day. Sorted by the
-      estimated cost of the tracked stay, cheapest first. * = no portal row (Edit-only), public × ~19% tax. Re-confirm in the
-      portal before booking.</div>`;
+    <div class="small" style="margin-top:6px">Rows are in <b>value order</b> — net cost
+      for these dates after credits, then quality; #1 (bold) is the play.
+      <b>FHR all-in/nt</b> = what the card play books: read once from the Amex FHR
+      portal on ${anchorDate} (2 adults + 1 child, taxes and fees in, averaged
+      per night over the stay — "free nt" marks a free-night promo already in
+      the number), moved each night by the public rate's drift.
+      <b>Public all-in/nt</b> = Google's cheapest listed rate (2 adults, pre-tax)
+      plus the city's taxes/fees (Istanbul +12%, Singapore +20%), re-checked
+      nightly — last run ${esc(RATES.updated || "—")}. The gap that remains is
+      flexible-vs-prepaid rate and the third guest. * = no portal row (Edit-only).
+      Re-confirm in the portal before booking.</div>`;
 }
 
 /* 🛏️ Stay math (2026-08-19): the all-in SIN night-count table — flights +

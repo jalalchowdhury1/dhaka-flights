@@ -22,6 +22,7 @@
    "name": "Sanasaryan Han (Lux. Coll.)",
    "program": "FHR",
    "angle": "Old-city boutique \u00b7 Bonvoy stacks \u00b7 cheapest FHR in IST",
+   "rank": 3,
    "bold": false,
    "rate": 353,
    "checked": "2026-08-22",
@@ -37,6 +38,8 @@
     "google_date": "2026-08-22"
    },
    "est_allin_night": 478.06,
+   "avg_allin_night": 478.06,
+   "public_allin_night": 395.36,
    "drift_pct": 0,
    "offsets": [
     {
@@ -51,8 +54,9 @@
    "city": "IST",
    "name": "Ritz-Carlton Istanbul",
    "program": "FHR",
-   "angle": "Value pick \u00b7 Bonvoy Platinum stacks (points + elite nights)",
-   "bold": true,
+   "angle": "The Bonvoy pick \u00b7 points + elite nights + Platinum perks stack",
+   "rank": 2,
+   "bold": false,
    "rate": 447,
    "checked": "2026-08-22",
    "anchor": {
@@ -67,6 +71,8 @@
     "google_date": "2026-08-22"
    },
    "est_allin_night": 625.21,
+   "avg_allin_night": 625.21,
+   "public_allin_night": 500.64,
    "drift_pct": 0,
    "offsets": [
     {
@@ -82,6 +88,7 @@
    "name": "Park Hyatt Ma\u00e7ka Palas",
    "program": "FHR",
    "angle": "Ni\u015fanta\u015f\u0131 boutique \u00b7 second-cheapest FHR",
+   "rank": 4,
    "bold": false,
    "rate": 403,
    "checked": "2026-08-22",
@@ -97,6 +104,8 @@
     "google_date": "2026-08-22"
    },
    "est_allin_night": 566.99,
+   "avg_allin_night": 566.99,
+   "public_allin_night": 451.36,
    "drift_pct": 0,
    "offsets": [
     {
@@ -111,8 +120,9 @@
    "city": "IST",
    "name": "Shangri-La Bosphorus",
    "program": "FHR",
-   "angle": "Bosphorus-front \u00b7 TA 4.8 \u00b7 Ritz money",
-   "bold": false,
+   "angle": "Best value in IST \u00b7 Bosphorus-front \u00b7 TA 4.8 \u00b7 Ritz money, better spot",
+   "rank": 1,
+   "bold": true,
    "rate": 398,
    "checked": "2026-08-22",
    "anchor": {
@@ -127,6 +137,8 @@
     "google_date": "2026-08-22"
    },
    "est_allin_night": 595.13,
+   "avg_allin_night": 595.13,
+   "public_allin_night": 445.76,
    "drift_pct": 0,
    "offsets": [
     {
@@ -142,6 +154,7 @@
    "name": "St. Regis Istanbul",
    "program": "FHR",
    "angle": "Butler with every room \u00b7 Bonvoy stacks",
+   "rank": 5,
    "bold": false,
    "rate": 546,
    "checked": "2026-08-22",
@@ -157,6 +170,8 @@
     "google_date": "2026-08-22"
    },
    "est_allin_night": 719.38,
+   "avg_allin_night": 719.38,
+   "public_allin_night": 611.52,
    "drift_pct": 0,
    "offsets": [
     {
@@ -172,6 +187,7 @@
    "name": "\u00c7\u0131ra\u011fan Palace Kempinski",
    "program": "FHR",
    "angle": "The sentimental splurge \u00b7 Bosphorus palace, the favorite brand",
+   "rank": 6,
    "bold": false,
    "rate": 473,
    "checked": "2026-08-22",
@@ -187,6 +203,8 @@
     "google_date": "2026-08-22"
    },
    "est_allin_night": 737.29,
+   "avg_allin_night": 737.29,
+   "public_allin_night": 529.76,
    "drift_pct": 0,
    "offsets": [
     {
@@ -202,6 +220,7 @@
    "name": "Four Seasons Bosphorus",
    "program": "FHR",
    "angle": "Palace on the water \u00b7 fits 3 (portal-proven)",
+   "rank": 7,
    "bold": false,
    "rate": 611,
    "checked": "2026-08-22",
@@ -217,6 +236,8 @@
     "google_date": "2026-08-22"
    },
    "est_allin_night": 784.77,
+   "avg_allin_night": 784.77,
+   "public_allin_night": 684.32,
    "drift_pct": 0,
    "offsets": [
     {
@@ -232,6 +253,7 @@
    "name": "Raffles Istanbul",
    "program": "FHR",
    "angle": "TA 4.9, the best-reviewed in town \u00b7 Zorlu mall",
+   "rank": 8,
    "bold": false,
    "rate": 536,
    "checked": "2026-08-22",
@@ -247,6 +269,8 @@
     "google_date": "2026-08-22"
    },
    "est_allin_night": 817.47,
+   "avg_allin_night": 817.47,
+   "public_allin_night": 600.32,
    "drift_pct": 0,
    "offsets": [
     {
@@ -262,6 +286,7 @@
    "name": "The Capitol Kempinski",
    "program": "FHR",
    "angle": "THE find \u00b7 free 4th night \u00b7 $125 F&B credit \u00b7 Kempinski standard at half the St. Regis",
+   "rank": 1,
    "bold": true,
    "rate": 287,
    "checked": "2026-08-22",
@@ -277,6 +302,8 @@
     "google_date": "2026-08-22"
    },
    "est_allin_night": 442.36,
+   "avg_allin_night": 331.77,
+   "public_allin_night": 344.4,
    "drift_pct": 0,
    "offsets": [
     {
@@ -297,6 +324,7 @@
    "name": "Shangri-La Singapore",
    "program": "FHR",
    "angle": "Garden resort in town \u00b7 Valley Wing is the play",
+   "rank": 2,
    "bold": false,
    "rate": 255,
    "checked": "2026-08-22",
@@ -312,6 +340,8 @@
     "google_date": "2026-08-22"
    },
    "est_allin_night": 433.54,
+   "avg_allin_night": 433.54,
+   "public_allin_night": 306.0,
    "drift_pct": 0,
    "offsets": [
     {
@@ -332,6 +362,7 @@
    "name": "Four Seasons Singapore",
    "program": "FHR",
    "angle": "Orchard \u00b7 kids' program \u00b7 cheaper than St. Regis",
+   "rank": 3,
    "bold": false,
    "rate": 309,
    "checked": "2026-08-22",
@@ -347,6 +378,8 @@
     "google_date": "2026-08-22"
    },
    "est_allin_night": 463.39,
+   "avg_allin_night": 463.39,
+   "public_allin_night": 370.8,
    "drift_pct": 0,
    "offsets": [
     {
@@ -367,6 +400,7 @@
    "name": "Artyzen Singapore",
    "program": "FHR",
    "angle": "New 2023 \u00b7 $125 property credit \u00b7 rooftop pool",
+   "rank": 4,
    "bold": false,
    "rate": 336,
    "checked": "2026-08-22",
@@ -382,6 +416,8 @@
     "google_date": "2026-08-22"
    },
    "est_allin_night": 484.08,
+   "avg_allin_night": 484.08,
+   "public_allin_night": 403.2,
    "drift_pct": 0,
    "offsets": [
     {
@@ -402,6 +438,7 @@
    "name": "Ritz-Carlton Millenia",
    "program": "FHR",
    "angle": "Marina views \u00b7 Bonvoy stacks",
+   "rank": 6,
    "bold": false,
    "rate": 477,
    "checked": "2026-08-22",
@@ -417,6 +454,8 @@
     "google_date": "2026-08-22"
    },
    "est_allin_night": 587.98,
+   "avg_allin_night": 587.98,
+   "public_allin_night": 572.4,
    "drift_pct": 0,
    "offsets": [
     {
@@ -437,6 +476,7 @@
    "name": "St. Regis Singapore",
    "program": "FHR",
    "angle": "Butler standard \u00b7 Bonvoy stacks \u00b7 the old play",
+   "rank": 7,
    "bold": false,
    "rate": 472,
    "checked": "2026-08-22",
@@ -452,6 +492,8 @@
     "google_date": "2026-08-22"
    },
    "est_allin_night": 604.5,
+   "avg_allin_night": 604.5,
+   "public_allin_night": 566.4,
    "drift_pct": 0,
    "offsets": [
     {
@@ -472,6 +514,7 @@
    "name": "Fullerton Bay Hotel",
    "program": "FHR",
    "angle": "Free 3rd night \u00b7 $125 F&B \u00b7 TA 4.8 \u00b7 on the water",
+   "rank": 8,
    "bold": false,
    "rate": 500,
    "checked": "2026-08-22",
@@ -487,6 +530,8 @@
     "google_date": "2026-08-22"
    },
    "est_allin_night": 875.27,
+   "avg_allin_night": 656.45,
+   "public_allin_night": 600.0,
    "drift_pct": 0,
    "offsets": [
     {
@@ -507,6 +552,7 @@
    "name": "Mandarin Oriental",
    "program": "FHR",
    "angle": "Free 4th night \u00b7 TA 4.8 \u00b7 Marina Bay",
+   "rank": 9,
    "bold": false,
    "rate": 486,
    "checked": "2026-08-22",
@@ -522,6 +568,8 @@
     "google_date": "2026-08-22"
    },
    "est_allin_night": 881.26,
+   "avg_allin_night": 660.94,
+   "public_allin_night": 583.2,
    "drift_pct": 0,
    "offsets": [
     {
@@ -542,6 +590,7 @@
    "name": "Singapore EDITION",
    "program": "FHR",
    "angle": "TA 4.8 \u00b7 Bonvoy stacks \u00b7 Orchard-adjacent",
+   "rank": 10,
    "bold": false,
    "rate": 472,
    "checked": "2026-08-22",
@@ -557,6 +606,8 @@
     "google_date": "2026-08-22"
    },
    "est_allin_night": 680.07,
+   "avg_allin_night": 680.07,
+   "public_allin_night": 566.4,
    "drift_pct": 0,
    "offsets": [
     {
@@ -577,6 +628,7 @@
    "name": "Pan Pacific Orchard",
    "program": "THC + Edit",
    "angle": "Wildcard \u00b7 CSR select-hotels credit may stack (see note)",
+   "rank": 5,
    "bold": false,
    "rate": 255,
    "checked": "2026-08-22",
@@ -592,6 +644,8 @@
     "google_date": "2026-08-22"
    },
    "est_allin_night": 445.59,
+   "avg_allin_night": 445.59,
+   "public_allin_night": 306.0,
    "drift_pct": 2,
    "offsets": [
     {
@@ -612,11 +666,14 @@
    "name": "JW Marriott South Beach",
    "program": "The Edit only",
    "angle": "Best Edit-exclusive if the fallback strategy is needed",
+   "rank": 11,
    "bold": false,
    "rate": 444,
    "checked": "2026-08-22",
    "anchor": null,
-   "est_allin_night": 528.36,
+   "est_allin_night": 532.8,
+   "avg_allin_night": 532.8,
+   "public_allin_night": 532.8,
    "drift_pct": null,
    "offsets": [
     {
