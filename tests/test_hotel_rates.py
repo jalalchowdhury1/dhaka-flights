@@ -401,7 +401,7 @@ def test_build_rows_carry_anchor_est_and_drift(tmp_path, monkeypatch):
     assert ritz["anchor"]["google_date"] == "2026-08-22"
     jw = next(r for r in out["rows"] if r["key"] == "jw_sin")
     assert jw["anchor"] is None and jw["drift_pct"] is None
-    assert jw["est_allin_night"] == round(jw["rate"] * 1.19, 2)        # fallback path
+    assert jw["est_allin_night"] == round(jw["rate"] * 1.20, 2)        # fallback path (SIN multiplier)
     new = next(r for r in out["rows"] if r["key"] == "shangrila_sin")
     assert new["rate"] is None and new["est_allin_night"] == round(1734.16 / 4, 2)
     assert new["offsets"][1]["pct"] == 37                              # offsets exist before the first scrape
@@ -491,3 +491,36 @@ def test_seeded_google_anchor_dies_with_a_portal_date_bump(tmp_path, monkeypatch
     assert ritz["anchor"]["google"] == 500 and ritz["anchor"]["google_date"] == "2026-10-02"
     untouched = next(r for r in out["rows"] if r["key"] == "stregis_ist")
     assert untouched["anchor"]["google"] is None        # no live read yet: no baseline
+
+
+# ── Value rank + apples-to-apples columns (2026-08-22, evening) ──────────────
+def test_city_tax_multipliers_come_from_the_portal_totals():
+    """total ÷ (avg × nights) on the portal: IST 1.12 (VAT + accommodation
+    tax), SIN 1.20 (GST + service). The Ritz IST is the lone 1.19 outlier."""
+    assert hr.TAX_MULT == {"IST": 1.12, "SIN": 1.20}
+
+
+def test_every_row_has_a_unique_value_rank_per_city():
+    for city in ("IST", "SIN"):
+        ranks = [e["rank"] for e in hr.SHORTLIST if e["city"] == city]
+        assert sorted(ranks) == list(range(1, len(ranks) + 1)), (city, ranks)
+        top = next(e for e in hr.SHORTLIST if e["city"] == city and e["rank"] == 1)
+        assert top.get("bold"), f"{city}: rank 1 must be the bold play"
+
+
+def test_build_writes_public_allin_and_stay_average(tmp_path, monkeypatch):
+    monkeypatch.setattr(hr, "RATES_FILE", str(tmp_path / "hotel_rates.json"))
+    out = hr.build({"main": None}, scraped={"kempinski_sin": (287, "ok")},
+                   today="2026-08-23")
+    k = next(r for r in out["rows"] if r["key"] == "kempinski_sin")
+    assert k["public_allin_night"] == round(287 * 1.20, 2)          # 344.4
+    # per-night AVERAGE over the tracked 4n stay: 3 paid × 442.36 ÷ 4
+    assert k["avg_allin_night"] == round(442.36 * 3 / 4, 2)          # 331.77
+    assert k["rank"] == 1
+    ritz = next(r for r in out["rows"] if r["key"] == "ritz_ist")
+    assert ritz["public_allin_night"] == round(447 * 1.12, 2)
+    assert ritz["avg_allin_night"] == ritz["est_allin_night"]        # no free night
+    new = next(r for r in out["rows"] if r["key"] == "fs_sin")
+    assert new["public_allin_night"] is None                          # no public rate yet
+    jw = next(r for r in out["rows"] if r["key"] == "jw_sin")
+    assert jw["est_allin_night"] == round(jw["rate"] * 1.20, 2)      # fallback uses the CITY multiplier

@@ -46,6 +46,13 @@ CREDITS_NOTE = ("$300 Amex (or $250 Edit) + $100–125 property credit "
 # offset by ~6 points.
 TAX_RATE = 0.19
 
+# Per-city all-in multipliers, READ OFF THE PORTAL TOTALS (total ÷ avg × nights,
+# 2026-08-22): Istanbul 1.12 (10 % VAT + 2 % accommodation tax — the Ritz's
+# 1.19 is the lone outlier), Singapore 1.20 (9 % GST + 10 % service charge).
+# Used for the "public all-in" column (Google's headline rate is PRE-tax for a
+# US viewer) and for the no-anchor fallback.
+TAX_MULT = {"IST": 1.12, "SIN": 1.20}
+
 # Credits, split the way the programs actually pay them out.
 AMEX_FIXED = 300            # Amex Platinum $300 per half-year on prepaid FHR/THC
 EDIT_FIXED = 250            # CSR "The Edit" — non-FHR programs
@@ -111,66 +118,71 @@ def moves_message(moves):
 # 2026-08-22: 8 → 20 properties = every luxury FHR candidate that fit 2 adults
 # + 1 child on the portal (Jalal: "track everything luxury nightly"). The
 # Browserbase quota math that this changes is in run_hotel_rates.py.
+# `rank` is Jalal-facing VALUE ORDER per city (1 = the play, also the bold row):
+# net cost for the tracked stay after credits, then quality (TA score, brand
+# tier, location). Hand-curated 2026-08-22 from the portal read — the site
+# sorts by it, so it is a recommendation, not a price sort. Re-rank when the
+# anchors are re-read.
 SHORTLIST = [
     # ── Istanbul · Jan 5–7 ──────────────────────────────────────────────────
-    {"key": "sanasaryan", "city": "IST", "program": "FHR",
+    {"key": "sanasaryan", "city": "IST", "program": "FHR", "rank": 3,
      "name": "Sanasaryan Han (Lux. Coll.)", "query": "Sanasaryan Han Istanbul",
      "match": "Sanasaryan", "angle": "Old-city boutique · Bonvoy stacks · cheapest FHR in IST"},
-    {"key": "ritz_ist", "city": "IST", "program": "FHR", "bold": True,
+    {"key": "ritz_ist", "city": "IST", "program": "FHR", "rank": 2,
      "name": "Ritz-Carlton Istanbul", "query": "Ritz Carlton Istanbul",
      "match": "Ritz-Carlton", "angle": "Value pick · Bonvoy Platinum stacks (points + elite nights)"},
-    {"key": "parkhyatt_ist", "city": "IST", "program": "FHR",
+    {"key": "parkhyatt_ist", "city": "IST", "program": "FHR", "rank": 4,
      "name": "Park Hyatt Maçka Palas", "query": "Park Hyatt Istanbul",
      "match": "Park Hyatt", "angle": "Nişantaşı boutique · second-cheapest FHR"},
-    {"key": "shangrila_ist", "city": "IST", "program": "FHR",
+    {"key": "shangrila_ist", "city": "IST", "program": "FHR", "bold": True, "rank": 1,
      "name": "Shangri-La Bosphorus", "query": "Shangri-La Bosphorus Istanbul",
      "match": "Shangri-La", "angle": "Bosphorus-front · TA 4.8 · Ritz money"},
-    {"key": "stregis_ist", "city": "IST", "program": "FHR",
+    {"key": "stregis_ist", "city": "IST", "program": "FHR", "rank": 5,
      "name": "St. Regis Istanbul", "query": "St Regis Istanbul Nisantasi",
      "match": "St. Regis", "angle": "Butler with every room · Bonvoy stacks"},
-    {"key": "ciragan", "city": "IST", "program": "FHR",
+    {"key": "ciragan", "city": "IST", "program": "FHR", "rank": 6,
      "name": "Çırağan Palace Kempinski", "query": "Ciragan Palace Kempinski",
      "match": "Kempinski", "angle": "The sentimental splurge · Bosphorus palace, the favorite brand"},
-    {"key": "fs_bosphorus", "city": "IST", "program": "FHR",
+    {"key": "fs_bosphorus", "city": "IST", "program": "FHR", "rank": 7,
      "name": "Four Seasons Bosphorus", "query": "Four Seasons Bosphorus Istanbul",
      "match": "Bosphorus", "angle": "Palace on the water · fits 3 (portal-proven)"},
-    {"key": "raffles_ist", "city": "IST", "program": "FHR",
+    {"key": "raffles_ist", "city": "IST", "program": "FHR", "rank": 8,
      "name": "Raffles Istanbul", "query": "Raffles Istanbul",
      "match": "Raffles", "angle": "TA 4.9, the best-reviewed in town · Zorlu mall"},
     # ── Singapore · Feb 2–6 ─────────────────────────────────────────────────
-    {"key": "kempinski_sin", "city": "SIN", "program": "FHR", "bold": True,
+    {"key": "kempinski_sin", "city": "SIN", "program": "FHR", "bold": True, "rank": 1,
      "name": "The Capitol Kempinski", "query": "Capitol Kempinski Singapore",
      "match": "Kempinski",
      "angle": "THE find · free 4th night · $125 F&B credit · Kempinski standard at half the St. Regis"},
-    {"key": "shangrila_sin", "city": "SIN", "program": "FHR",
+    {"key": "shangrila_sin", "city": "SIN", "program": "FHR", "rank": 2,
      "name": "Shangri-La Singapore", "query": "Shangri-La Singapore Orange Grove",
      "match": "Shangri-La", "angle": "Garden resort in town · Valley Wing is the play"},
-    {"key": "fs_sin", "city": "SIN", "program": "FHR",
+    {"key": "fs_sin", "city": "SIN", "program": "FHR", "rank": 3,
      "name": "Four Seasons Singapore", "query": "Four Seasons Hotel Singapore",
      "match": "Four Seasons", "angle": "Orchard · kids' program · cheaper than St. Regis"},
-    {"key": "artyzen", "city": "SIN", "program": "FHR",
+    {"key": "artyzen", "city": "SIN", "program": "FHR", "rank": 4,
      "name": "Artyzen Singapore", "query": "Artyzen Singapore",
      "match": "Artyzen", "angle": "New 2023 · $125 property credit · rooftop pool"},
-    {"key": "ritz_sin", "city": "SIN", "program": "FHR",
+    {"key": "ritz_sin", "city": "SIN", "program": "FHR", "rank": 6,
      "name": "Ritz-Carlton Millenia", "query": "Ritz Carlton Millenia Singapore",
      "match": "Ritz-Carlton", "angle": "Marina views · Bonvoy stacks"},
-    {"key": "stregis_sin", "city": "SIN", "program": "FHR",
+    {"key": "stregis_sin", "city": "SIN", "program": "FHR", "rank": 7,
      "name": "St. Regis Singapore", "query": "St Regis Singapore",
      "match": "St. Regis", "angle": "Butler standard · Bonvoy stacks · the old play"},
-    {"key": "fullerton_bay", "city": "SIN", "program": "FHR",
+    {"key": "fullerton_bay", "city": "SIN", "program": "FHR", "rank": 8,
      "name": "Fullerton Bay Hotel", "query": "Fullerton Bay Hotel Singapore",
      "match": "Fullerton Bay", "angle": "Free 3rd night · $125 F&B · TA 4.8 · on the water"},
-    {"key": "mo_sin", "city": "SIN", "program": "FHR",
+    {"key": "mo_sin", "city": "SIN", "program": "FHR", "rank": 9,
      "name": "Mandarin Oriental", "query": "Mandarin Oriental Singapore",
      "match": "Mandarin Oriental", "angle": "Free 4th night · TA 4.8 · Marina Bay"},
-    {"key": "edition_sin", "city": "SIN", "program": "FHR",
+    {"key": "edition_sin", "city": "SIN", "program": "FHR", "rank": 10,
      "name": "Singapore EDITION", "query": "The Singapore EDITION",
      "match": "EDITION", "angle": "TA 4.8 · Bonvoy stacks · Orchard-adjacent"},
-    {"key": "panpacific", "city": "SIN", "program": "THC + Edit",
+    {"key": "panpacific", "city": "SIN", "program": "THC + Edit", "rank": 5,
      "name": "Pan Pacific Orchard", "query": "Pan Pacific Orchard Singapore",
      "match": "Pan Pacific Orchard",
      "angle": "Wildcard · CSR select-hotels credit may stack (see note)"},
-    {"key": "jw_sin", "city": "SIN", "program": "The Edit only",
+    {"key": "jw_sin", "city": "SIN", "program": "The Edit only", "rank": 11,
      "name": "JW Marriott South Beach", "query": "JW Marriott South Beach Singapore",
      "match": "JW Marriott", "angle": "Best Edit-exclusive if the fallback strategy is needed"},
 ]
@@ -677,14 +689,24 @@ def build(payload, scraped=None, today=None):
             anchor["google"], anchor["google_date"] = _google_anchor(
                 prev, e["key"], fresh, today)
         est = est_allin_night(anchor, rate)
+        mult = TAX_MULT[e["city"]]
         if est is None and _num(rate):
-            est = round(rate * (1 + TAX_RATE), 2)          # fallback path
+            est = round(rate * mult, 2)                     # fallback path
         win = windows.get(e["city"])
         nights = win[2] if win else (2 if e["city"] == "IST" else None)
+        stay_n = nights or (2 if e["city"] == "IST" else 4)
+        # Two apples-to-apples per-night figures for the table: the public
+        # Google rate with the city's taxes/fees added, and the FHR estimate
+        # AVERAGED over the tracked stay (a free-night hotel's per-paid-night
+        # figure looks 33 % dearer than what the stay actually averages).
+        public_allin = round(rate * mult, 2) if _num(rate) else None
+        avg_allin = (round(est * paid_nights(stay_n, (anchor or {}).get("free_night_min")) / stay_n, 2)
+                     if est is not None else None)
         row = {"key": e["key"], "city": e["city"], "name": e["name"],
-               "program": e["program"], "angle": e["angle"],
+               "program": e["program"], "angle": e["angle"], "rank": e["rank"],
                "bold": bool(e.get("bold")), "rate": rate, "checked": checked,
                "anchor": anchor, "est_allin_night": est,
+               "avg_allin_night": avg_allin, "public_allin_night": public_allin,
                "drift_pct": drift_pct(rate, anchor.get("google")) if anchor else None}
         if e["city"] == "IST":
             row["offsets"] = [_offset(e, anchor, est, rate, nights or 2)]
