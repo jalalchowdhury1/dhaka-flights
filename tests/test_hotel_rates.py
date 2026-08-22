@@ -464,7 +464,7 @@ def test_build_survives_a_broken_portal_entry(tmp_path, monkeypatch):
     monkeypatch.setattr(hr, "RATES_FILE", str(tmp_path / "hotel_rates.json"))
     monkeypatch.setitem(hr.PORTAL, "ritz_ist", {"nights": 2, "credit": 100})
     out = hr.build({"main": None}, today="2026-08-23")
-    assert len(out["rows"]) == 20
+    assert len(out["rows"]) == len(hr.SHORTLIST)
     ritz = next(r for r in out["rows"] if r["key"] == "ritz_ist")
     assert ritz["anchor"] is None
 
