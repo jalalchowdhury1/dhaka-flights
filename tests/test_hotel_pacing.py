@@ -1,7 +1,8 @@
 """Quota pacing for the nightly hotel refresh.
 
-Demand (~30 nights x ~2.2 billed min) slightly exceeds Browserbase's 60-min
-free month, so a few nights each month must run on local Chrome. WHICH nights
+Demand (~30 nights x EST_RUN_MINUTES — ~5.7 billed min at 19 properties since
+2026-08-22, ~2.3 at the original 8) exceeds Browserbase's 60-min free month,
+so some nights each month must run on local Chrome. WHICH nights
 is the thing that matters: letting the quota run dry puts them all in one
 consecutive block at month-end, and a multi-night burst of hotel searches from
 the home IP is the shape that got slow-walked on 2026-08-03. A single isolated

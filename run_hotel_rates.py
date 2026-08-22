@@ -81,8 +81,8 @@ JITTER = {"remote": (1, 3), "local": (8, 20)}
 def should_conserve(used, cap, today=None, rng=random):
     """True when tonight should run on local Chrome to make the quota last.
 
-    Demand (~30 nights x EST_RUN_MINUTES) slightly exceeds the 60-min free
-    tier, so a handful of nights each month cannot be remote. WHICH nights
+    Demand (~30 nights x EST_RUN_MINUTES) exceeds the 60-min free tier —
+    by ~3x at 19 properties — so many nights each month cannot be remote. WHICH nights
     matters more than how many: letting the quota simply run dry puts every
     local night in one consecutive block at month-end, and a multi-night burst
     of hotel searches from one IP is exactly the shape that got slow-walked on
