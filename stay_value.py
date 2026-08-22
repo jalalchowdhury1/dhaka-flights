@@ -64,7 +64,14 @@ def _rows(rates):
 def bold_row(rates, city="SIN"):
     """The curated play — the bold row for the city, rate present. The bold
     flag is hand-set in hotel_rates.SHORTLIST (2026-08-01 research); re-bolding
-    a row switches the decision hotel with no logic change here."""
+    a row switches the decision hotel with no logic change here.
+
+    "Rate present" is deliberate even now that an anchored row could price
+    from est_allin_night alone: the stay math may only STEER the trip on a
+    number corroborated by a live public read, and the mode ladder's
+    freshness test needs that read's `checked` date. A brand-new bold hotel
+    is therefore "off" until its first successful scrape (the rollout runs
+    the hotel job once by hand for exactly this reason)."""
     for r in _rows(rates):
         if (r.get("city") == city and r.get("bold")
                 and isinstance(r.get("rate"), (int, float))):
@@ -92,7 +99,10 @@ def credits(n, program="FHR", prop=PROPERTY_CREDIT):
 
 
 def paid_nights(n, free_night_min=None):
-    """A 'free 4th night' promo bills 3 nights for a 4-night stay."""
+    """A 'free 4th night' promo bills 3 nights for a 4-night stay.
+    Same rule as hotel_rates.paid_nights, copied on purpose: this module
+    never imports hotel_rates (it reads the JSON it writes), and verify.py
+    carries a third copy as its independent check — keep all three in sync."""
     return n - 1 if free_night_min and n >= free_night_min else n
 
 

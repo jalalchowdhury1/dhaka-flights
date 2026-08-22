@@ -154,7 +154,7 @@ def test_watchdog_barks_when_a_rival_beats_the_bold_pick():
         {"key": "cheap", "city": "SIN", "name": "Cheap Palace",
          "program": "FHR", "bold": False, "rate": 100, "checked": "2026-08-19"}])
     sv = stay_value.build(rival, TOTALS, None, 4, today=TODAY)
-    # bold net at 4N = 337 → $84/n; Cheap Palace: 4×100×1.12−640 → 0 → $0/n
+    # bold net at 4N = 337 → $84/n; Cheap Palace (no anchor): 4×100×1.19−640 → 0 → $0/n
     assert sv["watchdog"] is not None and "Cheap Palace" in sv["watchdog"]
     # Pan Pacific at $255 does NOT trigger (it nets MORE than the bold pick)
     sv2 = stay_value.build(RATES, TOTALS, None, 4, today=TODAY)
