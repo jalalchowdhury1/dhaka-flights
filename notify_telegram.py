@@ -224,8 +224,11 @@ def _stays_quote(payload: dict, main: dict, sv: Optional[dict],
                 if len(checked) == 10 and checked[4] == "-" else "")
         two_free = any(r["n"] == 2 and r.get("hotel_net") == 0 for r in sv["rows"])
         credit_note = " — credits cover the first 2N" if two_free else ""
+        # Est. all-in per paid night (portal-anchored, 2026-08-22); the
+        # public rate is only the fallback for a row with no anchor.
+        per_night = hotel.get("allin_night") or hotel.get("rate", 0)
         body.append(f"{esc_html(_short_prop(hotel.get('name')))} "
-                    f"${hotel.get('rate', 0):,}/n{stamp}{credit_note}")
+                    f"~${per_night:,.0f}/n all-in{stamp}{credit_note}")
         if sv.get("mode") == "advisory" and sv.get("note"):
             body.append(f"⚠️ {esc_html(sv['note'])}")
         if sv.get("watchdog"):

@@ -287,6 +287,7 @@ def test_brief_carries_the_stay_math_line():
     assert "St. Regis <b>4N ✓</b>" in msg and "all-in" in msg
     assert "2N $4,600" in msg
     assert "4N $4,997 ✓picked" in msg      # 4660 flights + 337 net, picked
+    assert "~$244/n all-in" in msg          # est per paid night, not the public $218
 
 
 def test_brief_flags_advisory_mode():
