@@ -126,7 +126,7 @@ from. Rules now:
    paced, not eliminated — see 6d. A remote session bills by WALL-CLOCK, so
    every idle second is money: `browse eval` is POLLED, never slept on
    (`_wait_for_page`), and the inter-property gap is mode-aware (6e).
-   **Before adding any sleep to this path, price it: 1 s × 8 properties × 30
+   **Before adding any sleep to this path, price it: 1 s × 19 properties × 30
    nights = 4 min/month.** `browserbase_usage()` reads the live counter over
    plain REST (zero browser minutes) and prints `used/cap` every run — but it
    LAGS (it still read 0 after three runs on 2026-08-16), so treat it as a
@@ -180,8 +180,8 @@ from. Rules now:
    time. The `pgrep -f run_daily.py` stand-down in `run_hotel_rates.sh` is what
    prevents this; removing it would also mean the job never runs at all at
    00:00, since the flight run is always active then — silently, with exit 0.
-8. **Own job, own file, own slot** (`com.jalal.dhaka-hotels`, 5:00 AM): eight
-   hotel searches would push the flight run past its 25-min budget and into
+8. **Own job, own file, own slot** (`com.jalal.dhaka-hotels`, 5:00 AM): the
+   hotel searches (19 since 2026-08-22) would push the flight run past its 25-min budget and into
    the 35-min overrun guard. It writes only `hotel_rates.json` (never
    data.json, so no race with publish.py), pulls --rebase before pushing, and
    stands down entirely if a flight run is still active. Delays between
@@ -194,6 +194,47 @@ from. Rules now:
    An infra failure carries the `browser backend: ` prefix
    (`hotel_rates.is_infra_note`) so the runner and the alert can tell "our
    browser never started" apart from "Google refused us".
+
+10. **Portal anchors (2026-08-22) — the number that matters is `est_allin_night`,
+    not `rate`.** Jalal opened the Amex FHR portal (Nabila's Platinum) and the
+    full IST/SIN rosters were read once for the real dates as 2 adults + 1
+    child (`docs/research/2026-08-22-fhr-portal-snapshot.md`). Two things fell
+    out: the Google public rate understates the FHR booking rate by 23–55 %
+    (3rd guest + flexible rate), and taxes/fees are ~19–20 % in BOTH cities, not
+    the 12 % every offset had assumed. So `hotel_rates.PORTAL` holds each
+    hotel's all-in stay total, nights, property credit and free-night promo;
+    `build()` writes `anchor` (with the Google rate on the anchor day —
+    seeded for the original 8, bootstrapped from the first live scrape for
+    the rest), `est_allin_night` (portal all-in per PAID night × Google now ÷
+    Google on anchor day) and `drift_pct`. Offsets, `stay_value`, `verify`
+    and the Telegram 🛏️ line all price from `est_allin_night`; `rate` is the
+    drift alarm. `TAX_RATE = 0.19` is a FALLBACK for un-anchored rows only
+    (JW South Beach, Edit-only). A persisted Google baseline is trusted only
+    while its `anchor.date` equals `PORTAL_DATE` (and the SEED baseline only
+    while SEED's `checked` equals it), so bumping `PORTAL_DATE` self-
+    invalidates every old baseline — no hand-clearing of the JSON. **Re-anchor
+    by re-reading the portal with Jalal present — it is a cardholder login and
+    must never be automated; the read method (URL shape, lazy-render scroll,
+    `main.innerText` split on "Available Rooms") is in the snapshot doc.**
+    Anchors are a point-in-time read: when `drift_pct` on a bold row passes
+    ~25 % or the stay dates move, re-read.
+11. **19 properties, not 8, since 2026-08-22** ("track everything luxury
+    nightly" — every 5★ FHR candidate that fit 3 on the portal, plus the
+    Edit/THC wildcards). The Laurus (new Luxury Collection) is the one
+    exception: Google has no entity for it yet, so the date guard can never
+    bind — re-try ~Oct 2026. SIN bold moved to **The Capitol Kempinski** (FHR,
+    $125 F&B credit, free 4th night → ~$166/night net vs St. Regis ~$444);
+    that bold drives the 🛏️ stay math, and a free-4th-night hotel prices 3n
+    and 4n identically, so expect the math to favour 4N. `bold_row` still
+    requires a live public rate on purpose (the math may only steer on a
+    corroborated number) — a newly bolded hotel is "off" until its first
+    scrape, which is why a rollout runs the job once by hand. Quota: measured
+    0.22 min/property on the 2026-08-22 dry run, budgeted 0.30 → ~5.7
+    min/night ≈ 170 min/month vs the 60-min free tier; `should_conserve`
+    scatters ~2 nights in 3 onto local Chrome (local spacing widened to 8–20 s
+    so 19 searches do not resemble the 2026-08-03 burst). Jalal chose to stay
+    on the free tier (2026-08-22); Browserbase Developer ($20/mo, 100 h) makes
+    every night remote with no code change if that ever flips.
 
 **📉 Postmortem — the five silent nights (2026-08-11 → 08-16).** Browserbase's
 free 60 min/month ran out mid-run on 08-11 (6/8 that night, 0/8 for the next
@@ -544,9 +585,11 @@ reason.
 - `stay_value.py` — 🛏️ hotel-aware SIN night-count layer (§1 Stay math):
   knobs, mode ladder, the combo hook, the payload block, the re-bold watchdog
 - `hotel_rates.py` / `run_hotel_rates.py` / `run_hotel_rates.sh` — the nightly
-  IST/SIN public-rate refresh (§1 "Nightly hotel rates"): shortlist config,
-  fail-closed date/property guard, offset math, and the 5 AM launchd job that
-  writes `site/hotel_rates.json`. A miss keeps the last good rate and its date
+  IST/SIN public-rate refresh (§1 "Nightly hotel rates"): 19-property
+  shortlist, `PORTAL` anchors (§1 rule 10 — the real FHR all-in, read once),
+  fail-closed date/property guard, offset/drift math, and the 5 AM launchd job
+  that writes `site/hotel_rates.json`. A miss keeps the last good rate and its
+  date. Snapshot + read method: `docs/research/2026-08-22-fhr-portal-snapshot.md`
 - `alerts.py` — buy-signal stages, price context, countdown, change diff (§4d)
 - `verify.py` — the nightly 3-perspective independent re-check (keep it
   independent of combo.py; that's the point) + the 🛏️ stay-math
