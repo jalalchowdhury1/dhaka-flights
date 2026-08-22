@@ -26,8 +26,9 @@ MAX_DHAKA = 29
 # file's value is being a second implementation; keep the numbers in sync).
 STAY_WORTH = 225
 STAY_DEAD_BAND = 25
-STAY_TAX = 0.12
-STAY_FHR_FIXED, STAY_EDIT_FIXED, STAY_DAILY = 400, 350, 60
+STAY_TAX = 0.19                      # fallback only — anchored rows carry est_allin_night
+STAY_AMEX_FIXED, STAY_EDIT_FIXED = 300, 250
+STAY_PROPERTY_DEFAULT, STAY_DAILY = 100, 60
 
 _ORDER_SPEC = {
     "BKK-first": ("DAC→BKK", "BKK→SIN", "SIN", True),
@@ -136,12 +137,19 @@ def _stay_adj(payload, rates, incumbent_n):
                 and isinstance(r.get("rate"), (int, float))), None)
     if not row:
         return None
-    fixed = (STAY_FHR_FIXED if "FHR" in (row.get("program") or "")
+    fixed = (STAY_AMEX_FIXED if "FHR" in (row.get("program") or "")
              else STAY_EDIT_FIXED)
+    anchor = row.get("anchor") if isinstance(row.get("anchor"), dict) else {}
+    prop = anchor.get("credit")
+    prop = prop if isinstance(prop, (int, float)) else STAY_PROPERTY_DEFAULT
+    free_min = anchor.get("free_night_min")
+    est = row.get("est_allin_night")
+    per_night = (est if isinstance(est, (int, float)) and est > 0
+                 else row["rate"] * (1 + STAY_TAX))
 
     def adj(n):
-        net = max(0, round(n * row["rate"] * (1 + STAY_TAX)
-                           - (fixed + STAY_DAILY * n)))
+        paid = n - 1 if free_min and n >= free_min else n
+        net = max(0, round(paid * per_night - (fixed + prop + STAY_DAILY * n)))
         return (net - STAY_WORTH * (n - SG_BAND[0])
                 - (STAY_DEAD_BAND if n == incumbent_n else 0))
     return adj

@@ -116,6 +116,24 @@ def test_stay_rows_arithmetic_is_rechecked():
     assert any("stay-math row" in p for p in probs)
 
 
+def test_stay_adj_uses_the_anchor_not_the_public_rate():
+    """verify must re-derive from est_allin_night + anchor (free night,
+    property credit) with its OWN constants — a drift in stay_value's rule
+    must show up here as a disagreement, not be copied."""
+    kemp = {"rows": [{"key": "k", "city": "SIN", "bold": True, "program": "FHR",
+                      "rate": 300, "est_allin_night": 442.36,
+                      "anchor": {"credit": 125, "free_night_min": 4}}]}
+    adj = _verify._stay_adj({"stay_value": {"mode": "steering"}}, kemp, None)
+    # net(4) = 3 paid × 442.36 − (300+125+240) = 662; minus 225×2 extra nights
+    assert adj(4) == 662 - 450
+    # net(2) = 2 × 442.36 − 545 = 340 (rounded); no extra-night value
+    assert adj(2) == 340
+    bare = {"rows": [{"key": "b", "city": "SIN", "bold": True, "program": "FHR",
+                      "rate": 218}]}
+    adj2 = _verify._stay_adj({"stay_value": {"mode": "steering"}}, bare, None)
+    assert adj2(4) == 398 - 450                     # fallback 4×218×1.19 − 640
+
+
 def test_no_rates_no_steering_checks():
     payload, t2 = _stay_payload(None)
     payload["stay_value"] = None
