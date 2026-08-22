@@ -1088,12 +1088,28 @@ const offCell = (o) => `<td class="num">${o && o.pct != null
    play hands back (Amex $300 / Edit $250 + property credit + $60/day
    breakfast), = your net. Computed by hotel_rates.py from the same
    per-paid-night estimate as the offsets. */
+const usd0 = v => "$" + Math.round(v).toLocaleString();
 function stayCell(row) {
   const st = row.stay;
   if (!st) return `<td class="num">—</td>`;
-  const usd0 = v => "$" + Math.round(v).toLocaleString();
   return `<td class="num" title="${st.nights}n all-in ${usd0(st.total)} − credits ${usd0(st.credits)}">
-      <b>${usd0(st.net)}</b><div class="small muted">${usd0(st.total)} − ${usd0(st.credits)}</div></td>`;
+      <b>${usd0(st.net)}</b><div class="small muted">${usd0(st.total)} − ${usd0(st.credits)}
+      · ${usd0(st.net / st.nights)}/nt</div></td>`;
+}
+/* TripAdvisor score as the portal showed it on anchor day — the quality half
+   of the value rank, so a cheap row and a great row can be told apart. */
+function taCell(row) {
+  const ta = row.anchor && row.anchor.ta;
+  return `<td class="num">${typeof ta === "number" ? ta.toFixed(1) : "—"}</td>`;
+}
+/* How much more (net, whole stay) than the #1 play in the same city — the
+   number the "cancel the hold if something better shows up" rule needs. */
+function vsCell(row, play) {
+  if (!row.stay || !play || !play.stay) return `<td class="num">—</td>`;
+  if (row === play) return `<td class="num"><span class="badge good">the play</span></td>`;
+  const d = row.stay.net - play.stay.net;
+  const cls = d <= -150 ? "good" : (d < 0 ? "warn" : "");
+  return `<td class="num">${cls ? `<span class="badge ${cls}">` : ""}${d >= 0 ? "+" : "−"}${usd0(Math.abs(d))}${cls ? "</span>" : ""}</td>`;
 }
 
 function cardPlayTables() {
@@ -1109,11 +1125,12 @@ function cardPlayTables() {
   const sin = RATES.rows.filter(r => r.city === "SIN").sort(byRank);
   const nameCell = r => `<td><span class="muted small">${r.rank != null ? "#" + r.rank + " " : ""}</span>${
       r.bold ? `<b>${esc(r.name)}</b>` : esc(r.name)}</td>`;
-  const istRows = ist.map(r => `<tr>${nameCell(r)}<td>${esc(r.program)}</td>
-      ${allinCell(r)}${publicCell(r)}${offCell(r.offsets && r.offsets[0])}${stayCell(r)}
+  const istPlay = ist.find(r => r.bold), sinPlay = sin.find(r => r.bold);
+  const istRows = ist.map(r => `<tr>${nameCell(r)}<td>${esc(r.program)}</td>${taCell(r)}
+      ${allinCell(r)}${publicCell(r)}${offCell(r.offsets && r.offsets[0])}${stayCell(r)}${vsCell(r, istPlay)}
       <td class="wrap">${esc(r.angle)}</td></tr>`).join("");
-  const sinRows = sin.map(r => `<tr>${nameCell(r)}<td>${esc(r.program)}</td>
-      ${allinCell(r)}${publicCell(r)}${offCell(r.offsets && r.offsets[0])}${offCell(r.offsets && r.offsets[1])}${stayCell(r)}
+  const sinRows = sin.map(r => `<tr>${nameCell(r)}<td>${esc(r.program)}</td>${taCell(r)}
+      ${allinCell(r)}${publicCell(r)}${offCell(r.offsets && r.offsets[0])}${offCell(r.offsets && r.offsets[1])}${stayCell(r)}${vsCell(r, sinPlay)}
       <td class="wrap">${esc(r.angle)}</td></tr>`).join("");
   const aged = RATES.rows.filter(r => r.rate != null).map(r => daysSince(r.checked) ?? 0);
   const oldest = aged.length ? Math.max(...aged) : 0;
@@ -1123,12 +1140,12 @@ function cardPlayTables() {
        property since.</div>` : "";
   const anchorDate = esc(RATES.portal_date || "2026-08-22");
   return `<div class="scroll-x" style="margin-top:10px"><table>
-      <tr><th>🕌 Istanbul · ${stayHeading("IST", "Jan 5–7 (2n)")}</th><th>Program</th>
-          <th class="num">FHR all-in/nt</th><th class="num">Public all-in/nt</th><th class="num">Offset</th><th class="num">Your net (2n)</th><th>Angle</th></tr>
+      <tr><th>🕌 Istanbul · ${stayHeading("IST", "Jan 5–7 (2n)")}</th><th>Program</th><th class="num">TA</th>
+          <th class="num">FHR all-in/nt</th><th class="num">Public all-in/nt</th><th class="num">Offset</th><th class="num">Your net (2n)</th><th class="num">vs play</th><th>Angle</th></tr>
       ${istRows}</table></div>
     <div class="scroll-x" style="margin-top:10px"><table>
-      <tr><th>🇸🇬 Singapore · ${stayHeading("SIN", "2–4n")}</th><th>Program</th>
-          <th class="num">FHR all-in/nt</th><th class="num">Public all-in/nt</th><th class="num">2n</th><th class="num">4n</th><th class="num">Your net (${stayHeading("SIN", "4n").replace(/.*\((\d+n)\)$/, "$1")})</th><th>Angle</th></tr>
+      <tr><th>🇸🇬 Singapore · ${stayHeading("SIN", "2–4n")}</th><th>Program</th><th class="num">TA</th>
+          <th class="num">FHR all-in/nt</th><th class="num">Public all-in/nt</th><th class="num">2n</th><th class="num">4n</th><th class="num">Your net (${stayHeading("SIN", "4n").replace(/.*\((\d+n)\)$/, "$1")})</th><th class="num">vs play</th><th>Angle</th></tr>
       ${sinRows}</table></div>${freshness}
     <div class="small" style="margin-top:6px">Rows are in <b>value order</b> — net cost
       for these dates after credits, then quality; #1 (bold) is the play.
@@ -1138,7 +1155,11 @@ function cardPlayTables() {
       the number), moved each night by the public rate's drift.
       <b>Your net</b> = the whole tracked stay all-in, minus what the card play
       hands back ($300 Amex or $250 Edit + the property's $100–125 credit +
-      $60/day breakfast for two) — the cash that actually leaves your pocket.
+      $60/day breakfast for two) — the cash that actually leaves your pocket,
+      for the cheapest room that fits three. <b>vs play</b> = that net minus the
+      #1 hotel's; green means a rival has become ≥$150 cheaper than the play,
+      which is the bar for swapping a refundable hold. <b>TA</b> = TripAdvisor
+      score on anchor day.
       <b>Public all-in/nt</b> = Google's cheapest listed rate (2 adults, pre-tax)
       plus the city's taxes/fees (Istanbul +12%, Singapore +20%), re-checked
       nightly — last run ${esc(RATES.updated || "—")}. The gap that remains is

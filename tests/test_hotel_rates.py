@@ -540,3 +540,11 @@ def test_build_writes_stay_total_credits_and_net(tmp_path, monkeypatch):
     assert pp["stay"]["credits"] == 250 + 100 + 240                 # Edit-program credits
     new = next(r for r in out["rows"] if r["key"] == "fs_sin")
     assert new["stay"]["total"] == 1853.56                           # anchor alone, no public rate yet
+
+
+def test_rows_carry_the_portal_tripadvisor_score():
+    """Quality half of the value rank — the TA score read off the portal."""
+    assert hr.anchor_for("raffles_ist")["ta"] == 4.9
+    assert hr.anchor_for("kempinski_sin")["ta"] == 4.7
+    for key, p in hr.PORTAL.items():
+        assert isinstance(p.get("ta"), float) and 3.0 <= p["ta"] <= 5.0, key

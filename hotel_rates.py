@@ -193,38 +193,39 @@ SHORTLIST = [
 # is the WHOLE stay incl. taxes and fees; `avg` is the portal's ex-tax
 # average per night (kept for the record, not used in the math). A
 # `free_night_min` means the portal's price already includes a free night
-# for stays of at least that length. Source doc + read method:
+# for stays of at least that length; `ta` is the TripAdvisor score the portal
+# showed that day (the quality half of the value rank). Source doc + read method:
 # docs/research/2026-08-22-fhr-portal-snapshot.md. Re-anchor by re-reading
 # the portal WITH JALAL PRESENT (it is Nabila's Amex login) — never automate.
 PORTAL_DATE = "2026-08-22"
 PORTAL = {
     # Istanbul, 2 nights
-    "sanasaryan":    {"avg": 426.84, "total": 956.12,  "nights": 2, "credit": 100, "promo": "was $502"},
-    "ritz_ist":      {"avg": 525.52, "total": 1250.42, "nights": 2, "credit": 100},
-    "parkhyatt_ist": {"avg": 506.25, "total": 1133.98, "nights": 2, "credit": 100},
-    "shangrila_ist": {"avg": 531.36, "total": 1190.26, "nights": 2, "credit": 100},
-    "stregis_ist":   {"avg": 642.30, "total": 1438.76, "nights": 2, "credit": 100},
-    "ciragan":       {"avg": 656.90, "total": 1471.46, "nights": 2, "credit": 100},
-    "fs_bosphorus":  {"avg": 700.69, "total": 1569.54, "nights": 2, "credit": 100},
-    "raffles_ist":   {"avg": 729.88, "total": 1634.94, "nights": 2, "credit": 100},
+    "sanasaryan":    {"avg": 426.84, "total": 956.12,  "nights": 2, "credit": 100, "ta": 4.8, "promo": "was $502"},
+    "ritz_ist":      {"avg": 525.52, "total": 1250.42, "nights": 2, "credit": 100, "ta": 4.7},
+    "parkhyatt_ist": {"avg": 506.25, "total": 1133.98, "nights": 2, "credit": 100, "ta": 4.7},
+    "shangrila_ist": {"avg": 531.36, "total": 1190.26, "nights": 2, "credit": 100, "ta": 4.8},
+    "stregis_ist":   {"avg": 642.30, "total": 1438.76, "nights": 2, "credit": 100, "ta": 4.6},
+    "ciragan":       {"avg": 656.90, "total": 1471.46, "nights": 2, "credit": 100, "ta": 4.6},
+    "fs_bosphorus":  {"avg": 700.69, "total": 1569.54, "nights": 2, "credit": 100, "ta": 4.7},
+    "raffles_ist":   {"avg": 729.88, "total": 1634.94, "nights": 2, "credit": 100, "ta": 4.9},
     # Singapore, 4 nights
-    "kempinski_sin": {"avg": 276.70, "total": 1327.08, "nights": 4, "credit": 125,
+    "kempinski_sin": {"avg": 276.70, "total": 1327.08, "nights": 4, "credit": 125, "ta": 4.7,
                       "free_night_min": 4, "promo": "free 4th night (in the rate) · was $378"},
-    "shangrila_sin": {"avg": 361.59, "total": 1734.16, "nights": 4, "credit": 100},
-    "fs_sin":        {"avg": 386.48, "total": 1853.56, "nights": 4, "credit": 100},
-    "artyzen":       {"avg": 403.74, "total": 1936.31, "nights": 4, "credit": 125},
+    "shangrila_sin": {"avg": 361.59, "total": 1734.16, "nights": 4, "credit": 100, "ta": 4.6},
+    "fs_sin":        {"avg": 386.48, "total": 1853.56, "nights": 4, "credit": 100, "ta": 4.7},
+    "artyzen":       {"avg": 403.74, "total": 1936.31, "nights": 4, "credit": 125, "ta": 4.6},
     # "laurus" (The Laurus, Luxury Collection, $454.94 avg / $2,181.86 4n) is
     # NOT tracked: Google Hotels has no entity for it yet (three query shapes
     # tried live 2026-08-22, all landed on an unresolved search page), so the
     # date guard can never bind. Re-try a month or two after it opens.
-    "ritz_sin":      {"avg": 490.38, "total": 2351.92, "nights": 4, "credit": 100},
-    "stregis_sin":   {"avg": 504.17, "total": 2418.00, "nights": 4, "credit": 100},
-    "fullerton_bay": {"avg": 547.50, "total": 2625.82, "nights": 4, "credit": 125,
+    "ritz_sin":      {"avg": 490.38, "total": 2351.92, "nights": 4, "credit": 100, "ta": 4.6},
+    "stregis_sin":   {"avg": 504.17, "total": 2418.00, "nights": 4, "credit": 100, "ta": 4.5},
+    "fullerton_bay": {"avg": 547.50, "total": 2625.82, "nights": 4, "credit": 125, "ta": 4.8,
                       "free_night_min": 3, "promo": "free 3rd night (in the rate) · was $741"},
-    "mo_sin":        {"avg": 551.24, "total": 2643.77, "nights": 4, "credit": 100,
+    "mo_sin":        {"avg": 551.24, "total": 2643.77, "nights": 4, "credit": 100, "ta": 4.8,
                       "free_night_min": 4, "promo": "free 4th night (in the rate) · was $719"},
-    "edition_sin":   {"avg": 567.20, "total": 2720.28, "nights": 4, "credit": 100},
-    "panpacific":    {"avg": 364.34, "total": 1747.39, "nights": 4, "credit": 100},   # THC rate
+    "edition_sin":   {"avg": 567.20, "total": 2720.28, "nights": 4, "credit": 100, "ta": 4.8},
+    "panpacific":    {"avg": 364.34, "total": 1747.39, "nights": 4, "credit": 100, "ta": 4.7},   # THC rate
     # jw_sin: Edit-only, not on the Amex portal — no anchor, fallback math.
 }
 
@@ -281,7 +282,7 @@ def anchor_for(key):
     return {"date": PORTAL_DATE, "total": p["total"], "nights": p["nights"],
             "allin_night": round(p["total"] / paid_nights(p["nights"], fnm), 2),
             "credit": p.get("credit", DEFAULT_PROPERTY_CREDIT),
-            "free_night_min": fnm, "promo": p.get("promo"),
+            "free_night_min": fnm, "promo": p.get("promo"), "ta": p.get("ta"),
             "google": None, "google_date": None}
 
 

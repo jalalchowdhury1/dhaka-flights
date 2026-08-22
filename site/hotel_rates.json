@@ -40,6 +40,7 @@
     "credit": 100,
     "free_night_min": null,
     "promo": "was $502",
+    "ta": 4.8,
     "google": 353,
     "google_date": "2026-08-22"
    },
@@ -79,6 +80,7 @@
     "credit": 100,
     "free_night_min": null,
     "promo": null,
+    "ta": 4.7,
     "google": 447,
     "google_date": "2026-08-22"
    },
@@ -118,6 +120,7 @@
     "credit": 100,
     "free_night_min": null,
     "promo": null,
+    "ta": 4.7,
     "google": 403,
     "google_date": "2026-08-22"
    },
@@ -157,6 +160,7 @@
     "credit": 100,
     "free_night_min": null,
     "promo": null,
+    "ta": 4.8,
     "google": 398,
     "google_date": "2026-08-22"
    },
@@ -196,6 +200,7 @@
     "credit": 100,
     "free_night_min": null,
     "promo": null,
+    "ta": 4.6,
     "google": 546,
     "google_date": "2026-08-22"
    },
@@ -235,6 +240,7 @@
     "credit": 100,
     "free_night_min": null,
     "promo": null,
+    "ta": 4.6,
     "google": 472,
     "google_date": "2026-08-22"
    },
@@ -274,6 +280,7 @@
     "credit": 100,
     "free_night_min": null,
     "promo": null,
+    "ta": 4.7,
     "google": 611,
     "google_date": "2026-08-22"
    },
@@ -313,6 +320,7 @@
     "credit": 100,
     "free_night_min": null,
     "promo": null,
+    "ta": 4.9,
     "google": 536,
     "google_date": "2026-08-22"
    },
@@ -352,6 +360,7 @@
     "credit": 125,
     "free_night_min": 4,
     "promo": "free 4th night (in the rate) \u00b7 was $378",
+    "ta": 4.7,
     "google": 287,
     "google_date": "2026-08-22"
    },
@@ -396,6 +405,7 @@
     "credit": 100,
     "free_night_min": null,
     "promo": null,
+    "ta": 4.6,
     "google": 255,
     "google_date": "2026-08-22"
    },
@@ -440,6 +450,7 @@
     "credit": 100,
     "free_night_min": null,
     "promo": null,
+    "ta": 4.7,
     "google": 309,
     "google_date": "2026-08-22"
    },
@@ -484,6 +495,7 @@
     "credit": 125,
     "free_night_min": null,
     "promo": null,
+    "ta": 4.6,
     "google": 336,
     "google_date": "2026-08-22"
    },
@@ -528,6 +540,7 @@
     "credit": 100,
     "free_night_min": null,
     "promo": null,
+    "ta": 4.6,
     "google": 477,
     "google_date": "2026-08-22"
    },
@@ -572,6 +585,7 @@
     "credit": 100,
     "free_night_min": null,
     "promo": null,
+    "ta": 4.5,
     "google": 472,
     "google_date": "2026-08-22"
    },
@@ -616,6 +630,7 @@
     "credit": 125,
     "free_night_min": 3,
     "promo": "free 3rd night (in the rate) \u00b7 was $741",
+    "ta": 4.8,
     "google": 500,
     "google_date": "2026-08-22"
    },
@@ -660,6 +675,7 @@
     "credit": 100,
     "free_night_min": 4,
     "promo": "free 4th night (in the rate) \u00b7 was $719",
+    "ta": 4.8,
     "google": 486,
     "google_date": "2026-08-22"
    },
@@ -704,6 +720,7 @@
     "credit": 100,
     "free_night_min": null,
     "promo": null,
+    "ta": 4.8,
     "google": 472,
     "google_date": "2026-08-22"
    },
@@ -748,6 +765,7 @@
     "credit": 100,
     "free_night_min": null,
     "promo": null,
+    "ta": 4.7,
     "google": 250,
     "google_date": "2026-08-22"
    },
