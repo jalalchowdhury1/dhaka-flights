@@ -46,26 +46,36 @@ PAYLOAD = os.path.join(REPO, "site", "data.json")
 # endpoint's reported 61 — it is a monthly figure, not a lifetime one.
 FREE_TIER_MINUTES = 60
 
-# MEASURED, not estimated: two full 8-property remote runs on 2026-08-16 billed
-# 2.25 and 2.32 min. Tightening the inter-property jitter below was predicted to
-# bring this to ~2.0; it did not — the ~10 s saved is inside the run-to-run
-# variance of Google's page loads. Do not re-assert that without new numbers.
-#
-# Set ABOVE the observed max on purpose. The two errors are not symmetric:
-# overestimating costs a few needless local nights, while underestimating dries
-# the quota out mid-month — the exact failure this pacing exists to prevent.
-# Re-derive from `GET /v1/projects/{id}/usage` after a full month of real runs
-# (n=2 is thin), or whenever the shortlist changes length.
-EST_RUN_MINUTES = 2.35
+# MEASURED 2026-08-16: two full 8-property remote runs billed 2.25 and 2.32 min
+# → ~0.29 min per property. Set a hair ABOVE that on purpose: overestimating
+# costs a few needless local nights, underestimating dries the quota out
+# mid-month — the exact failure this pacing exists to prevent. Re-derive from
+# `GET /v1/projects/{id}/usage` after a month of 20-property runs.
+PER_PROPERTY_MINUTES = 0.30
+EST_RUN_MINUTES = round(PER_PROPERTY_MINUTES * len(hotel_rates.SHORTLIST), 1)
+
+# 2026-08-22: the shortlist went 8 → 20 ("track everything luxury nightly"),
+# so demand is ~180 min/month against the 60-min free tier and ~2 nights in 3
+# fall back to local Chrome. That is Jalal's explicit choice; the clean fix is
+# Browserbase's Developer plan ($20/mo, 100 h — read 2026-08-22), which makes
+# every night remote. Nothing here needs to change when that happens: usage
+# comes back under cap and should_conserve stops firing.
+
+
+def monthly_demand_minutes(today=None):
+    today = today or datetime.date.today()
+    return calendar.monthrange(today.year, today.month)[1] * EST_RUN_MINUTES
+
 
 # Delay between properties, per mode. The SAME pause is expensive-and-pointless
 # on one and free-and-valuable on the other, so it must not be one number:
-#   remote — every second is BILLED, and 8 requests from a rotating residential
-#            IP is not a shape Google throttles. Keep it tight.
+#   remote — every second is BILLED, and 20 requests from a rotating
+#            residential IP is not a shape Google throttles. Keep it tight.
 #   local  — seconds are free, and this is the home IP the midnight flight run
-#            depends on. Keep the original generous spacing (2026-08-03: Google
-#            slow-walked this IP after ~10 rapid hotel searches).
-JITTER = {"remote": (1, 3), "local": (4, 11)}
+#            depends on. 20 searches at 4–11 s would resemble the 2026-08-03
+#            burst (~10 rapid searches got slow-walked); 8–20 s on top of the
+#            page polling puts them ~30 s apart, ~10 min a night.
+JITTER = {"remote": (1, 3), "local": (8, 20)}
 
 
 def should_conserve(used, cap, today=None, rng=random):
@@ -146,6 +156,12 @@ def start_session(scraper):
         used, cap = browserbase_usage()
         if used is not None:
             print(f"  Browserbase: {used}/{cap} min used this month")
+            demand = monthly_demand_minutes()
+            if demand > cap:
+                print(f"  demand ≈ {demand:.0f} min/month for "
+                      f"{len(hotel_rates.SHORTLIST)} properties vs a {cap}-min "
+                      f"cap — expect ~{max(0, round((demand - cap) / EST_RUN_MINUTES))} "
+                      f"local-Chrome nights; the $20 Developer plan removes them")
         if used is not None and used >= cap:
             print("  Browserbase quota exhausted — falling back to local Chrome")
         elif should_conserve(used, cap):

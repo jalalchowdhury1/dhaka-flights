@@ -58,15 +58,28 @@ def test_cannot_afford_one_more_run_conserves():
     assert rh.should_conserve(CAP - (rh.EST_RUN_MINUTES / 2), CAP) is True
 
 
-def test_early_month_with_full_quota_is_usually_remote():
-    """Day 1 with a full tank should MOSTLY be remote — but not always, and
-    asserting always would be wrong. Demand slightly exceeds the cap, so every
-    night carries a small conserve probability; that is the scattering working,
-    and pinning one seed to False would just encode that seed."""
+def _expected_local(year, month, cost=None):
+    """Nights that CANNOT be remote at this run cost: demand − cap, in runs."""
+    cost = cost if cost is not None else rh.EST_RUN_MINUTES
+    days = calendar.monthrange(year, month)[1]
+    return max(0, days - int(CAP // cost))
+
+
+def test_day_one_conserve_rate_tracks_the_shortfall():
+    """Day 1 with a full tank conserves with probability shortfall/nights —
+    ~13% when 8 properties fit the cap, ~68% at 20 properties. Pin the
+    FORMULA, not a seed: asserting 'mostly remote' was true only while
+    demand barely exceeded the cap."""
     d = datetime.date(2026, 9, 1)
-    remote = sum(not rh.should_conserve(0, CAP, today=d, rng=Seeded(s))
-                 for s in range(50))
-    assert remote >= 40, f"day 1 went local {50 - remote}/50 times"
+    nights = 30
+    need = nights * rh.EST_RUN_MINUTES
+    p = max(0.0, (need - CAP) / rh.EST_RUN_MINUTES) / nights
+    trials = 200
+    local = sum(rh.should_conserve(0, CAP, today=d, rng=Seeded(s))
+                for s in range(trials))
+    sd = (trials * p * (1 - p)) ** 0.5
+    assert abs(local - trials * p) <= 4 * sd + 1, \
+        f"day-1 conserve rate {local}/{trials} vs expected p={p:.2f}"
 
 
 def test_pacing_bites_harder_as_the_quota_runs_down():
@@ -92,14 +105,16 @@ def test_a_month_never_runs_dry():
         assert used <= CAP, f"{y}-{m} overspent: {used:.1f} > {CAP}"
 
 
-def test_local_nights_are_few_and_are_not_all_at_month_end():
-    """31 nights x 2.2 = 68.2 min vs a 60-min cap, so ~4 nights cannot be
-    remote. They must be SCATTERED, not a terminal block."""
+def test_local_nights_match_demand_and_are_not_all_at_month_end():
+    """Whatever the shortlist length, the month must (a) spend the quota
+    rather than hoard it, (b) go local only about as often as demand
+    forces, and (c) scatter those nights instead of clumping at the end —
+    a multi-night burst from the home IP is the shape Google slow-walked."""
     local, used = simulate(2026, 10)          # 31 days
-    assert 1 <= len(local) <= 9, f"unexpected local-night count: {local}"
+    want = _expected_local(2026, 10)
+    assert want - 3 <= len(local) <= want + 4, \
+        f"local nights {len(local)} vs demand-forced {want}: {local}"
     assert used > CAP * 0.75, f"hoarded quota instead of spending it: {used:.1f}"
-    # The failure mode being guarded against is "all local nights consecutive
-    # at the end of the month", which is what simply running dry produces.
     tail = set(range(31 - len(local) + 1, 32))
     assert set(local) != tail, f"local nights clumped at month-end: {local}"
 
@@ -149,3 +164,16 @@ def test_every_mode_the_runner_can_report_has_a_jitter_band():
     """to_local()/start_session() return these strings; a missing key would
     raise mid-run, after the quota had already been spent."""
     assert set(rh.JITTER) >= {"remote", "local"}
+
+
+def test_run_estimate_scales_with_the_shortlist():
+    import hotel_rates
+    assert rh.EST_RUN_MINUTES == round(
+        rh.PER_PROPERTY_MINUTES * len(hotel_rates.SHORTLIST), 1)
+    assert rh.PER_PROPERTY_MINUTES >= 0.29          # the 2026-08-16 measurement
+
+
+def test_local_spacing_is_wide_enough_for_twenty_searches():
+    """20 searches from the home IP must not look like the 2026-08-03 burst
+    (~10 rapid searches). ≥8 s floor, on top of the page polling."""
+    assert rh.JITTER["local"][0] >= 8
