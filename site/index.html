@@ -1052,12 +1052,30 @@ function stayHeading(city, fallback) {
   return `${MON[+m1]} ${+d1}–${end} (${s.nights}n)`;
 }
 
+/* Public Google rate (2 adults, incl. fees) — the DRIFT ALARM, with how far
+   it has moved since the portal anchor date. */
 function rateCell(row) {
-  if (row.rate == null) return `<td class="num">—</td>`;
+  if (row.rate == null) return `<td class="num muted">— <span class="small">1st read tonight</span></td>`;
   const age = daysSince(row.checked);
   const stale = age != null && age > 3
     ? ` <span class="badge warn" title="last confirmed ${esc(row.checked)}">${age}d</span>` : "";
-  return `<td class="num">$${row.rate.toLocaleString()}${stale}</td>`;
+  const d = row.drift_pct;
+  const drift = typeof d === "number" && d !== 0
+    ? ` <span class="badge ${d > 0 ? "warn" : "good"}" title="vs the public rate on ${esc((row.anchor || {}).google_date || "anchor day")}">${d > 0 ? "▲" : "▼"}${Math.abs(d)}%</span>` : "";
+  return `<td class="num">$${row.rate.toLocaleString()}${stale}${drift}</td>`;
+}
+/* Estimated FHR all-in per paid night: the portal figure drifted by the public
+   rate. This is the number the offsets and the stay math use. */
+function allinCell(row) {
+  if (row.est_allin_night == null) return `<td class="num">—</td>`;
+  const a = row.anchor;
+  const tip = a
+    ? `Amex FHR portal ${a.date}: $${a.total.toLocaleString()} for ${a.nights}n incl. taxes` +
+      (a.free_night_min ? ` · free night from ${a.free_night_min}n` : "") +
+      (a.promo ? ` · ${a.promo}` : "") + ` · $${a.credit} property credit`
+    : "no portal anchor — public rate × ~19% tax";
+  const promo = a && a.free_night_min ? ` <span class="badge good" title="${esc(tip)}">free nt</span>` : "";
+  return `<td class="num" title="${esc(tip)}"><b>$${Math.round(row.est_allin_night).toLocaleString()}</b>${a ? "" : '<span class="small">*</span>'}${promo}</td>`;
 }
 const offCell = (o) => `<td class="num">${o && o.pct != null
   ? `<span class="badge ${o.band}">~${o.pct}%</span>` : "—"}</td>`;
@@ -1067,34 +1085,39 @@ function cardPlayTables() {
     return `<div class="small" style="margin-top:10px">Nightly rates are refreshed
       by their own job and weren't reachable just now — reload, or see the
       shortlist notes below.</div>`;
-  const ist = RATES.rows.filter(r => r.city === "IST");
-  const sin = RATES.rows.filter(r => r.city === "SIN");
+  const byNet = (a, b) => (a.est_allin_night ?? 1e9) - (b.est_allin_night ?? 1e9);
+  const ist = RATES.rows.filter(r => r.city === "IST").sort(byNet);
+  const sin = RATES.rows.filter(r => r.city === "SIN").sort(byNet);
   const nameCell = r => `<td>${r.bold ? `<b>${esc(r.name)}</b>` : esc(r.name)}</td>`;
   const istRows = ist.map(r => `<tr>${nameCell(r)}<td>${esc(r.program)}</td>
-      ${rateCell(r)}${offCell(r.offsets && r.offsets[0])}
+      ${allinCell(r)}${rateCell(r)}${offCell(r.offsets && r.offsets[0])}
       <td class="wrap">${esc(r.angle)}</td></tr>`).join("");
   const sinRows = sin.map(r => `<tr>${nameCell(r)}<td>${esc(r.program)}</td>
-      ${rateCell(r)}${offCell(r.offsets && r.offsets[0])}${offCell(r.offsets && r.offsets[1])}
+      ${allinCell(r)}${rateCell(r)}${offCell(r.offsets && r.offsets[0])}${offCell(r.offsets && r.offsets[1])}
       <td class="wrap">${esc(r.angle)}</td></tr>`).join("");
-  const oldest = Math.max(...RATES.rows.map(r => daysSince(r.checked) ?? 0));
+  const aged = RATES.rows.filter(r => r.rate != null).map(r => daysSince(r.checked) ?? 0);
+  const oldest = aged.length ? Math.max(...aged) : 0;
   const freshness = oldest > 3
-    ? `<div class="small" style="margin-top:6px">⚠️ Oldest rate here was last
+    ? `<div class="small" style="margin-top:6px">⚠️ Oldest public rate here was last
        confirmed ${oldest} days ago — the nightly refresh has not reached every
        property since.</div>` : "";
+  const anchorDate = esc(RATES.portal_date || "2026-08-22");
   return `<div class="scroll-x" style="margin-top:10px"><table>
       <tr><th>🕌 Istanbul · ${stayHeading("IST", "Jan 5–7 (2n)")}</th><th>Program</th>
-          <th class="num">Nightly</th><th class="num">Offset</th><th>Angle</th></tr>
+          <th class="num">FHR all-in/nt</th><th class="num">Public</th><th class="num">Offset</th><th>Angle</th></tr>
       ${istRows}</table></div>
     <div class="scroll-x" style="margin-top:10px"><table>
       <tr><th>🇸🇬 Singapore · ${stayHeading("SIN", "2–4n")}</th><th>Program</th>
-          <th class="num">Nightly</th><th class="num">2n</th><th class="num">4n</th><th>Angle</th></tr>
+          <th class="num">FHR all-in/nt</th><th class="num">Public</th><th class="num">2n</th><th class="num">4n</th><th>Angle</th></tr>
       ${sinRows}</table></div>${freshness}
-    <div class="small" style="margin-top:6px">Nightly figures are the <b>public
-      rate including fees</b> for these exact dates, re-checked automatically each
-      night (last run ${esc(RATES.updated || "—")}). FHR and Chase Edit rates sit
-      behind cardholder logins and can't be read from here — they normally track
-      the public flexible rate, but confirm the real number in the portal before
-      booking.</div>`;
+    <div class="small" style="margin-top:6px"><b>FHR all-in/nt</b> is the rate the card
+      play actually books: read once from the Amex FHR portal on ${anchorDate}
+      (2 adults + 1 child, taxes and fees in, per <i>paid</i> night — a free-night
+      promo shows as "free nt"), then moved each night by however far the
+      <b>public</b> Google rate (2 adults, incl. fees, re-checked nightly — last run
+      ${esc(RATES.updated || "—")}) has drifted since that day. Sorted cheapest
+      first. * = no portal row (Edit-only), public × ~19% tax. Re-confirm in the
+      portal before booking.</div>`;
 }
 
 /* 🛏️ Stay math (2026-08-19): the all-in SIN night-count table — flights +
@@ -1157,9 +1180,9 @@ function renderStays(d) {
         ($550). FHR's guaranteed 4pm checkout matters most in Istanbul: the IST→DAC flight leaves
         in the evening of Jan 7.</div></div>
       ${cardPlayTables()}
-      <div class="small" style="margin-top:8px"><b>Offset</b> = credits used ÷ (room + ~12% tax).
-        Credits assumed: $300 Amex (or $250 Edit) + $100 property + $60/day breakfast —
-        so IST 2n = $520 · SIN 2n = $520 FHR / $470 Edit · SIN 4n = $640 / $590. Bands:
+      <div class="small" style="margin-top:8px"><b>Offset</b> = credits used ÷ the FHR all-in above. Credits: $300 Amex (or $250 Edit)
+        + the property's own credit ($100, or $125 at Capitol Kempinski / Fullerton Bay /
+        Artyzen) + $60/day breakfast — so IST 2n = $520 · SIN 4n = $640 ($665 with a $125 credit). Bands:
         ≥70% book now · 50–70% solid · &lt;50% wait for off-peak or a promo. A low offset isn't
         a ban — it just means you're paying mostly cash for the luxury, so want it for its own
         sake (Kempinski, St. Regis). Note the lever: the flight engine picks the Singapore
@@ -1167,8 +1190,9 @@ function renderStays(d) {
         the hotel credits concentrate. Pan Pacific wildcard: if CSR's separate $250
         select-hotels credit stacks (confirm in the portal), 2 nights is near-free
         and 4 nights reaches about 74%.</div>
-      <div class="small" style="margin-top:10px">Good to know: CNY is Feb 6, 2027 — Singapore hasn't
-        loaded holiday premiums yet, so book early once dates firm. Program breakfasts cover 2;
+      <div class="small" style="margin-top:10px">Good to know: CNY is Feb 6, 2027 — Singapore HAS now
+        loaded it (St. Regis public rate $329 on Aug 1 → $472 on Aug 22), which is why the Capitol
+        Kempinski's free-4th-night rate matters so much; book early once dates firm. Program breakfasts cover 2;
         the kid's is chargeable unless kids-eat-free. FHR at Marriott brands earns points + elite
         nights AND keeps elite benefits (Marriott-confirmed). Edit 2026 rule: $500/yr, max $250 per
         booking, prepaid 2-night minimum, purchase-date-keyed; 2027 terms unpublished. Open item:
@@ -1212,7 +1236,8 @@ function renderStays(d) {
           saved $1,143 on its first night; the same logic is why the Bangkok trip prices BOTH
           orders nightly. Rule: never assume a multi-city order — price the reverse too.</li>
         <li style="margin:7px 0"><b>The offset yardstick (used on every hotel table here).</b>
-          Offset = credits you'll actually use ÷ (room + ~12% tax). From the July deal
+          Offset = credits you'll actually use ÷ the real all-in (portal-anchored; ~19% tax/fees
+          in both cities, not the 12% first assumed). From the July deal
           calculator: <b>≥70% book now · 50–70% solid · &lt;50% wait</b> for off-peak or a promo.
           Count breakfast at $60/day only if you'd genuinely eat it.</li>
         <li style="margin:7px 0"><b>The 3-guest trap (the Laguna lesson).</b> Headline award
