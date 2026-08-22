@@ -229,6 +229,29 @@ PORTAL = {
     # jw_sin: Edit-only, not on the Amex portal — no anchor, fallback math.
 }
 
+# Confirmed / in-progress bookings, hand-maintained (the site's Total tab
+# prefers a booking over the play's cheapest-room estimate). `total` is the
+# all-in USD figure on the Amex review page; credits are NOT subtracted here.
+BOOKED = {
+    "SIN": {"key": "kempinski_sin", "hotel": "The Capitol Kempinski",
+            "room": "Heritage Room, 1 King (484 sq ft, sleeps 3)",
+            "checkin": "2027-02-02", "checkout": "2027-02-06", "nights": 4,
+            "total": 1497.11, "via": "Amex FHR · Pay at Check-in",
+            "status": "hold — $0 down, fully refundable to Jan 31 2027",
+            "next": "rebook as Pay Today on/after Jan 2 2027 for the Jan–Jun $300, then cancel the hold",
+            "confirmation": None},
+}
+
+# Which stay takes the ONE Amex $300 available before the trip (Jan–Jun 2027;
+# the Jul–Dec 2026 one was spent on the July Marriott stay — tracker read
+# 2026-08-22). The other card stay is assumed on Chase's The Edit ($250).
+# The Total tab reads this; the Stays table keeps showing each program's own
+# best case.
+CREDIT_PLAN = {"amex_300_to": "SIN",
+               "note": ("Amex $300 → Singapore via the January rebook; "
+                        "Istanbul assumed on CSR The Edit ($250) — confirm "
+                        "the hotel is on The Edit, else drop it")}
+
 # Seed values: the Google public rates read 2026-08-22, the SAME DAY as the
 # portal anchors, which is what makes `anchor_google` an honest drift baseline
 # for the original eight. New rows have no seed; their Google anchor is
@@ -732,6 +755,8 @@ def build(payload, scraped=None, today=None):
                   for c, w in windows.items()},
         "credits_note": CREDITS_NOTE,
         "portal_date": PORTAL_DATE,
+        "bookings": BOOKED,
+        "credit_plan": CREDIT_PLAN,
         "source": ("est_allin_night = Amex FHR portal all-in per paid night "
                    f"(read {PORTAL_DATE}, 2 adults + 1 child) × tonight's public "
                    "Google rate ÷ the public rate on the anchor date; `rate` is "

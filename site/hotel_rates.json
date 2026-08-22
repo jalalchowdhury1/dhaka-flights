@@ -14,6 +14,25 @@
  },
  "credits_note": "$300 Amex (or $250 Edit) + $100\u2013125 property credit + $60/day breakfast",
  "portal_date": "2026-08-22",
+ "bookings": {
+  "SIN": {
+   "key": "kempinski_sin",
+   "hotel": "The Capitol Kempinski",
+   "room": "Heritage Room, 1 King (484 sq ft, sleeps 3)",
+   "checkin": "2027-02-02",
+   "checkout": "2027-02-06",
+   "nights": 4,
+   "total": 1497.11,
+   "via": "Amex FHR \u00b7 Pay at Check-in",
+   "status": "hold \u2014 $0 down, fully refundable to Jan 31 2027",
+   "next": "rebook as Pay Today on/after Jan 2 2027 for the Jan\u2013Jun $300, then cancel the hold",
+   "confirmation": null
+  }
+ },
+ "credit_plan": {
+  "amex_300_to": "SIN",
+  "note": "Amex $300 \u2192 Singapore via the January rebook; Istanbul assumed on CSR The Edit ($250) \u2014 confirm the hotel is on The Edit, else drop it"
+ },
  "source": "est_allin_night = Amex FHR portal all-in per paid night (read 2026-08-22, 2 adults + 1 child) \u00d7 tonight's public Google rate \u00f7 the public rate on the anchor date; `rate` is that public rate (2 adults, incl. fees) and is the drift alarm",
  "rows": [
   {

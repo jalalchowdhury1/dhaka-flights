@@ -574,6 +574,7 @@ const ROUTES = {
   "flights":  () => renderFlights(DATA),
   "stays":    () => renderStays(DATA),
   "history":  () => renderHistory(DATA),
+  "total":    () => renderTotal(DATA),
 };
 function route() {
   const name = location.hash.replace(/^#\/?/, "");
@@ -698,6 +699,8 @@ function tonightTiles(d) {
       <b>Flights →</b><span class="small">both tickets · bags · alternatives · playbook</span></a>
     <a class="tile" href="#/stays"><span style="font-size:1.15rem">🏨</span>
       <b>Stays →</b><span class="small">The Athenee 5n free-night · IST/SIN card play</span></a>
+    <a class="tile" href="#/total"><span style="font-size:1.15rem">🧾</span>
+      <b>Trip total →</b><span class="small">flights + hotels + points, every line, best-value build</span></a>
     <a class="tile" href="#/history"><span style="font-size:1.15rem">📈</span>
       <b>History →</b><span class="small">full chart · every night's detail</span></a>
     <a class="tile" href="#/history"><span style="font-size:1.15rem">🌴</span>
@@ -1299,6 +1302,131 @@ function renderStays(d) {
 
   return root;
 }
+/* ---- Total (#/total) — the whole trip added up, best-value build -------- */
+/* Every number comes from data.json (flights, Athenee) or hotel_rates.json
+   (the bold play per city, its portal-anchored stay total and credits, and
+   any confirmed booking, which overrides the play's cheapest-room estimate).
+   Nothing here is typed in. */
+function renderTotal(d) {
+  const root = el("");
+  const m = d && d.main;
+  const usd2 = v => v == null ? "—" : "$" + Math.round(v).toLocaleString();
+  const line = (label, val, cls = "", sub = "") => `<tr${cls ? ` class="${cls}"` : ""}>
+      <td class="wrap">${label}${sub ? `<div class="small muted">${sub}</div>` : ""}</td>
+      <td class="num">${val}</td></tr>`;
+  const status = (txt, good) => `<span class="badge ${good ? "good" : "warn"}">${esc(txt)}</span>`;
+
+  if (!m) {
+    root.appendChild(el(`<b>No priced trip tonight.</b>
+      <div class="muted" style="margin-top:4px">The total needs tonight's flights; it appears after the next successful run.</div>`, "pass"));
+    return root;
+  }
+
+  /* ── Flights (tonight's cheapest, both tickets, all three travellers) ── */
+  const oj = m.openjaw || {}, sg = m.sg_ticket || {}, legs = m.legs || [];
+  const t2Legs = legs.filter(l => typeof l.price_total === "number");
+  const t2Total = sg.price_total != null ? sg.price_total
+    : t2Legs.reduce((a, l) => a + l.price_total, 0);
+  const flightsTotal = m.total != null ? m.total : (oj.price_total || 0) + t2Total;
+  const t2Rows = sg.price_total != null
+    ? line(`Ticket ② · ${esc(sg.airline || "?")}`, usd2(sg.price_total), "", esc(sg.desc || `${sg.out_date || ""} → ${sg.ret_date || ""}`))
+    : t2Legs.map(l => line(`Ticket ② · ${esc(l.route)} · ${esc(l.airline)}`, usd2(l.price_total), "",
+        `${esc(l.depart)} · ${esc(l.depart_time || "")}–${esc(l.arrive_time || "")} · ${esc(l.stops || "")}`)).join("");
+  const bags = (m.baggage || []).map(b => `${esc(b.route)}: ${esc(b.checked || "?")}`).join(" · ");
+  const bagWarn = (m.baggage_warnings || []).length
+    ? `<div class="small" style="margin-top:4px">⚠️ ${esc(m.baggage_warnings[0])}</div>` : "";
+  add(root, () => el(`<span class="micro">✈️ Flights — tonight's cheapest · ${esc(m.order_label || "")} · 2 adults + 1 child</span>
+    <div class="pass"><div class="scroll-x"><table>
+      ${line(`Ticket ① · ${esc(oj.airline || "?")}`, usd2(oj.price_total), "", esc(oj.desc || oj.route || ""))}
+      ${t2Rows}
+      ${line("<b>Flights total</b>", `<b>${usd2(flightsTotal)}</b>`, "", "not booked yet — the buy window is mid/late September")}
+    </table></div>
+    <div class="small" style="margin-top:6px">Checked bags included: ${bags || "—"}.${bagWarn ? "" : ""}</div>${bagWarn}
+    <div class="small" style="margin-top:4px">${status("estimate · re-priced nightly", false)}</div></div>`));
+
+  /* ── Hotels: the play per city (bold row), booking overrides it ── */
+  const rows = (RATES && Array.isArray(RATES.rows)) ? RATES.rows : [];
+  const bookings = (RATES && RATES.bookings) || {};
+  const stayFor = city => {
+    const play = rows.find(r => r.city === city && r.bold) || null;
+    const bk = bookings[city] || null;
+    const st = play && play.stay;
+    if (!play || !st) return null;
+    const a = play.anchor || {};
+    const nights = bk ? bk.nights : st.nights;
+    const total = bk ? bk.total : st.total;
+    const prop = typeof a.credit === "number" ? a.credit : 100;
+    const breakfast = 60 * nights;
+    // One Amex $300 exists before the trip; hotel_rates.CREDIT_PLAN says which
+    // stay takes it. The other card stay is assumed on The Edit ($250).
+    const plan = (RATES && RATES.credit_plan) || {};
+    const tableFixed = st.credits - prop - 60 * st.nights;   // what the Stays table assumed
+    const fixed = plan.amex_300_to ? (plan.amex_300_to === city ? 300 : Math.min(tableFixed, 250)) : tableFixed;
+    const credits = fixed + prop + breakfast;
+    return {play, bk, nights, total, prop, breakfast, fixed, credits, net: Math.max(0, total - credits),
+            program: play.program, name: bk ? bk.hotel : play.name, room: bk ? bk.room : "cheapest room that fits 3"};
+  };
+  const stays = (RATES && RATES.stays) || {};
+  const hdr = (city) => { const w = stays[city]; return w ? `${w.checkin} → ${w.checkout}` : ""; };
+  const hotelCard = (city, label, note) => {
+    const h = stayFor(city);
+    if (!h) return el(`<span class="micro">${label}</span><div class="pass"><div class="muted">No rate for this stay yet — see the Stays tab.</div></div>`);
+    const fixedLabel = h.fixed >= 300 ? "Amex Platinum $300 hotel credit (prepaid FHR)" : "Chase Sapphire Reserve 'The Edit' $250";
+    return el(`<span class="micro">${label} · ${esc(hdr(city))} · ${h.nights}n</span>
+      <div class="pass"><div class="pass-head"><span>${esc(h.name)}</span><span>${esc(h.program)}</span></div>
+      <div class="small muted" style="margin-bottom:6px">${esc(h.room)}${h.bk ? ` · ${esc(h.bk.via)}` : ""}</div>
+      <div class="scroll-x"><table>
+        ${line("All-in, taxes and fees included", usd2(h.total), "", h.bk ? "from the Amex review page" : `Amex FHR portal ${esc(h.play.anchor && h.play.anchor.date || "")}, drifted by the public rate`)}
+        ${line("− breakfast for two, every day", "− " + usd2(h.breakfast), "", `$60/day × ${h.nights}` + (city === "SIN" ? " · Aoife eats free here" : ""))}
+        ${line("− property credit", "− " + usd2(h.prop), "", h.play.anchor && h.play.anchor.promo ? esc(h.play.anchor.promo) : "")}
+        ${line("− card credit", "− " + usd2(h.fixed), "", fixedLabel)}
+        ${line("<b>Your net</b>", `<b>${usd2(h.net)}</b>`, "", `${usd2(h.net / h.nights)}/night`)}
+      </table></div>
+      <div class="small" style="margin-top:6px">${h.bk ? status(h.bk.status, true) : status("estimate · not booked", false)}
+        ${h.bk && h.bk.next ? `<div class="small muted" style="margin-top:4px">Next: ${esc(h.bk.next)}</div>` : ""}
+        ${note ? `<div class="small muted" style="margin-top:4px">${note}</div>` : ""}</div></div>`);
+  };
+  const planNote = RATES && RATES.credit_plan && RATES.credit_plan.note ? esc(RATES.credit_plan.note) : "";
+  add(root, () => hotelCard("IST", "🕌 Istanbul — the play", planNote));
+  add(root, () => hotelCard("SIN", "🇸🇬 Singapore — the play", null));
+
+  /* ── Bangkok: Marriott points, not cash ── */
+  const hb = d.hotel || null;
+  const ptsVals = hb && hb.points ? Object.values(hb.points).filter(v => typeof v === "number") : [];
+  const ptsMax = ptsVals.length ? Math.max(...ptsVals) : null, ptsMin = ptsVals.length ? Math.min(...ptsVals) : null;
+  const ptsLabel = ptsMax == null ? "—" : (ptsMin === ptsMax ? `${ptsMax.toLocaleString()} pts` : `${ptsMin.toLocaleString()}–${ptsMax.toLocaleString()} pts`);
+  add(root, () => el(`<span class="micro">🏨 Bangkok — Marriott points · ${hb ? `${esc(hb.checkin || "")} → ${esc(hb.checkout || "")} · ${hb.nights}n` : ""}</span>
+    <div class="pass"><div class="pass-head"><span>${hb ? esc(hb.property) : "—"}</span><span>Bonvoy award</span></div>
+    <div class="scroll-x"><table>
+      ${line("Points for the stay", ptsLabel, "", hb && hb.fifth_night_free !== false ? "5th night free on points" : "")}
+      ${line("Cash", "$0", "", hb && hb.cash_ref ? `cash reference ${esc(hb.cash_ref)} — that is what the points are worth here` : "")}
+    </table></div>
+    <div class="small" style="margin-top:6px">${status("estimate · not booked — book after flights (~Sept)", false)}</div></div>`));
+
+  add(root, () => el(`<span class="micro">🇧🇩 Dhaka · ${m.dhaka_days != null ? m.dhaka_days + " days" : ""}</span>
+    <div class="pass"><div class="scroll-x"><table>${line("Family — no hotel", "$0")}</table></div></div>`));
+
+  /* ── Totals ── */
+  const ist = stayFor("IST"), sin = stayFor("SIN");
+  const hotelsGross = (ist ? ist.total : 0) + (sin ? sin.total : 0);
+  const credits = (ist ? ist.credits : 0) + (sin ? sin.credits : 0);
+  const hotelsNet = (ist ? ist.net : 0) + (sin ? sin.net : 0);
+  const cashGross = flightsTotal + hotelsGross;
+  const cashNet = flightsTotal + hotelsNet;
+  const days = (() => { const a = Date.parse(oj.out_date || ""), b = Date.parse(oj.ret_date || ""); return isNaN(a) || isNaN(b) ? null : Math.round((b - a) / 86400000); })();
+  add(root, () => el(`<span class="micro">🧾 The whole trip — three of you</span>
+    <div class="pass"><div class="scroll-x"><table>
+      ${line("Flights (both tickets)", usd2(flightsTotal))}
+      ${line("Hotels, all-in (Istanbul + Singapore)", usd2(hotelsGross), "", ist && sin ? `${usd2(ist.total)} + ${usd2(sin.total)}` : "")}
+      ${line("<b>Cash before credits</b>", `<b>${usd2(cashGross)}</b>`)}
+      ${line("− card credits + breakfasts", "− " + usd2(credits), "", "see each hotel's lines above")}
+      ${line("<b>Cash that leaves your pocket</b>", `<b style="font-size:1.1rem">${usd2(cashNet)}</b>`, "", days ? `${usd2(cashNet / days)}/day over ${days} days (${esc(oj.out_date || "")} → ${esc(oj.ret_date || "")})` : "")}
+      ${line("+ Marriott points (Bangkok)", ptsLabel, "", "not cash — the Athenee stay")}
+    </table></div>
+    <div class="small" style="margin-top:8px">What is firm vs estimated: ${sin && sin.bk ? "Singapore is a refundable hold" : "nothing is booked yet"}; flights re-price every night until you buy (~mid/late September); Istanbul and Bangkok are tonight's best-value picks, not bookings. Amex's $300 hotel credit can be earned once per half-year, so only one of the two card stays gets it.</div></div>`));
+  return root;
+}
+
 /* ---- History (#/history) — chart, per-night detail, Bali benchmark ----- */
 /* Categorical slots in fixed order (validated for CVD in both modes with the
    dataviz checker 2026-08-02 on the boarding-pass surfaces — order is the

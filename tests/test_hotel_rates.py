@@ -548,3 +548,12 @@ def test_rows_carry_the_portal_tripadvisor_score():
     assert hr.anchor_for("kempinski_sin")["ta"] == 4.7
     for key, p in hr.PORTAL.items():
         assert isinstance(p.get("ta"), float) and 3.0 <= p["ta"] <= 5.0, key
+
+
+def test_bookings_ride_in_the_json_and_point_at_shortlist_keys(tmp_path, monkeypatch):
+    monkeypatch.setattr(hr, "RATES_FILE", str(tmp_path / "hotel_rates.json"))
+    out = hr.build({"main": None}, today="2026-08-23")
+    assert out["bookings"] is hr.BOOKED or out["bookings"] == hr.BOOKED
+    keys = {e["key"] for e in hr.SHORTLIST}
+    for city, b in hr.BOOKED.items():
+        assert b["key"] in keys and b["nights"] > 0 and b["total"] > 0, city
