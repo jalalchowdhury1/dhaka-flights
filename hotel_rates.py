@@ -151,9 +151,6 @@ SHORTLIST = [
     {"key": "artyzen", "city": "SIN", "program": "FHR",
      "name": "Artyzen Singapore", "query": "Artyzen Singapore",
      "match": "Artyzen", "angle": "New 2023 · $125 property credit · rooftop pool"},
-    {"key": "laurus", "city": "SIN", "program": "FHR",
-     "name": "The Laurus (Lux. Coll.)", "query": "The Laurus Singapore",
-     "match": "Laurus", "angle": "New Luxury Collection · TA 5.0 · Bonvoy stacks"},
     {"key": "ritz_sin", "city": "SIN", "program": "FHR",
      "name": "Ritz-Carlton Millenia", "query": "Ritz Carlton Millenia Singapore",
      "match": "Ritz-Carlton", "angle": "Marina views · Bonvoy stacks"},
@@ -204,7 +201,10 @@ PORTAL = {
     "shangrila_sin": {"avg": 361.59, "total": 1734.16, "nights": 4, "credit": 100},
     "fs_sin":        {"avg": 386.48, "total": 1853.56, "nights": 4, "credit": 100},
     "artyzen":       {"avg": 403.74, "total": 1936.31, "nights": 4, "credit": 125},
-    "laurus":        {"avg": 454.94, "total": 2181.86, "nights": 4, "credit": 100},
+    # "laurus" (The Laurus, Luxury Collection, $454.94 avg / $2,181.86 4n) is
+    # NOT tracked: Google Hotels has no entity for it yet (three query shapes
+    # tried live 2026-08-22, all landed on an unresolved search page), so the
+    # date guard can never bind. Re-try a month or two after it opens.
     "ritz_sin":      {"avg": 490.38, "total": 2351.92, "nights": 4, "credit": 100},
     "stregis_sin":   {"avg": 504.17, "total": 2418.00, "nights": 4, "credit": 100},
     "fullerton_bay": {"avg": 547.50, "total": 2625.82, "nights": 4, "credit": 125,

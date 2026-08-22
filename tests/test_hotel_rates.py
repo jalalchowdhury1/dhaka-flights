@@ -476,7 +476,7 @@ def test_only_one_bold_per_city():
 
 def test_shortlist_keys_unique_and_anchored_rows_have_portal_rows():
     keys = [e["key"] for e in hr.SHORTLIST]
-    assert len(keys) == len(set(keys)) == 20
+    assert len(keys) == len(set(keys)) == 19
     assert set(hr.PORTAL) <= set(keys)
 
 

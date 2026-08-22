@@ -40,7 +40,7 @@ Observed all-in multiplier ≈ 1.19–1.20 in BOTH cities (site assumed 1.12).
 | Four Seasons Hotel Singapore | FHR | 4.7 | $100 property | | $386.48 | $1,853.56 | |
 | Mandai Rainforest Resort (Banyan Tree) | FHR | — | $100 property | | $392.31 | $1,881.53 | 3 rooms left; zoo district |
 | Artyzen Singapore | FHR | 4.6 | $125 property | | $403.74 | $1,936.31 | |
-| The Laurus, Luxury Collection | FHR | 5.0 | $100 property | | $454.94 | $2,181.86 | new; Bonvoy stacks |
+| The Laurus, Luxury Collection | FHR | 5.0 | $100 property | | $454.94 | $2,181.86 | new; Bonvoy stacks; NOT nightly-tracked — Google has no entity yet (re-try ~Oct) |
 | The Ritz-Carlton, Millenia | FHR | 4.6 | $100 property | | $490.38 | $2,351.92 | |
 | Conrad Singapore Marina Bay | FHR | 4.5 | $100 property | | $493.54 | $2,367.00 | |
 | The St. Regis Singapore (renovated) | FHR | 4.5 | $100 F&B | | $504.17 | $2,418.00 | |
