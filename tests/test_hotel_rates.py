@@ -117,10 +117,11 @@ def test_price_anchor_will_not_jump_over_another_price():
 
 
 def test_offset_math_matches_the_published_bands():
-    # IST 2 nights, $520 credits: the site's long-standing ~74% for a $314 room.
-    assert hr.offset_pct(314, 2, 520) == 74
+    # Fallback path (no portal anchor) now assumes the observed ~19% tax/fees:
+    # a $314 IST room with $520 credits sits exactly on the 70% line,
+    assert hr.offset_pct(314, 2, 520) == 70
     # and the corrected $425 room drops it out of the "book now" band.
-    assert hr.offset_pct(425, 2, 520) == 55
+    assert hr.offset_pct(425, 2, 520) == 51
 
 
 def test_bands():
@@ -344,3 +345,86 @@ def test_rate_moves_zero_old_rate_never_divides():
     prev = _rates_file([{"key": "x", "name": "X", "rate": 0}])
     new = _rates_file([{"key": "x", "name": "X", "rate": 5}])
     assert hotel_rates.rate_moves(prev, new) == []   # $5 < $40, pct guard skipped
+
+
+# ── Portal anchors (2026-08-22) ─────────────────────────────────────────────
+def test_paid_nights_free_night_rule():
+    assert hr.paid_nights(4, 4) == 3 and hr.paid_nights(3, 4) == 3
+    assert hr.paid_nights(2, 4) == 2
+    assert hr.paid_nights(4, None) == 4 and hr.paid_nights(4, 3) == 3
+
+
+def test_credits_for_splits_fixed_property_and_daily():
+    assert hr.credits_for(2) == 520 and hr.credits_for(4) == 640     # unchanged totals
+    assert hr.credits_for(2, "THC + Edit") == 470                     # $250 Edit
+    assert hr.credits_for(4, "FHR", 125) == 665                       # $125 property credit
+
+
+def test_anchor_allin_night_is_per_paid_night():
+    k = hr.anchor_for("kempinski_sin")
+    assert k["nights"] == 4 and k["free_night_min"] == 4 and k["credit"] == 125
+    assert k["allin_night"] == round(1327.08 / 3, 2)                  # 442.36, 4th night free
+    assert hr.anchor_for("ritz_ist")["allin_night"] == round(1250.42 / 2, 2)   # 625.21
+    assert hr.anchor_for("jw_sin") is None                            # Edit-only: no portal row
+    assert k["date"] == hr.PORTAL_DATE == "2026-08-22"
+
+
+def test_est_allin_drifts_with_the_public_rate():
+    a = dict(hr.anchor_for("ritz_ist"), google=447)
+    assert hr.est_allin_night(a, 447) == 625.21
+    assert hr.est_allin_night(a, 492) == round(625.21 * 492 / 447, 2)
+    assert hr.est_allin_night(dict(a, google=None), 600) == 625.21    # no Google anchor yet: no drift
+    assert hr.est_allin_night(a, None) == 625.21                       # no public rate yet
+    assert hr.est_allin_night(None, 447) is None
+    assert hr.drift_pct(492, 447) == 10 and hr.drift_pct(447, None) is None
+
+
+def test_offsets_from_the_portal_total():
+    # Capitol Kempinski 4n: $1,327.08 incl. tax with the free 4th night; credits 300+125+240
+    assert hr.offset_from_allin(442.36, 4, 665, free_night_min=4) == 50
+    assert hr.offset_from_allin(442.36, 2, 545, free_night_min=4) == 62
+    assert hr.offset_from_allin(None, 2, 545) is None
+    assert hr.offset_from_allin(442.36, 0, 545) is None
+
+
+def test_build_rows_carry_anchor_est_and_drift(tmp_path, monkeypatch):
+    monkeypatch.setattr(hr, "RATES_FILE", str(tmp_path / "hotel_rates.json"))
+    out = hr.build({"main": None}, scraped={"kempinski_sin": (300, "ok")},
+                   today="2026-08-23")
+    k = next(r for r in out["rows"] if r["key"] == "kempinski_sin")
+    assert k["bold"] is True                                           # the new SIN play
+    assert k["anchor"]["google"] == 300 and k["anchor"]["google_date"] == "2026-08-23"
+    assert k["est_allin_night"] == 442.36 and k["drift_pct"] == 0
+    assert [o["pct"] for o in k["offsets"]] == [62, 50]
+    ritz = next(r for r in out["rows"] if r["key"] == "ritz_ist")
+    assert ritz["anchor"]["google"] == hr.SEED["ritz_ist"]["anchor_google"]
+    assert ritz["anchor"]["google_date"] == "2026-08-22"
+    jw = next(r for r in out["rows"] if r["key"] == "jw_sin")
+    assert jw["anchor"] is None and jw["drift_pct"] is None
+    assert jw["est_allin_night"] == round(jw["rate"] * 1.19, 2)        # fallback path
+    new = next(r for r in out["rows"] if r["key"] == "shangrila_sin")
+    assert new["rate"] is None and new["est_allin_night"] == round(1734.16 / 4, 2)
+    assert new["offsets"][1]["pct"] == 37                              # offsets exist before the first scrape
+
+
+def test_build_keeps_a_bootstrapped_google_anchor(tmp_path, monkeypatch):
+    monkeypatch.setattr(hr, "RATES_FILE", str(tmp_path / "hotel_rates.json"))
+    first = hr.build({"main": None}, scraped={"kempinski_sin": (300, "ok")},
+                     today="2026-08-23")
+    hr.write(first)
+    second = hr.build({"main": None}, scraped={"kempinski_sin": (330, "ok")},
+                      today="2026-08-24")
+    k = next(r for r in second["rows"] if r["key"] == "kempinski_sin")
+    assert k["anchor"]["google"] == 300 and k["anchor"]["google_date"] == "2026-08-23"
+    assert k["drift_pct"] == 10 and k["est_allin_night"] == round(442.36 * 330 / 300, 2)
+
+
+def test_only_one_bold_per_city():
+    for city in ("IST", "SIN"):
+        assert sum(1 for e in hr.SHORTLIST if e["city"] == city and e.get("bold")) == 1
+
+
+def test_shortlist_keys_unique_and_anchored_rows_have_portal_rows():
+    keys = [e["key"] for e in hr.SHORTLIST]
+    assert len(keys) == len(set(keys)) == 20
+    assert set(hr.PORTAL) <= set(keys)

@@ -35,16 +35,37 @@ import re
 import time
 import urllib.parse
 
-CREDITS_NOTE = ("$300 Amex (or $250 Edit) + $100 property + $60/day breakfast")
-TAX_RATE = 0.12          # the ~12% the offset math has always assumed
+CREDITS_NOTE = ("$300 Amex (or $250 Edit) + $100–125 property credit "
+                "+ $60/day breakfast")
+# FALLBACK ONLY — used for a row that has no portal anchor (today: JW South
+# Beach, Edit-only). Every anchored row prices from the portal's all-in total,
+# which already contains the real taxes/fees: 1.19–1.20× the ex-tax rate in
+# BOTH cities on 2026-08-22. The old 0.12 was a guess and understated every
+# offset by ~6 points.
+TAX_RATE = 0.19
 
-# Per-stay credit pools, matching the site's long-standing assumption line.
-CREDIT_POOL = {
-    ("IST", 2): 520,
-    ("SIN", 2): 520,     # FHR; Edit variant is 470
-    ("SIN", 4): 640,     # FHR; Edit variant is 590
-}
-CREDIT_POOL_EDIT = {("SIN", 2): 470, ("SIN", 4): 590}
+# Credits, split the way the programs actually pay them out.
+AMEX_FIXED = 300            # Amex Platinum $300 per half-year on prepaid FHR/THC
+EDIT_FIXED = 250            # CSR "The Edit" — non-FHR programs
+DAILY_CREDIT = 60           # breakfast for two, per night
+DEFAULT_PROPERTY_CREDIT = 100
+
+
+def fixed_credit(program):
+    """Anything booked through Chase's Edit draws the $250 Edit credit, not
+    the $300 Amex one — that is what makes Pan Pacific 2n read lower."""
+    return EDIT_FIXED if "Edit" in (program or "") else AMEX_FIXED
+
+
+def credits_for(n, program="FHR", property_credit=DEFAULT_PROPERTY_CREDIT):
+    """Per-stay credit pool for n nights: fixed + property + daily."""
+    return fixed_credit(program) + property_credit + DAILY_CREDIT * n
+
+
+def paid_nights(n, free_night_min=None):
+    """Nights actually billed. A 'free 4th night' promo means 3n and 4n cost
+    the same — the portal's avg/night already bakes the free night in."""
+    return n - 1 if free_night_min and n >= free_night_min else n
 
 # 🏨 Morning movers alert (Jalal 2026-08-19: "give me any major changes in
 # hotel prices"). A mover = the rate changed ≥ MOVE_ALERT_PCT% of its old
@@ -85,46 +106,127 @@ def moves_message(moves):
 # long official names fall through to a no-results search page (proven
 # 2026-08-03). `match` is the substring the resolved page title must contain,
 # so a query that drifts to a different hotel is rejected rather than trusted.
+# 2026-08-22: 8 → 20 properties = every luxury FHR candidate that fit 2 adults
+# + 1 child on the portal (Jalal: "track everything luxury nightly"). The
+# Browserbase quota math that this changes is in run_hotel_rates.py.
 SHORTLIST = [
+    # ── Istanbul · Jan 5–7 ──────────────────────────────────────────────────
     {"key": "sanasaryan", "city": "IST", "program": "FHR",
      "name": "Sanasaryan Han (Lux. Coll.)", "query": "Sanasaryan Han Istanbul",
-     "match": "Sanasaryan", "angle": "Old-city boutique · Bonvoy stacks"},
+     "match": "Sanasaryan", "angle": "Old-city boutique · Bonvoy stacks · cheapest FHR in IST"},
     {"key": "ritz_ist", "city": "IST", "program": "FHR", "bold": True,
      "name": "Ritz-Carlton Istanbul", "query": "Ritz Carlton Istanbul",
      "match": "Ritz-Carlton", "angle": "Value pick · Bonvoy Platinum stacks (points + elite nights)"},
+    {"key": "parkhyatt_ist", "city": "IST", "program": "FHR",
+     "name": "Park Hyatt Maçka Palas", "query": "Park Hyatt Istanbul",
+     "match": "Park Hyatt", "angle": "Nişantaşı boutique · second-cheapest FHR"},
+    {"key": "shangrila_ist", "city": "IST", "program": "FHR",
+     "name": "Shangri-La Bosphorus", "query": "Shangri-La Bosphorus Istanbul",
+     "match": "Shangri-La", "angle": "Bosphorus-front · TA 4.8 · Ritz money"},
     {"key": "stregis_ist", "city": "IST", "program": "FHR",
      "name": "St. Regis Istanbul", "query": "St Regis Istanbul Nisantasi",
      "match": "St. Regis", "angle": "Butler with every room · Bonvoy stacks"},
     {"key": "ciragan", "city": "IST", "program": "FHR",
      "name": "Çırağan Palace Kempinski", "query": "Ciragan Palace Kempinski",
      "match": "Kempinski", "angle": "The sentimental splurge · Bosphorus palace, the favorite brand"},
+    {"key": "fs_bosphorus", "city": "IST", "program": "FHR",
+     "name": "Four Seasons Bosphorus", "query": "Four Seasons Bosphorus Istanbul",
+     "match": "Bosphorus", "angle": "Palace on the water · fits 3 (portal-proven)"},
+    {"key": "raffles_ist", "city": "IST", "program": "FHR",
+     "name": "Raffles Istanbul", "query": "Raffles Istanbul",
+     "match": "Raffles", "angle": "TA 4.9, the best-reviewed in town · Zorlu mall"},
+    # ── Singapore · Feb 2–6 ─────────────────────────────────────────────────
+    {"key": "kempinski_sin", "city": "SIN", "program": "FHR", "bold": True,
+     "name": "The Capitol Kempinski", "query": "Capitol Kempinski Singapore",
+     "match": "Kempinski",
+     "angle": "THE find · free 4th night · $125 F&B credit · Kempinski standard at half the St. Regis"},
+    {"key": "shangrila_sin", "city": "SIN", "program": "FHR",
+     "name": "Shangri-La Singapore", "query": "Shangri-La Singapore Orange Grove",
+     "match": "Shangri-La", "angle": "Garden resort in town · Valley Wing is the play"},
+    {"key": "fs_sin", "city": "SIN", "program": "FHR",
+     "name": "Four Seasons Singapore", "query": "Four Seasons Hotel Singapore",
+     "match": "Four Seasons", "angle": "Orchard · kids' program · cheaper than St. Regis"},
+    {"key": "artyzen", "city": "SIN", "program": "FHR",
+     "name": "Artyzen Singapore", "query": "Artyzen Singapore",
+     "match": "Artyzen", "angle": "New 2023 · $125 property credit · rooftop pool"},
+    {"key": "laurus", "city": "SIN", "program": "FHR",
+     "name": "The Laurus (Lux. Coll.)", "query": "The Laurus Singapore",
+     "match": "Laurus", "angle": "New Luxury Collection · TA 5.0 · Bonvoy stacks"},
+    {"key": "ritz_sin", "city": "SIN", "program": "FHR",
+     "name": "Ritz-Carlton Millenia", "query": "Ritz Carlton Millenia Singapore",
+     "match": "Ritz-Carlton", "angle": "Marina views · Bonvoy stacks"},
+    {"key": "stregis_sin", "city": "SIN", "program": "FHR",
+     "name": "St. Regis Singapore", "query": "St Regis Singapore",
+     "match": "St. Regis", "angle": "Butler standard · Bonvoy stacks · the old play"},
+    {"key": "fullerton_bay", "city": "SIN", "program": "FHR",
+     "name": "Fullerton Bay Hotel", "query": "Fullerton Bay Hotel Singapore",
+     "match": "Fullerton Bay", "angle": "Free 3rd night · $125 F&B · TA 4.8 · on the water"},
+    {"key": "mo_sin", "city": "SIN", "program": "FHR",
+     "name": "Mandarin Oriental", "query": "Mandarin Oriental Singapore",
+     "match": "Mandarin Oriental", "angle": "Free 4th night · TA 4.8 · Marina Bay"},
+    {"key": "edition_sin", "city": "SIN", "program": "FHR",
+     "name": "Singapore EDITION", "query": "The Singapore EDITION",
+     "match": "EDITION", "angle": "TA 4.8 · Bonvoy stacks · Orchard-adjacent"},
     {"key": "panpacific", "city": "SIN", "program": "THC + Edit",
      "name": "Pan Pacific Orchard", "query": "Pan Pacific Orchard Singapore",
      "match": "Pan Pacific Orchard",
      "angle": "Wildcard · CSR select-hotels credit may stack (see note)"},
-    {"key": "stregis_sin", "city": "SIN", "program": "FHR", "bold": True,
-     "name": "St. Regis Singapore", "query": "St Regis Singapore",
-     "match": "St. Regis", "angle": "Butler standard · Bonvoy stacks · cheap for SIN luxury"},
-    {"key": "ritz_sin", "city": "SIN", "program": "FHR",
-     "name": "Ritz-Carlton Millenia", "query": "Ritz Carlton Millenia Singapore",
-     "match": "Ritz-Carlton", "angle": "Marina views · Bonvoy stacks"},
     {"key": "jw_sin", "city": "SIN", "program": "The Edit only",
      "name": "JW Marriott South Beach", "query": "JW Marriott South Beach Singapore",
      "match": "JW Marriott", "angle": "Best Edit-exclusive if the fallback strategy is needed"},
 ]
 
-# Seed values. Rates carrying `checked` 2026-08-01 are the ORIGINAL hand
-# research; 2026-08-03 entries were re-verified live that evening against
-# Google Hotels for the real stay dates. The nightly job overwrites these.
+# ── Portal anchors — READ FROM THE AMEX FHR PORTAL, 2026-08-22 ───────────────
+# These are the rates the card play actually books, for a 2-adult + 1-child
+# search on the real dates, so every row here fits the three of us. `total`
+# is the WHOLE stay incl. taxes and fees; `avg` is the portal's ex-tax
+# average per night (kept for the record, not used in the math). A
+# `free_night_min` means the portal's price already includes a free night
+# for stays of at least that length. Source doc + read method:
+# docs/research/2026-08-22-fhr-portal-snapshot.md. Re-anchor by re-reading
+# the portal WITH JALAL PRESENT (it is Nabila's Amex login) — never automate.
+PORTAL_DATE = "2026-08-22"
+PORTAL = {
+    # Istanbul, 2 nights
+    "sanasaryan":    {"avg": 426.84, "total": 956.12,  "nights": 2, "credit": 100, "promo": "was $502"},
+    "ritz_ist":      {"avg": 525.52, "total": 1250.42, "nights": 2, "credit": 100},
+    "parkhyatt_ist": {"avg": 506.25, "total": 1133.98, "nights": 2, "credit": 100},
+    "shangrila_ist": {"avg": 531.36, "total": 1190.26, "nights": 2, "credit": 100},
+    "stregis_ist":   {"avg": 642.30, "total": 1438.76, "nights": 2, "credit": 100},
+    "ciragan":       {"avg": 656.90, "total": 1471.46, "nights": 2, "credit": 100},
+    "fs_bosphorus":  {"avg": 700.69, "total": 1569.54, "nights": 2, "credit": 100},
+    "raffles_ist":   {"avg": 729.88, "total": 1634.94, "nights": 2, "credit": 100},
+    # Singapore, 4 nights
+    "kempinski_sin": {"avg": 276.70, "total": 1327.08, "nights": 4, "credit": 125,
+                      "free_night_min": 4, "promo": "free 4th night (in the rate) · was $378"},
+    "shangrila_sin": {"avg": 361.59, "total": 1734.16, "nights": 4, "credit": 100},
+    "fs_sin":        {"avg": 386.48, "total": 1853.56, "nights": 4, "credit": 100},
+    "artyzen":       {"avg": 403.74, "total": 1936.31, "nights": 4, "credit": 125},
+    "laurus":        {"avg": 454.94, "total": 2181.86, "nights": 4, "credit": 100},
+    "ritz_sin":      {"avg": 490.38, "total": 2351.92, "nights": 4, "credit": 100},
+    "stregis_sin":   {"avg": 504.17, "total": 2418.00, "nights": 4, "credit": 100},
+    "fullerton_bay": {"avg": 547.50, "total": 2625.82, "nights": 4, "credit": 125,
+                      "free_night_min": 3, "promo": "free 3rd night (in the rate) · was $741"},
+    "mo_sin":        {"avg": 551.24, "total": 2643.77, "nights": 4, "credit": 100,
+                      "free_night_min": 4, "promo": "free 4th night (in the rate) · was $719"},
+    "edition_sin":   {"avg": 567.20, "total": 2720.28, "nights": 4, "credit": 100},
+    "panpacific":    {"avg": 364.34, "total": 1747.39, "nights": 4, "credit": 100},   # THC rate
+    # jw_sin: Edit-only, not on the Amex portal — no anchor, fallback math.
+}
+
+# Seed values: the Google public rates read 2026-08-22, the SAME DAY as the
+# portal anchors, which is what makes `anchor_google` an honest drift baseline
+# for the original eight. New rows have no seed; their Google anchor is
+# bootstrapped from their first live scrape (see build()).
 SEED = {
-    "sanasaryan":  {"rate": 348, "checked": "2026-08-03"},
-    "ritz_ist":    {"rate": 425, "checked": "2026-08-03"},
-    "stregis_ist": {"rate": 525, "checked": "2026-08-01"},
-    "ciragan":     {"rate": 726, "checked": "2026-08-01"},
-    "panpacific":  {"rate": 252, "checked": "2026-08-01"},
-    "stregis_sin": {"rate": 329, "checked": "2026-08-01"},
-    "ritz_sin":    {"rate": 420, "checked": "2026-08-01"},
-    "jw_sin":      {"rate": 497, "checked": "2026-08-01"},
+    "sanasaryan":  {"rate": 353, "checked": "2026-08-22", "anchor_google": 353},
+    "ritz_ist":    {"rate": 447, "checked": "2026-08-22", "anchor_google": 447},
+    "stregis_ist": {"rate": 546, "checked": "2026-08-22", "anchor_google": 546},
+    "ciragan":     {"rate": 472, "checked": "2026-08-22", "anchor_google": 472},
+    "panpacific":  {"rate": 250, "checked": "2026-08-22", "anchor_google": 250},
+    "stregis_sin": {"rate": 472, "checked": "2026-08-22", "anchor_google": 472},
+    "ritz_sin":    {"rate": 477, "checked": "2026-08-22", "anchor_google": 477},
+    "jw_sin":      {"rate": 444, "checked": "2026-08-22"},
 }
 
 RATES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -148,6 +250,52 @@ def band(pct):
     if pct is None:
         return "dim"
     return "good" if pct >= 70 else ("dim" if pct < 50 else "warn")
+
+
+def anchor_for(key):
+    """The portal anchor for a shortlist key as the JSON row carries it, or
+    None. `allin_night` is per PAID night so the free-night promos price
+    2n/3n honestly (a free-4th-night hotel costs the same for 3n and 4n)."""
+    p = PORTAL.get(key)
+    if not p:
+        return None
+    fnm = p.get("free_night_min")
+    return {"date": PORTAL_DATE, "total": p["total"], "nights": p["nights"],
+            "allin_night": round(p["total"] / paid_nights(p["nights"], fnm), 2),
+            "credit": p.get("credit", DEFAULT_PROPERTY_CREDIT),
+            "free_night_min": fnm, "promo": p.get("promo"),
+            "google": None, "google_date": None}
+
+
+def _num(x):
+    return isinstance(x, (int, float)) and not isinstance(x, bool) and x > 0
+
+
+def est_allin_night(anchor, rate):
+    """Tonight's estimated FHR all-in per paid night: the portal figure,
+    scaled by how far the public Google rate has moved since the anchor.
+    No Google anchor or no rate tonight → the portal figure unscaled."""
+    if not anchor:
+        return None
+    base = anchor["allin_night"]
+    g = anchor.get("google")
+    if _num(rate) and _num(g):
+        return round(base * rate / g, 2)
+    return base
+
+
+def drift_pct(rate, google_anchor):
+    """Public-rate movement since the anchor date, whole percent, or None."""
+    if not (_num(rate) and _num(google_anchor)):
+        return None
+    return round(100 * (rate / google_anchor - 1))
+
+
+def offset_from_allin(allin_night, n, credits, free_night_min=None):
+    """Credits ÷ estimated all-in for n nights, whole percent. None-safe."""
+    if not _num(allin_night) or not n:
+        return None
+    return round(100 * credits / (allin_night * paid_nights(n, free_night_min)))
 
 
 def _label(d):
@@ -457,10 +605,42 @@ def load_previous():
         return {}
 
 
+def _offset(entry, anchor, est, rate, n):
+    """One offset cell. Anchored rows price from the portal estimate; the
+    rest fall back to Google rate × (1 + TAX_RATE)."""
+    prop = anchor["credit"] if anchor else DEFAULT_PROPERTY_CREDIT
+    c = credits_for(n, entry["program"], prop)
+    if est is not None and anchor:
+        pct = offset_from_allin(est, n, c, anchor.get("free_night_min"))
+    else:
+        pct = offset_pct(rate, n, c)
+    return {"label": f"{n}n", "pct": pct, "band": band(pct)}
+
+
+def _google_anchor(prev, key, fresh, today):
+    """(google, google_date) for the anchor: what the previous row already
+    carried, else the seeded same-day read, else bootstrap from tonight's
+    first live rate. None until one of those exists."""
+    pa = prev.get("anchor") if isinstance(prev.get("anchor"), dict) else {}
+    if _num(pa.get("google")):
+        return pa["google"], pa.get("google_date")
+    seeded = prev.get("anchor_google") or (SEED.get(key) or {}).get("anchor_google")
+    if _num(seeded):
+        return seeded, (SEED.get(key) or {}).get("checked") or prev.get("checked")
+    if fresh and _num(fresh[0]):
+        return fresh[0], today
+    return None, None
+
+
 def build(payload, scraped=None, today=None):
     """Merge freshly scraped rates over the last-known ones and compute the
     offsets. A property with no fresh rate keeps its previous value AND its
-    previous `checked` date, so staleness is always visible."""
+    previous `checked` date, so staleness is always visible.
+
+    2026-08-22: every row also carries its portal `anchor` (the real FHR
+    all-in, read once), `est_allin_night` (that figure drifted by tonight's
+    public rate) and `drift_pct`. Offsets and the stay math price from
+    est_allin_night; the Google rate is the drift alarm, not the price."""
     today = today or datetime.date.today().isoformat()
     previous = load_previous()
     scraped = scraped or {}
@@ -475,24 +655,24 @@ def build(payload, scraped=None, today=None):
             rate, checked = prev.get("rate"), prev.get("checked")
             if fresh and fresh[1] and fresh[1] != "ok":
                 notes.append(f"{e['name']}: {fresh[1]}")
+        anchor = anchor_for(e["key"])
+        if anchor:
+            anchor["google"], anchor["google_date"] = _google_anchor(
+                prev, e["key"], fresh, today)
+        est = est_allin_night(anchor, rate)
+        if est is None and _num(rate):
+            est = round(rate * (1 + TAX_RATE), 2)          # fallback path
         win = windows.get(e["city"])
         nights = win[2] if win else (2 if e["city"] == "IST" else None)
         row = {"key": e["key"], "city": e["city"], "name": e["name"],
                "program": e["program"], "angle": e["angle"],
-               "bold": bool(e.get("bold")), "rate": rate, "checked": checked}
+               "bold": bool(e.get("bold")), "rate": rate, "checked": checked,
+               "anchor": anchor, "est_allin_night": est,
+               "drift_pct": drift_pct(rate, anchor.get("google")) if anchor else None}
         if e["city"] == "IST":
-            pct = offset_pct(rate, nights or 2, CREDIT_POOL[("IST", 2)])
-            row["offsets"] = [{"label": f"{nights or 2}n", "pct": pct, "band": band(pct)}]
+            row["offsets"] = [_offset(e, anchor, est, rate, nights or 2)]
         else:
-            row["offsets"] = []
-            for n in (2, 4):
-                # Anything booked through Chase's Edit draws the $250 Edit
-                # credit, not the $300 Amex one — that is what makes Pan
-                # Pacific 2n read 83% and not 92%.
-                pool = (CREDIT_POOL_EDIT if "Edit" in e["program"]
-                        else CREDIT_POOL)[("SIN", n)]
-                pct = offset_pct(rate, n, pool)
-                row["offsets"].append({"label": f"{n}n", "pct": pct, "band": band(pct)})
+            row["offsets"] = [_offset(e, anchor, est, rate, n) for n in (2, 4)]
         rows.append(row)
     return {
         "updated": today,
@@ -500,8 +680,11 @@ def build(payload, scraped=None, today=None):
                        "nights": w[2]} if w else None)
                   for c, w in windows.items()},
         "credits_note": CREDITS_NOTE,
-        "source": ("public nightly rate incl. fees, Google Hotels, same dates — "
-                   "FHR/Edit rates are login-gated and must be confirmed in the portal"),
+        "portal_date": PORTAL_DATE,
+        "source": ("est_allin_night = Amex FHR portal all-in per paid night "
+                   f"(read {PORTAL_DATE}, 2 adults + 1 child) × tonight's public "
+                   "Google rate ÷ the public rate on the anchor date; `rate` is "
+                   "that public rate (2 adults, incl. fees) and is the drift alarm"),
         "rows": rows,
         "notes": notes,
     }
