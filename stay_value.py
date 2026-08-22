@@ -9,7 +9,9 @@ points-value, and replacement cost; he chose $225).
 
     score(n) = allin(n) − EXTRA_NIGHT_WORTH × (n − MIN_N)     lowest wins
     allin(n) = flights(n) + hotel_net(n)
-    hotel_net(n) = max(0, n·rate·(1+TAX) − credits(n))        never cash back
+    hotel_net(n) = max(0, paid_nights(n)·allin_night − credits(n))   never cash back
+    allin_night  = est_allin_night from hotel_rates.json (portal-anchored),
+                   else rate·(1+TAX) for a row with no anchor
 
 Mode ladder — a stale rate must never steer the trip (the hotel job
 fail-closes and has gone 5 nights dark before, 2026-08-11):
@@ -29,9 +31,11 @@ EXTRA_NIGHT_WORTH = 225   # $ one extra SIN night is worth (Jalal, 2026-08-19)
 DEAD_BAND = 25            # challenger must beat the incumbent shape by this
 STALE_DAYS = 3            # bold rate older than this → advisory, not steering
 WATCHDOG_GAP = 50         # $/night a rival must beat the bold pick by to bark
-TAX_RATE = 0.12           # hotel_rates.py's long-standing offset assumption
-FHR_FIXED = 400           # $300 Amex FHR + $100 property, per stay
-EDIT_FIXED = 350          # $250 Edit + $100 property — non-FHR programs
+TAX_RATE = 0.19           # FALLBACK for a row with no portal anchor (observed
+                          # 1.19–1.20× on the Amex portal 2026-08-22)
+AMEX_FIXED = 300          # $300 Amex FHR/THC per stay
+EDIT_FIXED = 250          # $250 Edit — non-FHR programs
+PROPERTY_CREDIT = 100     # default; an anchored row carries its own ($100/$125)
 DAILY_CREDIT = 60         # breakfast credit per day
 MIN_N = 2                 # mirrors combo.MIN_SG_NIGHTS — the score baseline
 
@@ -69,17 +73,44 @@ def bold_row(rates, city="SIN"):
 
 def fixed_credits(program):
     """FHR-bookable stays get the $300 Amex; Edit/THC-only get $250 Edit."""
-    return FHR_FIXED if "FHR" in (program or "") else EDIT_FIXED
+    return AMEX_FIXED if "FHR" in (program or "") else EDIT_FIXED
 
 
-def credits(n, program="FHR"):
-    return fixed_credits(program) + DAILY_CREDIT * n
+def _anchor(row):
+    a = row.get("anchor") if isinstance(row, dict) else None
+    return a if isinstance(a, dict) else {}
 
 
-def hotel_net(rate, n, program="FHR"):
+def property_credit(row):
+    c = _anchor(row).get("credit")
+    return c if isinstance(c, (int, float)) else PROPERTY_CREDIT
+
+
+def credits(n, program="FHR", prop=PROPERTY_CREDIT):
+    return fixed_credits(program) + prop + DAILY_CREDIT * n
+
+
+def paid_nights(n, free_night_min=None):
+    """A 'free 4th night' promo bills 3 nights for a 4-night stay."""
+    return n - 1 if free_night_min and n >= free_night_min else n
+
+
+def allin_night(row):
+    """Estimated all-in per paid night: the portal-anchored estimate the
+    hotel job writes (est_allin_night), else public rate × (1 + TAX_RATE)."""
+    est = row.get("est_allin_night")
+    if isinstance(est, (int, float)) and est > 0:
+        return est
+    return row["rate"] * (1 + TAX_RATE)
+
+
+def hotel_net(row, n):
     """Out-of-pocket for n nights after credits, floored at 0 — credits
-    beyond the bill are not cash back."""
-    return max(0, round(n * rate * (1 + TAX_RATE) - credits(n, program)))
+    beyond the bill are not cash back. `row` is a hotel_rates.json row."""
+    program = row.get("program", "FHR")
+    nights = paid_nights(n, _anchor(row).get("free_night_min"))
+    return max(0, round(nights * allin_night(row)
+                        - credits(n, program, property_credit(row))))
 
 
 def _age_days(row, today):
@@ -99,12 +130,12 @@ def mode(rates, today):
     return "steering"
 
 
-def score_adjust(rate, n, incumbent_n, program="FHR"):
+def score_adjust(row, n, incumbent_n):
     """What the combo hook adds to a candidate's flight cost: its net hotel
     bill, minus the value of its extra nights, minus the incumbent shape's
     dead-band bonus (so the pick only flips when the challenger clearly
     wins — no 4N-Monday/2N-Tuesday whiplash from volatile flex fares)."""
-    return (hotel_net(rate, n, program)
+    return (hotel_net(row, n)
             - EXTRA_NIGHT_WORTH * (n - MIN_N)
             - (DEAD_BAND if n == incumbent_n else 0))
 
@@ -118,8 +149,7 @@ def hotel_hook(rates, incumbent_n, today=None):
     if mode(rates, today) != "steering":
         return None
     row = bold_row(rates)
-    rate, program = row["rate"], row.get("program", "FHR")
-    return lambda n: score_adjust(rate, n, incumbent_n, program)
+    return lambda n: score_adjust(row, n, incumbent_n)
 
 
 def _watchdog(rates, row, n):
@@ -128,13 +158,13 @@ def _watchdog(rates, row, n):
     and the rates under it move nightly."""
     if not n:
         return None
-    bold_pn = hotel_net(row["rate"], n, row.get("program", "FHR")) / n
+    bold_pn = hotel_net(row, n) / n
     best = None
     for r in _rows(rates):
         if (r.get("city") != "SIN" or r.get("bold")
                 or not isinstance(r.get("rate"), (int, float))):
             continue
-        pn = hotel_net(r["rate"], n, r.get("program", "FHR")) / n
+        pn = hotel_net(r, n) / n
         if bold_pn - pn > WATCHDOG_GAP and (best is None or pn < best[1]):
             best = (r, pn)
     if not best:
@@ -162,10 +192,9 @@ def build(rates, flight_totals, incumbent_n, trip_n, today=None):
     rows = []
     for n in sorted(k for k in (flight_totals or {}) if isinstance(k, int)):
         fl = flight_totals[n]
-        net = hotel_net(row["rate"], n, program)
+        net = hotel_net(row, n)
         rows.append({"n": n, "flights": fl, "hotel_net": net, "allin": fl + net,
-                     "score": fl + score_adjust(row["rate"], n, incumbent_n,
-                                                program)})
+                     "score": fl + score_adjust(row, n, incumbent_n)})
     picked = min(rows, key=lambda r: r["score"])["n"] if rows else None
     trip_row = next((r for r in rows if r["n"] == trip_n), None)
     warning = None
@@ -182,14 +211,22 @@ def build(rates, flight_totals, incumbent_n, trip_n, today=None):
         base,
         hotel={"key": row.get("key"), "name": row.get("name"),
                "rate": row["rate"], "checked": row.get("checked"),
-               "program": program},
+               "program": program,
+               "allin_night": round(allin_night(row), 2),
+               "anchor_date": _anchor(row).get("date")},
         rows=rows, picked_n=picked,
         trip_allin=trip_row["allin"] if trip_row else None,
         watchdog=_watchdog(rates, row, trip_n if trip_row else MIN_N),
         warning=warning, note=note,
-        assumption=(f"{row['name']} ${row['rate']:,}/n (checked "
-                    f"{row.get('checked')}) · credits "
-                    f"${fixed_credits(program)}/stay + ${DAILY_CREDIT}/day · "
-                    f"~12% tax · longer stays assume the tracked window's "
-                    f"nightly rate"),
+        assumption=(f"{row['name']} est. ${allin_night(row):,.0f}/paid night "
+                    f"all-in ("
+                    + (f"FHR portal {_anchor(row).get('date')}, drifted by the "
+                       f"public rate ${row['rate']:,} checked {row.get('checked')}"
+                       if _anchor(row).get("date") else
+                       f"public ${row['rate']:,} checked {row.get('checked')} "
+                       f"× ~{round(TAX_RATE * 100)}% tax, no portal anchor")
+                    + f") · credits ${fixed_credits(program)}+"
+                    f"${property_credit(row)}/stay + ${DAILY_CREDIT}/day"
+                    + (f" · free night from {_anchor(row).get('free_night_min')}n"
+                       if _anchor(row).get("free_night_min") else "")),
     )

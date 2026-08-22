@@ -15,7 +15,12 @@ RATES = {
         {"key": "ritz_ist", "city": "IST", "name": "Ritz-Carlton Istanbul",
          "program": "FHR", "bold": True, "rate": 439, "checked": "2026-08-19"},
         {"key": "stregis_sin", "city": "SIN", "name": "St. Regis Singapore",
-         "program": "FHR", "bold": True, "rate": 218, "checked": "2026-08-19"},
+         "program": "FHR", "bold": True, "rate": 218, "checked": "2026-08-19",
+         "est_allin_night": 244.15,
+         "anchor": {"date": "2026-08-19", "total": 976.6, "nights": 4,
+                    "allin_night": 244.15, "credit": 100,
+                    "free_night_min": None, "promo": None,
+                    "google": 218, "google_date": "2026-08-19"}},
         {"key": "panpacific", "city": "SIN", "name": "Pan Pacific Orchard",
          "program": "THC + Edit", "bold": False, "rate": 255,
          "checked": "2026-08-19"},
@@ -35,14 +40,30 @@ def test_edit_only_programs_get_the_smaller_fixed_credit():
     assert stay_value.credits(2, "FHR") == 520
 
 
+ROW = RATES["rows"][1]                                  # the anchored St. Regis
+
+
 def test_hotel_net_floors_at_zero():
-    # 2×218×1.12 = 488.32 < $520 credits — credits beyond the bill are NOT cash back
-    assert stay_value.hotel_net(218, 2) == 0
+    # 2×244.15 = 488.30 < $520 credits — credits beyond the bill are NOT cash back
+    assert stay_value.hotel_net(ROW, 2) == 0
 
 
 def test_hotel_net_at_three_and_four():
-    assert stay_value.hotel_net(218, 3) == 152
-    assert stay_value.hotel_net(218, 4) == 337
+    assert stay_value.hotel_net(ROW, 3) == 152          # 732.45 − 580
+    assert stay_value.hotel_net(ROW, 4) == 337          # 976.60 − 640
+
+
+def test_hotel_net_fallback_without_an_anchor_assumes_19pct():
+    bare = {"rate": 218, "program": "FHR"}
+    assert stay_value.hotel_net(bare, 4) == 398         # 4×218×1.19 − 640 = 397.68
+
+
+def test_hotel_net_honours_free_night_and_property_credit():
+    kemp = {"rate": 300, "program": "FHR", "est_allin_night": 442.36,
+            "anchor": {"credit": 125, "free_night_min": 4}}
+    assert stay_value.hotel_net(kemp, 4) == 662         # 3 paid × 442.36 − 665
+    assert stay_value.hotel_net(kemp, 3) == 722         # 3 paid × 442.36 − 605
+    assert stay_value.hotel_net(kemp, 2) == 340         # 2 paid × 442.36 − 545
 
 
 def test_bold_row_finds_the_sin_play_not_the_ist_one():
@@ -67,14 +88,14 @@ def test_mode_ladder():
 
 def test_score_adjust_values_extra_nights_at_the_knob():
     # f(n) = net − 225×(n−2) − dead-band bonus
-    assert stay_value.score_adjust(218, 2, None) == 0
-    assert stay_value.score_adjust(218, 3, None) == 152 - 225      # −73
-    assert stay_value.score_adjust(218, 4, None) == 337 - 450      # −113
+    assert stay_value.score_adjust(ROW, 2, None) == 0
+    assert stay_value.score_adjust(ROW, 3, None) == 152 - 225      # −73
+    assert stay_value.score_adjust(ROW, 4, None) == 337 - 450      # −113
 
 
 def test_score_adjust_gives_the_incumbent_the_dead_band():
-    assert stay_value.score_adjust(218, 2, 2) == -25
-    assert stay_value.score_adjust(218, 4, 2) == -113              # not incumbent
+    assert stay_value.score_adjust(ROW, 2, 2) == -25
+    assert stay_value.score_adjust(ROW, 4, 2) == -113              # not incumbent
 
 
 def test_hook_none_unless_steering():
@@ -103,7 +124,9 @@ def test_build_rows_and_pick():
     assert sv["trip_n"] == 4 and sv["warning"] is None
     assert sv["trip_allin"] == 4997
     assert sv["hotel"]["key"] == "stregis_sin" and sv["knob"] == 225
-    assert "St. Regis" in sv["assumption"] and "218" in sv["assumption"]
+    assert "St. Regis" in sv["assumption"] and "244" in sv["assumption"] \
+        and "218" in sv["assumption"]
+    assert sv["hotel"]["allin_night"] == 244.15
 
 
 def test_build_warns_when_trip_ignored_the_math():
