@@ -12,22 +12,36 @@
    "nights": 4
   }
  },
- "credits_note": "$300 Amex (or $250 Edit) + $100 property + $60/day breakfast",
- "source": "public nightly rate incl. fees, Google Hotels, same dates \u2014 FHR/Edit rates are login-gated and must be confirmed in the portal",
+ "credits_note": "$300 Amex (or $250 Edit) + $100\u2013125 property credit + $60/day breakfast",
+ "portal_date": "2026-08-22",
+ "source": "est_allin_night = Amex FHR portal all-in per paid night (read 2026-08-22, 2 adults + 1 child) \u00d7 tonight's public Google rate \u00f7 the public rate on the anchor date; `rate` is that public rate (2 adults, incl. fees) and is the drift alarm",
  "rows": [
   {
    "key": "sanasaryan",
    "city": "IST",
    "name": "Sanasaryan Han (Lux. Coll.)",
    "program": "FHR",
-   "angle": "Old-city boutique \u00b7 Bonvoy stacks",
+   "angle": "Old-city boutique \u00b7 Bonvoy stacks \u00b7 cheapest FHR in IST",
    "bold": false,
    "rate": 353,
    "checked": "2026-08-22",
+   "anchor": {
+    "date": "2026-08-22",
+    "total": 956.12,
+    "nights": 2,
+    "allin_night": 478.06,
+    "credit": 100,
+    "free_night_min": null,
+    "promo": "was $502",
+    "google": 353,
+    "google_date": "2026-08-22"
+   },
+   "est_allin_night": 478.06,
+   "drift_pct": 0,
    "offsets": [
     {
      "label": "2n",
-     "pct": 66,
+     "pct": 54,
      "band": "warn"
     }
    ]
@@ -41,11 +55,84 @@
    "bold": true,
    "rate": 447,
    "checked": "2026-08-22",
+   "anchor": {
+    "date": "2026-08-22",
+    "total": 1250.42,
+    "nights": 2,
+    "allin_night": 625.21,
+    "credit": 100,
+    "free_night_min": null,
+    "promo": null,
+    "google": 447,
+    "google_date": "2026-08-22"
+   },
+   "est_allin_night": 625.21,
+   "drift_pct": 0,
    "offsets": [
     {
      "label": "2n",
-     "pct": 52,
-     "band": "warn"
+     "pct": 42,
+     "band": "dim"
+    }
+   ]
+  },
+  {
+   "key": "parkhyatt_ist",
+   "city": "IST",
+   "name": "Park Hyatt Ma\u00e7ka Palas",
+   "program": "FHR",
+   "angle": "Ni\u015fanta\u015f\u0131 boutique \u00b7 second-cheapest FHR",
+   "bold": false,
+   "rate": 403,
+   "checked": "2026-08-22",
+   "anchor": {
+    "date": "2026-08-22",
+    "total": 1133.98,
+    "nights": 2,
+    "allin_night": 566.99,
+    "credit": 100,
+    "free_night_min": null,
+    "promo": null,
+    "google": 403,
+    "google_date": "2026-08-22"
+   },
+   "est_allin_night": 566.99,
+   "drift_pct": 0,
+   "offsets": [
+    {
+     "label": "2n",
+     "pct": 46,
+     "band": "dim"
+    }
+   ]
+  },
+  {
+   "key": "shangrila_ist",
+   "city": "IST",
+   "name": "Shangri-La Bosphorus",
+   "program": "FHR",
+   "angle": "Bosphorus-front \u00b7 TA 4.8 \u00b7 Ritz money",
+   "bold": false,
+   "rate": 398,
+   "checked": "2026-08-22",
+   "anchor": {
+    "date": "2026-08-22",
+    "total": 1190.26,
+    "nights": 2,
+    "allin_night": 595.13,
+    "credit": 100,
+    "free_night_min": null,
+    "promo": null,
+    "google": 398,
+    "google_date": "2026-08-22"
+   },
+   "est_allin_night": 595.13,
+   "drift_pct": 0,
+   "offsets": [
+    {
+     "label": "2n",
+     "pct": 44,
+     "band": "dim"
     }
    ]
   },
@@ -58,10 +145,23 @@
    "bold": false,
    "rate": 546,
    "checked": "2026-08-22",
+   "anchor": {
+    "date": "2026-08-22",
+    "total": 1438.76,
+    "nights": 2,
+    "allin_night": 719.38,
+    "credit": 100,
+    "free_night_min": null,
+    "promo": null,
+    "google": 546,
+    "google_date": "2026-08-22"
+   },
+   "est_allin_night": 719.38,
+   "drift_pct": 0,
    "offsets": [
     {
      "label": "2n",
-     "pct": 43,
+     "pct": 36,
      "band": "dim"
     }
    ]
@@ -73,56 +173,225 @@
    "program": "FHR",
    "angle": "The sentimental splurge \u00b7 Bosphorus palace, the favorite brand",
    "bold": false,
-   "rate": 472,
+   "rate": 473,
    "checked": "2026-08-22",
+   "anchor": {
+    "date": "2026-08-22",
+    "total": 1471.46,
+    "nights": 2,
+    "allin_night": 735.73,
+    "credit": 100,
+    "free_night_min": null,
+    "promo": null,
+    "google": 472,
+    "google_date": "2026-08-22"
+   },
+   "est_allin_night": 737.29,
+   "drift_pct": 0,
    "offsets": [
     {
      "label": "2n",
-     "pct": 49,
+     "pct": 35,
      "band": "dim"
     }
    ]
   },
   {
-   "key": "panpacific",
-   "city": "SIN",
-   "name": "Pan Pacific Orchard",
-   "program": "THC + Edit",
-   "angle": "Wildcard \u00b7 CSR select-hotels credit may stack (see note)",
+   "key": "fs_bosphorus",
+   "city": "IST",
+   "name": "Four Seasons Bosphorus",
+   "program": "FHR",
+   "angle": "Palace on the water \u00b7 fits 3 (portal-proven)",
    "bold": false,
-   "rate": 250,
+   "rate": 611,
    "checked": "2026-08-22",
+   "anchor": {
+    "date": "2026-08-22",
+    "total": 1569.54,
+    "nights": 2,
+    "allin_night": 784.77,
+    "credit": 100,
+    "free_night_min": null,
+    "promo": null,
+    "google": 611,
+    "google_date": "2026-08-22"
+   },
+   "est_allin_night": 784.77,
+   "drift_pct": 0,
    "offsets": [
     {
      "label": "2n",
-     "pct": 84,
-     "band": "good"
+     "pct": 33,
+     "band": "dim"
+    }
+   ]
+  },
+  {
+   "key": "raffles_ist",
+   "city": "IST",
+   "name": "Raffles Istanbul",
+   "program": "FHR",
+   "angle": "TA 4.9, the best-reviewed in town \u00b7 Zorlu mall",
+   "bold": false,
+   "rate": 536,
+   "checked": "2026-08-22",
+   "anchor": {
+    "date": "2026-08-22",
+    "total": 1634.94,
+    "nights": 2,
+    "allin_night": 817.47,
+    "credit": 100,
+    "free_night_min": null,
+    "promo": null,
+    "google": 536,
+    "google_date": "2026-08-22"
+   },
+   "est_allin_night": 817.47,
+   "drift_pct": 0,
+   "offsets": [
+    {
+     "label": "2n",
+     "pct": 32,
+     "band": "dim"
+    }
+   ]
+  },
+  {
+   "key": "kempinski_sin",
+   "city": "SIN",
+   "name": "The Capitol Kempinski",
+   "program": "FHR",
+   "angle": "THE find \u00b7 free 4th night \u00b7 $125 F&B credit \u00b7 Kempinski standard at half the St. Regis",
+   "bold": true,
+   "rate": 287,
+   "checked": "2026-08-22",
+   "anchor": {
+    "date": "2026-08-22",
+    "total": 1327.08,
+    "nights": 4,
+    "allin_night": 442.36,
+    "credit": 125,
+    "free_night_min": 4,
+    "promo": "free 4th night (in the rate) \u00b7 was $378",
+    "google": 287,
+    "google_date": "2026-08-22"
+   },
+   "est_allin_night": 442.36,
+   "drift_pct": 0,
+   "offsets": [
+    {
+     "label": "2n",
+     "pct": 62,
+     "band": "warn"
     },
     {
      "label": "4n",
-     "pct": 53,
+     "pct": 50,
      "band": "warn"
     }
    ]
   },
   {
-   "key": "stregis_sin",
+   "key": "shangrila_sin",
    "city": "SIN",
-   "name": "St. Regis Singapore",
+   "name": "Shangri-La Singapore",
    "program": "FHR",
-   "angle": "Butler standard \u00b7 Bonvoy stacks \u00b7 cheap for SIN luxury",
-   "bold": true,
-   "rate": 472,
+   "angle": "Garden resort in town \u00b7 Valley Wing is the play",
+   "bold": false,
+   "rate": 255,
    "checked": "2026-08-22",
+   "anchor": {
+    "date": "2026-08-22",
+    "total": 1734.16,
+    "nights": 4,
+    "allin_night": 433.54,
+    "credit": 100,
+    "free_night_min": null,
+    "promo": null,
+    "google": 255,
+    "google_date": "2026-08-22"
+   },
+   "est_allin_night": 433.54,
+   "drift_pct": 0,
    "offsets": [
     {
      "label": "2n",
-     "pct": 49,
-     "band": "dim"
+     "pct": 60,
+     "band": "warn"
     },
     {
      "label": "4n",
-     "pct": 30,
+     "pct": 37,
+     "band": "dim"
+    }
+   ]
+  },
+  {
+   "key": "fs_sin",
+   "city": "SIN",
+   "name": "Four Seasons Singapore",
+   "program": "FHR",
+   "angle": "Orchard \u00b7 kids' program \u00b7 cheaper than St. Regis",
+   "bold": false,
+   "rate": 309,
+   "checked": "2026-08-22",
+   "anchor": {
+    "date": "2026-08-22",
+    "total": 1853.56,
+    "nights": 4,
+    "allin_night": 463.39,
+    "credit": 100,
+    "free_night_min": null,
+    "promo": null,
+    "google": 309,
+    "google_date": "2026-08-22"
+   },
+   "est_allin_night": 463.39,
+   "drift_pct": 0,
+   "offsets": [
+    {
+     "label": "2n",
+     "pct": 56,
+     "band": "warn"
+    },
+    {
+     "label": "4n",
+     "pct": 35,
+     "band": "dim"
+    }
+   ]
+  },
+  {
+   "key": "artyzen",
+   "city": "SIN",
+   "name": "Artyzen Singapore",
+   "program": "FHR",
+   "angle": "New 2023 \u00b7 $125 property credit \u00b7 rooftop pool",
+   "bold": false,
+   "rate": 336,
+   "checked": "2026-08-22",
+   "anchor": {
+    "date": "2026-08-22",
+    "total": 1936.31,
+    "nights": 4,
+    "allin_night": 484.08,
+    "credit": 125,
+    "free_night_min": null,
+    "promo": null,
+    "google": 336,
+    "google_date": "2026-08-22"
+   },
+   "est_allin_night": 484.08,
+   "drift_pct": 0,
+   "offsets": [
+    {
+     "label": "2n",
+     "pct": 56,
+     "band": "warn"
+    },
+    {
+     "label": "4n",
+     "pct": 34,
      "band": "dim"
     }
    ]
@@ -136,15 +405,203 @@
    "bold": false,
    "rate": 477,
    "checked": "2026-08-22",
+   "anchor": {
+    "date": "2026-08-22",
+    "total": 2351.92,
+    "nights": 4,
+    "allin_night": 587.98,
+    "credit": 100,
+    "free_night_min": null,
+    "promo": null,
+    "google": 477,
+    "google_date": "2026-08-22"
+   },
+   "est_allin_night": 587.98,
+   "drift_pct": 0,
    "offsets": [
     {
      "label": "2n",
-     "pct": 49,
+     "pct": 44,
      "band": "dim"
     },
     {
      "label": "4n",
+     "pct": 27,
+     "band": "dim"
+    }
+   ]
+  },
+  {
+   "key": "stregis_sin",
+   "city": "SIN",
+   "name": "St. Regis Singapore",
+   "program": "FHR",
+   "angle": "Butler standard \u00b7 Bonvoy stacks \u00b7 the old play",
+   "bold": false,
+   "rate": 472,
+   "checked": "2026-08-22",
+   "anchor": {
+    "date": "2026-08-22",
+    "total": 2418.0,
+    "nights": 4,
+    "allin_night": 604.5,
+    "credit": 100,
+    "free_night_min": null,
+    "promo": null,
+    "google": 472,
+    "google_date": "2026-08-22"
+   },
+   "est_allin_night": 604.5,
+   "drift_pct": 0,
+   "offsets": [
+    {
+     "label": "2n",
+     "pct": 43,
+     "band": "dim"
+    },
+    {
+     "label": "4n",
+     "pct": 26,
+     "band": "dim"
+    }
+   ]
+  },
+  {
+   "key": "fullerton_bay",
+   "city": "SIN",
+   "name": "Fullerton Bay Hotel",
+   "program": "FHR",
+   "angle": "Free 3rd night \u00b7 $125 F&B \u00b7 TA 4.8 \u00b7 on the water",
+   "bold": false,
+   "rate": 500,
+   "checked": "2026-08-22",
+   "anchor": {
+    "date": "2026-08-22",
+    "total": 2625.82,
+    "nights": 4,
+    "allin_night": 875.27,
+    "credit": 125,
+    "free_night_min": 3,
+    "promo": "free 3rd night (in the rate) \u00b7 was $741",
+    "google": 500,
+    "google_date": "2026-08-22"
+   },
+   "est_allin_night": 875.27,
+   "drift_pct": 0,
+   "offsets": [
+    {
+     "label": "2n",
+     "pct": 31,
+     "band": "dim"
+    },
+    {
+     "label": "4n",
+     "pct": 25,
+     "band": "dim"
+    }
+   ]
+  },
+  {
+   "key": "mo_sin",
+   "city": "SIN",
+   "name": "Mandarin Oriental",
+   "program": "FHR",
+   "angle": "Free 4th night \u00b7 TA 4.8 \u00b7 Marina Bay",
+   "bold": false,
+   "rate": 486,
+   "checked": "2026-08-22",
+   "anchor": {
+    "date": "2026-08-22",
+    "total": 2643.77,
+    "nights": 4,
+    "allin_night": 881.26,
+    "credit": 100,
+    "free_night_min": 4,
+    "promo": "free 4th night (in the rate) \u00b7 was $719",
+    "google": 486,
+    "google_date": "2026-08-22"
+   },
+   "est_allin_night": 881.26,
+   "drift_pct": 0,
+   "offsets": [
+    {
+     "label": "2n",
      "pct": 30,
+     "band": "dim"
+    },
+    {
+     "label": "4n",
+     "pct": 24,
+     "band": "dim"
+    }
+   ]
+  },
+  {
+   "key": "edition_sin",
+   "city": "SIN",
+   "name": "Singapore EDITION",
+   "program": "FHR",
+   "angle": "TA 4.8 \u00b7 Bonvoy stacks \u00b7 Orchard-adjacent",
+   "bold": false,
+   "rate": 472,
+   "checked": "2026-08-22",
+   "anchor": {
+    "date": "2026-08-22",
+    "total": 2720.28,
+    "nights": 4,
+    "allin_night": 680.07,
+    "credit": 100,
+    "free_night_min": null,
+    "promo": null,
+    "google": 472,
+    "google_date": "2026-08-22"
+   },
+   "est_allin_night": 680.07,
+   "drift_pct": 0,
+   "offsets": [
+    {
+     "label": "2n",
+     "pct": 38,
+     "band": "dim"
+    },
+    {
+     "label": "4n",
+     "pct": 24,
+     "band": "dim"
+    }
+   ]
+  },
+  {
+   "key": "panpacific",
+   "city": "SIN",
+   "name": "Pan Pacific Orchard",
+   "program": "THC + Edit",
+   "angle": "Wildcard \u00b7 CSR select-hotels credit may stack (see note)",
+   "bold": false,
+   "rate": 255,
+   "checked": "2026-08-22",
+   "anchor": {
+    "date": "2026-08-22",
+    "total": 1747.39,
+    "nights": 4,
+    "allin_night": 436.85,
+    "credit": 100,
+    "free_night_min": null,
+    "promo": null,
+    "google": 250,
+    "google_date": "2026-08-22"
+   },
+   "est_allin_night": 445.59,
+   "drift_pct": 2,
+   "offsets": [
+    {
+     "label": "2n",
+     "pct": 53,
+     "band": "warn"
+    },
+    {
+     "label": "4n",
+     "pct": 33,
      "band": "dim"
     }
    ]
@@ -158,15 +615,18 @@
    "bold": false,
    "rate": 444,
    "checked": "2026-08-22",
+   "anchor": null,
+   "est_allin_night": 528.36,
+   "drift_pct": null,
    "offsets": [
     {
      "label": "2n",
-     "pct": 47,
+     "pct": 44,
      "band": "dim"
     },
     {
      "label": "4n",
-     "pct": 30,
+     "pct": 28,
      "band": "dim"
     }
    ]
