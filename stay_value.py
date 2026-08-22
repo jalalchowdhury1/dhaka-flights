@@ -2,8 +2,9 @@
 
 The SIN stay is a 2-4 night flex band; combo.py historically picked within it
 by flight price alone. This module prices the whole choice — flights + what
-the curated hotel play actually costs out of pocket (rate + ~12% tax − card
-credits) — and values each extra Singapore night at EXTRA_NIGHT_WORTH
+the curated hotel play actually costs out of pocket (the portal-anchored
+all-in per paid night, since 2026-08-22 — see hotel_rates.PORTAL — minus
+card credits) — and values each extra Singapore night at EXTRA_NIGHT_WORTH
 (derived 2026-08-19 from Jalal's own ≥70% book-now band, the Athenee
 points-value, and replacement cost; he chose $225).
 
