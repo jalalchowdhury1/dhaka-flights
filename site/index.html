@@ -1085,9 +1085,20 @@ function cardPlayTables() {
     return `<div class="small" style="margin-top:10px">Nightly rates are refreshed
       by their own job and weren't reachable just now — reload, or see the
       shortlist notes below.</div>`;
-  const byNet = (a, b) => (a.est_allin_night ?? 1e9) - (b.est_allin_night ?? 1e9);
-  const ist = RATES.rows.filter(r => r.city === "IST").sort(byNet);
-  const sin = RATES.rows.filter(r => r.city === "SIN").sort(byNet);
+  /* Sort by the estimated cost of the TRACKED STAY (paid nights × all-in), not
+     per night: a free-4th-night hotel bills 3 nights for 4, which is exactly
+     what makes the Capitol Kempinski cheaper for the stay than hotels with a
+     lower per-night figure. Same paid_nights rule as hotel_rates.py. */
+  const stayNights = city => (RATES.stays && RATES.stays[city] && RATES.stays[city].nights)
+    || (city === "IST" ? 2 : 4);
+  const stayCost = r => {
+    if (r.est_allin_night == null) return 1e9;
+    const n = stayNights(r.city), fm = r.anchor && r.anchor.free_night_min;
+    return r.est_allin_night * (fm && n >= fm ? n - 1 : n);
+  };
+  const byStay = (a, b) => stayCost(a) - stayCost(b);
+  const ist = RATES.rows.filter(r => r.city === "IST").sort(byStay);
+  const sin = RATES.rows.filter(r => r.city === "SIN").sort(byStay);
   const nameCell = r => `<td>${r.bold ? `<b>${esc(r.name)}</b>` : esc(r.name)}</td>`;
   const istRows = ist.map(r => `<tr>${nameCell(r)}<td>${esc(r.program)}</td>
       ${allinCell(r)}${rateCell(r)}${offCell(r.offsets && r.offsets[0])}
@@ -1115,8 +1126,8 @@ function cardPlayTables() {
       (2 adults + 1 child, taxes and fees in, per <i>paid</i> night — a free-night
       promo shows as "free nt"), then moved each night by however far the
       <b>public</b> Google rate (2 adults, incl. fees, re-checked nightly — last run
-      ${esc(RATES.updated || "—")}) has drifted since that day. Sorted cheapest
-      first. * = no portal row (Edit-only), public × ~19% tax. Re-confirm in the
+      ${esc(RATES.updated || "—")}) has drifted since that day. Sorted by the
+      estimated cost of the tracked stay, cheapest first. * = no portal row (Edit-only), public × ~19% tax. Re-confirm in the
       portal before booking.</div>`;
 }
 
