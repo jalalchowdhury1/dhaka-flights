@@ -478,3 +478,16 @@ def test_shortlist_keys_unique_and_anchored_rows_have_portal_rows():
     keys = [e["key"] for e in hr.SHORTLIST]
     assert len(keys) == len(set(keys)) == 20
     assert set(hr.PORTAL) <= set(keys)
+
+
+def test_seeded_google_anchor_dies_with_a_portal_date_bump(tmp_path, monkeypatch):
+    """SEED's anchor_google is a same-day read for PORTAL_DATE only. Bump the
+    portal date without refreshing SEED and the original rows must bootstrap
+    from a live scrape rather than reuse the old baseline."""
+    monkeypatch.setattr(hr, "RATES_FILE", str(tmp_path / "hotel_rates.json"))
+    monkeypatch.setattr(hr, "PORTAL_DATE", "2026-10-01")
+    out = hr.build({"main": None}, scraped={"ritz_ist": (500, "ok")}, today="2026-10-02")
+    ritz = next(r for r in out["rows"] if r["key"] == "ritz_ist")
+    assert ritz["anchor"]["google"] == 500 and ritz["anchor"]["google_date"] == "2026-10-02"
+    untouched = next(r for r in out["rows"] if r["key"] == "stregis_ist")
+    assert untouched["anchor"]["google"] is None        # no live read yet: no baseline

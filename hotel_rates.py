@@ -637,9 +637,13 @@ def _google_anchor(prev, key, fresh, today):
     pa = prev.get("anchor") if isinstance(prev.get("anchor"), dict) else {}
     if pa.get("date") == PORTAL_DATE and _num(pa.get("google")):
         return pa["google"], pa.get("google_date")
-    seeded = prev.get("anchor_google") or (SEED.get(key) or {}).get("anchor_google")
-    if _num(seeded):
-        return seeded, (SEED.get(key) or {}).get("checked") or prev.get("checked")
+    # The seed is a same-day Google read and is only a valid baseline while
+    # SEED's `checked` date IS the portal date; a PORTAL_DATE bump without a
+    # SEED refresh must bootstrap from a live scrape instead.
+    seed = SEED.get(key) or {}
+    seeded = prev.get("anchor_google") or seed.get("anchor_google")
+    if _num(seeded) and seed.get("checked") == PORTAL_DATE:
+        return seeded, seed.get("checked")
     if fresh and _num(fresh[0]):
         return fresh[0], today
     return None, None
