@@ -1,5 +1,5 @@
 {
- "updated": "2026-08-21",
+ "updated": "2026-08-22",
  "stays": {
   "IST": {
    "checkin": "2027-01-05",
@@ -23,7 +23,7 @@
    "angle": "Old-city boutique \u00b7 Bonvoy stacks",
    "bold": false,
    "rate": 353,
-   "checked": "2026-08-21",
+   "checked": "2026-08-22",
    "offsets": [
     {
      "label": "2n",
@@ -39,8 +39,8 @@
    "program": "FHR",
    "angle": "Value pick \u00b7 Bonvoy Platinum stacks (points + elite nights)",
    "bold": true,
-   "rate": 446,
-   "checked": "2026-08-21",
+   "rate": 447,
+   "checked": "2026-08-22",
    "offsets": [
     {
      "label": "2n",
@@ -57,7 +57,7 @@
    "angle": "Butler with every room \u00b7 Bonvoy stacks",
    "bold": false,
    "rate": 546,
-   "checked": "2026-08-21",
+   "checked": "2026-08-22",
    "offsets": [
     {
      "label": "2n",
@@ -73,8 +73,8 @@
    "program": "FHR",
    "angle": "The sentimental splurge \u00b7 Bosphorus palace, the favorite brand",
    "bold": false,
-   "rate": 471,
-   "checked": "2026-08-21",
+   "rate": 472,
+   "checked": "2026-08-22",
    "offsets": [
     {
      "label": "2n",
@@ -91,7 +91,7 @@
    "angle": "Wildcard \u00b7 CSR select-hotels credit may stack (see note)",
    "bold": false,
    "rate": 250,
-   "checked": "2026-08-21",
+   "checked": "2026-08-22",
    "offsets": [
     {
      "label": "2n",
@@ -112,18 +112,18 @@
    "program": "FHR",
    "angle": "Butler standard \u00b7 Bonvoy stacks \u00b7 cheap for SIN luxury",
    "bold": true,
-   "rate": 227,
-   "checked": "2026-08-21",
+   "rate": 472,
+   "checked": "2026-08-22",
    "offsets": [
     {
      "label": "2n",
-     "pct": 102,
-     "band": "good"
+     "pct": 49,
+     "band": "dim"
     },
     {
      "label": "4n",
-     "pct": 63,
-     "band": "warn"
+     "pct": 30,
+     "band": "dim"
     }
    ]
   },
@@ -134,17 +134,17 @@
    "program": "FHR",
    "angle": "Marina views \u00b7 Bonvoy stacks",
    "bold": false,
-   "rate": 446,
-   "checked": "2026-08-21",
+   "rate": 477,
+   "checked": "2026-08-22",
    "offsets": [
     {
      "label": "2n",
-     "pct": 52,
-     "band": "warn"
+     "pct": 49,
+     "band": "dim"
     },
     {
      "label": "4n",
-     "pct": 32,
+     "pct": 30,
      "band": "dim"
     }
    ]
@@ -156,8 +156,8 @@
    "program": "The Edit only",
    "angle": "Best Edit-exclusive if the fallback strategy is needed",
    "bold": false,
-   "rate": 443,
-   "checked": "2026-08-21",
+   "rate": 444,
+   "checked": "2026-08-22",
    "offsets": [
     {
      "label": "2n",
