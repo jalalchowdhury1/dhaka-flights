@@ -8,12 +8,14 @@ the offset bands they drive were wrong too.
 
 WHAT THIS CAN AND CANNOT SEE — read before trusting a number:
   * The rates the card play actually books (Amex FHR, Chase "The Edit") sit
-    behind CARDHOLDER LOGINS. They are not scrapable and never will be from
-    here. What this module tracks is the PUBLIC nightly rate incl. fees from
-    Google Hotels for the same property and the same dates. FHR/Edit rates
-    normally sit near the flexible/BAR rate, so the public rate is a good
-    drift alarm and a good offset denominator — but the booking rate must be
-    confirmed in the portal.
+    behind CARDHOLDER LOGINS and are never scraped from here. Since
+    2026-08-22, `PORTAL` holds a one-time HUMAN read of the real FHR all-in
+    totals for the shortlist (see
+    docs/research/2026-08-22-fhr-portal-snapshot.md). `est_allin_night` is
+    that portal figure drifted by tonight's PUBLIC nightly rate from Google
+    Hotels for the same property and dates — the public rate is now the
+    DRIFT ALARM, not the price. Re-anchor ONLY by re-reading the portal WITH
+    JALAL PRESENT (it is Nabila's Amex login) — never automate that read.
   * Google Hotels throttles. A blocked or slow night must NEVER publish a
     guess: every rate carries its own `checked` date, a failed refresh keeps
     the last good value, and the site shows how old each figure is.
@@ -255,9 +257,13 @@ def band(pct):
 def anchor_for(key):
     """The portal anchor for a shortlist key as the JSON row carries it, or
     None. `allin_night` is per PAID night so the free-night promos price
-    2n/3n honestly (a free-4th-night hotel costs the same for 3n and 4n)."""
+    2n/3n honestly (a free-4th-night hotel costs the same for 3n and 4n).
+
+    A malformed PORTAL entry (missing/non-numeric total or nights) degrades
+    to None for that ONE row instead of raising and killing the whole build
+    — the row then falls back to rate × (1 + TAX_RATE)."""
     p = PORTAL.get(key)
-    if not p:
+    if not p or not _num(p.get("total")) or not _num(p.get("nights")):
         return None
     fnm = p.get("free_night_min")
     return {"date": PORTAL_DATE, "total": p["total"], "nights": p["nights"],
@@ -620,9 +626,16 @@ def _offset(entry, anchor, est, rate, n):
 def _google_anchor(prev, key, fresh, today):
     """(google, google_date) for the anchor: what the previous row already
     carried, else the seeded same-day read, else bootstrap from tonight's
-    first live rate. None until one of those exists."""
+    first live rate. None until one of those exists.
+
+    A persisted baseline is trusted ONLY when it was recorded against the
+    CURRENT PORTAL_DATE. Bumping PORTAL_DATE (a future portal re-read)
+    self-invalidates every already-run row's old Google baseline — without
+    this check, a new portal total would be silently scaled against a
+    baseline it was never measured against, and est_allin_night would drift
+    on a comparison that no longer means anything."""
     pa = prev.get("anchor") if isinstance(prev.get("anchor"), dict) else {}
-    if _num(pa.get("google")):
+    if pa.get("date") == PORTAL_DATE and _num(pa.get("google")):
         return pa["google"], pa.get("google_date")
     seeded = prev.get("anchor_google") or (SEED.get(key) or {}).get("anchor_google")
     if _num(seeded):

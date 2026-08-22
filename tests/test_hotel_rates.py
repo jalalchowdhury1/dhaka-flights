@@ -419,6 +419,56 @@ def test_build_keeps_a_bootstrapped_google_anchor(tmp_path, monkeypatch):
     assert k["drift_pct"] == 10 and k["est_allin_night"] == round(442.36 * 330 / 300, 2)
 
 
+# ── Code-review follow-ups (2026-08-22, post-Task-1) ────────────────────────
+def test_stale_google_anchor_is_invalidated_when_portal_date_moves(tmp_path, monkeypatch):
+    """A persisted google baseline from a DIFFERENT PORTAL_DATE (a future
+    re-anchor) must never be reused — otherwise a new portal total would get
+    silently scaled by an old baseline it was never measured against."""
+    monkeypatch.setattr(hr, "RATES_FILE", str(tmp_path / "hotel_rates.json"))
+    stale = {"rows": [{"key": "kempinski_sin", "rate": 310, "checked": "2026-07-01",
+                       "anchor": {"date": "2026-07-01", "google": 999,
+                                  "google_date": "2026-07-01", "total": 1327.08,
+                                  "nights": 4, "allin_night": 442.36, "credit": 125,
+                                  "free_night_min": 4, "promo": None}}]}
+    with open(tmp_path / "hotel_rates.json", "w") as f:
+        json.dump(stale, f)
+    out = hr.build({"main": None}, scraped={"kempinski_sin": (300, "ok")},
+                   today="2026-08-23")
+    k = next(r for r in out["rows"] if r["key"] == "kempinski_sin")
+    assert k["anchor"]["google"] == 300 and k["anchor"]["google_date"] == "2026-08-23"
+
+
+def test_non_dict_previous_anchor_is_ignored(tmp_path, monkeypatch):
+    """A malformed previous row (`anchor` not a dict) must not raise, and
+    must fall through to the seed/bootstrap baseline like a missing anchor."""
+    monkeypatch.setattr(hr, "RATES_FILE", str(tmp_path / "hotel_rates.json"))
+    junk = {"rows": [{"key": "ritz_ist", "anchor": "junk", "rate": 447,
+                      "checked": "2026-08-22"}]}
+    with open(tmp_path / "hotel_rates.json", "w") as f:
+        json.dump(junk, f)
+    out = hr.build({"main": None}, today="2026-08-23")
+    ritz = next(r for r in out["rows"] if r["key"] == "ritz_ist")
+    assert ritz["anchor"]["google"] == hr.SEED["ritz_ist"]["anchor_google"]
+
+
+def test_anchor_for_degrades_on_a_broken_portal_entry(monkeypatch):
+    """One malformed PORTAL row (missing total/nights) must degrade to None
+    for that key, not raise — the row then takes the fallback tax-rate path."""
+    monkeypatch.setitem(hr.PORTAL, "ritz_ist", {"nights": 2, "credit": 100})
+    assert hr.anchor_for("ritz_ist") is None
+    monkeypatch.setitem(hr.PORTAL, "ritz_ist", {"total": 1250.42, "credit": 100})
+    assert hr.anchor_for("ritz_ist") is None
+
+
+def test_build_survives_a_broken_portal_entry(tmp_path, monkeypatch):
+    monkeypatch.setattr(hr, "RATES_FILE", str(tmp_path / "hotel_rates.json"))
+    monkeypatch.setitem(hr.PORTAL, "ritz_ist", {"nights": 2, "credit": 100})
+    out = hr.build({"main": None}, today="2026-08-23")
+    assert len(out["rows"]) == 20
+    ritz = next(r for r in out["rows"] if r["key"] == "ritz_ist")
+    assert ritz["anchor"] is None
+
+
 def test_only_one_bold_per_city():
     for city in ("IST", "SIN"):
         assert sum(1 for e in hr.SHORTLIST if e["city"] == city and e.get("bold")) == 1
