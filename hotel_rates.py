@@ -702,8 +702,19 @@ def build(payload, scraped=None, today=None):
         public_allin = round(rate * mult, 2) if _num(rate) else None
         avg_allin = (round(est * paid_nights(stay_n, (anchor or {}).get("free_night_min")) / stay_n, 2)
                      if est is not None else None)
+        # The Stay column: total − credits = net for the tracked window, from
+        # the same per-paid-night estimate the offsets use.
+        stay = None
+        if est is not None:
+            fnm = (anchor or {}).get("free_night_min")
+            prop = anchor["credit"] if anchor else DEFAULT_PROPERTY_CREDIT
+            total = round(est * paid_nights(stay_n, fnm), 2)
+            cred = credits_for(stay_n, e["program"], prop)
+            stay = {"nights": stay_n, "total": total, "credits": cred,
+                    "net": max(0, round(total - cred))}
         row = {"key": e["key"], "city": e["city"], "name": e["name"],
                "program": e["program"], "angle": e["angle"], "rank": e["rank"],
+               "stay": stay,
                "bold": bool(e.get("bold")), "rate": rate, "checked": checked,
                "anchor": anchor, "est_allin_night": est,
                "avg_allin_night": avg_allin, "public_allin_night": public_allin,

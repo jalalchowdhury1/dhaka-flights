@@ -1084,6 +1084,17 @@ function allinCell(row) {
 }
 const offCell = (o) => `<td class="num">${o && o.pct != null
   ? `<span class="badge ${o.band}">~${o.pct}%</span>` : "—"}</td>`;
+/* The Stay column: what the tracked stay costs all-in, minus what the card
+   play hands back (Amex $300 / Edit $250 + property credit + $60/day
+   breakfast), = your net. Computed by hotel_rates.py from the same
+   per-paid-night estimate as the offsets. */
+function stayCell(row) {
+  const st = row.stay;
+  if (!st) return `<td class="num">—</td>`;
+  const usd0 = v => "$" + Math.round(v).toLocaleString();
+  return `<td class="num" title="${st.nights}n all-in ${usd0(st.total)} − credits ${usd0(st.credits)}">
+      <b>${usd0(st.net)}</b><div class="small muted">${usd0(st.total)} − ${usd0(st.credits)}</div></td>`;
+}
 
 function cardPlayTables() {
   if (!RATES || !Array.isArray(RATES.rows) || !RATES.rows.length)
@@ -1099,10 +1110,10 @@ function cardPlayTables() {
   const nameCell = r => `<td><span class="muted small">${r.rank != null ? "#" + r.rank + " " : ""}</span>${
       r.bold ? `<b>${esc(r.name)}</b>` : esc(r.name)}</td>`;
   const istRows = ist.map(r => `<tr>${nameCell(r)}<td>${esc(r.program)}</td>
-      ${allinCell(r)}${publicCell(r)}${offCell(r.offsets && r.offsets[0])}
+      ${allinCell(r)}${publicCell(r)}${offCell(r.offsets && r.offsets[0])}${stayCell(r)}
       <td class="wrap">${esc(r.angle)}</td></tr>`).join("");
   const sinRows = sin.map(r => `<tr>${nameCell(r)}<td>${esc(r.program)}</td>
-      ${allinCell(r)}${publicCell(r)}${offCell(r.offsets && r.offsets[0])}${offCell(r.offsets && r.offsets[1])}
+      ${allinCell(r)}${publicCell(r)}${offCell(r.offsets && r.offsets[0])}${offCell(r.offsets && r.offsets[1])}${stayCell(r)}
       <td class="wrap">${esc(r.angle)}</td></tr>`).join("");
   const aged = RATES.rows.filter(r => r.rate != null).map(r => daysSince(r.checked) ?? 0);
   const oldest = aged.length ? Math.max(...aged) : 0;
@@ -1113,11 +1124,11 @@ function cardPlayTables() {
   const anchorDate = esc(RATES.portal_date || "2026-08-22");
   return `<div class="scroll-x" style="margin-top:10px"><table>
       <tr><th>🕌 Istanbul · ${stayHeading("IST", "Jan 5–7 (2n)")}</th><th>Program</th>
-          <th class="num">FHR all-in/nt</th><th class="num">Public all-in/nt</th><th class="num">Offset</th><th>Angle</th></tr>
+          <th class="num">FHR all-in/nt</th><th class="num">Public all-in/nt</th><th class="num">Offset</th><th class="num">Your net (2n)</th><th>Angle</th></tr>
       ${istRows}</table></div>
     <div class="scroll-x" style="margin-top:10px"><table>
       <tr><th>🇸🇬 Singapore · ${stayHeading("SIN", "2–4n")}</th><th>Program</th>
-          <th class="num">FHR all-in/nt</th><th class="num">Public all-in/nt</th><th class="num">2n</th><th class="num">4n</th><th>Angle</th></tr>
+          <th class="num">FHR all-in/nt</th><th class="num">Public all-in/nt</th><th class="num">2n</th><th class="num">4n</th><th class="num">Your net (${stayHeading("SIN", "4n").replace(/.*\((\d+n)\)$/, "$1")})</th><th>Angle</th></tr>
       ${sinRows}</table></div>${freshness}
     <div class="small" style="margin-top:6px">Rows are in <b>value order</b> — net cost
       for these dates after credits, then quality; #1 (bold) is the play.
@@ -1125,6 +1136,9 @@ function cardPlayTables() {
       portal on ${anchorDate} (2 adults + 1 child, taxes and fees in, averaged
       per night over the stay — "free nt" marks a free-night promo already in
       the number), moved each night by the public rate's drift.
+      <b>Your net</b> = the whole tracked stay all-in, minus what the card play
+      hands back ($300 Amex or $250 Edit + the property's $100–125 credit +
+      $60/day breakfast for two) — the cash that actually leaves your pocket.
       <b>Public all-in/nt</b> = Google's cheapest listed rate (2 adults, pre-tax)
       plus the city's taxes/fees (Istanbul +12%, Singapore +20%), re-checked
       nightly — last run ${esc(RATES.updated || "—")}. The gap that remains is

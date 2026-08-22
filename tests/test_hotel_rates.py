@@ -524,3 +524,19 @@ def test_build_writes_public_allin_and_stay_average(tmp_path, monkeypatch):
     assert new["public_allin_night"] is None                          # no public rate yet
     jw = next(r for r in out["rows"] if r["key"] == "jw_sin")
     assert jw["est_allin_night"] == round(jw["rate"] * 1.20, 2)      # fallback uses the CITY multiplier
+
+
+def test_build_writes_stay_total_credits_and_net(tmp_path, monkeypatch):
+    """The Stay column: what the tracked stay costs all-in, what the card play
+    hands back (Amex/Edit fixed + property credit + breakfast/day), and the
+    net — all from the same per-paid-night estimate the offsets use."""
+    monkeypatch.setattr(hr, "RATES_FILE", str(tmp_path / "hotel_rates.json"))
+    out = hr.build({"main": None}, today="2026-08-23")
+    k = next(r for r in out["rows"] if r["key"] == "kempinski_sin")
+    assert k["stay"] == {"nights": 4, "total": 1327.08, "credits": 665, "net": 662}
+    ritz = next(r for r in out["rows"] if r["key"] == "ritz_ist")
+    assert ritz["stay"] == {"nights": 2, "total": 1250.42, "credits": 520, "net": 730}
+    pp = next(r for r in out["rows"] if r["key"] == "panpacific")
+    assert pp["stay"]["credits"] == 250 + 100 + 240                 # Edit-program credits
+    new = next(r for r in out["rows"] if r["key"] == "fs_sin")
+    assert new["stay"]["total"] == 1853.56                           # anchor alone, no public rate yet

@@ -23,6 +23,12 @@
    "program": "FHR",
    "angle": "Old-city boutique \u00b7 Bonvoy stacks \u00b7 cheapest FHR in IST",
    "rank": 3,
+   "stay": {
+    "nights": 2,
+    "total": 956.12,
+    "credits": 520,
+    "net": 436
+   },
    "bold": false,
    "rate": 353,
    "checked": "2026-08-22",
@@ -56,6 +62,12 @@
    "program": "FHR",
    "angle": "The Bonvoy pick \u00b7 points + elite nights + Platinum perks stack",
    "rank": 2,
+   "stay": {
+    "nights": 2,
+    "total": 1250.42,
+    "credits": 520,
+    "net": 730
+   },
    "bold": false,
    "rate": 447,
    "checked": "2026-08-22",
@@ -89,6 +101,12 @@
    "program": "FHR",
    "angle": "Ni\u015fanta\u015f\u0131 boutique \u00b7 second-cheapest FHR",
    "rank": 4,
+   "stay": {
+    "nights": 2,
+    "total": 1133.98,
+    "credits": 520,
+    "net": 614
+   },
    "bold": false,
    "rate": 403,
    "checked": "2026-08-22",
@@ -122,6 +140,12 @@
    "program": "FHR",
    "angle": "Best value in IST \u00b7 Bosphorus-front \u00b7 TA 4.8 \u00b7 Ritz money, better spot",
    "rank": 1,
+   "stay": {
+    "nights": 2,
+    "total": 1190.26,
+    "credits": 520,
+    "net": 670
+   },
    "bold": true,
    "rate": 398,
    "checked": "2026-08-22",
@@ -155,6 +179,12 @@
    "program": "FHR",
    "angle": "Butler with every room \u00b7 Bonvoy stacks",
    "rank": 5,
+   "stay": {
+    "nights": 2,
+    "total": 1438.76,
+    "credits": 520,
+    "net": 919
+   },
    "bold": false,
    "rate": 546,
    "checked": "2026-08-22",
@@ -188,6 +218,12 @@
    "program": "FHR",
    "angle": "The sentimental splurge \u00b7 Bosphorus palace, the favorite brand",
    "rank": 6,
+   "stay": {
+    "nights": 2,
+    "total": 1474.58,
+    "credits": 520,
+    "net": 955
+   },
    "bold": false,
    "rate": 473,
    "checked": "2026-08-22",
@@ -221,6 +257,12 @@
    "program": "FHR",
    "angle": "Palace on the water \u00b7 fits 3 (portal-proven)",
    "rank": 7,
+   "stay": {
+    "nights": 2,
+    "total": 1569.54,
+    "credits": 520,
+    "net": 1050
+   },
    "bold": false,
    "rate": 611,
    "checked": "2026-08-22",
@@ -254,6 +296,12 @@
    "program": "FHR",
    "angle": "TA 4.9, the best-reviewed in town \u00b7 Zorlu mall",
    "rank": 8,
+   "stay": {
+    "nights": 2,
+    "total": 1634.94,
+    "credits": 520,
+    "net": 1115
+   },
    "bold": false,
    "rate": 536,
    "checked": "2026-08-22",
@@ -287,6 +335,12 @@
    "program": "FHR",
    "angle": "THE find \u00b7 free 4th night \u00b7 $125 F&B credit \u00b7 Kempinski standard at half the St. Regis",
    "rank": 1,
+   "stay": {
+    "nights": 4,
+    "total": 1327.08,
+    "credits": 665,
+    "net": 662
+   },
    "bold": true,
    "rate": 287,
    "checked": "2026-08-22",
@@ -325,6 +379,12 @@
    "program": "FHR",
    "angle": "Garden resort in town \u00b7 Valley Wing is the play",
    "rank": 2,
+   "stay": {
+    "nights": 4,
+    "total": 1734.16,
+    "credits": 640,
+    "net": 1094
+   },
    "bold": false,
    "rate": 255,
    "checked": "2026-08-22",
@@ -363,6 +423,12 @@
    "program": "FHR",
    "angle": "Orchard \u00b7 kids' program \u00b7 cheaper than St. Regis",
    "rank": 3,
+   "stay": {
+    "nights": 4,
+    "total": 1853.56,
+    "credits": 640,
+    "net": 1214
+   },
    "bold": false,
    "rate": 309,
    "checked": "2026-08-22",
@@ -401,6 +467,12 @@
    "program": "FHR",
    "angle": "New 2023 \u00b7 $125 property credit \u00b7 rooftop pool",
    "rank": 4,
+   "stay": {
+    "nights": 4,
+    "total": 1936.32,
+    "credits": 665,
+    "net": 1271
+   },
    "bold": false,
    "rate": 336,
    "checked": "2026-08-22",
@@ -439,6 +511,12 @@
    "program": "FHR",
    "angle": "Marina views \u00b7 Bonvoy stacks",
    "rank": 6,
+   "stay": {
+    "nights": 4,
+    "total": 2351.92,
+    "credits": 640,
+    "net": 1712
+   },
    "bold": false,
    "rate": 477,
    "checked": "2026-08-22",
@@ -477,6 +555,12 @@
    "program": "FHR",
    "angle": "Butler standard \u00b7 Bonvoy stacks \u00b7 the old play",
    "rank": 7,
+   "stay": {
+    "nights": 4,
+    "total": 2418.0,
+    "credits": 640,
+    "net": 1778
+   },
    "bold": false,
    "rate": 472,
    "checked": "2026-08-22",
@@ -515,6 +599,12 @@
    "program": "FHR",
    "angle": "Free 3rd night \u00b7 $125 F&B \u00b7 TA 4.8 \u00b7 on the water",
    "rank": 8,
+   "stay": {
+    "nights": 4,
+    "total": 2625.81,
+    "credits": 665,
+    "net": 1961
+   },
    "bold": false,
    "rate": 500,
    "checked": "2026-08-22",
@@ -553,6 +643,12 @@
    "program": "FHR",
    "angle": "Free 4th night \u00b7 TA 4.8 \u00b7 Marina Bay",
    "rank": 9,
+   "stay": {
+    "nights": 4,
+    "total": 2643.78,
+    "credits": 640,
+    "net": 2004
+   },
    "bold": false,
    "rate": 486,
    "checked": "2026-08-22",
@@ -591,6 +687,12 @@
    "program": "FHR",
    "angle": "TA 4.8 \u00b7 Bonvoy stacks \u00b7 Orchard-adjacent",
    "rank": 10,
+   "stay": {
+    "nights": 4,
+    "total": 2720.28,
+    "credits": 640,
+    "net": 2080
+   },
    "bold": false,
    "rate": 472,
    "checked": "2026-08-22",
@@ -629,6 +731,12 @@
    "program": "THC + Edit",
    "angle": "Wildcard \u00b7 CSR select-hotels credit may stack (see note)",
    "rank": 5,
+   "stay": {
+    "nights": 4,
+    "total": 1782.36,
+    "credits": 590,
+    "net": 1192
+   },
    "bold": false,
    "rate": 255,
    "checked": "2026-08-22",
@@ -667,6 +775,12 @@
    "program": "The Edit only",
    "angle": "Best Edit-exclusive if the fallback strategy is needed",
    "rank": 11,
+   "stay": {
+    "nights": 4,
+    "total": 2131.2,
+    "credits": 590,
+    "net": 1541
+   },
    "bold": false,
    "rate": 444,
    "checked": "2026-08-22",
