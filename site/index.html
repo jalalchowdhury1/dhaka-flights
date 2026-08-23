@@ -1418,13 +1418,17 @@ function renderTotal(d) {
     const hySaved = planNet - hyNet;
     const cpp = (saved, pts) => pts ? (saved / pts * 100).toFixed(2) + "¢" : "—";
     const bar = pr.bar_cents || 1.5;
-    const verdict = Math.max(boostSaved / boostPts, hySaved / (hy.pts || 1)) * 100 >= bar
+    const sp = pr.split || null;
+    const spPts = sp ? Math.round((h.total - sp.card) / (sp.cents / 100)) : null;
+    const verdict = sp ? sp.note
+      : Math.max(boostSaved / boostPts, hySaved / (hy.pts || 1)) * 100 >= bar
       ? "a points route clears the bar — worth switching" : `neither clears ${bar}¢ — keep the card plan; ordinary points are worth ~${pr.future_cents || 2}¢ on a future Hyatt stay`;
     return `<div class="small" style="margin-top:10px"><b>Why not points?</b> <span class="muted">same basis as the net above · Chase read ${esc(pr.read || "")}</span></div>
       <div class="scroll-x"><table>
         ${line("The plan — card on The Edit", `<b>${usd2(planNet)}</b> net`, "", `0 pts · $${pr.edit_credit || 250} credit + $${h.prop} + breakfasts all kept`)}
         ${line(`${esc(h.name)} on Points Boost`, `${boostPts.toLocaleString()} pts`, "", `sticker ${pr.boost_cents}¢/pt, but the $${pr.edit_credit || 250} credit is forfeited → saves ${usd2(boostSaved)} = <b>${cpp(boostSaved, boostPts)}</b>/pt`)}
         ${hy.pts ? line(`${esc(hy.hotel || "Hyatt")} via Chase→Hyatt 1:1`, `${hy.pts.toLocaleString()} pts`, "", `${hy.per_night ? hy.per_night.toLocaleString() + "/night · " : ""}${hyCash ? "sticker " + (hyCash / hy.pts * 100).toFixed(2) + "¢/pt vs its " + usd2(hyCash) + " cash rate, but " : ""}no credit, breakfast ~${usd2(hyNet)} → saves ${usd2(hySaved)} = <b>${cpp(hySaved, hy.pts)}</b>/pt`) : ""}
+        ${sp ? line("Split-pay after Ticket ①", `${spPts.toLocaleString()} pts + ${usd2(sp.card)}`, "", `points at ${sp.cents}¢ Boost (cart-verified), $250 credit kept if Chase confirms it posts on the card portion → cash out ~${usd2(Math.max(0, sp.card - 250))} = <b>${sp.cents}¢</b>/pt`) : ""}
         ${line("Verdict", `bar ${bar}¢`, "", verdict)}
       </table></div>`;
   };

@@ -433,6 +433,14 @@ POINTS_ROUTES = {"IST": {
               "pts": 50000, "per_night": 25000, "breakfast_cash": 150},
     "bar_cents": 1.5,              # what the legacy bucket is guaranteed on Ticket ①
     "future_cents": 2.0,           # what ordinary UR points fetch via Hyatt later
+    # Cart test 2026-08-23: split-pay works and Boost applies to partial
+    # redemptions. AFTER Ticket ① drains the 1.5× bucket, ~$260 card + ~62K
+    # ordinary pts at 1.65¢ keeps the $250 (pending Chase confirming the
+    # credit posts on the card portion) — the one route that clears the bar.
+    "split": {"card": 260, "cents": 1.65,
+              "note": ("split-pay AFTER Ticket ①: ~$260 card + ordinary points "
+                       "at 1.65¢ Boost — the checkout credits modal (8/23) "
+                       "confirmed the $250 applies to the card portion")},
 }}
 
 # Flights plan (Chase Travel read 2026-08-23, docs/research/2026-08-23-chase-marriott-amex-read.md):

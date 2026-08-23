@@ -92,13 +92,15 @@ REMINDERS = [
      "Dec 31 (Jan 5–7, 3 guests, ~$1,285) to use the 2026 $250 credit",
      ["chase.com/travel → Hotels → Istanbul, Jan 5–7, 2 adults + 1 child (5) "
       "→ The Ritz-Carlton, Istanbul (The Edit badge).",
-      "Pick the cheapest REFUNDABLE room that sleeps 3 (~$1,285 all-in at the "
-      "August read).",
-      "Payment — two options. (a) Card only: keeps the $250 credit, costs "
-      "~$1,035. (b) Split-pay: ~$260 on the card + the rest in ordinary points "
-      "at Points Boost 1.65¢ (~62K pts) — IF the $250 credit still posts on "
-      "the card portion. Call Chase Travel 855-234-2542 first to confirm; if "
-      "they say no, use (a) or go all-points (~78K pts, saves $1,035 = 1.33¢).",
+      "Pick the cheapest REFUNDABLE Guest Room that sleeps 3 (~$1,285 at the "
+      "Aug read) — NOT the non-refundable Bosphorus-view rate the cart "
+      "defaults to (cart test 2026-08-23: $1,387.70 non-ref).",
+      "Payment (Ticket ① must already be bought, so the 1.5× bucket is gone): "
+      "split-pay ~$260 on the card + the rest in ORDINARY points at Points "
+      "Boost 1.65¢ (~62K pts). Confirmed at checkout 8/23: the statement-"
+      "credits modal listed the Edit $500 (max $250/transaction) as applying "
+      "to the card charge on a split payment. Fallback if it doesn't post "
+      "within 8 weeks: card only next time; the charge must land by Dec 31.",
       "The $250 Edit credit posts by itself; the charge must land by Dec 31. "
       "Add your Bonvoy number at booking (points + Platinum perks stack).",
       "Send me the confirmation number."]),
