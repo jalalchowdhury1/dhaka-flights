@@ -29,6 +29,7 @@ STAY_DEAD_BAND = 25
 STAY_TAX = 0.19                      # fallback only — anchored rows carry est_allin_night
 STAY_AMEX_FIXED, STAY_EDIT_FIXED = 300, 250
 STAY_PROPERTY_DEFAULT, STAY_DAILY = 100, 60
+STAY_NONSTOP_WORTH = 500             # preference.NONSTOP_WORTH — nonstop BOS→IST premium accepted
 
 _ORDER_SPEC = {
     "BKK-first": ("DAC→BKK", "BKK→SIN", "SIN", True),
@@ -98,7 +99,10 @@ def strict_by_sg(flights, tickets1, tickets2, order_key):
            if o.get("ret_city") == ret_city and _priced(o)]
     if not ojs:
         return {}
-    oj = min(ojs, key=lambda o: o["price_total"])
+    # Same convenience rule as preference.ticket1_score, OWN constant (this
+    # file's value is being a second implementation — keep in sync).
+    oj = min(ojs, key=lambda o: o["price_total"] - (
+        STAY_NONSTOP_WORTH if str(o.get("stops") or "").strip().lower() == "nonstop" else 0))
     ret, dac_in = _d(oj.get("ret_date", "")), _d(oj.get("out_arrive", ""))
     if not (ret and dac_in):
         return {}

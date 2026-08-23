@@ -15,7 +15,11 @@ All knobs live here; changing the target is a one-line edit.
 """
 import datetime
 
-BUY_BELOW = 4500                       # whole trip, all 3 travelers
+# 2026-08-23: the engine now pays up to preference.NONSTOP_WORTH ($500) for a
+# nonstop BOS→IST, so the target for the trip as actually picked moved up by
+# the premium observed that night (+$378, Turkish over Air France). The old
+# $4,500 was the pure-price build; main["cheapest_total"] still records it.
+BUY_BELOW = 4900                       # whole trip, all 3 travelers
 WINDOW_OPENS = datetime.date(2026, 9, 1)
 BOOK_BY = datetime.date(2026, 9, 20)
 BOOKED_HISTORY = "booked Sep 18 '24 · Sep 23 '25"

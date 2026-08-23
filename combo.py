@@ -16,6 +16,8 @@ functions further down are RETIRED but kept working + tested.
 import re
 from datetime import datetime, timedelta
 
+import preference
+
 MAX_DHAKA_DAYS = 29
 IDEAL_BKK_NIGHTS = 5                # the Marriott 5th-night-free block
 ALLOWED_BKK_NIGHTS = (4, 5, 6)
@@ -463,7 +465,19 @@ def _resolve_ticket1(openjaws, cfg):
            and isinstance(o.get("price_total"), (int, float)) and _airline_ok(o)]
     if not ojs:
         return None
-    oj = min(ojs, key=lambda o: o["price_total"])
+    # 2026-08-23: convenience-aware pick (preference.py) — a nonstop BOS→IST
+    # is worth NONSTOP_WORTH; the fare itself is never adjusted. When the
+    # pick is not the cheapest, it carries a `pick` block the site/brief show.
+    oj = min(ojs, key=preference.ticket1_score)
+    cheapest = min(ojs, key=lambda o: o["price_total"])
+    if oj is not cheapest and oj["price_total"] > cheapest["price_total"]:
+        oj = dict(oj, pick={"premium": oj["price_total"] - cheapest["price_total"],
+                            "over": {"airline": cheapest.get("airline"),
+                                     "price_total": cheapest["price_total"],
+                                     "stops": cheapest.get("stops"),
+                                     "duration": cheapest.get("duration")},
+                            "knob": preference.NONSTOP_WORTH,
+                            "note": preference.pick_note(oj, cheapest)})
     ret = _date(oj["ret_date"])
     dac_in = _date(oj.get("out_arrive", "")) or (_date(oj["out_date"]) + timedelta(days=1))
     if not ret:
@@ -534,6 +548,9 @@ def order_trip(flights, openjaws, tickets2, order_key, hotel_cost=None):
         "kind": "sg-stopover2", "trip": cfg["route"],
         "order": order_key, "order_label": cfg["label"],
         "total": oj["price_total"] + m["cost"],
+        # the pure-price build, for the record (equals total unless the
+        # nonstop preference paid a premium)
+        "cheapest_total": oj["price_total"] - (oj.get("pick") or {}).get("premium", 0) + m["cost"],
         "valid": not flags, "flag": " · ".join(flags) or None,
         "home": home.strftime("%b %-d"),
         "dhaka_days": dhaka_days, "bkk_nights": bkk_nights,

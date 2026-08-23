@@ -817,6 +817,8 @@ function ticket1Pass(s, bag) {
     ${row("🏠", `${esc(o.ret)}`, esc(fd(ret)),
       `return leg of the same ticket · lands ${esc(s.home)} · exact times at booking`,
       bag[o.ret])}
+    ${oj.pick && oj.pick.note ? `<div class="small" style="margin-top:6px"><span class="badge good">nonstop preferred</span>
+      ${esc(oj.pick.note)}</div>` : ""}
     <div class="perf"></div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       ${bookBtn(oj.link, true)}

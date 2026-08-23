@@ -35,7 +35,9 @@ def test_stages():
 
 
 def test_quiet_ordinary_day():
-    e = _entry("2026-08-05", 4666, t1=3647)
+    # above the buy line, not a new low → nothing to say (relative to the
+    # knob so a BUY_BELOW change does not silently turn this into a buy day)
+    e = _entry("2026-08-05", BUY_BELOW + 166, t1=3647)
     assert headlines(e, HIST + [e], WATCH_DAY) == []
 
 

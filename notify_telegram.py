@@ -119,8 +119,13 @@ def _leg_line(f: dict) -> str:
 def _ticket1_line(oj: dict) -> str:
     route = oj.get("desc") or (f"BOS→DAC {_short_date(oj['out_date'])} + "
                                f"DPS→BOS {_short_date(oj['ret_date'])} (one ticket)")
-    return (f"🎫 ① {esc_html(route)} · {esc_html(oj.get('airline', '?'))} · "
+    line = (f"🎫 ① {esc_html(route)} · {esc_html(oj.get('airline', '?'))} · "
             f"${oj['price_total']:,} · {_link(oj['link'])}")
+    pick = oj.get("pick") or {}
+    if pick.get("note"):
+        # 2026-08-23 convenience rule: say WHY the pick is not the cheapest.
+        line += f"\n   ✈️ {esc_html(pick['note'])}"
+    return line
 
 
 def _ticket2_line(t: dict) -> str:
