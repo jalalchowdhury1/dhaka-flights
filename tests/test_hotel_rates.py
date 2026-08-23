@@ -556,7 +556,11 @@ def test_bookings_ride_in_the_json_and_point_at_shortlist_keys(tmp_path, monkeyp
     assert out["bookings"] is hr.BOOKED or out["bookings"] == hr.BOOKED
     keys = {e["key"] for e in hr.SHORTLIST}
     for city, b in hr.BOOKED.items():
-        assert b["key"] in keys and b["nights"] > 0 and b["total"] > 0, city
+        assert b["nights"] > 0 and (b["total"] > 0 or b.get("points", 0) > 0), city
+        if city in ("IST", "SIN"):                 # card-play cities point at a tracked row
+            assert b["key"] in keys, city
+        else:                                      # Bangkok rides on the award block in data.json
+            assert b.get("confirmation") and b.get("points"), city
 
 
 # ── Movers alert v2 (2026-08-23, Jalal: "clean this up") ────────────────────

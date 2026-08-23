@@ -15,6 +15,20 @@
  "credits_note": "$300 Amex (or $250 Edit) + $100\u2013125 property credit + $60/day breakfast",
  "portal_date": "2026-08-22",
  "bookings": {
+  "BKK": {
+   "key": "athenee",
+   "hotel": "The Athenee Hotel, a Luxury Collection Hotel, Bangkok",
+   "room": "Athenee, Guest room, 1 King (2 adults + 1 child)",
+   "checkin": "2027-01-28",
+   "checkout": "2027-02-02",
+   "nights": 5,
+   "total": 0,
+   "points": 177000,
+   "via": "Marriott Bonvoy award \u00b7 5th night free",
+   "status": "BOOKED 2026-08-23 \u00b7 free cancel to Jan 26 2027 11:59pm hotel time",
+   "next": "Sept: email the hotel for suite + Club-lounge supplement quotes on conf #88518376",
+   "confirmation": "88518376"
+  },
   "SIN": {
    "key": "kempinski_sin",
    "hotel": "The Capitol Kempinski",

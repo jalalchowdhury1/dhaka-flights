@@ -1403,7 +1403,10 @@ function renderTotal(d) {
       ${line("Points for the stay", ptsLabel, "", hb && hb.fifth_night_free !== false ? "5th night free on points" : "")}
       ${line("Cash", "$0", "", hb && hb.cash_ref ? `cash reference ${esc(hb.cash_ref)} — that is what the points are worth here` : "")}
     </table></div>
-    <div class="small" style="margin-top:6px">${status("estimate · not booked — book after flights (~Sept)", false)}</div></div>`));
+    <div class="small" style="margin-top:6px">${bookings.BKK
+      ? status(bookings.BKK.status + (bookings.BKK.confirmation ? " · conf #" + bookings.BKK.confirmation : ""), true)
+        + (bookings.BKK.next ? `<div class="small muted" style="margin-top:4px">Next: ${esc(bookings.BKK.next)}</div>` : "")
+      : status("estimate · not booked — book after flights (~Sept)", false)}</div></div>`));
 
   add(root, () => el(`<span class="micro">🇧🇩 Dhaka · ${m.dhaka_days != null ? m.dhaka_days + " days" : ""}</span>
     <div class="pass"><div class="scroll-x"><table>${line("Family — no hotel", "$0")}</table></div></div>`));
@@ -1425,7 +1428,7 @@ function renderTotal(d) {
       ${line("<b>Cash that leaves your pocket</b>", `<b style="font-size:1.1rem">${usd2(cashNet)}</b>`, "", days ? `${usd2(cashNet / days)}/day over ${days} days (${esc(oj.out_date || "")} → ${esc(oj.ret_date || "")})` : "")}
       ${line("+ Marriott points (Bangkok)", ptsLabel, "", "not cash — the Athenee stay")}
     </table></div>
-    <div class="small" style="margin-top:8px">What is firm vs estimated: ${sin && sin.bk ? "Singapore is a refundable hold" : "nothing is booked yet"}; flights re-price every night until you buy (~mid/late September); Istanbul and Bangkok are tonight's best-value picks, not bookings. Amex's $300 hotel credit can be earned once per half-year, so only one of the two card stays gets it.</div></div>`));
+    <div class="small" style="margin-top:8px">What is firm vs estimated: ${[bookings.BKK ? "Bangkok is booked on points (refundable)" : null, sin && sin.bk ? "Singapore is a refundable hold" : null].filter(Boolean).join("; ") || "nothing is booked yet"}; flights re-price every night until you buy (~mid/late September); Istanbul is tonight's best-value pick, not a booking. Amex's $300 hotel credit can be earned once per half-year, so only one of the two card stays gets it.</div></div>`));
   return root;
 }
 

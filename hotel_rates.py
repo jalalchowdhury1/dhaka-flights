@@ -293,6 +293,13 @@ PORTAL = {
 # prefers a booking over the play's cheapest-room estimate). `total` is the
 # all-in USD figure on the Amex review page; credits are NOT subtracted here.
 BOOKED = {
+    "BKK": {"key": "athenee", "hotel": "The Athenee Hotel, a Luxury Collection Hotel, Bangkok",
+            "room": "Athenee, Guest room, 1 King (2 adults + 1 child)",
+            "checkin": "2027-01-28", "checkout": "2027-02-02", "nights": 5,
+            "total": 0, "points": 177000, "via": "Marriott Bonvoy award · 5th night free",
+            "status": "BOOKED 2026-08-23 · free cancel to Jan 26 2027 11:59pm hotel time",
+            "next": "Sept: email the hotel for suite + Club-lounge supplement quotes on conf #88518376",
+            "confirmation": "88518376"},
     "SIN": {"key": "kempinski_sin", "hotel": "The Capitol Kempinski",
             "room": "Heritage Room, 1 King (484 sq ft, sleeps 3)",
             "checkin": "2027-02-02", "checkout": "2027-02-06", "nights": 4,
