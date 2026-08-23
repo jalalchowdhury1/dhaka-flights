@@ -57,9 +57,44 @@ def stage(today: datetime.date) -> str:
     return "watch"
 
 
+# ── Dated reminders (2026-08-23) ────────────────────────────────────────────
+# Booking deadlines and to-dos that must reach Telegram on the day, whatever
+# the prices are doing. (date, lead days, text). Mirrors the Google Calendar
+# events created the same day; this is the channel Jalal actually reads.
+REMINDERS = [
+    (datetime.date(2026, 9, 14), 2,
+     "buy the flights this week — Turkish nonstop on turkish.com first "
+     "(24h free cancel), then Ticket ②, on the Sapphire Reserve"),
+    (datetime.date(2026, 9, 15), 0,
+     "email the Athenee for suite + Club-lounge supplement quotes "
+     "(conf #88518376)"),
+    (datetime.date(2026, 12, 28), 3,
+     "book the Istanbul hotel prepaid via Chase Travel / The Edit by Dec 31 "
+     "to use the 2026 $250 credit"),
+    (datetime.date(2027, 1, 2), 0,
+     "Kempinski: rebook as Pay Today on the Platinum (Jan–Jun $300), then "
+     "cancel the Pay-at-Check-in hold"),
+    (datetime.date(2027, 1, 26), 3,
+     "Athenee free-cancel deadline (conf #88518376) — 11:59pm Bangkok time"),
+    (datetime.date(2027, 1, 31), 3,
+     "Kempinski free-cancel deadline — 11:59pm Singapore time"),
+]
+
+
+def reminders(today: datetime.date) -> list:
+    """⏰ lines due today or within their lead window, nearest first."""
+    out = []
+    for when, lead, text in REMINDERS:
+        left = (when - today).days
+        if 0 <= left <= lead:
+            tag = "TODAY" if left == 0 else ("tomorrow" if left == 1 else f"in {left} days")
+            out.append(f"⏰ {tag}: {text}")
+    return out
+
+
 def headlines(entry, history, today: datetime.date) -> list:
     """Lines that LEAD the Telegram message (empty = nothing alert-worthy)."""
-    lines = []
+    lines = reminders(today)
     cur = _main(entry)
     pts = _mains(history)
     prior = [(d, v) for d, v in pts if d != entry.get("date")]

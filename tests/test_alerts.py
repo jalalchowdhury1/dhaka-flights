@@ -178,3 +178,24 @@ def test_sg_nights_change_is_tagged_when_hotel_aware():
     cur_plain = {"ticket1_total": 3600, "sg_nights": 4}
     out3 = alerts.changes_since(prev, cur_plain)
     assert any(c == "Singapore nights: 2 → 4" for c in out3)
+
+
+# ── Dated reminders (2026-08-23): booking deadlines ride in the brief ───────
+def test_reminders_fire_in_their_window_and_name_the_day():
+    import datetime as dt
+    from alerts import reminders
+    # Athenee free-cancel: Jan 26 2027, window 3 days → Jan 23..26, not 22 or 27
+    assert reminders(dt.date(2027, 1, 22)) == []
+    got = reminders(dt.date(2027, 1, 24))
+    assert len(got) == 1 and "Athenee" in got[0] and "in 2 days" in got[0]
+    assert any("TODAY" in l for l in reminders(dt.date(2027, 1, 26)))
+    assert reminders(dt.date(2027, 1, 27)) == []
+    # Jan 2: Kempinski rebook day
+    assert any("Kempinski" in l and "Pay Today" in l for l in reminders(dt.date(2027, 1, 2)))
+
+
+def test_headlines_include_due_reminders():
+    import datetime as dt
+    e = _entry("2027-01-25", BUY_BELOW + 500, t1=3900)
+    lines = headlines(e, HIST + [e], dt.date(2027, 1, 25))
+    assert any("Athenee" in l for l in lines)
