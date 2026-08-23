@@ -547,6 +547,23 @@ reason.
    (TDAC / SG Arrival Card). The old Indonesia e-VOA onward-proof constraint died
    with Bali.
 
+## 5a. Ticket ① is NOT picked by price alone (2026-08-23)
+
+`preference.py` — a nonstop BOS→IST is worth `NONSTOP_WORTH` ($500, whole
+family) over a 1-stop; `combo._resolve_ticket1` minimises
+`price − (500 if nonstop)`, so Turkish nonstop $4,003 beats Air France $3,625
+(1 stop, 15 h 30, and Google-stitched "separate tickets" — a tag the
+accessibility tree does NOT expose, verified 2026-08-23, so it cannot be
+parsed). Jalal: "for $300-something we should definitely take the direct."
+The trip `total`, history and buy signal stay on the REAL fare;
+`main["cheapest_total"]` records the pure-price build; when the pick is not
+the cheapest, `openjaw["pick"]` carries the premium, the runner-up and a
+one-line note the Flights pass and the 🎫 brief line show. `verify.py`
+re-derives the rule with its own `STAY_NONSTOP_WORTH` — keep in sync.
+`alerts.BUY_BELOW` moved 4,500 → 4,900 the same night (the premium observed
+was +$378); the `stops` field on a multi-city option describes leg 1 only,
+which is exactly the BOS→IST leg this rule cares about.
+
 ## 5b. Postmortem — the $18,913 Ticket ① (2026-08-23 00:32)
 
 Tonight's brief said the trip cost $19,904. Ticket ① had come back as British
