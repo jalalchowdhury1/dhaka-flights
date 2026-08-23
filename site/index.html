@@ -1428,7 +1428,7 @@ function renderTotal(d) {
         ${line("The plan — card on The Edit", `<b>${usd2(planNet)}</b> net`, "", `0 pts · $${pr.edit_credit || 250} credit + $${h.prop} + breakfasts all kept`)}
         ${line(`${esc(h.name)} on Points Boost`, `${boostPts.toLocaleString()} pts`, "", `sticker ${pr.boost_cents}¢/pt, but the $${pr.edit_credit || 250} credit is forfeited → saves ${usd2(boostSaved)} = <b>${cpp(boostSaved, boostPts)}</b>/pt`)}
         ${hy.pts ? line(`${esc(hy.hotel || "Hyatt")} via Chase→Hyatt 1:1`, `${hy.pts.toLocaleString()} pts`, "", `${hy.per_night ? hy.per_night.toLocaleString() + "/night · " : ""}${hyCash ? "sticker " + (hyCash / hy.pts * 100).toFixed(2) + "¢/pt vs its " + usd2(hyCash) + " cash rate, but " : ""}no credit, breakfast ~${usd2(hyNet)} → saves ${usd2(hySaved)} = <b>${cpp(hySaved, hy.pts)}</b>/pt`) : ""}
-        ${sp ? line("Split-pay after Ticket ①", `${spPts.toLocaleString()} pts + ${usd2(sp.card)}`, "", `points at ${sp.cents}¢ Boost (cart-verified), $250 credit kept if Chase confirms it posts on the card portion → cash out ~${usd2(Math.max(0, sp.card - 250))} = <b>${sp.cents}¢</b>/pt`) : ""}
+        ${sp ? line("Split-pay after Ticket ①", `${spPts.toLocaleString()} pts + ${usd2(sp.card)}`, "", `points at ${sp.cents}¢ Boost (cart-verified), the $250 posts against the card portion (verified 8/23) → cash out ~${usd2(Math.max(0, sp.card - 250))} = <b>${sp.cents}¢</b>/pt`) : ""}
         ${line("Verdict", `bar ${bar}¢`, "", verdict)}
       </table></div>`;
   };

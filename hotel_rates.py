@@ -440,9 +440,10 @@ POINTS_ROUTES = {"IST": {
     # ordinary pts at 1.65¢ keeps the $250 (pending Chase confirming the
     # credit posts on the card portion) — the one route that clears the bar.
     "split": {"card": 300, "cents": 1.65,
-              "note": ("split-pay AFTER Ticket ①: ~$260 card + ordinary points "
-                       "at 1.65¢ Boost — the checkout credits modal (8/23) "
-                       "confirmed the $250 applies to the card portion")},
+              "note": ("split-pay AFTER Ticket ①: ~$300 card + ordinary points "
+                       "at 1.65¢ Boost — verified 8/23 (checkout credits modal "
+                       "+ documented precedent): the $250 posts on the card "
+                       "portion")},
 }}
 
 # Flights plan (Chase Travel read 2026-08-23, docs/research/2026-08-23-chase-marriott-amex-read.md):
