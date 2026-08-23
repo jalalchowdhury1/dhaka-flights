@@ -289,7 +289,7 @@ SHORTLIST = [
      "match": "Sanasaryan", "angle": "Old-city boutique · Bonvoy stacks · cheapest FHR in IST"},
     {"key": "ritz_ist", "city": "IST", "program": "FHR + Edit", "bold": True, "rank": 1,
      "name": "Ritz-Carlton Istanbul", "query": "Ritz Carlton Istanbul",
-     "match": "Ritz-Carlton", "angle": "THE PLAY (2026-08-23): on The Edit at $1,285 — $250 credit + breakfast + $100 + Bonvoy stacks; prepay via Chase by Dec 31"},
+     "match": "Ritz-Carlton", "angle": "THE PLAY (2026-08-23): on The Edit at $1,285 — split-pay ~$300 card + ~60K pts at 1.65¢ Boost after Ticket ①; $250 + breakfast + $100 + Bonvoy stack; refundable room, by Dec 31"},
     {"key": "parkhyatt_ist", "city": "IST", "program": "FHR", "rank": 4,
      "name": "Park Hyatt Maçka Palas", "query": "Park Hyatt Istanbul",
      "match": "Park Hyatt", "angle": "Nişantaşı boutique · second-cheapest FHR"},
@@ -416,8 +416,10 @@ BOOKED = {
 # best case.
 CREDIT_PLAN = {"amex_300_to": "SIN",
                "note": ("Amex $300 → Singapore via the January rebook; "
-                        "Istanbul = Ritz-Carlton on CSR The Edit ($250, "
-                        "confirmed on the roster 2026-08-23), prepaid before Dec 31")}
+                        "Istanbul = Ritz-Carlton on The Edit, SPLIT-PAY "
+                        "(verified 8/23): ~$300 card (the $250 posts against "
+                        "it) + ~60K ordinary points at 1.65¢ Boost — booked "
+                        "AFTER Ticket ① drains the 1.5× bucket, by Dec 31")}
 
 # Points routes for the Istanbul stay (Chase read 2026-08-23) — the Total tab
 # prices the play off `edit_total` (drifted by the Ritz's public rate, since
