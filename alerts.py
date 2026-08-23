@@ -93,8 +93,12 @@ REMINDERS = [
      ["chase.com/travel → Hotels → Istanbul, Jan 5–7, 2 adults + 1 child (5) "
       "→ The Ritz-Carlton, Istanbul (The Edit badge).",
       "Pick the cheapest REFUNDABLE room that sleeps 3 (~$1,285 all-in at the "
-      "August read). Pay with the Sapphire Reserve card, NOT points — Points "
-      "Boost would forfeit the $250.",
+      "August read).",
+      "Payment — two options. (a) Card only: keeps the $250 credit, costs "
+      "~$1,035. (b) Split-pay: ~$260 on the card + the rest in ordinary points "
+      "at Points Boost 1.65¢ (~62K pts) — IF the $250 credit still posts on "
+      "the card portion. Call Chase Travel 855-234-2542 first to confirm; if "
+      "they say no, use (a) or go all-points (~78K pts, saves $1,035 = 1.33¢).",
       "The $250 Edit credit posts by itself; the charge must land by Dec 31. "
       "Add your Bonvoy number at booking (points + Platinum perks stack).",
       "Send me the confirmation number."]),
