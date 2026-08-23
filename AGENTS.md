@@ -547,6 +547,35 @@ reason.
    (TDAC / SG Arrival Card). The old Indonesia e-VOA onward-proof constraint died
    with Bali.
 
+## 5b. Postmortem — the $18,913 Ticket ① (2026-08-23 00:32)
+
+Tonight's brief said the trip cost $19,904. Ticket ① had come back as British
+Airways $18,913; Air France $3,624 (every night for weeks) was simply absent.
+The log showed why: the two `[stopover2]` multi-city searches parsed **3 and 2
+options** where they always parse 8–9. `_wait_for_results` stopped at the FIRST
+"us dollars" on the page, and Google renders a multi-city list progressively —
+the first rows to carry a price that night were the premium ones. The
+self-check saw the +422 % swing and WARNED, but warnings never block a publish
+(by design — "publishing nothing is worse"), and the retry logic only fired on
+ZERO results. Jalal caught it from his phone at 00:55.
+
+Fixes (commit 3ce66d9, tests in `tests/test_scraper.py`):
+1. `_wait_for_results` now polls until the COUNT of priced rows is unchanged
+   on two consecutive snapshots (2 s settle poll once prices show — ~+1 min a
+   night across 30 searches), not until the first price appears.
+2. `scrape_tickets_all`: a Ticket ① list shorter than `THIN_TICKET1_OPTIONS`
+   (4) is retried once with a fresh session; the LONGER list wins; a genuinely
+   thin night still publishes. Zero results keep their 3 attempts.
+3. A manual same-night re-run: clear `.last_run_date` to yesterday, then
+   `nohup /bin/bash run_daily.sh …`. It re-publishes, re-sends the brief and
+   dedupes the day's history row. Tonight's re-run hit the 35-min deadline on
+   the 18 one-way "budget variant" searches (skipped, headline unaffected).
+
+Backlog from the same night: Google tags the cheapest Ticket ① combination
+"Separate tickets" (Air France + Delta stitched) — capture that tag in
+`_parse_openjaw_results` and show it on the Flights screen; it changes the
+protection story when buying in September.
+
 ## 6. Known issues / TODO
 
 - `main_flyai.py` / `scraper_flyai.py` are dead legacy (flyai experiment) — ignore.
