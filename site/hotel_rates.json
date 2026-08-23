@@ -51,7 +51,13 @@
  "flight_plan": {
   "ticket1": "Chase Travel: Turkish TK 82/712/23+81 Ecofly, pay with ONLY the 127,825 points eligible for 1.5\u00d7 (= $1,917) + ~$2,230 cash; never the 1\u00d7 points. Or turkish.com for ~$4,003 cash.",
   "ticket2": "Cash, booked direct: US-Bangla DAC\u2192BKK + Scoot BKK\u2192SIN (~$992); neither carrier is on Chase Travel. Add Scoot bags on scoot.com.",
-  "points_1_5x": 127825
+  "points_1_5x": 127825,
+  "cents_1_5x": 1.5,
+  "chase_read": "2026-08-23",
+  "chase_ticket1": 4147.29,
+  "google_ticket1": 4003,
+  "chase_premium": 144,
+  "marriott_points": 177000
  },
  "source": "est_allin_night = Amex FHR portal all-in per paid night (read 2026-08-22, 2 adults + 1 child) \u00d7 tonight's public Google rate \u00f7 the public rate on the anchor date; `rate` is that public rate (2 adults, incl. fees) and is the drift alarm",
  "rows": [

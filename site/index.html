@@ -1418,18 +1418,26 @@ function renderTotal(d) {
   const hotelsGross = (ist ? ist.total : 0) + (sin ? sin.total : 0);
   const credits = (ist ? ist.credits : 0) + (sin ? sin.credits : 0);
   const hotelsNet = (ist ? ist.net : 0) + (sin ? sin.net : 0);
-  const cashGross = flightsTotal + hotelsGross;
-  const cashNet = flightsTotal + hotelsNet;
+  // Points plan (hotel_rates.FLIGHT_PLAN): Ticket ① is bought on Chase Travel
+  // at a fixed premium over the airline fare, and the 1.5× bucket pays part.
+  const fp = (RATES && RATES.flight_plan) || {};
+  const t1Price = m.ticket1_total != null ? m.ticket1_total : (oj.price_total || 0);
+  const premium = typeof fp.chase_premium === "number" ? fp.chase_premium : 0;
+  const ptsValue = typeof fp.points_1_5x === "number" ? Math.min(fp.points_1_5x * ((fp.cents_1_5x || 1.5) / 100), t1Price + premium) : 0;
+  const flightsCash = flightsTotal + premium - ptsValue;
+  const cashGross = flightsCash + hotelsGross;
+  const cashNet = flightsCash + hotelsNet;
   const days = (() => { const a = Date.parse(oj.out_date || ""), b = Date.parse(oj.ret_date || ""); return isNaN(a) || isNaN(b) ? null : Math.round((b - a) / 86400000); })();
   add(root, () => el(`<span class="micro">🧾 The whole trip — three of you</span>
     <div class="pass"><div class="scroll-x"><table>
-      ${line("Flights (both tickets)", usd2(flightsTotal), "", RATES && RATES.flight_plan && RATES.flight_plan.points_1_5x
-        ? `of which ~${usd2(RATES.flight_plan.points_1_5x * 0.015)} can be paid with the ${RATES.flight_plan.points_1_5x.toLocaleString()} Chase points worth 1.5× on Ticket ①` : "")}
+      ${line("Flights (both tickets)", usd2(flightsTotal), "", "tonight's fares")}
+      ${premium ? line("+ Chase Travel premium on Ticket ①", "+ " + usd2(premium), "", `portal ${usd2(fp.chase_ticket1)} vs airline ${usd2(fp.google_ticket1)} at the ${esc(fp.chase_read || "")} read — re-check in the cart`) : ""}
+      ${ptsValue ? line("− paid with Chase points", "− " + usd2(ptsValue), "", `${fp.points_1_5x.toLocaleString()} pts × ${fp.cents_1_5x || 1.5}¢ — the 1.5× bucket only, on Ticket ①`) : ""}
       ${line("Hotels, all-in (Istanbul + Singapore)", usd2(hotelsGross), "", ist && sin ? `${usd2(ist.total)} + ${usd2(sin.total)}` : "")}
       ${line("<b>Cash before credits</b>", `<b>${usd2(cashGross)}</b>`)}
       ${line("− card credits + breakfasts", "− " + usd2(credits), "", "see each hotel's lines above")}
       ${line("<b>Cash that leaves your pocket</b>", `<b style="font-size:1.1rem">${usd2(cashNet)}</b>`, "", days ? `${usd2(cashNet / days)}/day over ${days} days (${esc(oj.out_date || "")} → ${esc(oj.ret_date || "")})` : "")}
-      ${line("+ Marriott points (Bangkok)", ptsLabel, "", "not cash — the Athenee stay")}
+      ${line("+ points spent", [typeof fp.marriott_points === "number" ? `${fp.marriott_points.toLocaleString()} Marriott` : ptsLabel, ptsValue ? `${fp.points_1_5x.toLocaleString()} Chase` : null].filter(Boolean).join(" + "), "", "not cash — Bangkok on Marriott, Ticket ① part-paid with Chase")}
     </table></div>
     <div class="small" style="margin-top:8px">What is firm vs estimated: ${[bookings.BKK ? "Bangkok is booked on points (refundable)" : null, sin && sin.bk ? "Singapore is booked (Pay-at-Check-in hold, refundable to Jan 31)" : null].filter(Boolean).join("; ") || "nothing is booked yet"}; flights re-price every night until you buy (~mid/late September); Istanbul is tonight's best-value pick, not a booking. Amex's $300 hotel credit can be earned once per half-year, so only one of the two card stays gets it.</div></div>`));
   return root;

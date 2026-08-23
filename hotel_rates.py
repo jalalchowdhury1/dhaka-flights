@@ -430,6 +430,15 @@ FLIGHT_PLAN = {
     "ticket2": ("Cash, booked direct: US-Bangla DAC→BKK + Scoot BKK→SIN (~$992); "
                 "neither carrier is on Chase Travel. Add Scoot bags on scoot.com."),
     "points_1_5x": 127825,
+    "cents_1_5x": 1.5,
+    # Chase Travel sells Ticket ① above the airline price; the Total tab adds
+    # this fixed premium (snapshot) on top of tonight's live Google fare,
+    # then takes the points off. Re-read the cart before buying.
+    "chase_read": "2026-08-23",
+    "chase_ticket1": 4147.29,
+    "google_ticket1": 4003,
+    "chase_premium": 144,
+    "marriott_points": 177000,
 }
 
 # Seed values: the Google public rates read 2026-08-22, the SAME DAY as the
