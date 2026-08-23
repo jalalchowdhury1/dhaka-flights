@@ -135,3 +135,51 @@ def test_browser_session_is_reused_until_marked_dirty(monkeypatch):
     scraper._ensure_session()
     assert cmds.count("browse env local") == 2, "dirty mark must force restart"
     scraper._session_dirty()
+
+
+# ── Thin-results guard (2026-08-23) ──────────────────────────────────────────
+# A multi-city page read before it finished rendering yields a SHORT list whose
+# cheapest row is a premium fare (3 options, BA $18,913, while Air France
+# $3,624 was still loading). Zero results already retried; thin ones did not.
+def test_ticket1_thin_result_is_retried_with_a_fresh_session(monkeypatch):
+    import scraper
+    calls = []
+    def thin_then_full(cfg):
+        calls.append(cfg["kind"])
+        return ([{"price_total": 18913}] if len(calls) == 1
+                else [{"price_total": 3624 + i} for i in range(8)])
+    dirty = {"n": 0}
+    monkeypatch.setattr(scraper, "scrape_stopover", thin_then_full)
+    monkeypatch.setattr(scraper, "_session_dirty", lambda: dirty.__setitem__("n", dirty["n"] + 1))
+    monkeypatch.setattr(scraper.time, "sleep", lambda s: None)
+    out = scraper.scrape_tickets_all()
+    # search 1: thin → retried once (fresh session) → full; search 2: full first try
+    assert len(calls) == len(scraper.STOPOVER_SEARCHES) + 1
+    assert dirty["n"] == 1
+    assert min(f["price_total"] for f in out) == 3624
+
+
+def test_ticket1_thin_result_is_kept_if_the_retry_is_thinner(monkeypatch):
+    """A genuinely thin night (few itineraries exist) must still publish the
+    most complete list seen, never nothing."""
+    import scraper
+    seen = []
+    def thin_both(cfg):
+        seen.append(1)
+        return [{"price_total": 5000}, {"price_total": 5100}] if len(seen) % 2 else [{"price_total": 5200}]
+    monkeypatch.setattr(scraper, "scrape_stopover", thin_both)
+    monkeypatch.setattr(scraper, "_session_dirty", lambda: None)
+    monkeypatch.setattr(scraper.time, "sleep", lambda s: None)
+    out = scraper.scrape_tickets_all()
+    assert len(out) == 2 * len(scraper.STOPOVER_SEARCHES)      # the longer of each pair
+
+
+def test_wait_for_results_keeps_polling_while_prices_are_still_appearing(monkeypatch):
+    import scraper
+    trees = iter(["loading", "From 18913 US dollars", "From 18913 US dollars From 3624 US dollars",
+                  "From 18913 US dollars From 3624 US dollars"])
+    monkeypatch.setattr(scraper, "_get_tree", lambda s: s)
+    monkeypatch.setattr(scraper, "_snap", lambda: next(trees))
+    monkeypatch.setattr(scraper.time, "sleep", lambda s: None)
+    final = scraper._wait_for_results("loading")
+    assert final.count("US dollars") == 2          # did not stop at the first price

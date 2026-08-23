@@ -211,14 +211,27 @@ def end_session() -> None:
 # night, and the difference between a real empty day and a slow one.
 RESULT_WAIT_SECONDS = 40
 RESULT_POLL_SECONDS = 5
+SETTLE_POLL_SECONDS = 2      # once prices show, re-check this often until the count stops growing
 
 
 def _wait_for_results(snap: str) -> str:
-    waited = 0
-    while ("us dollars" not in _get_tree(snap).lower()
-           and waited < RESULT_WAIT_SECONDS):
-        time.sleep(RESULT_POLL_SECONDS)
-        waited += RESULT_POLL_SECONDS
+    """Poll until prices are on the page AND have stopped appearing.
+
+    Stopping at the FIRST price is how 2026-08-23 published a $18,913 Ticket ①:
+    Google renders a multi-city list progressively, the first rows to carry a
+    price were three premium fares, and the $3,624 Air France row was still
+    loading. So once a price is visible, keep polling until the number of
+    priced rows is the same on two consecutive snapshots (one extra poll on a
+    settled page), within the same overall budget."""
+    waited, last_n = 0, -1
+    while waited < RESULT_WAIT_SECONDS:
+        n = _get_tree(snap).lower().count("us dollars")
+        if n and n == last_n:
+            break                                   # settled
+        last_n = n
+        step = SETTLE_POLL_SECONDS if n else RESULT_POLL_SECONDS
+        time.sleep(step)                            # ~+2 s per search on a settled page
+        waited += step
         snap = _snap()
     return snap
 
@@ -762,6 +775,11 @@ STOPOVER_SEARCHES = [TICKET1_SIN_RETURN, TICKET1_BKK_RETURN]
 # empty — nothing else can stand in for it now that the alternatives are gone —
 # so it gets more attempts than everything else.
 TICKET1_ATTEMPTS = 3
+# A Ticket ① search normally parses 8-9 options (BKK-first) / 5-8 (SIN-first).
+# Fewer than this means the page was read half-rendered (2026-08-23: 3 options,
+# cheapest a $18,913 BA fare, Air France $3,624 missing) — retry once with a
+# fresh session and keep the LONGER list, never nothing.
+THIN_TICKET1_OPTIONS = 4
 
 
 def scrape_stopover(cfg=None) -> list:
@@ -943,13 +961,24 @@ def scrape_tickets_all() -> list:
     all_results = []
     for cfg in STOPOVER_SEARCHES:
         print(f"[{cfg['kind']}] {cfg['label']}")
-        results = []
+        results, thin_retried = [], False
         for attempt in range(1, TICKET1_ATTEMPTS + 1):
-            results = scrape_stopover(cfg)
-            if results:
+            got = scrape_stopover(cfg)
+            if len(got) > len(results):
+                results = got                      # keep the most complete list
+            if len(results) >= THIN_TICKET1_OPTIONS:
                 break
-            print(f"  0 results (attempt {attempt}/{TICKET1_ATTEMPTS}) — "
-                  f"retrying with a fresh session...")
+            if results and thin_retried:
+                break                              # genuinely thin night: publish it
+            if results:
+                thin_retried = True
+                print(f"  only {len(results)} options (attempt {attempt}/"
+                      f"{TICKET1_ATTEMPTS}) — page may be half-rendered, "
+                      f"retrying once with a fresh session...")
+                _session_dirty()
+            else:
+                print(f"  0 results (attempt {attempt}/{TICKET1_ATTEMPTS}) — "
+                      f"retrying with a fresh session...")
             time.sleep(5)
         all_results += results
         print(f"  Got {len(results)} options")
