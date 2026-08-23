@@ -535,7 +535,7 @@ def test_build_writes_stay_total_credits_and_net(tmp_path, monkeypatch):
     k = next(r for r in out["rows"] if r["key"] == "kempinski_sin")
     assert k["stay"] == {"nights": 4, "total": 1327.08, "credits": 665, "net": 662}
     ritz = next(r for r in out["rows"] if r["key"] == "ritz_ist")
-    assert ritz["stay"] == {"nights": 2, "total": 1250.42, "credits": 520, "net": 730}
+    assert ritz["stay"] == {"nights": 2, "total": 1250.42, "credits": 470, "net": 780}   # Edit program: $250
     pp = next(r for r in out["rows"] if r["key"] == "panpacific")
     assert pp["stay"]["credits"] == 250 + 100 + 240                 # Edit-program credits
     new = next(r for r in out["rows"] if r["key"] == "fs_sin")

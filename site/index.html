@@ -1344,6 +1344,8 @@ function renderTotal(d) {
       ${line("<b>Flights total</b>", `<b>${usd2(flightsTotal)}</b>`, "", "not booked yet — the buy window is mid/late September")}
     </table></div>
     <div class="small" style="margin-top:6px">Checked bags included: ${bags || "—"}.${bagWarn ? "" : ""}</div>${bagWarn}
+    ${RATES && RATES.flight_plan ? `<div class="small" style="margin-top:6px"><b>How to pay (Chase Travel read 2026-08-23):</b>
+      <div>① ${esc(RATES.flight_plan.ticket1 || "")}</div><div>② ${esc(RATES.flight_plan.ticket2 || "")}</div></div>` : ""}
     <div class="small" style="margin-top:4px">${status("estimate · re-priced nightly", false)}</div></div>`));
 
   /* ── Hotels: the play per city (bold row), booking overrides it ── */
@@ -1421,7 +1423,8 @@ function renderTotal(d) {
   const days = (() => { const a = Date.parse(oj.out_date || ""), b = Date.parse(oj.ret_date || ""); return isNaN(a) || isNaN(b) ? null : Math.round((b - a) / 86400000); })();
   add(root, () => el(`<span class="micro">🧾 The whole trip — three of you</span>
     <div class="pass"><div class="scroll-x"><table>
-      ${line("Flights (both tickets)", usd2(flightsTotal))}
+      ${line("Flights (both tickets)", usd2(flightsTotal), "", RATES && RATES.flight_plan && RATES.flight_plan.points_1_5x
+        ? `of which ~${usd2(RATES.flight_plan.points_1_5x * 0.015)} can be paid with the ${RATES.flight_plan.points_1_5x.toLocaleString()} Chase points worth 1.5× on Ticket ①` : "")}
       ${line("Hotels, all-in (Istanbul + Singapore)", usd2(hotelsGross), "", ist && sin ? `${usd2(ist.total)} + ${usd2(sin.total)}` : "")}
       ${line("<b>Cash before credits</b>", `<b>${usd2(cashGross)}</b>`)}
       ${line("− card credits + breakfasts", "− " + usd2(credits), "", "see each hotel's lines above")}

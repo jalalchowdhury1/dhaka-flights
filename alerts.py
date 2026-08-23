@@ -63,14 +63,15 @@ def stage(today: datetime.date) -> str:
 # events created the same day; this is the channel Jalal actually reads.
 REMINDERS = [
     (datetime.date(2026, 9, 14), 2,
-     "buy the flights this week — Turkish nonstop on turkish.com first "
-     "(24h free cancel), then Ticket ②, on the Sapphire Reserve"),
+     "buy the flights this week — Ticket ① Turkish on Chase Travel with ONLY "
+     "the 127,825 points eligible for 1.5× (cart must show ~$1,917 covered) + "
+     "cash, or turkish.com cash; Ticket ② cash direct (US-Bangla + Scoot)"),
     (datetime.date(2026, 9, 15), 0,
      "email the Athenee for suite + Club-lounge supplement quotes "
      "(conf #88518376)"),
     (datetime.date(2026, 12, 28), 3,
-     "book the Istanbul hotel prepaid via Chase Travel / The Edit by Dec 31 "
-     "to use the 2026 $250 credit"),
+     "book the Ritz-Carlton Istanbul prepaid via Chase Travel / The Edit by "
+     "Dec 31 (Jan 5–7, 3 guests, ~$1,285) to use the 2026 $250 credit"),
     (datetime.date(2027, 1, 2), 0,
      "Kempinski: rebook as Pay Today on the Platinum (Jan–Jun $300), then "
      "cancel the Pay-at-Check-in hold"),

@@ -45,7 +45,12 @@
  },
  "credit_plan": {
   "amex_300_to": "SIN",
-  "note": "Amex $300 \u2192 Singapore via the January rebook; Istanbul assumed on CSR The Edit ($250) \u2014 confirm the hotel is on The Edit, else drop it"
+  "note": "Amex $300 \u2192 Singapore via the January rebook; Istanbul = Ritz-Carlton on CSR The Edit ($250, confirmed on the roster 2026-08-23), prepaid before Dec 31"
+ },
+ "flight_plan": {
+  "ticket1": "Chase Travel: Turkish TK 82/712/23+81 Ecofly, pay with ONLY the 127,825 points eligible for 1.5\u00d7 (= $1,917) + ~$2,230 cash; never the 1\u00d7 points. Or turkish.com for ~$4,003 cash.",
+  "ticket2": "Cash, booked direct: US-Bangla DAC\u2192BKK + Scoot BKK\u2192SIN (~$992); neither carrier is on Chase Travel. Add Scoot bags on scoot.com.",
+  "points_1_5x": 127825
  },
  "source": "est_allin_night = Amex FHR portal all-in per paid night (read 2026-08-22, 2 adults + 1 child) \u00d7 tonight's public Google rate \u00f7 the public rate on the anchor date; `rate` is that public rate (2 adults, incl. fees) and is the drift alarm",
  "rows": [
@@ -93,16 +98,16 @@
    "key": "ritz_ist",
    "city": "IST",
    "name": "Ritz-Carlton Istanbul",
-   "program": "FHR",
-   "angle": "The Bonvoy pick \u00b7 points + elite nights + Platinum perks stack",
-   "rank": 2,
+   "program": "FHR + Edit",
+   "angle": "THE PLAY (2026-08-23): on The Edit at $1,285 \u2014 $250 credit + breakfast + $100 + Bonvoy stacks; prepay via Chase by Dec 31",
+   "rank": 1,
    "stay": {
     "nights": 2,
     "total": 1250.42,
-    "credits": 520,
-    "net": 730
+    "credits": 470,
+    "net": 780
    },
-   "bold": false,
+   "bold": true,
    "rate": 447,
    "checked": "2026-08-23",
    "anchor": {
@@ -124,7 +129,7 @@
    "offsets": [
     {
      "label": "2n",
-     "pct": 42,
+     "pct": 38,
      "band": "dim"
     }
    ]
@@ -174,15 +179,15 @@
    "city": "IST",
    "name": "Shangri-La Bosphorus",
    "program": "FHR",
-   "angle": "Best value in IST \u00b7 Bosphorus-front \u00b7 TA 4.8 \u00b7 Ritz money, better spot",
-   "rank": 1,
+   "angle": "Bosphorus-front \u00b7 TA 4.8 \u00b7 not on The Edit (Amex FHR only, no $300 left in 2026)",
+   "rank": 2,
    "stay": {
     "nights": 2,
     "total": 1211.2,
     "credits": 520,
     "net": 691
    },
-   "bold": true,
+   "bold": false,
    "rate": 405,
    "checked": "2026-08-23",
    "anchor": {

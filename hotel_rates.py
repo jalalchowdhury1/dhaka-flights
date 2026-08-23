@@ -188,15 +188,15 @@ SHORTLIST = [
     {"key": "sanasaryan", "city": "IST", "program": "FHR", "rank": 3,
      "name": "Sanasaryan Han (Lux. Coll.)", "query": "Sanasaryan Han Istanbul",
      "match": "Sanasaryan", "angle": "Old-city boutique · Bonvoy stacks · cheapest FHR in IST"},
-    {"key": "ritz_ist", "city": "IST", "program": "FHR", "rank": 2,
+    {"key": "ritz_ist", "city": "IST", "program": "FHR + Edit", "bold": True, "rank": 1,
      "name": "Ritz-Carlton Istanbul", "query": "Ritz Carlton Istanbul",
-     "match": "Ritz-Carlton", "angle": "The Bonvoy pick · points + elite nights + Platinum perks stack"},
+     "match": "Ritz-Carlton", "angle": "THE PLAY (2026-08-23): on The Edit at $1,285 — $250 credit + breakfast + $100 + Bonvoy stacks; prepay via Chase by Dec 31"},
     {"key": "parkhyatt_ist", "city": "IST", "program": "FHR", "rank": 4,
      "name": "Park Hyatt Maçka Palas", "query": "Park Hyatt Istanbul",
      "match": "Park Hyatt", "angle": "Nişantaşı boutique · second-cheapest FHR"},
-    {"key": "shangrila_ist", "city": "IST", "program": "FHR", "bold": True, "rank": 1,
+    {"key": "shangrila_ist", "city": "IST", "program": "FHR", "rank": 2,
      "name": "Shangri-La Bosphorus", "query": "Shangri-La Bosphorus Istanbul",
-     "match": "Shangri-La", "angle": "Best value in IST · Bosphorus-front · TA 4.8 · Ritz money, better spot"},
+     "match": "Shangri-La", "angle": "Bosphorus-front · TA 4.8 · not on The Edit (Amex FHR only, no $300 left in 2026)"},
     {"key": "stregis_ist", "city": "IST", "program": "FHR", "rank": 5,
      "name": "St. Regis Istanbul", "query": "St Regis Istanbul Nisantasi",
      "match": "St. Regis", "angle": "Butler with every room · Bonvoy stacks"},
@@ -316,8 +316,21 @@ BOOKED = {
 # best case.
 CREDIT_PLAN = {"amex_300_to": "SIN",
                "note": ("Amex $300 → Singapore via the January rebook; "
-                        "Istanbul assumed on CSR The Edit ($250) — confirm "
-                        "the hotel is on The Edit, else drop it")}
+                        "Istanbul = Ritz-Carlton on CSR The Edit ($250, "
+                        "confirmed on the roster 2026-08-23), prepaid before Dec 31")}
+
+# Flights plan (Chase Travel read 2026-08-23, docs/research/2026-08-23-chase-marriott-amex-read.md):
+# Ticket ① is sold on Chase as the exact Turkish multi-city ($4,147 vs $4,003
+# on Google) and the cart honours the 1.5× bucket — 127,825 eligible points
+# cover $1,917. Ticket ②'s carriers (US-Bangla, Scoot) are not sold on Chase.
+FLIGHT_PLAN = {
+    "ticket1": ("Chase Travel: Turkish TK 82/712/23+81 Ecofly, pay with ONLY the "
+                "127,825 points eligible for 1.5× (= $1,917) + ~$2,230 cash; "
+                "never the 1× points. Or turkish.com for ~$4,003 cash."),
+    "ticket2": ("Cash, booked direct: US-Bangla DAC→BKK + Scoot BKK→SIN (~$992); "
+                "neither carrier is on Chase Travel. Add Scoot bags on scoot.com."),
+    "points_1_5x": 127825,
+}
 
 # Seed values: the Google public rates read 2026-08-22, the SAME DAY as the
 # portal anchors, which is what makes `anchor_google` an honest drift baseline
@@ -824,6 +837,7 @@ def build(payload, scraped=None, today=None):
         "portal_date": PORTAL_DATE,
         "bookings": BOOKED,
         "credit_plan": CREDIT_PLAN,
+        "flight_plan": FLIGHT_PLAN,
         "source": ("est_allin_night = Amex FHR portal all-in per paid night "
                    f"(read {PORTAL_DATE}, 2 adults + 1 child) × tonight's public "
                    "Google rate ÷ the public rate on the anchor date; `rate` is "
