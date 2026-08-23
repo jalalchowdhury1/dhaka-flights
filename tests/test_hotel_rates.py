@@ -669,3 +669,12 @@ def test_deal_bells_are_none_safe_on_rows_without_drift():
     assert hr.deal_alerts(PREV, NEW) == [ln for ln in hr.rival_bells(PREV, NEW).values()]
     assert hr.play_drop_bells(None, NEW) == []
     assert hr.deal_message(None, {"rows": []}) is None
+
+
+def test_payload_carries_points_routes_for_the_edit_city():
+    pr = hr.POINTS_ROUTES["IST"]
+    assert pr["edit_total"] > 0 and pr["boost_cents"] > 1 and pr["hyatt"]["pts"] == 50000
+    # the Hyatt comparison row must be a tracked property
+    assert pr["hyatt"]["key"] in {e["key"] for e in hr.SHORTLIST}
+    # The Edit city is the one NOT taking the Amex $300
+    assert hr.CREDIT_PLAN["amex_300_to"] != "IST" and "IST" in hr.POINTS_ROUTES

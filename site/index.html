@@ -1358,7 +1358,13 @@ function renderTotal(d) {
     if (!play || !st) return null;
     const a = play.anchor || {};
     const nights = bk ? bk.nights : st.nights;
-    const total = bk ? bk.total : st.total;
+    // The Edit city is bought on Chase Travel, not FHR: price it off the Edit
+    // read, drifted by the same public-rate move the FHR estimate uses.
+    const pr = ((RATES && RATES.points_routes) || {})[city] || null;
+    const planFor = (RATES && RATES.credit_plan) || {};
+    const onEdit = !bk && pr && typeof pr.edit_total === "number" && planFor.amex_300_to && planFor.amex_300_to !== city;
+    const drift = typeof play.drift_pct === "number" ? 1 + play.drift_pct / 100 : 1;
+    const total = bk ? bk.total : (onEdit ? Math.round(pr.edit_total * drift * 100) / 100 : st.total);
     const prop = typeof a.credit === "number" ? a.credit : 100;
     const breakfast = 60 * nights;
     // One Amex $300 exists before the trip; hotel_rates.CREDIT_PLAN says which
@@ -1368,6 +1374,9 @@ function renderTotal(d) {
     const fixed = plan.amex_300_to ? (plan.amex_300_to === city ? 300 : Math.min(tableFixed, 250)) : tableFixed;
     const credits = fixed + prop + breakfast;
     return {play, bk, nights, total, prop, breakfast, fixed, credits, net: Math.max(0, total - credits),
+            onEdit, pr, drift, priceNote: bk ? "from the Amex review page"
+              : onEdit ? `Chase Travel / The Edit ${esc(pr.read || "")}, drifted by the public rate`
+              : `Amex FHR portal ${esc(a.date || "")}, drifted by the public rate`,
             program: play.program, name: bk ? bk.hotel : play.name, room: bk ? bk.room : "cheapest room that fits 3"};
   };
   const stays = (RATES && RATES.stays) || {};
@@ -1380,7 +1389,7 @@ function renderTotal(d) {
       <div class="pass"><div class="pass-head"><span>${esc(h.name)}</span><span>${esc(h.program)}</span></div>
       <div class="small muted" style="margin-bottom:6px">${esc(h.room)}${h.bk ? ` · ${esc(h.bk.via)}` : ""}</div>
       <div class="scroll-x"><table>
-        ${line("All-in, taxes and fees included", usd2(h.total), "", h.bk ? "from the Amex review page" : `Amex FHR portal ${esc(h.play.anchor && h.play.anchor.date || "")}, drifted by the public rate`)}
+        ${line("All-in, taxes and fees included", usd2(h.total), "", h.priceNote)}
         ${line("− breakfast for two, every day", "− " + usd2(h.breakfast), "", `$60/day × ${h.nights}` + (city === "SIN" ? " · Aoife eats free here" : ""))}
         ${line("− property credit", "− " + usd2(h.prop), "", h.play.anchor && h.play.anchor.promo ? esc(h.play.anchor.promo) : "")}
         ${line("− card credit", "− " + usd2(h.fixed), "", fixedLabel)}
@@ -1388,7 +1397,36 @@ function renderTotal(d) {
       </table></div>
       <div class="small" style="margin-top:6px">${h.bk ? status(h.bk.status + (h.bk.confirmation ? " · ref " + h.bk.confirmation : ""), true) : status("estimate · not booked", false)}
         ${h.bk && h.bk.next ? `<div class="small muted" style="margin-top:4px">Next: ${esc(h.bk.next)}</div>` : ""}
-        ${note ? `<div class="small muted" style="margin-top:4px">${note}</div>` : ""}</div></div>`);
+        ${note ? `<div class="small muted" style="margin-top:4px">${note}</div>` : ""}</div>
+      ${pointsBlock(city, h)}</div>`);
+  };
+  /* "Why not points?" — the Istanbul routes on the SAME basis as the card's
+     net (breakfast + property credit count as cash-equivalent). A points
+     route has to beat the plan's NET, not the sticker price; ¢/pt = cash
+     saved ÷ points spent. */
+  const pointsBlock = (city, h) => {
+    const pr = h.pr;
+    if (!pr || h.bk || !h.onEdit) return "";
+    const planNet = h.net;
+    const boostPts = Math.round(h.total / (pr.boost_cents / 100));
+    const boostNet = -(h.prop + h.breakfast);          // room on points, Edit perks kept, $250 lost
+    const boostSaved = planNet - boostNet;
+    const hy = pr.hyatt || {};
+    const hyRow = hy.key ? rows.find(r => r.key === hy.key) : null;
+    const hyCash = hyRow && hyRow.stay && typeof hyRow.stay.total === "number" ? hyRow.stay.total : null;
+    const hyNet = hy.breakfast_cash || 0;              // room on points, breakfast paid, no credit
+    const hySaved = planNet - hyNet;
+    const cpp = (saved, pts) => pts ? (saved / pts * 100).toFixed(2) + "¢" : "—";
+    const bar = pr.bar_cents || 1.5;
+    const verdict = Math.max(boostSaved / boostPts, hySaved / (hy.pts || 1)) * 100 >= bar
+      ? "a points route clears the bar — worth switching" : `neither clears ${bar}¢ — keep the card plan; ordinary points are worth ~${pr.future_cents || 2}¢ on a future Hyatt stay`;
+    return `<div class="small" style="margin-top:10px"><b>Why not points?</b> <span class="muted">same basis as the net above · Chase read ${esc(pr.read || "")}</span></div>
+      <div class="scroll-x"><table>
+        ${line("The plan — card on The Edit", `<b>${usd2(planNet)}</b> net`, "", `0 pts · $${pr.edit_credit || 250} credit + $${h.prop} + breakfasts all kept`)}
+        ${line(`${esc(h.name)} on Points Boost`, `${boostPts.toLocaleString()} pts`, "", `sticker ${pr.boost_cents}¢/pt, but the $${pr.edit_credit || 250} credit is forfeited → saves ${usd2(boostSaved)} = <b>${cpp(boostSaved, boostPts)}</b>/pt`)}
+        ${hy.pts ? line(`${esc(hy.hotel || "Hyatt")} via Chase→Hyatt 1:1`, `${hy.pts.toLocaleString()} pts`, "", `${hy.per_night ? hy.per_night.toLocaleString() + "/night · " : ""}${hyCash ? "sticker " + (hyCash / hy.pts * 100).toFixed(2) + "¢/pt vs its " + usd2(hyCash) + " cash rate, but " : ""}no credit, breakfast ~${usd2(hyNet)} → saves ${usd2(hySaved)} = <b>${cpp(hySaved, hy.pts)}</b>/pt`) : ""}
+        ${line("Verdict", `bar ${bar}¢`, "", verdict)}
+      </table></div>`;
   };
   const planNote = RATES && RATES.credit_plan && RATES.credit_plan.note ? esc(RATES.credit_plan.note) : "";
   add(root, () => hotelCard("IST", "🕌 Istanbul — the play", planNote));

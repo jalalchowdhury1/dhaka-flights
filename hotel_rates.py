@@ -419,6 +419,22 @@ CREDIT_PLAN = {"amex_300_to": "SIN",
                         "Istanbul = Ritz-Carlton on CSR The Edit ($250, "
                         "confirmed on the roster 2026-08-23), prepaid before Dec 31")}
 
+# Points routes for the Istanbul stay (Chase read 2026-08-23) — the Total tab
+# prices the play off `edit_total` (drifted by the Ritz's public rate, since
+# the play is bought on The Edit, not FHR) and renders "why not points?" from
+# the rest. Snapshots: Boost points scale with the drifted total at
+# `boost_cents`; the Hyatt figures are the live award read that day.
+POINTS_ROUTES = {"IST": {
+    "read": "2026-08-23",
+    "edit_total": 1285.0,          # Ritz-Carlton, Jan 5–7, 3 guests, all-in on Chase Travel
+    "edit_credit": 250,            # the statement credit a points booking forfeits
+    "boost_cents": 1.65,           # Points Boost on Edit hotels ($1,285 ↔ 77,873 pts)
+    "hyatt": {"hotel": "Park Hyatt Maçka Palas", "key": "parkhyatt_ist",
+              "pts": 50000, "per_night": 25000, "breakfast_cash": 150},
+    "bar_cents": 1.5,              # what the legacy bucket is guaranteed on Ticket ①
+    "future_cents": 2.0,           # what ordinary UR points fetch via Hyatt later
+}}
+
 # Flights plan (Chase Travel read 2026-08-23, docs/research/2026-08-23-chase-marriott-amex-read.md):
 # Ticket ① is sold on Chase as the exact Turkish multi-city ($4,147 vs $4,003
 # on Google) and the cart honours the 1.5× bucket — 127,825 eligible points
@@ -947,6 +963,7 @@ def build(payload, scraped=None, today=None):
         "bookings": BOOKED,
         "credit_plan": CREDIT_PLAN,
         "flight_plan": FLIGHT_PLAN,
+        "points_routes": POINTS_ROUTES,
         "source": ("est_allin_night = Amex FHR portal all-in per paid night "
                    f"(read {PORTAL_DATE}, 2 adults + 1 child) × tonight's public "
                    "Google rate ÷ the public rate on the anchor date; `rate` is "

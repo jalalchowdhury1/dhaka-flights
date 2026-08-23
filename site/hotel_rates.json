@@ -866,5 +866,22 @@
    ]
   }
  ],
- "notes": []
+ "notes": [],
+ "points_routes": {
+  "IST": {
+   "read": "2026-08-23",
+   "edit_total": 1285.0,
+   "edit_credit": 250,
+   "boost_cents": 1.65,
+   "hyatt": {
+    "hotel": "Park Hyatt Ma\u00e7ka Palas",
+    "key": "parkhyatt_ist",
+    "pts": 50000,
+    "per_night": 25000,
+    "breakfast_cash": 150
+   },
+   "bar_cents": 1.5,
+   "future_cents": 2.0
+  }
+ }
 }
