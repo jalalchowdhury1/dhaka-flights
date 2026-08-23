@@ -1456,6 +1456,11 @@ function renderTotal(d) {
     <div class="pass"><div class="scroll-x"><table>${line("Family — no hotel", "$0")}</table></div></div>`));
 
   /* ── Totals ── */
+  const fp = (RATES && RATES.flight_plan) || {};
+  const t1Price = m.ticket1_total != null ? m.ticket1_total : (oj.price_total || 0);
+  const premium = typeof fp.chase_premium === "number" ? fp.chase_premium : 0;
+  const ptsValue = typeof fp.points_1_5x === "number" ? Math.min(fp.points_1_5x * ((fp.cents_1_5x || 1.5) / 100), t1Price + premium) : 0;
+  const flightsCash = flightsTotal + premium - ptsValue;
   const ist = stayFor("IST"), sin = stayFor("SIN");
   // Istanbul's decided payment is split-pay (points_routes.split): ~$300 on
   // the card with the $250 posting against it, the rest in ordinary points at
