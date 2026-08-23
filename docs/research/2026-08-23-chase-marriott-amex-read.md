@@ -60,3 +60,25 @@ Chase→Hyatt 1:1 (Reserve). Hyatt chart went to 5 levels May 2026 (Cat 6 = 20�
 Istanbul = **Ritz-Carlton via The Edit**, prepaid before Dec 31 (uses an expiring $250; Bonvoy stacks) —
 net ≈ $1,285 − 250 − 100 − 120 = $815. Bangkok = Athenee on points (booked). Singapore = Kempinski on Amex.
 Ticket ① = Chase Travel with the 127,825 1.5× points + ~$2,230 cash (or turkish.com cash). Ticket ② = cash direct.
+
+## Addendum (same day, evening): split-pay verified for the Ritz / The Edit
+
+Cart test by Jalal (Ritz IST in cart, 50,000 pts + $562.70 card):
+- Points Boost 1.65¢ applied to a PARTIAL redemption ("redeemed at 1.65x value
+  with Points Boost", saving 32,500 pts) — Boost is not all-or-nothing.
+- The checkout "Your statement credits" modal listed the Edit $500 (max
+  $250/transaction, renews 01/01/2027) and said credits "will be applied to
+  your account when you use your Chase Sapphire Reserve card" — i.e. the card
+  portion of a split payment qualifies.
+- Public precedent (Upgraded Points): ~$300 card + UR points triggered the
+  $250 twice (Ritz-Carlton Philadelphia $299.88 + 39K pts; Thompson Austin
+  $316.43 + 38,194 pts).
+- Bucket order: Chase drains the 1.5× legacy points FIRST at the higher of
+  1.5×/Boost — so the Ritz must be booked AFTER Ticket ① (September), or it
+  eats the Ticket-① bucket for a ~$75 marginal gain.
+- Cart gotcha: it defaulted to a $1,387.70 NON-refundable "Partial Bosphorus
+  View" rate; the plan rate is the cheapest refundable Guest Room (~$1,285).
+
+DECIDED: Ritz = split-pay ~$300 card + ~60K ordinary pts at 1.65¢, Oct–Dec,
+refundable room. Cash out ≈ $50; net incl. perks ≈ −$170 vs the $815
+card-only basis. Trip cash drops ~$4,870 → ~$4,100.
