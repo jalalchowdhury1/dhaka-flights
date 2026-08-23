@@ -38,9 +38,10 @@
    "nights": 4,
    "total": 1497.11,
    "via": "Amex FHR \u00b7 Pay at Check-in",
-   "status": "hold \u2014 $0 down, fully refundable to Jan 31 2027",
-   "next": "rebook as Pay Today on/after Jan 2 2027 for the Jan\u2013Jun $300, then cancel the hold",
-   "confirmation": null
+   "status": "BOOKED 2026-08-23 \u00b7 hold, $0 down \u00b7 free cancel to Jan 31 2027 11:59pm hotel time",
+   "next": "Jan 2 2027: rebook as Pay Today on the Platinum for the Jan\u2013Jun $300, then cancel ref ZO-AX1078-06155",
+   "confirmation": "ZO-AX1078-06155",
+   "confirmation_note": "Amex Travel trip reference (guest Nabila); hotel's own number follows by email"
   }
  },
  "credit_plan": {

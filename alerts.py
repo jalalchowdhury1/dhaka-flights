@@ -74,11 +74,12 @@ REMINDERS = [
      "Dec 31 (Jan 5–7, 3 guests, ~$1,285) to use the 2026 $250 credit"),
     (datetime.date(2027, 1, 2), 0,
      "Kempinski: rebook as Pay Today on the Platinum (Jan–Jun $300), then "
-     "cancel the Pay-at-Check-in hold"),
+     "cancel the Pay-at-Check-in hold (Amex ref ZO-AX1078-06155)"),
     (datetime.date(2027, 1, 26), 3,
      "Athenee free-cancel deadline (conf #88518376) — 11:59pm Bangkok time"),
     (datetime.date(2027, 1, 31), 3,
-     "Kempinski free-cancel deadline — 11:59pm Singapore time"),
+     "Kempinski free-cancel deadline (Amex ref ZO-AX1078-06155) — 11:59pm "
+     "Singapore time"),
 ]
 
 

@@ -304,9 +304,10 @@ BOOKED = {
             "room": "Heritage Room, 1 King (484 sq ft, sleeps 3)",
             "checkin": "2027-02-02", "checkout": "2027-02-06", "nights": 4,
             "total": 1497.11, "via": "Amex FHR · Pay at Check-in",
-            "status": "hold — $0 down, fully refundable to Jan 31 2027",
-            "next": "rebook as Pay Today on/after Jan 2 2027 for the Jan–Jun $300, then cancel the hold",
-            "confirmation": None},
+            "status": "BOOKED 2026-08-23 · hold, $0 down · free cancel to Jan 31 2027 11:59pm hotel time",
+            "next": "Jan 2 2027: rebook as Pay Today on the Platinum for the Jan–Jun $300, then cancel ref ZO-AX1078-06155",
+            "confirmation": "ZO-AX1078-06155",
+            "confirmation_note": "Amex Travel trip reference (guest Nabila); hotel's own number follows by email"},
 }
 
 # Which stay takes the ONE Amex $300 available before the trip (Jan–Jun 2027;

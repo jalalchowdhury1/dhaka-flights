@@ -1386,13 +1386,13 @@ function renderTotal(d) {
         ${line("− card credit", "− " + usd2(h.fixed), "", fixedLabel)}
         ${line("<b>Your net</b>", `<b>${usd2(h.net)}</b>`, "", `${usd2(h.net / h.nights)}/night`)}
       </table></div>
-      <div class="small" style="margin-top:6px">${h.bk ? status(h.bk.status, true) : status("estimate · not booked", false)}
+      <div class="small" style="margin-top:6px">${h.bk ? status(h.bk.status + (h.bk.confirmation ? " · ref " + h.bk.confirmation : ""), true) : status("estimate · not booked", false)}
         ${h.bk && h.bk.next ? `<div class="small muted" style="margin-top:4px">Next: ${esc(h.bk.next)}</div>` : ""}
         ${note ? `<div class="small muted" style="margin-top:4px">${note}</div>` : ""}</div></div>`);
   };
   const planNote = RATES && RATES.credit_plan && RATES.credit_plan.note ? esc(RATES.credit_plan.note) : "";
   add(root, () => hotelCard("IST", "🕌 Istanbul — the play", planNote));
-  add(root, () => hotelCard("SIN", "🇸🇬 Singapore — the play", null));
+  add(root, () => hotelCard("SIN", "🇸🇬 Singapore — booked", null));
 
   /* ── Bangkok: Marriott points, not cash ── */
   const hb = d.hotel || null;
@@ -1431,7 +1431,7 @@ function renderTotal(d) {
       ${line("<b>Cash that leaves your pocket</b>", `<b style="font-size:1.1rem">${usd2(cashNet)}</b>`, "", days ? `${usd2(cashNet / days)}/day over ${days} days (${esc(oj.out_date || "")} → ${esc(oj.ret_date || "")})` : "")}
       ${line("+ Marriott points (Bangkok)", ptsLabel, "", "not cash — the Athenee stay")}
     </table></div>
-    <div class="small" style="margin-top:8px">What is firm vs estimated: ${[bookings.BKK ? "Bangkok is booked on points (refundable)" : null, sin && sin.bk ? "Singapore is a refundable hold" : null].filter(Boolean).join("; ") || "nothing is booked yet"}; flights re-price every night until you buy (~mid/late September); Istanbul is tonight's best-value pick, not a booking. Amex's $300 hotel credit can be earned once per half-year, so only one of the two card stays gets it.</div></div>`));
+    <div class="small" style="margin-top:8px">What is firm vs estimated: ${[bookings.BKK ? "Bangkok is booked on points (refundable)" : null, sin && sin.bk ? "Singapore is booked (Pay-at-Check-in hold, refundable to Jan 31)" : null].filter(Boolean).join("; ") || "nothing is booked yet"}; flights re-price every night until you buy (~mid/late September); Istanbul is tonight's best-value pick, not a booking. Amex's $300 hotel credit can be earned once per half-year, so only one of the two card stays gets it.</div></div>`));
   return root;
 }
 
