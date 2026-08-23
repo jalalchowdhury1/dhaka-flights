@@ -610,3 +610,62 @@ def test_moves_bell_only_rings_when_a_rival_crosses_the_bar():
     moves = hr.rate_moves(prev, new)
     msg = hr.moves_message(moves, prev, new)
     assert "🔔 Park Hyatt" in msg and "🔔 Sanasaryan" not in msg
+
+
+# ── 🔔 Deal bells (2026-08-23, "notify me when and if there's a better hotel deal") ──
+def _drow(key, city, name, rate, net, nights, total, drift, bold=False):
+    return {"key": key, "city": city, "name": name, "rate": rate, "rank": 1 if bold else 2,
+            "bold": bold, "est_allin_night": total / nights, "drift_pct": drift,
+            "stay": {"nights": nights, "total": total, "credits": 0, "net": net}}
+
+
+def test_booked_play_getting_cheaper_rings_once(monkeypatch):
+    """SIN is booked at $1,497.11 (BOOKED). A −8% public drift = −$120 on the
+    booked total → crosses REBOOK_BAR; the next night at −9% it stays quiet."""
+    monkeypatch.setattr(hr, "BOOKED", {"SIN": {"key": "kempinski_sin", "total": 1497.11,
+                                               "via": "Amex FHR · Pay at Check-in",
+                                               "confirmation": "ZO-AX1078-06155"}})
+    prev = {"rows": [_drow("kempinski_sin", "SIN", "The Capitol Kempinski", 287, 662, 4, 1327, 0.0, bold=True)]}
+    new = {"rows": [_drow("kempinski_sin", "SIN", "The Capitol Kempinski", 264, 600, 4, 1221, -8.0, bold=True)]}
+    bells = hr.deal_alerts(prev, new)
+    assert len(bells) == 1
+    assert "The Capitol Kempinski got cheaper: your booked $1,497 now prices ≈ $1,377 (−$120)" in bells[0]
+    assert "THEN cancel ZO-AX1078-06155" in bells[0]
+    assert hr.deal_message(prev, new).startswith("🏨 <b>Hotel deal</b>")
+    # already under the bar last night → no repeat bell
+    later = {"rows": [_drow("kempinski_sin", "SIN", "The Capitol Kempinski", 261, 590, 4, 1207, -9.0, bold=True)]}
+    assert hr.deal_alerts(new, later) == []
+    assert hr.deal_message(new, later) is None
+    # a −5% night (−$75) never crosses
+    small = {"rows": [_drow("kempinski_sin", "SIN", "The Capitol Kempinski", 273, 630, 4, 1261, -5.0, bold=True)]}
+    assert hr.deal_alerts(prev, small) == []
+
+
+def test_unbooked_play_under_its_anchor_rings_with_the_lock_hint(monkeypatch):
+    monkeypatch.setattr(hr, "BOOKED", {})
+    prev = {"rows": [_drow("ritz_ist", "IST", "The Ritz-Carlton Istanbul", 500, 815, 2, 1285, 0.0, bold=True)]}
+    new = {"rows": [_drow("ritz_ist", "IST", "The Ritz-Carlton Istanbul", 450, 700, 2, 1156.5, -10.0, bold=True)]}
+    bells = hr.deal_alerts(prev, new)
+    assert len(bells) == 1 and "$128 under its portal anchor" in bells[0]
+    assert "chase.com/travel" in bells[0]
+    assert hr.deal_alerts(new, new) == []          # no crossing when nothing changed
+
+
+def test_rival_bell_rings_on_a_quiet_night_without_a_mover(monkeypatch):
+    """A rival can creep under the bar through moves too small to be a
+    'mover' (< 10% / $40) — deal_message still rings."""
+    monkeypatch.setattr(hr, "BOOKED", {"SIN": {"key": "kempinski_sin", "total": 1497.11,
+                                               "via": "Amex FHR", "confirmation": "ZO-AX1078-06155"}})
+    play = _drow("kempinski_sin", "SIN", "The Capitol Kempinski", 287, 662, 4, 1327, 0.0, bold=True)
+    prev = {"rows": [play, _drow("shangrila_sin", "SIN", "Shangri-La Singapore", 300, 520, 4, 1300, 0.0)]}
+    new = {"rows": [play, _drow("shangrila_sin", "SIN", "Shangri-La Singapore", 290, 505, 4, 1260, -3.0)]}
+    assert hr.rate_moves(prev, new) == []           # $10 / 3% — not a mover
+    msg = hr.deal_message(prev, new)
+    assert "🔔 Shangri-La Singapore nets $157 less than the play (The Capitol Kempinski)" in msg
+    assert "book it refundable FIRST, then cancel ZO-AX1078-06155" in msg
+
+
+def test_deal_bells_are_none_safe_on_rows_without_drift():
+    assert hr.deal_alerts(PREV, NEW) == [ln for ln in hr.rival_bells(PREV, NEW).values()]
+    assert hr.play_drop_bells(None, NEW) == []
+    assert hr.deal_message(None, {"rows": []}) is None

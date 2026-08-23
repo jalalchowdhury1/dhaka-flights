@@ -62,31 +62,82 @@ def stage(today: datetime.date) -> str:
 # the prices are doing. (date, lead days, text). Mirrors the Google Calendar
 # events created the same day; this is the channel Jalal actually reads.
 REMINDERS = [
+    # (date, lead days, one-line text for the brief, step-by-step for the day-of push)
     (datetime.date(2026, 9, 14), 2,
      "buy the flights this week — Ticket ① Turkish on Chase Travel with ONLY "
      "the 127,825 points eligible for 1.5× (cart must show ~$1,917 covered) + "
-     "cash, or turkish.com cash; Ticket ② cash direct (US-Bangla + Scoot)"),
+     "cash, or turkish.com cash; Ticket ② cash direct (US-Bangla + Scoot)",
+     ["Ticket ①: chase.com/travel → Flights → Multi-city: BOS→IST Mon Jan 4 · "
+      "IST→DAC Thu Jan 7 · SIN→BOS Sat Feb 6, 2 adults + 1 child. Pick the "
+      "Turkish nonstop itinerary the tracker shows (TK 82 / 712 / 23+81).",
+      "In the cart choose pay-with-points: it MUST show ~127,825 pts covering "
+      "~$1,917 (the 1.5× bucket), cash for the rest. If it only offers 1¢, "
+      "stop — buy the same itinerary on turkish.com with the Sapphire Reserve.",
+      "Same day, Ticket ② cash direct: usbangla-airlines.com DAC→BKK Jan 28 "
+      "morning; flyscoot.com BKK→SIN Feb 2 morning — add a checked bag on Scoot.",
+      "Send me the ticket numbers and I stamp them on the site, Notion and the "
+      "calendar."]),
     (datetime.date(2026, 9, 15), 0,
      "email the Athenee for suite + Club-lounge supplement quotes "
-     "(conf #88518376)"),
+     "(conf #88518376)",
+     ["Email The Athenee Bangkok reservations quoting conf #88518376 "
+      "(Jan 28–Feb 2, 2 adults + 1 child, Platinum Elite): ask the per-night "
+      "supplement for (a) a suite and (b) a Club-floor room with Club lounge "
+      "access, in THB. Say 'draft it' and I write the email.",
+      "Fair (~$80–150/night) → accept in writing. Greedy → decline and keep the "
+      "Platinum upgrade lottery at check-in. Never split the 5-night award.",
+      "Tell me the quote — I update the money table."]),
     (datetime.date(2026, 12, 28), 3,
      "book the Ritz-Carlton Istanbul prepaid via Chase Travel / The Edit by "
-     "Dec 31 (Jan 5–7, 3 guests, ~$1,285) to use the 2026 $250 credit"),
+     "Dec 31 (Jan 5–7, 3 guests, ~$1,285) to use the 2026 $250 credit",
+     ["chase.com/travel → Hotels → Istanbul, Jan 5–7, 2 adults + 1 child (5) "
+      "→ The Ritz-Carlton, Istanbul (The Edit badge).",
+      "Pick the cheapest REFUNDABLE room that sleeps 3 (~$1,285 all-in at the "
+      "August read). Pay with the Sapphire Reserve card, NOT points — Points "
+      "Boost would forfeit the $250.",
+      "The $250 Edit credit posts by itself; the charge must land by Dec 31. "
+      "Add your Bonvoy number at booking (points + Platinum perks stack).",
+      "Send me the confirmation number."]),
     (datetime.date(2027, 1, 2), 0,
      "Kempinski: rebook as Pay Today on the Platinum (Jan–Jun $300), then "
-     "cancel the Pay-at-Check-in hold (Amex ref ZO-AX1078-06155)"),
+     "cancel the Pay-at-Check-in hold (Amex ref ZO-AX1078-06155)",
+     ["amextravel.com (Nabila's login) → Hotels → Singapore Feb 2–6, 2 adults "
+      "+ 1 child (5) → The Capitol Kempinski → Room, 1 King Bed (Heritage).",
+      "Choose 'Book and Pay Today' on the Platinum (…1004), guest Nabila. "
+      "Expect ~$1,497 with the free 4th night; if it is over ~$1,650 or the "
+      "promo is gone, keep the hold and skip the $300.",
+      "Once the new confirmation arrives: Manage My Trips → cancel ref "
+      "ZO-AX1078-06155 (free until Jan 31).",
+      "Send me the new ref. The Jan–Jun $300 credit posts within ~2 "
+      "statements."]),
     (datetime.date(2027, 1, 26), 3,
-     "Athenee free-cancel deadline (conf #88518376) — 11:59pm Bangkok time"),
+     "Athenee free-cancel deadline (conf #88518376) — 11:59pm Bangkok time",
+     ["Keeping the Athenee? Check the Stays tab and any 🔔 alerts first.",
+      "Keeping → nothing to do, the award stands. Switching → book the "
+      "replacement FIRST, then cancel at marriott.com → Trips → #88518376 "
+      "before 11:59 pm Bangkok time (= 11:59 am Eastern, Jan 26)."]),
     (datetime.date(2027, 1, 31), 3,
      "Kempinski free-cancel deadline (Amex ref ZO-AX1078-06155) — 11:59pm "
-     "Singapore time"),
+     "Singapore time",
+     ["Make sure exactly ONE Kempinski booking remains: the Jan 2 prepaid one "
+      "(hold ZO-AX1078-06155 cancelled) — or the hold itself if you skipped "
+      "the rebook.",
+      "Deadline 11:59 pm Singapore = 10:59 am Eastern on Jan 31. Cancel "
+      "anything unwanted at amextravel.com → Manage My Trips."]),
 ]
+
+
+def due_reminders(today: datetime.date) -> list:
+    """[(index, text, steps)] for reminders whose day is TODAY — the day-of
+    push with the what-to-do steps (notify_telegram.send_due_reminders)."""
+    return [(i, text, list(steps)) for i, (when, _lead, text, steps)
+            in enumerate(REMINDERS) if when == today]
 
 
 def reminders(today: datetime.date) -> list:
     """⏰ lines due today or within their lead window, nearest first."""
     out = []
-    for when, lead, text in REMINDERS:
+    for when, lead, text, _steps in REMINDERS:
         left = (when - today).days
         if 0 <= left <= lead:
             tag = "TODAY" if left == 0 else ("tomorrow" if left == 1 else f"in {left} days")

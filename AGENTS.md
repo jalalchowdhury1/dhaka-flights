@@ -510,6 +510,36 @@ Everything lands in the payload (`alerts`, `price_context`, `countdown`,
 `notify_telegram.build_message(payload)` takes the whole payload for that
 reason.
 
+## 4e. Dated reminders + hotel deal bells (2026-08-23)
+
+Jalal: "remind me when it's time on telegram what to do" / "notify me when and
+if there's a better hotel deal". Two channels, both Telegram:
+
+- **⏰ Reminders** — `alerts.REMINDERS` is a list of `(date, lead, text,
+  steps)`. The one-line `text` rides in the nightly brief for `lead` days
+  before the date (`alerts.reminders`). On the day itself
+  `notify_telegram.send_due_reminders()` pushes a **standalone** message with
+  the numbered `steps` (what to click, what the cart must show, which ref to
+  cancel). It is called at the TOP of `run_daily.main()` (before the
+  already-ran stamp, before the scrape can fail) and again from
+  `run_hotel_rates.main()` at 5 am as a fallback; `.reminders_sent`
+  (gitignored, `date:index` lines) makes the second caller a no-op and a
+  failed send is never stamped. When a booking is made, cancelled or a ref
+  changes, edit the steps — they quote confirmation numbers verbatim.
+- **🔔 Deal bells** (`hotel_rates.deal_alerts`) ring ONCE, on the night a bar
+  is crossed (compared with the previous night's JSON), never nightly:
+  - `rival_bells`: a rival in the same city nets ≥ `SWAP_BAR` ($150) under the
+    play and did not last night → "book it refundable FIRST, then cancel
+    <ref>" (the rule in §5).
+  - `play_drop_bells`: the play itself got cheaper by ≥ `REBOOK_BAR` ($100).
+    Booked city (`BOOKED[city].key == play.key`): the booked total × tonight's
+    public drift vs what is held → rebook, then cancel the ref. Unbooked:
+    tonight's stay total vs its portal-anchor total → `LOCK_HINT[city]`.
+  - They ride at the end of the 🏨 movers message when rates moved, and go out
+    alone as `deal_message` on a quiet night (a rival can creep under the bar
+    through moves smaller than `MOVE_ALERT_PCT/ABS`). Rows without
+    `drift_pct` (stale/seeded) never ring.
+
 ## 5. Gotchas / hard rules
 
 1. **Google shows the TOTAL price for all selected passengers** (verified 2026-07-15:

@@ -69,6 +69,15 @@ def _fold_warnings(payload, findings, mark, log_prefix):
 
 
 def main():
+    # ⏰ Day-of reminders go out FIRST and on their own — before the scrape can
+    # fail or the already-ran stamp can short-circuit. Idempotent (stamped).
+    try:
+        from notify_telegram import send_due_reminders
+        if not send_due_reminders():
+            print("WARN: reminder push failed — the 5 am hotel job retries it")
+    except Exception as e:                     # noqa: BLE001 — never kill the run
+        print(f"WARN: reminder push crashed (run continues): {e}")
+
     if already_ran_today():
         print("=== Already ran today, skipping ===")
         return

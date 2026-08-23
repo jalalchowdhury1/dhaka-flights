@@ -206,6 +206,12 @@ def _load_payload():
 
 def main():
     print("=== Hotel rate refresh starting ===")
+    # ⏰ Fallback for the midnight job's day-of reminder push (idempotent).
+    try:
+        from notify_telegram import send_due_reminders
+        send_due_reminders()
+    except Exception as e:                       # noqa: BLE001
+        print(f"WARN: reminder push crashed (run continues): {e}")
     payload = _load_payload()
     windows = hotel_rates.stay_windows(payload)
     for city, w in windows.items():
@@ -259,11 +265,17 @@ def main():
     # Telegram at ~5am, before wake-up — silent when nothing moved. The whole
     # path (including rate_moves itself) is shielded, so a bad/garbage rate
     # can never abort main() before the push.
+    # 🔔 Deal bells (2026-08-23, "notify me when and if there's a better hotel
+    # deal") ride inside the movers message when rates moved, and go out on
+    # their own on a quiet night — a rival can creep under the bar, or the
+    # booked hotel can get cheaper, through moves too small to be "movers".
     try:
         moves = hotel_rates.rate_moves(prev, data)
-        if moves:
+        msg = (hotel_rates.moves_message(moves, prev, data) if moves
+               else hotel_rates.deal_message(prev, data))
+        if msg:
             from notify_telegram import send_message
-            send_message(hotel_rates.moves_message(moves, prev, data))
+            send_message(msg)
     except Exception as e:                       # noqa: BLE001
         print(f"WARN: telegram moves alert failed: {e}")
 

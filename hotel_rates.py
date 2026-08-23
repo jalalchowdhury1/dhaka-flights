@@ -100,16 +100,137 @@ def rate_moves(prev, new):
     return out
 
 
-SWAP_BAR = 150   # $ a rival must net under the play for the alert to ring a bell
+SWAP_BAR = 150    # $ a rival must net under the play for the alert to ring a bell
+REBOOK_BAR = 100  # $ the play's own stay must fall under what you hold (or its
+                  # anchor) before the "rebook it cheaper" bell rings
+
+_CITY_LABEL = {"IST": "🕌 Istanbul", "SIN": "🇸🇬 Singapore"}
+
+# How to lock a NOT-yet-booked play when it gets cheaper (per city).
+LOCK_HINT = {
+    "IST": ("lock it on chase.com/travel (The Edit, refundable, card not "
+            "points) — it must be prepaid by Dec 31 anyway"),
+}
+
+
+def _net(row):
+    v = ((row or {}).get("stay") or {}).get("net")
+    return v if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+
+
+def _city_rows(data, city):
+    rows = [r for r in (data or {}).get("rows", []) if r.get("city") == city and r.get("stay")]
+    play = next((r for r in rows if r.get("bold")), None)
+    return rows, play
+
+
+def _drift_factor(row):
+    d = (row or {}).get("drift_pct")
+    if isinstance(d, (int, float)) and not isinstance(d, bool) and d > -100:
+        return 1 + d / 100
+    return None
+
+
+def rival_bells(prev, new):
+    """{city: 🔔 line} for a rival that CROSSED the swap bar tonight — nets
+    ≥ SWAP_BAR under the play now, and did not last night. Sanasaryan Han
+    sits ~$230 under the Istanbul play every night by design (cheaper,
+    lesser) — a bell that rings nightly is no bell."""
+    by_key_prev = {r.get("key"): r for r in (prev or {}).get("rows", [])}
+    out = {}
+    for city in _CITY_LABEL:
+        rows, play = _city_rows(new, city)
+        if not play or _net(play) is None:
+            continue
+        prev_play_net = _net(by_key_prev.get(play.get("key")))
+        rivals = []
+        for r in rows:
+            if r is play or _net(r) is None:
+                continue
+            d = _net(play) - _net(r)
+            was_net = _net(by_key_prev.get(r.get("key")))
+            d_was = (prev_play_net - was_net
+                     if prev_play_net is not None and was_net is not None else None)
+            if d >= SWAP_BAR and (d_was is None or d_was < SWAP_BAR):
+                rivals.append((d, r))
+        if rivals:
+            d, r = max(rivals, key=lambda t: t[0])
+            bk = BOOKED.get(city) or {}
+            line = (f"🔔 {r['name']} nets ${d:,.0f} less than the play "
+                    f"({play['name']}) — worth a look")
+            line += (f"\n   → check it on the Stays tab; if it holds up, book it "
+                     f"refundable FIRST, then cancel {bk.get('confirmation')}"
+                     if bk.get("confirmation") else
+                     "\n   → check it on the Stays tab before anything is booked")
+            out[city] = line
+    return out
+
+
+def play_drop_bells(prev, new):
+    """🔔 lines for the play itself getting cheaper — crossing REBOOK_BAR
+    tonight. Booked (BOOKED[city] on the play's key): the booked total
+    drifted by tonight's public move vs what you hold → rebook, then cancel.
+    Not booked: tonight's stay total vs its portal-anchor total → lock it."""
+    by_key_prev = {r.get("key"): r for r in (prev or {}).get("rows", [])}
+    out = []
+    for city in _CITY_LABEL:
+        _rows, play = _city_rows(new, city)
+        if not play:
+            continue
+        was = by_key_prev.get(play.get("key")) or {}
+        bk = BOOKED.get(city) or {}
+        booked = bk if bk.get("key") == play.get("key") and _num(bk.get("total")) else None
+        f_now, f_was = _drift_factor(play), _drift_factor(was)
+        if booked:
+            if f_now is None:
+                continue
+            est = booked["total"] * f_now
+            saving = booked["total"] - est
+            saving_was = booked["total"] * (1 - f_was) if f_was is not None else None
+            if saving >= REBOOK_BAR and (saving_was is None or saving_was < REBOOK_BAR):
+                out.append(
+                    f"🔔 {play['name']} got cheaper: your booked ${booked['total']:,.0f} "
+                    f"now prices ≈ ${est:,.0f} (−${saving:,.0f})"
+                    f"\n   → rebook the same room/dates the same way ({bk.get('via', 'same program')}), "
+                    f"THEN cancel {bk.get('confirmation') or 'the old booking'}")
+            continue
+        total = (play.get("stay") or {}).get("total")
+        if f_now is None or not _num(total):
+            continue
+        anchor_total = total / f_now
+        saving = anchor_total - total
+        was_total = (was.get("stay") or {}).get("total")
+        saving_was = (was_total / f_was - was_total
+                      if f_was is not None and _num(was_total) else None)
+        if saving >= REBOOK_BAR and (saving_was is None or saving_was < REBOOK_BAR):
+            hint = LOCK_HINT.get(city, "see the Stays tab")
+            out.append(
+                f"🔔 {play['name']} is ${saving:,.0f} under its portal anchor "
+                f"(${anchor_total:,.0f} → ≈ ${total:,.0f} for the stay)\n   → {hint}")
+    return out
+
+
+def deal_alerts(prev, new):
+    """Every 🔔 line that should ring tonight (rivals + play drops)."""
+    return list(rival_bells(prev, new).values()) + play_drop_bells(prev, new)
+
+
+def deal_message(prev, new):
+    """The quiet-night bell: None unless something crossed a bar tonight."""
+    bells = deal_alerts(prev, new)
+    if not bells:
+        return None
+    return "🏨 <b>Hotel deal</b> — something crossed a bar overnight\n" + "\n".join(bells)
 
 
 def moves_message(moves, prev=None, new=None):
     """The 🏨 movers alert. With the before/after JSON (v2, 2026-08-23) it
     speaks in what you would PAY — net for the tracked stay — grouped by
     city, and ends with a verdict per city: play unchanged, or a rival now
-    nets ≥ SWAP_BAR under it. The public Google rate that actually moved is
-    kept as the trailing detail. Without rows it is the original flat line.
-    HTML parse mode (bold only); None when quiet."""
+    nets ≥ SWAP_BAR under it (rival_bells), plus any play-drop bell. The
+    public Google rate that actually moved is kept as the trailing detail.
+    Without rows it is the original flat line. HTML parse mode (bold only);
+    None when quiet."""
     if not moves:
         return None
     if not (new and new.get("rows")):
@@ -122,9 +243,8 @@ def moves_message(moves, prev=None, new=None):
 
     by_name_new = {r.get("name"): r for r in new["rows"]}
     by_key_prev = {r.get("key"): r for r in (prev or {}).get("rows", [])}
-    cities = {"IST": "🕌 Istanbul", "SIN": "🇸🇬 Singapore"}
     lines = ["🏨 <b>Hotel moves overnight</b> — what you'd pay for the stay"]
-    for city, label in cities.items():
+    for city, label in _CITY_LABEL.items():
         city_moves = [(n, o, r) for n, o, r in moves
                       if (by_name_new.get(n) or {}).get("city") == city]
         if not city_moves:
@@ -140,35 +260,14 @@ def moves_message(moves, prev=None, new=None):
                    if _num(st.get("net")) or st.get("net") == 0 else "net —") \
                 if st and wst else "net —"
             lines.append(f"  {arrow}{pct}% {name} · {net} · public ${o:,.0f}→${n:,.0f}")
-    # Verdict per city: does any rival now net SWAP_BAR under the play?
-    for city, label in cities.items():
-        rows = [r for r in new["rows"] if r.get("city") == city and r.get("stay")]
-        play = next((r for r in rows if r.get("bold")), None)
+    rivals = rival_bells(prev, new)
+    for city, label in _CITY_LABEL.items():
+        _rows, play = _city_rows(new, city)
         if not play:
             continue
-        # Ring only for a rival that CROSSED the bar tonight. Sanasaryan Han
-        # sits ~$230 under the Istanbul play every night by design (cheaper,
-        # lesser) — a bell that rings nightly is no bell.
-        prev_play = by_key_prev.get(play.get("key")) or {}
-        prev_play_net = (prev_play.get("stay") or {}).get("net")
-        rivals = []
-        for r in rows:
-            if r is play or not isinstance(r["stay"].get("net"), (int, float)):
-                continue
-            d = play["stay"]["net"] - r["stay"]["net"]
-            was = by_key_prev.get(r.get("key")) or {}
-            was_net = (was.get("stay") or {}).get("net")
-            d_was = (prev_play_net - was_net
-                     if isinstance(prev_play_net, (int, float)) and isinstance(was_net, (int, float))
-                     else None)
-            if d >= SWAP_BAR and (d_was is None or d_was < SWAP_BAR):
-                rivals.append((d, r))
-        if rivals:
-            d, r = max(rivals, key=lambda t: t[0])
-            lines.append(f"🔔 {r['name']} nets ${d:,.0f} less than the play "
-                         f"({play['name']}) — worth a look")
-        else:
-            lines.append(f"{label.split(' ', 1)[1]}: play unchanged ({play['name']})")
+        lines.append(rivals.get(city) or
+                     f"{label.split(' ', 1)[1]}: play unchanged ({play['name']})")
+    lines.extend(play_drop_bells(prev, new))
     return "\n".join(lines)
 
 # The shortlist. `query` is the Google Hotels search string — keep it SHORT;

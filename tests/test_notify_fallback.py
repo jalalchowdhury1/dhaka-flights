@@ -162,3 +162,41 @@ def test_fire_alert_survives_with_no_other_expandable_content():
     core, _, rest = msg.partition("<blockquote")
     assert "🔥 Ticket ① new low" not in core
     assert "🔥 Ticket ① new low: $3,622 (prev $3,647)" in rest
+
+
+# ── ⏰ day-of push is standalone and idempotent (2026-08-23) ─────────────────
+def test_reminder_message_lists_numbered_steps_and_escapes():
+    import datetime as dt
+    import notify_telegram as nt
+    assert nt.reminder_message(dt.date(2027, 1, 1)) is None
+    msg = nt.reminder_message(dt.date(2027, 1, 2))
+    assert msg.startswith("⏰ <b>TODAY — Kempinski")
+    assert "\n1. amextravel.com" in msg and "\n3. " in msg
+    assert "&amp;" not in msg or "&" in msg        # esc_html ran (no raw '<' from steps)
+
+
+def test_send_due_reminders_sends_once_per_day(tmp_path):
+    import datetime as dt
+    import notify_telegram as nt
+    sent = []
+    stamp = tmp_path / ".reminders_sent"
+    ok = nt.send_due_reminders(dt.date(2027, 1, 2), stamp_path=str(stamp),
+                               send=lambda m: sent.append(m) or True)
+    assert ok and len(sent) == 1 and "Pay Today" in sent[0]
+    # second caller (the 5 am hotel job) is a no-op
+    assert nt.send_due_reminders(dt.date(2027, 1, 2), stamp_path=str(stamp),
+                                 send=lambda m: sent.append(m) or True)
+    assert len(sent) == 1
+    # nothing due → True, nothing sent, no stamp growth
+    assert nt.send_due_reminders(dt.date(2027, 1, 3), stamp_path=str(stamp),
+                                 send=lambda m: sent.append(m) or True)
+    assert len(sent) == 1 and stamp.read_text().count("\n") == 1
+
+
+def test_send_due_reminders_does_not_stamp_a_failed_send(tmp_path):
+    import datetime as dt
+    import notify_telegram as nt
+    stamp = tmp_path / ".reminders_sent"
+    assert not nt.send_due_reminders(dt.date(2027, 1, 2), stamp_path=str(stamp),
+                                     send=lambda m: False)
+    assert not stamp.exists()

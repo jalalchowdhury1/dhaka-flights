@@ -50,6 +50,57 @@ def esc_html(s) -> str:
             .replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
 
 
+REMINDER_STAMP = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              ".reminders_sent")
+
+
+def reminder_message(today=None) -> Optional[str]:
+    """⏰ day-of push (2026-08-23, Jalal: "remind me when it's time on
+    Telegram what to do"): every reminder due TODAY with its numbered steps.
+    None when nothing is due. Stands alone — NOT part of the brief — so it
+    survives a night when the scrape fails."""
+    import datetime
+    import alerts
+    due = alerts.due_reminders(today or datetime.date.today())
+    if not due:
+        return None
+    parts = []
+    for _i, text, steps in due:
+        parts.append(f"⏰ <b>TODAY — {esc_html(text)}</b>")
+        parts.extend(f"{n}. {esc_html(step)}" for n, step in enumerate(steps, 1))
+        parts.append("")
+    return "\n".join(parts).rstrip()
+
+
+def _stamped(path) -> set:
+    try:
+        with open(path) as f:
+            return {line.strip() for line in f if line.strip()}
+    except OSError:
+        return set()
+
+
+def send_due_reminders(today=None, stamp_path=REMINDER_STAMP, send=None) -> bool:
+    """Push today's reminders ONCE. Both nightly jobs call this (midnight
+    flights run, 5 am hotel run) so a failed scrape can't swallow a deadline;
+    the stamp file makes the second caller a no-op. True when a message went
+    out (or nothing was due)."""
+    import datetime
+    import alerts
+    today = today or datetime.date.today()
+    send = send or send_message
+    keys = [f"{today.isoformat()}:{i}" for i, _t, _s in alerts.due_reminders(today)]
+    done = _stamped(stamp_path)
+    if not keys or all(k in done for k in keys):
+        return True
+    msg = reminder_message(today)
+    if not msg or not send(msg):
+        return False
+    with open(stamp_path, "a") as f:
+        f.write("".join(k + "\n" for k in keys if k not in done))
+    return True
+
+
 def send_message(text: str, parse_mode: str = "HTML") -> bool:
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     payload = json.dumps({

@@ -199,3 +199,16 @@ def test_headlines_include_due_reminders():
     e = _entry("2027-01-25", BUY_BELOW + 500, t1=3900)
     lines = headlines(e, HIST + [e], dt.date(2027, 1, 25))
     assert any("Athenee" in l for l in lines)
+
+
+# ── Day-of reminders carry their steps (2026-08-23, "remind me … what to do") ──
+def test_due_reminders_only_on_the_day_and_with_steps():
+    import datetime as dt
+    from alerts import due_reminders, REMINDERS
+    assert due_reminders(dt.date(2027, 1, 1)) == []
+    due = due_reminders(dt.date(2027, 1, 2))
+    assert len(due) == 1
+    idx, text, steps = due[0]
+    assert "Kempinski" in text and "ZO-AX1078-06155" in text
+    assert len(steps) >= 3 and any("Pay Today" in s for s in steps)
+    assert all(len(r) == 4 and isinstance(r[3], (list, tuple)) and r[3] for r in REMINDERS)
