@@ -557,3 +557,52 @@ def test_bookings_ride_in_the_json_and_point_at_shortlist_keys(tmp_path, monkeyp
     keys = {e["key"] for e in hr.SHORTLIST}
     for city, b in hr.BOOKED.items():
         assert b["key"] in keys and b["nights"] > 0 and b["total"] > 0, city
+
+
+# ── Movers alert v2 (2026-08-23, Jalal: "clean this up") ────────────────────
+def _row(key, city, name, rate, est, net, nights, rank, bold=False):
+    return {"key": key, "city": city, "name": name, "rate": rate, "rank": rank,
+            "bold": bold, "est_allin_night": est,
+            "stay": {"nights": nights, "total": est * nights, "credits": 0, "net": net}}
+
+PREV = {"rows": [
+    _row("shangrila_ist", "IST", "Shangri-La Bosphorus", 398, 595.13, 670, 2, 1, bold=True),
+    _row("parkhyatt_ist", "IST", "Park Hyatt Maçka Palas", 403, 566.99, 614, 2, 4),
+    _row("kempinski_sin", "SIN", "The Capitol Kempinski", 287, 442.36, 662, 4, 1, bold=True),
+    _row("fs_sin", "SIN", "Four Seasons Singapore", 309, 463.39, 1214, 4, 3),
+]}
+NEW = {"rows": [
+    _row("shangrila_ist", "IST", "Shangri-La Bosphorus", 398, 595.13, 670, 2, 1, bold=True),
+    _row("parkhyatt_ist", "IST", "Park Hyatt Maçka Palas", 346, 486.79, 454, 2, 4),
+    _row("kempinski_sin", "SIN", "The Capitol Kempinski", 287, 442.36, 662, 4, 1, bold=True),
+    _row("fs_sin", "SIN", "Four Seasons Singapore", 355, 532.38, 1490, 4, 3),
+]}
+
+
+def test_moves_message_v2_groups_by_city_and_talks_in_net():
+    moves = hr.rate_moves(PREV, NEW)
+    msg = hr.moves_message(moves, PREV, NEW)
+    assert msg.startswith("🏨 <b>Hotel moves overnight</b>")
+    assert "🕌 Istanbul" in msg and "🇸🇬 Singapore" in msg
+    assert msg.index("🕌 Istanbul") < msg.index("🇸🇬 Singapore")
+    # one line per hotel: arrow, name, what you'd PAY (net for the stay), then the public move
+    assert "▼14% Park Hyatt Maçka Palas · net 2n $614 → $454" in msg
+    assert "▲15% Four Seasons Singapore · net 4n $1,214 → $1,490" in msg
+    assert "public $403→$346" in msg and "public $309→$355" in msg
+    # the verdict: Park Hyatt now nets $216 under the Istanbul play → a swap candidate
+    assert "🔔 Park Hyatt Maçka Palas nets $216 less than the play (Shangri-La Bosphorus)" in msg
+    assert "Singapore: play unchanged (The Capitol Kempinski)" in msg
+
+
+def test_moves_message_v2_falls_back_to_the_flat_line_without_rows():
+    msg = hr.moves_message([("St. Regis Singapore", 248, 218)])
+    assert msg == "🏨 Hotel rate moves: St. Regis Singapore $248→$218 (▼12%)"
+
+
+def test_moves_bell_only_rings_when_a_rival_crosses_the_bar():
+    """Sanasaryan sits under the Istanbul play every night by design."""
+    prev = {"rows": PREV["rows"] + [_row("sanasaryan", "IST", "Sanasaryan Han", 353, 478, 436, 2, 3)]}
+    new = {"rows": NEW["rows"] + [_row("sanasaryan", "IST", "Sanasaryan Han", 340, 460, 400, 2, 3)]}
+    moves = hr.rate_moves(prev, new)
+    msg = hr.moves_message(moves, prev, new)
+    assert "🔔 Park Hyatt" in msg and "🔔 Sanasaryan" not in msg

@@ -263,7 +263,7 @@ def main():
         moves = hotel_rates.rate_moves(prev, data)
         if moves:
             from notify_telegram import send_message
-            send_message(hotel_rates.moves_message(moves))
+            send_message(hotel_rates.moves_message(moves, prev, data))
     except Exception as e:                       # noqa: BLE001
         print(f"WARN: telegram moves alert failed: {e}")
 

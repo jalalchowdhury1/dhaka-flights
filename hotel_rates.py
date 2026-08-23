@@ -100,16 +100,76 @@ def rate_moves(prev, new):
     return out
 
 
-def moves_message(moves):
-    """One compact Telegram line for the movers, or None when quiet."""
+SWAP_BAR = 150   # $ a rival must net under the play for the alert to ring a bell
+
+
+def moves_message(moves, prev=None, new=None):
+    """The 🏨 movers alert. With the before/after JSON (v2, 2026-08-23) it
+    speaks in what you would PAY — net for the tracked stay — grouped by
+    city, and ends with a verdict per city: play unchanged, or a rival now
+    nets ≥ SWAP_BAR under it. The public Google rate that actually moved is
+    kept as the trailing detail. Without rows it is the original flat line.
+    HTML parse mode (bold only); None when quiet."""
     if not moves:
         return None
-    parts = []
-    for name, o, n in moves:
-        pct = round(abs(n - o) / o * 100)
-        arrow = "▼" if n < o else "▲"
-        parts.append(f"{name} ${o:,.0f}→${n:,.0f} ({arrow}{pct}%)")
-    return "🏨 Hotel rate moves: " + " · ".join(parts)
+    if not (new and new.get("rows")):
+        parts = []
+        for name, o, n in moves:
+            pct = round(abs(n - o) / o * 100)
+            arrow = "▼" if n < o else "▲"
+            parts.append(f"{name} ${o:,.0f}→${n:,.0f} ({arrow}{pct}%)")
+        return "🏨 Hotel rate moves: " + " · ".join(parts)
+
+    by_name_new = {r.get("name"): r for r in new["rows"]}
+    by_key_prev = {r.get("key"): r for r in (prev or {}).get("rows", [])}
+    cities = {"IST": "🕌 Istanbul", "SIN": "🇸🇬 Singapore"}
+    lines = ["🏨 <b>Hotel moves overnight</b> — what you'd pay for the stay"]
+    for city, label in cities.items():
+        city_moves = [(n, o, r) for n, o, r in moves
+                      if (by_name_new.get(n) or {}).get("city") == city]
+        if not city_moves:
+            continue
+        lines.append(label)
+        for name, o, n in city_moves:
+            row = by_name_new[name]
+            was = by_key_prev.get(row.get("key")) or {}
+            st, wst = row.get("stay") or {}, was.get("stay") or {}
+            pct = round(abs(n - o) / o * 100)
+            arrow = "▼" if n < o else "▲"
+            net = (f"net {st['nights']}n ${wst['net']:,.0f} → ${st['net']:,.0f}"
+                   if _num(st.get("net")) or st.get("net") == 0 else "net —") \
+                if st and wst else "net —"
+            lines.append(f"  {arrow}{pct}% {name} · {net} · public ${o:,.0f}→${n:,.0f}")
+    # Verdict per city: does any rival now net SWAP_BAR under the play?
+    for city, label in cities.items():
+        rows = [r for r in new["rows"] if r.get("city") == city and r.get("stay")]
+        play = next((r for r in rows if r.get("bold")), None)
+        if not play:
+            continue
+        # Ring only for a rival that CROSSED the bar tonight. Sanasaryan Han
+        # sits ~$230 under the Istanbul play every night by design (cheaper,
+        # lesser) — a bell that rings nightly is no bell.
+        prev_play = by_key_prev.get(play.get("key")) or {}
+        prev_play_net = (prev_play.get("stay") or {}).get("net")
+        rivals = []
+        for r in rows:
+            if r is play or not isinstance(r["stay"].get("net"), (int, float)):
+                continue
+            d = play["stay"]["net"] - r["stay"]["net"]
+            was = by_key_prev.get(r.get("key")) or {}
+            was_net = (was.get("stay") or {}).get("net")
+            d_was = (prev_play_net - was_net
+                     if isinstance(prev_play_net, (int, float)) and isinstance(was_net, (int, float))
+                     else None)
+            if d >= SWAP_BAR and (d_was is None or d_was < SWAP_BAR):
+                rivals.append((d, r))
+        if rivals:
+            d, r = max(rivals, key=lambda t: t[0])
+            lines.append(f"🔔 {r['name']} nets ${d:,.0f} less than the play "
+                         f"({play['name']}) — worth a look")
+        else:
+            lines.append(f"{label.split(' ', 1)[1]}: play unchanged ({play['name']})")
+    return "\n".join(lines)
 
 # The shortlist. `query` is the Google Hotels search string — keep it SHORT;
 # long official names fall through to a no-results search page (proven
