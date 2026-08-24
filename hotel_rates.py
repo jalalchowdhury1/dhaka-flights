@@ -85,15 +85,25 @@ MOVE_ALERT_PCT = 10
 MOVE_ALERT_ABS = 40
 
 
+def _same_basis(prev_row, row):
+    return ((prev_row or {}).get("rate_basis") or SEED_RATE_BASIS) == \
+           ((row or {}).get("rate_basis") or SEED_RATE_BASIS)
+
+
 def rate_moves(prev, new):
     """Major nightly movers: [(name, old_rate, new_rate)]. A kept-stale row
     never registers (fail-closed keeps the old number verbatim), so this only
-    ever reports genuinely re-checked rates. None-safe on both sides."""
-    old = {r.get("key"): r.get("rate") for r in (prev or {}).get("rows", [])}
+    ever reports genuinely re-checked rates. None-safe on both sides. Rows
+    whose rate BASIS changed overnight are skipped — that is a source
+    migration, not a market move."""
+    by_prev = {r.get("key"): r for r in (prev or {}).get("rows", [])}
+    old = {k: (r or {}).get("rate") for k, r in by_prev.items()}
     out = []
     for r in (new or {}).get("rows", []):
         o, n = old.get(r.get("key")), r.get("rate")
         if not (isinstance(o, (int, float)) and isinstance(n, (int, float))):
+            continue
+        if not _same_basis(by_prev.get(r.get("key")), r):
             continue
         if abs(n - o) >= MOVE_ALERT_ABS or (o and abs(n - o) / o * 100 >= MOVE_ALERT_PCT):
             out.append((r.get("name") or r.get("key"), o, n))
@@ -164,6 +174,8 @@ def rival_bells(prev, new):
             if r is play or _net(r) is None:
                 continue
             was_row = by_key_prev.get(r.get("key"))
+            if not _same_basis(was_row, r):
+                continue          # migration night: nets not comparable yet
             if suspect_drop(was_row, r):
                 suspects.append(r)
                 continue
@@ -206,8 +218,8 @@ def play_drop_bells(prev, new):
         if not play:
             continue
         was = by_key_prev.get(play.get("key")) or {}
-        if suspect_drop(was, play):
-            continue          # poisoned baseline must never trigger a rebook
+        if not _same_basis(was, play) or suspect_drop(was, play):
+            continue          # basis migration / poisoned baseline: no bell
         bk = BOOKED.get(city) or {}
         booked = bk if bk.get("key") == play.get("key") and _num(bk.get("total")) else None
         f_now, f_was = _drift_factor(play), _drift_factor(was)
@@ -688,6 +700,14 @@ EXTRACT_JS = """(function(){
 # zenhotels, algotels, super.com, …) is bait-prone: 2026-08-24 catchit.com
 # advertised the St. Regis SIN at $196/n (−62%) while every seller below said
 # $520. Allowlist, not blocklist — new junk OTAs appear weekly.
+# The rate SERIES has a basis. Until 2026-08-24 it was Google's junk-prone
+# headline; now it is the cheapest TRUSTED seller. Rates from different bases
+# differ by the junk discount (~15-20%), so: Google baselines re-bootstrap on
+# a basis change, and movers/bells never compare across bases (one quiet
+# migration night instead of a wall of fake ▲20% moves).
+RATE_BASIS = "trusted-min"
+SEED_RATE_BASIS = "headline"   # what the 2026-08-22 SEED reads were
+
 TRUSTED_SELLERS = ("official site", "hotels.com", "expedia", "travelocity",
                    "booking.com", "agoda", "priceline", "orbitz", "trip.com",
                    "ebookers", "wotif", "marriott", "hyatt", "ihg", "accor",
@@ -710,6 +730,8 @@ def offer_rate(payload):
         if not 20 <= price <= 20000:
             continue
         prov_l = prov.lower().removeprefix("www.")
+        if prov_l.startswith("visit "):
+            continue   # UI artifact ("Visit Expedia.com" + a promo $), not a quote
         # PREFIX match, not substring — "zenhotels.com" must not pass as
         # "hotels.com".
         bucket = (trusted if any(prov_l.startswith(t) for t in TRUSTED_SELLERS)
@@ -984,14 +1006,17 @@ def _google_anchor(prev, key, fresh, today):
     baseline it was never measured against, and est_allin_night would drift
     on a comparison that no longer means anything."""
     pa = prev.get("anchor") if isinstance(prev.get("anchor"), dict) else {}
-    if pa.get("date") == PORTAL_DATE and _num(pa.get("google")):
+    if (pa.get("date") == PORTAL_DATE and _num(pa.get("google"))
+            and pa.get("google_basis", SEED_RATE_BASIS) == RATE_BASIS):
         return pa["google"], pa.get("google_date")
     # The seed is a same-day Google read and is only a valid baseline while
-    # SEED's `checked` date IS the portal date; a PORTAL_DATE bump without a
-    # SEED refresh must bootstrap from a live scrape instead.
+    # SEED's `checked` date IS the portal date AND the series still runs on
+    # the basis the seed was read on; a PORTAL_DATE bump or a basis change
+    # must bootstrap from a live scrape instead.
     seed = SEED.get(key) or {}
     seeded = prev.get("anchor_google") or seed.get("anchor_google")
-    if _num(seeded) and seed.get("checked") == PORTAL_DATE:
+    if (_num(seeded) and seed.get("checked") == PORTAL_DATE
+            and SEED_RATE_BASIS == RATE_BASIS):
         return seeded, seed.get("checked")
     if fresh and _num(fresh[0]):
         return fresh[0], today
@@ -1028,6 +1053,7 @@ def build(payload, scraped=None, today=None):
         if anchor:
             anchor["google"], anchor["google_date"] = _google_anchor(
                 prev, e["key"], fresh, today)
+            anchor["google_basis"] = RATE_BASIS
         est = est_allin_night(anchor, rate)
         mult = TAX_MULT[e["city"]]
         if est is None and _num(rate):
@@ -1056,7 +1082,7 @@ def build(payload, scraped=None, today=None):
                "program": e["program"], "angle": e["angle"], "rank": e["rank"],
                "stay": stay,
                "suspect": suspect_drop(prev, {"rate": rate}) or None,
-               "rate_src": rate_src,
+               "rate_src": rate_src, "rate_basis": RATE_BASIS,
                "bold": bool(e.get("bold")), "rate": rate, "checked": checked,
                "anchor": anchor, "est_allin_night": est,
                "avg_allin_night": avg_allin, "public_allin_night": public_allin,

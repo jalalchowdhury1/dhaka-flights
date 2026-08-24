@@ -433,8 +433,11 @@ def test_build_rows_carry_anchor_est_and_drift(tmp_path, monkeypatch):
     assert k["est_allin_night"] == 442.36 and k["drift_pct"] == 0
     assert [o["pct"] for o in k["offsets"]] == [62, 50]
     ritz = next(r for r in out["rows"] if r["key"] == "ritz_ist")
-    assert ritz["anchor"]["google"] == hr.SEED["ritz_ist"]["anchor_google"]
-    assert ritz["anchor"]["google_date"] == "2026-08-22"
+    # 2026-08-24 basis change: the SEED reads were headline-basis, so under
+    # the trusted-min basis they are NOT a valid baseline — no google anchor
+    # until a live trusted scrape bootstraps one.
+    assert ritz["anchor"]["google"] is None
+    assert ritz["anchor"]["google_basis"] == hr.RATE_BASIS
     jw = next(r for r in out["rows"] if r["key"] == "jw_sin")
     assert jw["anchor"] is None and jw["drift_pct"] is None
     assert jw["est_allin_night"] == round(jw["rate"] * 1.20, 2)        # fallback path (SIN multiplier)
@@ -484,7 +487,37 @@ def test_non_dict_previous_anchor_is_ignored(tmp_path, monkeypatch):
         json.dump(junk, f)
     out = hr.build({"main": None}, today="2026-08-23")
     ritz = next(r for r in out["rows"] if r["key"] == "ritz_ist")
+    assert ritz["anchor"]["google"] is None      # seed refused: wrong basis, no crash
+
+
+def test_seed_baseline_valid_only_on_its_own_basis(tmp_path, monkeypatch):
+    """The legacy (headline) basis still honours the same-day seed; the
+    current basis refuses it and bootstraps from tonight's live scrape."""
+    monkeypatch.setattr(hr, "RATES_FILE", str(tmp_path / "hotel_rates.json"))
+    monkeypatch.setattr(hr, "RATE_BASIS", hr.SEED_RATE_BASIS)
+    out = hr.build({"main": None}, today="2026-08-23")
+    ritz = next(r for r in out["rows"] if r["key"] == "ritz_ist")
     assert ritz["anchor"]["google"] == hr.SEED["ritz_ist"]["anchor_google"]
+    assert ritz["anchor"]["google_date"] == "2026-08-22"
+
+
+def test_persisted_baseline_refused_across_a_basis_change(tmp_path, monkeypatch):
+    """A stored headline-basis google anchor must re-bootstrap from tonight's
+    trusted rate, not silently scale the portal total against the old basis."""
+    monkeypatch.setattr(hr, "RATES_FILE", str(tmp_path / "hotel_rates.json"))
+    prev = {"rows": [{"key": "ritz_ist", "rate": 447, "checked": "2026-08-23",
+                      "rate_basis": "headline",
+                      "anchor": {"date": hr.PORTAL_DATE, "google": 447,
+                                 "google_date": "2026-08-22"}}]}
+    with open(tmp_path / "hotel_rates.json", "w") as f:
+        json.dump(prev, f)
+    out = hr.build({"main": None}, scraped={"ritz_ist": (500, "ok · $500 Booking.com")},
+                   today="2026-08-24")
+    ritz = next(r for r in out["rows"] if r["key"] == "ritz_ist")
+    assert ritz["anchor"]["google"] == 500 and ritz["anchor"]["google_date"] == "2026-08-24"
+    assert ritz["drift_pct"] == 0                # night one on the new basis
+    # and the migration night is silent: no mover, no bell for that row
+    assert hr.rate_moves(prev, out) == []
 
 
 def test_anchor_for_degrades_on_a_broken_portal_entry(monkeypatch):
