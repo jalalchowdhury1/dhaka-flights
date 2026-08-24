@@ -1,5 +1,5 @@
 {
- "updated": "2026-08-23",
+ "updated": "2026-08-24",
  "stays": {
   "IST": {
    "checkin": "2027-01-05",
@@ -59,6 +59,28 @@
   "chase_premium": 144,
   "marriott_points": 177000
  },
+ "points_routes": {
+  "IST": {
+   "read": "2026-08-23",
+   "edit_total": 1285.0,
+   "edit_credit": 250,
+   "boost_cents": 1.65,
+   "hyatt": {
+    "hotel": "Park Hyatt Ma\u00e7ka Palas",
+    "key": "parkhyatt_ist",
+    "pts": 50000,
+    "per_night": 25000,
+    "breakfast_cash": 150
+   },
+   "bar_cents": 1.5,
+   "future_cents": 2.0,
+   "split": {
+    "card": 300,
+    "cents": 1.65,
+    "note": "split-pay AFTER Ticket \u2460: ~$300 card + ordinary points at 1.65\u00a2 Boost \u2014 verified 8/23 (checkout credits modal + documented precedent): the $250 posts on the card portion"
+   }
+  }
+ },
  "source": "est_allin_night = Amex FHR portal all-in per paid night (read 2026-08-22, 2 adults + 1 child) \u00d7 tonight's public Google rate \u00f7 the public rate on the anchor date; `rate` is that public rate (2 adults, incl. fees) and is the drift alarm",
  "rows": [
   {
@@ -70,13 +92,13 @@
    "rank": 3,
    "stay": {
     "nights": 2,
-    "total": 956.12,
+    "total": 953.42,
     "credits": 520,
-    "net": 436
+    "net": 433
    },
    "bold": false,
-   "rate": 353,
-   "checked": "2026-08-23",
+   "rate": 352,
+   "checked": "2026-08-24",
    "anchor": {
     "date": "2026-08-22",
     "total": 956.12,
@@ -89,14 +111,14 @@
     "google": 353,
     "google_date": "2026-08-22"
    },
-   "est_allin_night": 478.06,
-   "avg_allin_night": 478.06,
-   "public_allin_night": 395.36,
+   "est_allin_night": 476.71,
+   "avg_allin_night": 476.71,
+   "public_allin_night": 394.24,
    "drift_pct": 0,
    "offsets": [
     {
      "label": "2n",
-     "pct": 54,
+     "pct": 55,
      "band": "warn"
     }
    ]
@@ -110,13 +132,13 @@
    "rank": 1,
    "stay": {
     "nights": 2,
-    "total": 1250.42,
+    "total": 1214.06,
     "credits": 470,
-    "net": 780
+    "net": 744
    },
    "bold": true,
-   "rate": 447,
-   "checked": "2026-08-23",
+   "rate": 434,
+   "checked": "2026-08-24",
    "anchor": {
     "date": "2026-08-22",
     "total": 1250.42,
@@ -129,14 +151,14 @@
     "google": 447,
     "google_date": "2026-08-22"
    },
-   "est_allin_night": 625.21,
-   "avg_allin_night": 625.21,
-   "public_allin_night": 500.64,
-   "drift_pct": 0,
+   "est_allin_night": 607.03,
+   "avg_allin_night": 607.03,
+   "public_allin_night": 486.08,
+   "drift_pct": -3,
    "offsets": [
     {
      "label": "2n",
-     "pct": 38,
+     "pct": 39,
      "band": "dim"
     }
    ]
@@ -150,13 +172,13 @@
    "rank": 4,
    "stay": {
     "nights": 2,
-    "total": 973.6,
+    "total": 1133.98,
     "credits": 520,
-    "net": 454
+    "net": 614
    },
    "bold": false,
-   "rate": 346,
-   "checked": "2026-08-23",
+   "rate": 403,
+   "checked": "2026-08-24",
    "anchor": {
     "date": "2026-08-22",
     "total": 1133.98,
@@ -169,15 +191,15 @@
     "google": 403,
     "google_date": "2026-08-22"
    },
-   "est_allin_night": 486.8,
-   "avg_allin_night": 486.8,
-   "public_allin_night": 387.52,
-   "drift_pct": -14,
+   "est_allin_night": 566.99,
+   "avg_allin_night": 566.99,
+   "public_allin_night": 451.36,
+   "drift_pct": 0,
    "offsets": [
     {
      "label": "2n",
-     "pct": 53,
-     "band": "warn"
+     "pct": 46,
+     "band": "dim"
     }
    ]
   },
@@ -190,13 +212,13 @@
    "rank": 2,
    "stay": {
     "nights": 2,
-    "total": 1211.2,
+    "total": 1100.54,
     "credits": 520,
-    "net": 691
+    "net": 581
    },
    "bold": false,
-   "rate": 405,
-   "checked": "2026-08-23",
+   "rate": 368,
+   "checked": "2026-08-24",
    "anchor": {
     "date": "2026-08-22",
     "total": 1190.26,
@@ -209,14 +231,14 @@
     "google": 398,
     "google_date": "2026-08-22"
    },
-   "est_allin_night": 605.6,
-   "avg_allin_night": 605.6,
-   "public_allin_night": 453.6,
-   "drift_pct": 2,
+   "est_allin_night": 550.27,
+   "avg_allin_night": 550.27,
+   "public_allin_night": 412.16,
+   "drift_pct": -8,
    "offsets": [
     {
      "label": "2n",
-     "pct": 43,
+     "pct": 47,
      "band": "dim"
     }
    ]
@@ -230,13 +252,13 @@
    "rank": 5,
    "stay": {
     "nights": 2,
-    "total": 1438.76,
+    "total": 1436.12,
     "credits": 520,
-    "net": 919
+    "net": 916
    },
    "bold": false,
-   "rate": 546,
-   "checked": "2026-08-23",
+   "rate": 545,
+   "checked": "2026-08-24",
    "anchor": {
     "date": "2026-08-22",
     "total": 1438.76,
@@ -249,9 +271,9 @@
     "google": 546,
     "google_date": "2026-08-22"
    },
-   "est_allin_night": 719.38,
-   "avg_allin_night": 719.38,
-   "public_allin_night": 611.52,
+   "est_allin_night": 718.06,
+   "avg_allin_night": 718.06,
+   "public_allin_night": 610.4,
    "drift_pct": 0,
    "offsets": [
     {
@@ -276,7 +298,7 @@
    },
    "bold": false,
    "rate": 472,
-   "checked": "2026-08-23",
+   "checked": "2026-08-24",
    "anchor": {
     "date": "2026-08-22",
     "total": 1471.46,
@@ -310,13 +332,13 @@
    "rank": 7,
    "stay": {
     "nights": 2,
-    "total": 1564.4,
+    "total": 1528.44,
     "credits": 520,
-    "net": 1044
+    "net": 1008
    },
    "bold": false,
-   "rate": 609,
-   "checked": "2026-08-23",
+   "rate": 595,
+   "checked": "2026-08-24",
    "anchor": {
     "date": "2026-08-22",
     "total": 1569.54,
@@ -329,14 +351,14 @@
     "google": 611,
     "google_date": "2026-08-22"
    },
-   "est_allin_night": 782.2,
-   "avg_allin_night": 782.2,
-   "public_allin_night": 682.08,
-   "drift_pct": 0,
+   "est_allin_night": 764.22,
+   "avg_allin_night": 764.22,
+   "public_allin_night": 666.4,
+   "drift_pct": -3,
    "offsets": [
     {
      "label": "2n",
-     "pct": 33,
+     "pct": 34,
      "band": "dim"
     }
    ]
@@ -350,13 +372,13 @@
    "rank": 8,
    "stay": {
     "nights": 2,
-    "total": 1668.5,
+    "total": 1537.34,
     "credits": 520,
-    "net": 1148
+    "net": 1017
    },
    "bold": false,
-   "rate": 547,
-   "checked": "2026-08-23",
+   "rate": 504,
+   "checked": "2026-08-24",
    "anchor": {
     "date": "2026-08-22",
     "total": 1634.94,
@@ -369,14 +391,14 @@
     "google": 536,
     "google_date": "2026-08-22"
    },
-   "est_allin_night": 834.25,
-   "avg_allin_night": 834.25,
-   "public_allin_night": 612.64,
-   "drift_pct": 2,
+   "est_allin_night": 768.67,
+   "avg_allin_night": 768.67,
+   "public_allin_night": 564.48,
+   "drift_pct": -6,
    "offsets": [
     {
      "label": "2n",
-     "pct": 31,
+     "pct": 34,
      "band": "dim"
     }
    ]
@@ -396,7 +418,7 @@
    },
    "bold": true,
    "rate": 286,
-   "checked": "2026-08-23",
+   "checked": "2026-08-24",
    "anchor": {
     "date": "2026-08-22",
     "total": 1327.08,
@@ -441,7 +463,7 @@
    },
    "bold": false,
    "rate": 273,
-   "checked": "2026-08-23",
+   "checked": "2026-08-24",
    "anchor": {
     "date": "2026-08-22",
     "total": 1734.16,
@@ -480,13 +502,13 @@
    "rank": 3,
    "stay": {
     "nights": 4,
-    "total": 2129.48,
+    "total": 2171.48,
     "credits": 640,
-    "net": 1489
+    "net": 1531
    },
    "bold": false,
-   "rate": 355,
-   "checked": "2026-08-23",
+   "rate": 362,
+   "checked": "2026-08-24",
    "anchor": {
     "date": "2026-08-22",
     "total": 1853.56,
@@ -499,19 +521,19 @@
     "google": 309,
     "google_date": "2026-08-22"
    },
-   "est_allin_night": 532.37,
-   "avg_allin_night": 532.37,
-   "public_allin_night": 426.0,
-   "drift_pct": 15,
+   "est_allin_night": 542.87,
+   "avg_allin_night": 542.87,
+   "public_allin_night": 434.4,
+   "drift_pct": 17,
    "offsets": [
     {
      "label": "2n",
-     "pct": 49,
+     "pct": 48,
      "band": "dim"
     },
     {
      "label": "4n",
-     "pct": 30,
+     "pct": 29,
      "band": "dim"
     }
    ]
@@ -531,7 +553,7 @@
    },
    "bold": false,
    "rate": 298,
-   "checked": "2026-08-23",
+   "checked": "2026-08-24",
    "anchor": {
     "date": "2026-08-22",
     "total": 1936.31,
@@ -570,13 +592,13 @@
    "rank": 6,
    "stay": {
     "nights": 4,
-    "total": 2179.36,
+    "total": 2199.08,
     "credits": 640,
-    "net": 1539
+    "net": 1559
    },
    "bold": false,
-   "rate": 442,
-   "checked": "2026-08-23",
+   "rate": 446,
+   "checked": "2026-08-24",
    "anchor": {
     "date": "2026-08-22",
     "total": 2351.92,
@@ -589,14 +611,14 @@
     "google": 477,
     "google_date": "2026-08-22"
    },
-   "est_allin_night": 544.84,
-   "avg_allin_night": 544.84,
-   "public_allin_night": 530.4,
-   "drift_pct": -7,
+   "est_allin_night": 549.77,
+   "avg_allin_night": 549.77,
+   "public_allin_night": 535.2,
+   "drift_pct": -6,
    "offsets": [
     {
      "label": "2n",
-     "pct": 48,
+     "pct": 47,
      "band": "dim"
     },
     {
@@ -615,13 +637,13 @@
    "rank": 7,
    "stay": {
     "nights": 4,
-    "total": 2663.88,
+    "total": 1004.08,
     "credits": 640,
-    "net": 2024
+    "net": 364
    },
    "bold": false,
-   "rate": 520,
-   "checked": "2026-08-23",
+   "rate": 196,
+   "checked": "2026-08-24",
    "anchor": {
     "date": "2026-08-22",
     "total": 2418.0,
@@ -634,20 +656,20 @@
     "google": 472,
     "google_date": "2026-08-22"
    },
-   "est_allin_night": 665.97,
-   "avg_allin_night": 665.97,
-   "public_allin_night": 624.0,
-   "drift_pct": 10,
+   "est_allin_night": 251.02,
+   "avg_allin_night": 251.02,
+   "public_allin_night": 235.2,
+   "drift_pct": -58,
    "offsets": [
     {
      "label": "2n",
-     "pct": 39,
-     "band": "dim"
+     "pct": 104,
+     "band": "good"
     },
     {
      "label": "4n",
-     "pct": 24,
-     "band": "dim"
+     "pct": 64,
+     "band": "warn"
     }
    ]
   },
@@ -660,13 +682,13 @@
    "rank": 8,
    "stay": {
     "nights": 4,
-    "total": 2573.28,
+    "total": 2620.56,
     "credits": 665,
-    "net": 1908
+    "net": 1956
    },
    "bold": false,
-   "rate": 490,
-   "checked": "2026-08-23",
+   "rate": 499,
+   "checked": "2026-08-24",
    "anchor": {
     "date": "2026-08-22",
     "total": 2625.82,
@@ -679,19 +701,19 @@
     "google": 500,
     "google_date": "2026-08-22"
    },
-   "est_allin_night": 857.76,
-   "avg_allin_night": 643.32,
-   "public_allin_night": 588.0,
-   "drift_pct": -2,
+   "est_allin_night": 873.52,
+   "avg_allin_night": 655.14,
+   "public_allin_night": 598.8,
+   "drift_pct": 0,
    "offsets": [
     {
      "label": "2n",
-     "pct": 32,
+     "pct": 31,
      "band": "dim"
     },
     {
      "label": "4n",
-     "pct": 26,
+     "pct": 25,
      "band": "dim"
     }
    ]
@@ -705,13 +727,13 @@
    "rank": 9,
    "stay": {
     "nights": 4,
-    "total": 2698.17,
+    "total": 2654.67,
     "credits": 640,
-    "net": 2058
+    "net": 2015
    },
    "bold": false,
-   "rate": 496,
-   "checked": "2026-08-23",
+   "rate": 488,
+   "checked": "2026-08-24",
    "anchor": {
     "date": "2026-08-22",
     "total": 2643.77,
@@ -724,10 +746,10 @@
     "google": 486,
     "google_date": "2026-08-22"
    },
-   "est_allin_night": 899.39,
-   "avg_allin_night": 674.54,
-   "public_allin_night": 595.2,
-   "drift_pct": 2,
+   "est_allin_night": 884.89,
+   "avg_allin_night": 663.67,
+   "public_allin_night": 585.6,
+   "drift_pct": 0,
    "offsets": [
     {
      "label": "2n",
@@ -750,13 +772,13 @@
    "rank": 10,
    "stay": {
     "nights": 4,
-    "total": 2726.04,
+    "total": 2720.28,
     "credits": 640,
-    "net": 2086
+    "net": 2080
    },
    "bold": false,
-   "rate": 473,
-   "checked": "2026-08-23",
+   "rate": 472,
+   "checked": "2026-08-24",
    "anchor": {
     "date": "2026-08-22",
     "total": 2720.28,
@@ -769,9 +791,9 @@
     "google": 472,
     "google_date": "2026-08-22"
    },
-   "est_allin_night": 681.51,
-   "avg_allin_night": 681.51,
-   "public_allin_night": 567.6,
+   "est_allin_night": 680.07,
+   "avg_allin_night": 680.07,
+   "public_allin_night": 566.4,
    "drift_pct": 0,
    "offsets": [
     {
@@ -781,7 +803,7 @@
     },
     {
      "label": "4n",
-     "pct": 23,
+     "pct": 24,
      "band": "dim"
     }
    ]
@@ -795,13 +817,13 @@
    "rank": 5,
    "stay": {
     "nights": 4,
-    "total": 1775.36,
+    "total": 1747.4,
     "credits": 590,
-    "net": 1185
+    "net": 1157
    },
    "bold": false,
-   "rate": 254,
-   "checked": "2026-08-23",
+   "rate": 250,
+   "checked": "2026-08-24",
    "anchor": {
     "date": "2026-08-22",
     "total": 1747.39,
@@ -814,19 +836,19 @@
     "google": 250,
     "google_date": "2026-08-22"
    },
-   "est_allin_night": 443.84,
-   "avg_allin_night": 443.84,
-   "public_allin_night": 304.8,
-   "drift_pct": 2,
+   "est_allin_night": 436.85,
+   "avg_allin_night": 436.85,
+   "public_allin_night": 300.0,
+   "drift_pct": 0,
    "offsets": [
     {
      "label": "2n",
-     "pct": 53,
+     "pct": 54,
      "band": "warn"
     },
     {
      "label": "4n",
-     "pct": 33,
+     "pct": 34,
      "band": "dim"
     }
    ]
@@ -840,53 +862,31 @@
    "rank": 11,
    "stay": {
     "nights": 4,
-    "total": 2131.2,
+    "total": 2212.8,
     "credits": 590,
-    "net": 1541
+    "net": 1623
    },
    "bold": false,
-   "rate": 444,
-   "checked": "2026-08-23",
+   "rate": 461,
+   "checked": "2026-08-24",
    "anchor": null,
-   "est_allin_night": 532.8,
-   "avg_allin_night": 532.8,
-   "public_allin_night": 532.8,
+   "est_allin_night": 553.2,
+   "avg_allin_night": 553.2,
+   "public_allin_night": 553.2,
    "drift_pct": null,
    "offsets": [
     {
      "label": "2n",
-     "pct": 44,
+     "pct": 43,
      "band": "dim"
     },
     {
      "label": "4n",
-     "pct": 28,
+     "pct": 27,
      "band": "dim"
     }
    ]
   }
  ],
- "notes": [],
- "points_routes": {
-  "IST": {
-   "read": "2026-08-23",
-   "edit_total": 1285.0,
-   "edit_credit": 250,
-   "boost_cents": 1.65,
-   "hyatt": {
-    "hotel": "Park Hyatt Ma\u00e7ka Palas",
-    "key": "parkhyatt_ist",
-    "pts": 50000,
-    "per_night": 25000,
-    "breakfast_cash": 150
-   },
-   "bar_cents": 1.5,
-   "future_cents": 2.0,
-   "split": {
-    "card": 300,
-    "cents": 1.65,
-    "note": "split-pay AFTER Ticket \u2460: ~$300 card + ordinary points at 1.65\u00a2 Boost \u2014 verified 8/23 (checkout credits modal + documented precedent): the $250 posts on the card portion"
-   }
-  }
- }
+ "notes": []
 }
