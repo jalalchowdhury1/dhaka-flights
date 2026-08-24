@@ -96,6 +96,8 @@
     "credits": 520,
     "net": 433
    },
+   "suspect": null,
+   "rate_src": null,
    "bold": false,
    "rate": 352,
    "checked": "2026-08-24",
@@ -136,6 +138,8 @@
     "credits": 470,
     "net": 744
    },
+   "suspect": null,
+   "rate_src": null,
    "bold": true,
    "rate": 434,
    "checked": "2026-08-24",
@@ -176,6 +180,8 @@
     "credits": 520,
     "net": 614
    },
+   "suspect": null,
+   "rate_src": null,
    "bold": false,
    "rate": 403,
    "checked": "2026-08-24",
@@ -216,6 +222,8 @@
     "credits": 520,
     "net": 581
    },
+   "suspect": null,
+   "rate_src": null,
    "bold": false,
    "rate": 368,
    "checked": "2026-08-24",
@@ -256,6 +264,8 @@
     "credits": 520,
     "net": 916
    },
+   "suspect": null,
+   "rate_src": null,
    "bold": false,
    "rate": 545,
    "checked": "2026-08-24",
@@ -296,6 +306,8 @@
     "credits": 520,
     "net": 951
    },
+   "suspect": null,
+   "rate_src": null,
    "bold": false,
    "rate": 472,
    "checked": "2026-08-24",
@@ -336,6 +348,8 @@
     "credits": 520,
     "net": 1008
    },
+   "suspect": null,
+   "rate_src": null,
    "bold": false,
    "rate": 595,
    "checked": "2026-08-24",
@@ -376,6 +390,8 @@
     "credits": 520,
     "net": 1017
    },
+   "suspect": null,
+   "rate_src": null,
    "bold": false,
    "rate": 504,
    "checked": "2026-08-24",
@@ -416,6 +432,8 @@
     "credits": 665,
     "net": 657
    },
+   "suspect": null,
+   "rate_src": null,
    "bold": true,
    "rate": 286,
    "checked": "2026-08-24",
@@ -461,6 +479,8 @@
     "credits": 640,
     "net": 1217
    },
+   "suspect": null,
+   "rate_src": null,
    "bold": false,
    "rate": 273,
    "checked": "2026-08-24",
@@ -506,6 +526,8 @@
     "credits": 640,
     "net": 1531
    },
+   "suspect": null,
+   "rate_src": null,
    "bold": false,
    "rate": 362,
    "checked": "2026-08-24",
@@ -551,6 +573,8 @@
     "credits": 665,
     "net": 1052
    },
+   "suspect": null,
+   "rate_src": null,
    "bold": false,
    "rate": 298,
    "checked": "2026-08-24",
@@ -596,6 +620,8 @@
     "credits": 640,
     "net": 1559
    },
+   "suspect": null,
+   "rate_src": null,
    "bold": false,
    "rate": 446,
    "checked": "2026-08-24",
@@ -637,12 +663,14 @@
    "rank": 7,
    "stay": {
     "nights": 4,
-    "total": 1004.08,
+    "total": 2663.88,
     "credits": 640,
-    "net": 364
+    "net": 2024
    },
+   "suspect": null,
+   "rate_src": "$520 Expedia.com (ignored Catchit.com $196)",
    "bold": false,
-   "rate": 196,
+   "rate": 520,
    "checked": "2026-08-24",
    "anchor": {
     "date": "2026-08-22",
@@ -656,23 +684,22 @@
     "google": 472,
     "google_date": "2026-08-22"
    },
-   "est_allin_night": 251.02,
-   "avg_allin_night": 251.02,
-   "public_allin_night": 235.2,
-   "drift_pct": -58,
+   "est_allin_night": 665.97,
+   "avg_allin_night": 665.97,
+   "public_allin_night": 624.0,
+   "drift_pct": 10,
    "offsets": [
     {
      "label": "2n",
-     "pct": 104,
-     "band": "good"
+     "pct": 39,
+     "band": "dim"
     },
     {
      "label": "4n",
-     "pct": 64,
-     "band": "warn"
+     "pct": 24,
+     "band": "dim"
     }
-   ],
-   "suspect": true
+   ]
   },
   {
    "key": "fullerton_bay",
@@ -687,6 +714,8 @@
     "credits": 665,
     "net": 1956
    },
+   "suspect": null,
+   "rate_src": null,
    "bold": false,
    "rate": 499,
    "checked": "2026-08-24",
@@ -732,6 +761,8 @@
     "credits": 640,
     "net": 2015
    },
+   "suspect": null,
+   "rate_src": null,
    "bold": false,
    "rate": 488,
    "checked": "2026-08-24",
@@ -777,6 +808,8 @@
     "credits": 640,
     "net": 2080
    },
+   "suspect": null,
+   "rate_src": null,
    "bold": false,
    "rate": 472,
    "checked": "2026-08-24",
@@ -822,6 +855,8 @@
     "credits": 590,
     "net": 1157
    },
+   "suspect": null,
+   "rate_src": null,
    "bold": false,
    "rate": 250,
    "checked": "2026-08-24",
@@ -867,6 +902,8 @@
     "credits": 590,
     "net": 1623
    },
+   "suspect": null,
+   "rate_src": null,
    "bold": false,
    "rate": 461,
    "checked": "2026-08-24",

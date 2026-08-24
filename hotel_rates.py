@@ -666,10 +666,59 @@ EXTRACT_JS = """(function(){
      apostrophes: this source is flattened to a single line and shell-quoted,
      so a line comment would swallow the rest of the function. */
   var m = t.match(new RegExp("\\\\$([\\\\d,]+)[^$]{0,40}?%s"));
+  /* Provider list (2026-08-24): each seller renders as a name line followed
+     within ~3 lines by a bare $price line. Lets Python price from TRUSTED
+     sellers and ignore junk OTAs (the catchit.com bait incident). */
+  var pls = t.split(String.fromCharCode(10)).map(function(x){return x.trim()}).filter(Boolean);
+  var provRe = new RegExp("^([A-Za-z][A-Za-z0-9 .&+-]{1,40}[.](com|net|co|sg|travel)|Official Site|Priceline|Agoda|Booking[.]com|Trip[.]com)$","i");
+  var offers = []; var prov = null, dist = 99;
+  for (var i = 0; i < pls.length; i++) {
+    if (provRe.test(pls[i])) { prov = pls[i]; dist = 0; continue; }
+    dist++;
+    var pm = pls[i].match(new RegExp("^\\\\$([\\\\d,]+)$"));
+    if (pm && prov && dist <= 3) { offers.push(prov + "|" + pm[1]); prov = null; }
+  }
   return JSON.stringify({title: document.title,
                          checkin: inp[0] || "", checkout: inp[1] || "",
-                         price: m ? m[1] : null, len: t.length});
+                         price: m ? m[1] : null, offers: offers, len: t.length});
 })()"""
+
+
+# Sellers whose Google price we will actually use. Anything else (catchit,
+# zenhotels, algotels, super.com, …) is bait-prone: 2026-08-24 catchit.com
+# advertised the St. Regis SIN at $196/n (−62%) while every seller below said
+# $520. Allowlist, not blocklist — new junk OTAs appear weekly.
+TRUSTED_SELLERS = ("official site", "hotels.com", "expedia", "travelocity",
+                   "booking.com", "agoda", "priceline", "orbitz", "trip.com",
+                   "ebookers", "wotif", "marriott", "hyatt", "ihg", "accor",
+                   "hilton", "kempinski", "shangri-la", "fourseasons",
+                   "four seasons", "mandarin oriental", "raffles")
+
+
+def offer_rate(payload):
+    """(rate, src, ignored) — the cheapest TRUSTED seller from the provider
+    list, plus every untrusted seller that undercut it (for the note).
+    (None, None, untrusted) when the list did not render or held no trusted
+    seller — parse_rate then falls back to the headline price."""
+    trusted, untrusted = [], []
+    for o in (payload or {}).get("offers") or []:
+        try:
+            prov, price = str(o).rsplit("|", 1)
+            price = int(price.replace(",", ""))
+        except (ValueError, AttributeError):
+            continue
+        if not 20 <= price <= 20000:
+            continue
+        prov_l = prov.lower().removeprefix("www.")
+        # PREFIX match, not substring — "zenhotels.com" must not pass as
+        # "hotels.com".
+        bucket = (trusted if any(prov_l.startswith(t) for t in TRUSTED_SELLERS)
+                  else untrusted)
+        bucket.append((price, prov))
+    if not trusted:
+        return None, None, sorted(untrusted)
+    price, prov = min(trusted)
+    return price, prov, sorted(u for u in untrusted if u[0] < price)
 
 
 def parse_rate(payload, entry, checkin, checkout):
@@ -695,6 +744,14 @@ def parse_rate(payload, entry, checkin, checkout):
         return None, (f"dates did not bind — page shows "
                       f"'{got_in or '?'}'→'{got_out or '?'}', wanted "
                       f"{want_in}→{want_out}")
+    # Price from the cheapest TRUSTED seller when the provider list rendered
+    # — the headline is whatever OTA bids lowest, junk included (catchit).
+    o_rate, o_src, ignored = offer_rate(payload)
+    if o_rate is not None:
+        note = f"ok · ${o_rate} {o_src}"
+        if ignored:
+            note += f" (ignored {ignored[0][1]} ${ignored[0][0]})"
+        return o_rate, note
     price = payload.get("price")
     if not price:
         return None, "dates bound but no price anchored to them"
@@ -704,7 +761,7 @@ def parse_rate(payload, entry, checkin, checkout):
         return None, f"unparseable price {price!r}"
     if not 20 <= rate <= 20000:
         return None, f"implausible nightly rate ${rate}"
-    return rate, "ok"
+    return rate, "ok · headline (no trusted seller parsed)"
 
 
 def _eval_payload(scraper, checkin, checkout):
@@ -768,6 +825,9 @@ def is_infra_note(note):
 # — ~40 s a night, ~20 min a month against a 60-min free cap.
 PAGE_WAIT_SECONDS = 12
 PAGE_POLL_SECONDS = 2
+OFFERS_EXTRA_SECONDS = 6   # the seller list renders AFTER the dates bind;
+                           # give it up to this long so trusted-seller pricing
+                           # (the catchit filter) actually has sellers to read
 
 
 def _wait_for_page(scraper, checkin, checkout, deadline=PAGE_WAIT_SECONDS):
@@ -775,15 +835,21 @@ def _wait_for_page(scraper, checkin, checkout, deadline=PAGE_WAIT_SECONDS):
 
     Returns the first payload carrying BOTH dates; otherwise the last payload
     seen, so parse_rate still gets to render its specific complaint."""
-    waited, last = 0.0, None
+    waited, bound_wait, last = 0.0, 0.0, None
     want_in, want_out = _label(checkin), _label(checkout)
-    while waited < deadline:
+    while waited < deadline + OFFERS_EXTRA_SECONDS:
         payload = _eval_payload(scraper, checkin, checkout)
         if isinstance(payload, dict):
             last = payload
             if (want_in in (payload.get("checkin") or "")
                     and want_out in (payload.get("checkout") or "")):
-                return payload                     # bound: stop paying to wait
+                # Bound. The provider list lags the date chips — hold a few
+                # extra polls for it, else the trusted-seller filter has
+                # nothing to read and we fall back to the (junk-prone)
+                # headline. Return at once when the sellers are in.
+                if payload.get("offers") or bound_wait >= OFFERS_EXTRA_SECONDS:
+                    return payload
+                bound_wait += PAGE_POLL_SECONDS
         time.sleep(PAGE_POLL_SECONDS)
         waited += PAGE_POLL_SECONDS
     return last
@@ -951,9 +1017,12 @@ def build(payload, scraped=None, today=None):
         fresh = scraped.get(e["key"])
         if fresh and fresh[0]:
             rate, checked = fresh[0], today
+            rate_src = (fresh[1][5:] if isinstance(fresh[1], str)
+                        and fresh[1].startswith("ok · ") else None)
         else:
             rate, checked = prev.get("rate"), prev.get("checked")
-            if fresh and fresh[1] and fresh[1] != "ok":
+            rate_src = prev.get("rate_src")
+            if fresh and fresh[1] and not str(fresh[1]).startswith("ok"):
                 notes.append(f"{e['name']}: {fresh[1]}")
         anchor = anchor_for(e["key"])
         if anchor:
@@ -987,6 +1056,7 @@ def build(payload, scraped=None, today=None):
                "program": e["program"], "angle": e["angle"], "rank": e["rank"],
                "stay": stay,
                "suspect": suspect_drop(prev, {"rate": rate}) or None,
+               "rate_src": rate_src,
                "bold": bool(e.get("bold")), "rate": rate, "checked": checked,
                "anchor": anchor, "est_allin_night": est,
                "avg_allin_night": avg_allin, "public_allin_night": public_allin,

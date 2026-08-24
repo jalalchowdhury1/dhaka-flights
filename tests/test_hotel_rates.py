@@ -28,7 +28,8 @@ def page(**kw):
 
 
 def test_good_page_yields_rate():
-    assert hr.parse_rate(page(), ENTRY, JAN5, JAN7) == (425, "ok")
+    rate, note = hr.parse_rate(page(), ENTRY, JAN5, JAN7)
+    assert rate == 425 and note.startswith("ok")
 
 
 def test_silently_defaulted_dates_are_rejected():
@@ -259,7 +260,7 @@ def test_stale_stderr_from_a_previous_property_is_not_reused(monkeypatch):
             return ""
 
     rate, note = hr.scrape_rate(ENTRY, JAN5, JAN7, scraper=Recovered)
-    assert rate == 425 and note == "ok"
+    assert rate == 425 and note.startswith("ok")
 
 
 def test_wait_for_page_stops_as_soon_as_the_dates_bind(monkeypatch):
@@ -271,11 +272,46 @@ def test_wait_for_page_stops_as_soon_as_the_dates_bind(monkeypatch):
         @staticmethod
         def _run(cmd):
             calls.append(cmd)
-            return json.dumps({"result": json.dumps(page())})
+            p = page()
+            p["offers"] = ["Expedia.com|425"]
+            return json.dumps({"result": json.dumps(p)})
 
     got = hr._wait_for_page(Fast, JAN5, JAN7)
     assert got["price"] == "425"
     assert len(calls) == 1, f"kept polling after the page bound: {len(calls)}"
+
+
+def test_wait_for_page_holds_briefly_for_the_seller_list(monkeypatch):
+    """Dates bind before the provider list renders (proven live 2026-08-24);
+    without the hold the catchit filter has nothing to read."""
+    monkeypatch.setattr(hr.time, "sleep", lambda *_: None)
+    calls = []
+
+    class Lagging:
+        @staticmethod
+        def _run(cmd):
+            calls.append(cmd)
+            p = page()
+            if len(calls) >= 3:
+                p["offers"] = ["Hotels.com|520", "Catchit.com|196"]
+            return json.dumps({"result": json.dumps(p)})
+
+    got = hr._wait_for_page(Lagging, JAN5, JAN7)
+    assert got["offers"] and len(calls) == 3
+    rate, note = hr.parse_rate(got, ENTRY, JAN5, JAN7)
+    assert rate == 520 and "ignored Catchit.com" in note
+
+
+def test_wait_for_page_returns_bound_page_when_sellers_never_render(monkeypatch):
+    monkeypatch.setattr(hr.time, "sleep", lambda *_: None)
+
+    class NoSellers:
+        @staticmethod
+        def _run(cmd):
+            return json.dumps({"result": json.dumps(page())})
+
+    got = hr._wait_for_page(NoSellers, JAN5, JAN7)
+    assert got["price"] == "425" and not got.get("offers")
 
 
 def test_wait_for_page_gives_up_and_returns_the_last_bad_payload(monkeypatch):
@@ -714,3 +750,38 @@ def test_build_rows_carry_the_suspect_flag(monkeypatch):
     flags = {r["key"]: r.get("suspect") for r in data["rows"]}
     assert flags["stregis_sin"] is True
     assert not flags["kempinski_sin"]
+
+
+# ── Trusted-seller pricing (2026-08-24: filter catchit-class OTAs out) ──────
+def test_offer_rate_prices_from_trusted_sellers_only():
+    payload = {"offers": ["Hotels.com|520", "Official Site|520", "Expedia.com|520",
+                          "Travelocity.com|520", "Catchit.com|196"]}
+    rate, src, ignored = hr.offer_rate(payload)
+    assert rate == 520 and src in ("Expedia.com", "Hotels.com", "Official Site", "Travelocity.com")
+    assert ignored == [(196, "Catchit.com")]
+    # parse_rate uses it and names the junk seller in the note
+    p = page(price="196"); p["offers"] = payload["offers"]
+    rate, note = hr.parse_rate(p, ENTRY, JAN5, JAN7)
+    assert rate == 520 and "ignored Catchit.com $196" in note
+
+
+def test_offer_rate_untrusted_only_falls_back_to_headline():
+    p = page(price="425"); p["offers"] = ["Catchit.com|196", "ZenHotels.com|210"]
+    rate, note = hr.parse_rate(p, ENTRY, JAN5, JAN7)
+    assert rate == 425 and "no trusted seller" in note
+    assert hr.offer_rate({"offers": []}) == (None, None, [])
+    assert hr.offer_rate({"offers": ["garbage", "X|notanumber", "Y|999999"]}) == (None, None, [])
+
+
+def test_build_records_the_rate_source(monkeypatch):
+    prev_rows = {e["key"]: {"rate": 500, "checked": "2026-08-23", "rate_src": "$500 Expedia.com"}
+                 for e in hr.SHORTLIST}
+    monkeypatch.setattr(hr, "load_previous", lambda: prev_rows)
+    scraped = {e["key"]: ((520, "ok · $520 Hotels.com (ignored Catchit.com $196)")
+                          if e["key"] == "stregis_sin" else (None, "throttled"))
+               for e in hr.SHORTLIST}
+    data = hr.build({"stays": {}}, scraped=scraped, today="2026-08-24")
+    by = {r["key"]: r for r in data["rows"]}
+    assert by["stregis_sin"]["rate_src"] == "$520 Hotels.com (ignored Catchit.com $196)"
+    assert by["kempinski_sin"]["rate_src"] == "$500 Expedia.com"   # stale keeps prev
+    assert any("throttled" in n for n in data["notes"])

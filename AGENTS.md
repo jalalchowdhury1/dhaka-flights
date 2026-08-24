@@ -539,6 +539,16 @@ if there's a better hotel deal". Two channels, both Telegram:
     alone as `deal_message` on a quiet night (a rival can creep under the bar
     through moves smaller than `MOVE_ALERT_PCT/ABS`). Rows without
     `drift_pct` (stale/seeded) never ring.
+  - **Trusted-seller pricing** (2026-08-24, same incident): `EXTRACT_JS` now
+    also scrapes Google's per-seller price list (provider line → bare $price
+    within 3 lines); `parse_rate` prices from the cheapest seller matching
+    `TRUSTED_SELLERS` (PREFIX match — "zenhotels.com" must not pass as
+    "hotels.com") and names any cheaper junk seller in the note
+    ("ok · $520 Hotels.com (ignored Catchit.com $196)"). The headline price
+    is only a fallback ("no trusted seller parsed"). `_wait_for_page` holds
+    up to `OFFERS_EXTRA_SECONDS` after the dates bind because the seller
+    list renders late (proven live). `build()` keeps the seller on the row
+    as `rate_src`. The ⚠️ suspect guard below stays as the second net.
   - **⚠️ Suspect rates** (`SUSPECT_DROP_PCT = 45`, added 2026-08-24): Google's
     headline price is whatever OTA bids lowest, including junk/bait sellers —
     catchit.com put the St. Regis SIN at $196/n (−62%) during CNY week and the
