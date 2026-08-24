@@ -104,6 +104,10 @@ REMINDERS = [
       "charge must land by Dec 31.",
       "The $250 Edit credit posts by itself; the charge must land by Dec 31. "
       "Add your Bonvoy number at booking (points + Platinum perks stack).",
+      "Within 24h of booking: check Booking/Expedia for the SAME Ritz room, "
+      "dates and cancellation policy — if publicly cheaper, file Chase "
+      "Travel's Price Match Guarantee (855-234-2542) for the difference. "
+      "Mainstream sites only; opaque/member rates don't qualify.",
       "Send me the confirmation number."]),
     (datetime.date(2027, 1, 2), 0,
      "Kempinski: rebook as Pay Today on the Platinum (Jan–Jun $300), then "
