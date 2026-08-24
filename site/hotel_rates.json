@@ -671,7 +671,8 @@
      "pct": 64,
      "band": "warn"
     }
-   ]
+   ],
+   "suspect": true
   },
   {
    "key": "fullerton_bay",

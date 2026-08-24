@@ -678,3 +678,39 @@ def test_payload_carries_points_routes_for_the_edit_city():
     assert pr["hyatt"]["key"] in {e["key"] for e in hr.SHORTLIST}
     # The Edit city is the one NOT taking the Amex $300
     assert hr.CREDIT_PLAN["amex_300_to"] != "IST" and "IST" in hr.POINTS_ROUTES
+
+
+# ── ⚠️ Suspect rates (2026-08-24: catchit.com bait poisoned the St. Regis) ──
+def test_suspect_collapse_never_rings_but_warns(monkeypatch):
+    monkeypatch.setattr(hr, "BOOKED", {"SIN": {"key": "kempinski_sin", "total": 1497.11,
+                                               "via": "Amex FHR", "confirmation": "ZO-AX1078-06155"}})
+    play = _drow("kempinski_sin", "SIN", "The Capitol Kempinski", 287, 662, 4, 1327, 0.0, bold=True)
+    prev = {"rows": [play, _drow("stregis_sin", "SIN", "St. Regis Singapore", 520, 2024, 4, 2664, 0.0)]}
+    new = {"rows": [play, _drow("stregis_sin", "SIN", "St. Regis Singapore", 196, 364, 4, 1004, -62.0)]}
+    bells = hr.rival_bells(prev, new)
+    assert "🔔" not in (bells.get("SIN") or "")
+    assert "⚠️" in bells["SIN"] and "junk OTA" in bells["SIN"] and "$520" in bells["SIN"]
+    # the movers line carries the same flag
+    msg = hr.moves_message(hr.rate_moves(prev, new), prev, new)
+    assert "⚠️ suspect (junk OTA rate?)" in msg
+    # a genuine −30% drop still rings normally
+    real = {"rows": [play, _drow("stregis_sin", "SIN", "St. Regis Singapore", 364, 500, 4, 1400, -30.0)]}
+    assert "🔔" in hr.rival_bells(prev, real)["SIN"]
+
+
+def test_suspect_play_never_triggers_the_rebook_bell(monkeypatch):
+    monkeypatch.setattr(hr, "BOOKED", {"SIN": {"key": "kempinski_sin", "total": 1497.11,
+                                               "via": "Amex FHR", "confirmation": "ZO-AX1078-06155"}})
+    prev = {"rows": [_drow("kempinski_sin", "SIN", "The Capitol Kempinski", 287, 662, 4, 1327, 0.0, bold=True)]}
+    new = {"rows": [_drow("kempinski_sin", "SIN", "The Capitol Kempinski", 120, 200, 4, 550, -58.0, bold=True)]}
+    assert hr.play_drop_bells(prev, new) == []
+
+
+def test_build_rows_carry_the_suspect_flag(monkeypatch):
+    prev_rows = {e["key"]: {"rate": 520, "checked": "2026-08-23"} for e in hr.SHORTLIST}
+    monkeypatch.setattr(hr, "load_previous", lambda: prev_rows)
+    scraped = {e["key"]: (196 if e["key"] == "stregis_sin" else 500, "ok") for e in hr.SHORTLIST}
+    data = hr.build({"stays": {}}, scraped=scraped, today="2026-08-24")
+    flags = {r["key"]: r.get("suspect") for r in data["rows"]}
+    assert flags["stregis_sin"] is True
+    assert not flags["kempinski_sin"]

@@ -103,6 +103,21 @@ def rate_moves(prev, new):
 SWAP_BAR = 150    # $ a rival must net under the play for the alert to ring a bell
 REBOOK_BAR = 100  # $ the play's own stay must fall under what you hold (or its
                   # anchor) before the "rebook it cheaper" bell rings
+SUSPECT_DROP_PCT = 45  # an overnight public-rate collapse this size is almost
+                       # never the market — it's a junk/bait OTA listing that
+                       # Google surfaced (proven 2026-08-24: catchit.com put
+                       # St. Regis SIN at $196/n, −62%, during CNY week).
+                       # Suspect rates get a ⚠️ and NEVER ring a 🔔 bell.
+
+
+def suspect_drop(prev_row, row):
+    """True when tonight's public rate collapsed ≥ SUSPECT_DROP_PCT vs last
+    night — treat as a poisoned baseline until a real bookable rate confirms."""
+    o = (prev_row or {}).get("rate")
+    n = (row or {}).get("rate")
+    if not (_num(o) and _num(n)) or n >= o:
+        return False
+    return (o - n) / o * 100 >= SUSPECT_DROP_PCT
 
 _CITY_LABEL = {"IST": "🕌 Istanbul", "SIN": "🇸🇬 Singapore"}
 
@@ -144,11 +159,16 @@ def rival_bells(prev, new):
             continue
         prev_play_net = _net(by_key_prev.get(play.get("key")))
         rivals = []
+        suspects = []
         for r in rows:
             if r is play or _net(r) is None:
                 continue
+            was_row = by_key_prev.get(r.get("key"))
+            if suspect_drop(was_row, r):
+                suspects.append(r)
+                continue
             d = _net(play) - _net(r)
-            was_net = _net(by_key_prev.get(r.get("key")))
+            was_net = _net(was_row)
             d_was = (prev_play_net - was_net
                      if prev_play_net is not None and was_net is not None else None)
             if d >= SWAP_BAR and (d_was is None or d_was < SWAP_BAR):
@@ -163,6 +183,14 @@ def rival_bells(prev, new):
                      if bk.get("confirmation") else
                      "\n   → check it on the Stays tab before anything is booked")
             out[city] = line
+        elif suspects:
+            r = suspects[0]
+            was = by_key_prev.get(r.get("key")) or {}
+            out[city] = (f"⚠️ {r['name']} shows a suspicious public-rate collapse "
+                         f"(${was.get('rate'):,.0f}→${r.get('rate'):,.0f}/n) — almost "
+                         f"certainly a junk OTA listing on Google, NOT a real deal. "
+                         f"Verify a bookable rate (marriott.com / Amex) before acting; "
+                         f"no bell until it holds.")
     return out
 
 
@@ -178,6 +206,8 @@ def play_drop_bells(prev, new):
         if not play:
             continue
         was = by_key_prev.get(play.get("key")) or {}
+        if suspect_drop(was, play):
+            continue          # poisoned baseline must never trigger a rebook
         bk = BOOKED.get(city) or {}
         booked = bk if bk.get("key") == play.get("key") and _num(bk.get("total")) else None
         f_now, f_was = _drift_factor(play), _drift_factor(was)
@@ -259,7 +289,8 @@ def moves_message(moves, prev=None, new=None):
             net = (f"net {st['nights']}n ${wst['net']:,.0f} → ${st['net']:,.0f}"
                    if _num(st.get("net")) or st.get("net") == 0 else "net —") \
                 if st and wst else "net —"
-            lines.append(f"  {arrow}{pct}% {name} · {net} · public ${o:,.0f}→${n:,.0f}")
+            flag = " ⚠️ suspect (junk OTA rate?)" if suspect_drop(was, row) else ""
+            lines.append(f"  {arrow}{pct}% {name} · {net} · public ${o:,.0f}→${n:,.0f}{flag}")
     rivals = rival_bells(prev, new)
     for city, label in _CITY_LABEL.items():
         _rows, play = _city_rows(new, city)
@@ -955,6 +986,7 @@ def build(payload, scraped=None, today=None):
         row = {"key": e["key"], "city": e["city"], "name": e["name"],
                "program": e["program"], "angle": e["angle"], "rank": e["rank"],
                "stay": stay,
+               "suspect": suspect_drop(prev, {"rate": rate}) or None,
                "bold": bool(e.get("bold")), "rate": rate, "checked": checked,
                "anchor": anchor, "est_allin_night": est,
                "avg_allin_night": avg_allin, "public_allin_night": public_allin,

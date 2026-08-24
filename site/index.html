@@ -1112,6 +1112,10 @@ function taCell(row) {
 function vsCell(row, play) {
   if (!row.stay || !play || !play.stay) return `<td class="num">—</td>`;
   if (row === play) return `<td class="num"><span class="badge good">the play</span></td>`;
+  /* A ⚠️ row's public rate collapsed overnight — almost always a junk OTA
+     listing Google surfaced (catchit.com, 2026-08-24), so its "value" is
+     fiction until a real bookable rate confirms. Never paint it green. */
+  if (row.suspect) return `<td class="num" title="overnight public-rate collapse — likely a junk OTA listing, not a real deal; verify a bookable rate before acting"><span class="badge warn">⚠️ suspect</span></td>`;
   const d = row.stay.net - play.stay.net;
   const cls = d <= -150 ? "good" : (d < 0 ? "warn" : "");
   return `<td class="num">${cls ? `<span class="badge ${cls}">` : ""}${d >= 0 ? "+" : "−"}${usd0(Math.abs(d))}${cls ? "</span>" : ""}</td>`;

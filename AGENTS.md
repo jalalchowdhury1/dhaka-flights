@@ -539,6 +539,16 @@ if there's a better hotel deal". Two channels, both Telegram:
     alone as `deal_message` on a quiet night (a rival can creep under the bar
     through moves smaller than `MOVE_ALERT_PCT/ABS`). Rows without
     `drift_pct` (stale/seeded) never ring.
+  - **⚠️ Suspect rates** (`SUSPECT_DROP_PCT = 45`, added 2026-08-24): Google's
+    headline price is whatever OTA bids lowest, including junk/bait sellers —
+    catchit.com put the St. Regis SIN at $196/n (−62%) during CNY week and the
+    5 am alert wrongly rang the swap bell. An overnight collapse ≥45% now (a)
+    never rings a 🔔 (rival or rebook), (b) gets a ⚠️ "junk OTA rate?" tag on
+    its movers line + a ⚠️ suspect badge in the site's "vs play" column
+    (`row.suspect` from `build()`), and (c) emits a verify-first ⚠️ line
+    instead of the bell. Chase's Price Match won't accept such rates either
+    (same room + publicly verifiable retail site required). If a big drop is
+    REAL it will still be there tomorrow at <45% drift — the bell then rings.
 
 ## 5. Gotchas / hard rules
 
