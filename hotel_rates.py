@@ -113,6 +113,22 @@ def rate_moves(prev, new):
 SWAP_BAR = 150    # $ a rival must net under the play for the alert to ring a bell
 REBOOK_BAR = 100  # $ the play's own stay must fall under what you hold (or its
                   # anchor) before the "rebook it cheaper" bell rings
+
+# ── card-portal quotes (Edit / FHR carts) vs the public rate ────────────────
+# Rule 2: the rates the card play actually books are behind CARDHOLDER LOGINS
+# and are never scraped. So the play's quote is a HAND-ENTERED number from a
+# cart read with Jalal present, and every nightly run compares it against the
+# public rate that IS scraped. This exists because the Ritz IST Edit quote
+# ($1,285, read 2026-08-23) sat $63 ABOVE booking direct after the credit and
+# nobody noticed until a Reddit thread prompted a manual look on 2026-08-25 —
+# the quote lived only as prose in the `angle` field, so nothing compared it.
+# Update `total`/`date` whenever the cart is re-read; delete the entry once
+# the stay is prepaid (the quote becomes BOOKED and play_drop_bells takes over).
+PORTAL_QUOTES = {
+    "ritz_ist": {"via": "Chase The Edit", "total": 1285.0, "credit": 250.0,
+                 "date": "2026-08-23",
+                 "benefits": "breakfast + $100 property credit + Bonvoy (if flagged eligible in cart)"},
+}
 SUSPECT_DROP_PCT = 45  # an overnight public-rate collapse this size is almost
                        # never the market — it's a junk/bait OTA listing that
                        # Google surfaced (proven 2026-08-24: catchit.com put
@@ -252,9 +268,65 @@ def play_drop_bells(prev, new):
     return out
 
 
+def portal_quote_fields(quote, public_allin_night, nights):
+    """The nightly comparison for one hand-entered cart quote.
+
+    edge = public stay total − (quote − credit): positive means the card-portal
+    quote, after its statement credit, still beats booking the same stay
+    direct at tonight's public rate; negative means direct is now cheaper.
+    The public side is the scraped Google rate with the city tax multiplier
+    already applied (public_allin_night), NOT est_allin_night — that one is
+    FHR-portal-anchored and would compare the quote against itself.
+    """
+    if not _num(public_allin_night) or not nights:
+        return None
+    public_stay = round(public_allin_night * nights, 2)
+    net = round(quote["total"] - quote["credit"], 2)
+    return {**quote,
+            "public_stay": public_stay,
+            "premium": round(quote["total"] - public_stay, 2),
+            "net_after_credit": net,
+            "edge": round(public_stay - net, 2)}
+
+
+def portal_quote_bells(prev, new):
+    """🔔 once, on the crossing, when a cart quote stops (or resumes) beating
+    the public rate. Never a nightly nag: while the edge stays on one side the
+    bell is silent — the site row still carries the number every night.
+
+    A missing prev quote (feature just shipped, or a new entry) counts as
+    "was winning": a live inversion on night one must not wait a night.
+    """
+    by_key_prev = {r.get("key"): r for r in (prev or {}).get("rows", [])}
+    out = []
+    for row in (new or {}).get("rows", []):
+        pq = row.get("portal_quote")
+        if not pq or pq.get("edge") is None:
+            continue
+        was = (by_key_prev.get(row.get("key")) or {}).get("portal_quote") or {}
+        was_edge = was.get("edge")
+        losing_now, losing_was = pq["edge"] < 0, (was_edge is not None and was_edge < 0)
+        if losing_now and not losing_was:
+            out.append(
+                f"🔔 {row['name']}: the {pq['via']} quote (${pq['total']:,.0f} on "
+                f"{pq['date']}) now nets ${pq['net_after_credit']:,.0f} after the "
+                f"${pq['credit']:,.0f} credit vs ≈${pq['public_stay']:,.0f} booking "
+                f"direct — direct is ${-pq['edge']:,.0f} cheaper, before extras "
+                f"({pq.get('benefits', 'program benefits')})."
+                f"\n   → re-price the cart before prepaying")
+        elif not losing_now and losing_was:
+            out.append(
+                f"🔔 {row['name']}: the {pq['via']} quote beats booking direct "
+                f"again — ${pq['edge']:,.0f} ahead after the credit "
+                f"(${pq['net_after_credit']:,.0f} vs ≈${pq['public_stay']:,.0f}). "
+                f"Good moment to prepay if the cart still shows ${pq['total']:,.0f}.")
+    return out
+
+
 def deal_alerts(prev, new):
-    """Every 🔔 line that should ring tonight (rivals + play drops)."""
-    return list(rival_bells(prev, new).values()) + play_drop_bells(prev, new)
+    """Every 🔔 line that should ring tonight (rivals + play drops + quotes)."""
+    return (list(rival_bells(prev, new).values()) + play_drop_bells(prev, new)
+            + portal_quote_bells(prev, new))
 
 
 def deal_message(prev, new):
@@ -1091,6 +1163,11 @@ def build(payload, scraped=None, today=None):
             row["offsets"] = [_offset(e, anchor, est, rate, nights or 2)]
         else:
             row["offsets"] = [_offset(e, anchor, est, rate, n) for n in (2, 4)]
+        quote = PORTAL_QUOTES.get(e["key"])
+        if quote:
+            pq = portal_quote_fields(quote, public_allin, stay_n)
+            if pq is not None:
+                row["portal_quote"] = pq
         rows.append(row)
     return {
         "updated": today,

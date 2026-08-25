@@ -110,6 +110,23 @@ from. Rules now:
    no line comments and no apostrophes — a line comment silently swallows the
    rest of the function and every property returns "no page payload" (this
    exact bug shipped and was caught by a live run). A test enforces both.
+5b. **Hand-entered cart quotes are compared nightly (`PORTAL_QUOTES`,
+   2026-08-25).** Rule 2 stands — Edit/FHR carts are never scraped — but the
+   quote READ from a cart (with Jalal present) is entered as a NUMBER in
+   `hotel_rates.PORTAL_QUOTES`, and `build()` attaches `portal_quote` to the
+   play's row: `public_stay` (public_allin_night × nights — the scraped
+   Google rate with city tax, NOT est_allin_night, which is portal-anchored
+   and would compare the quote against itself), `premium`, `net_after_credit`
+   and `edge` (positive = the quote after its credit still beats booking
+   direct). `portal_quote_bells()` rings ONCE on each crossing — quote stops
+   beating direct, or starts again — never nightly. Why it exists: the Ritz
+   IST Edit quote ($1,285, 8/23) sat $63 ABOVE booking direct after the
+   credit and nothing noticed, because the quote lived only as prose in the
+   `angle` field. The bell text always says the gap is BEFORE program extras
+   (breakfast/$100/Bonvoy) so a small inversion reads as "re-price", not
+   "cancel the plan". Update `total`/`date` on every cart re-read; DELETE the
+   entry once the stay is prepaid (it becomes BOOKED and play_drop_bells
+   takes over). Tests: `tests/test_portal_quote.py`.
 6. **Scrape from Browserbase, not from this house.** `run_hotel_rates.py`
    switches the CLI to `browse env remote` (key in the gitignored `.env`), so
    hotel traffic leaves from Browserbase residential IPs and the home IP is
