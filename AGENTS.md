@@ -429,11 +429,18 @@ launchd 12:00am + 2:00am retry slot (com.jalal.dhaka-flights.plist, parallel wit
   baggage table, sheets rows; no browser).
 - Manual full run: `./run_daily.sh` (delete `.last_run_date` first or it skips).
 - One search interactively: `python3 -c "from scraper import scrape_route; print(scrape_route('DAC','SIN','January 30, 2027'))"`.
-- Dashboard deploy (only when site/index.html changes): `cd site && vercel --prod --yes`
-  (project `dhaka-flights`, account `jalalchowdhury-8053`). Data updates need NO deploy.
+- Dashboard deploy: the Vercel project (`dhaka-flights`, account
+  `jalalchowdhury-8053`) has been Git-linked to github.com/jalalchowdhury1/dhaka-flights
+  since 2026-08-29, with **Root Directory = `site`** — every `git push` to main
+  auto-deploys `site/`. Manual deploy, if ever needed, runs from the REPO ROOT:
+  `vercel --prod --yes` (NOT from `site/` — with the root-directory setting that
+  fails). Data updates need NO deploy (index.html fetches data.json raw from GitHub).
+  ⚠️ 2026-09-01 incident: the Git link was created with no root directory, so the
+  nightly data pushes deployed the Python repo root → dhaka-flights.vercel.app
+  served 404 for ~2 days. Never clear the Root Directory setting.
 - **Rollback the site to the pre-overhaul version** (tagged `v1-pre-overhaul`,
   2026-08-02): `git checkout v1-pre-overhaul -- site/index.html && git commit
-  -m "Rollback site to v1" && git push && cd site && vercel --prod --yes`.
+  -m "Rollback site to v1" && git push` (the push auto-deploys).
   Plan B: Vercel dashboard → Deployments → pick an older one → Promote to
   Production.
 
