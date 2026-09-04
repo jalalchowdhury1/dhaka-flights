@@ -1,8 +1,8 @@
 {
- "updated": "2026-09-03 00:34",
+ "updated": "2026-09-04 00:35",
  "alerts": [],
- "price_context": "#24/34 \u00b7 $312 over low",
- "countdown": "\ud83d\udcc5 17 days left in your usual booking window (booked Sep 18 '24 \u00b7 Sep 23 '25)",
+ "price_context": "#24/35 \u00b7 $312 over low",
+ "countdown": "\ud83d\udcc5 16 days left in your usual booking window (booked Sep 18 '24 \u00b7 Sep 23 '25)",
  "changes": [],
  "warnings": [],
  "trip": {
@@ -17,7 +17,7 @@
   "order": "BKK-first",
   "order_label": "Bangkok first",
   "total": 4913,
-  "cheapest_total": 4536,
+  "cheapest_total": 4573,
   "valid": true,
   "flag": null,
   "home": "Feb 7",
@@ -39,20 +39,20 @@
     "stops": "Nonstop",
     "duration": "2 hr 35 min",
     "layovers": "none",
-    "price_total": 590,
+    "price_total": 589,
     "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI4agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
    },
    {
     "route": "BKK\u2192SIN",
     "depart": "February 2, 2027",
     "arrive": "February 2, 2027",
-    "depart_time": "9:15 AM",
-    "arrive_time": "12:50 PM",
+    "depart_time": "11:50 AM",
+    "arrive_time": "3:25 PM",
     "airline": "Scoot",
     "stops": "Nonstop",
     "duration": "2 hr 35 min",
     "layovers": "none",
-    "price_total": 321,
+    "price_total": 322,
     "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
    }
   ],
@@ -77,22 +77,22 @@
    "ret_city": "SIN",
    "route": "BOS\u2192IST\u2192DAC + SIN\u2192BOS",
    "pick": {
-    "premium": 377,
+    "premium": 340,
     "over": {
      "airline": "Delta and Air France",
-     "price_total": 3625,
+     "price_total": 3662,
      "stops": "1 stop",
      "duration": "16 hr 55 min"
     },
     "knob": 500,
-    "note": "nonstop Turkish Airlines preferred over Delta and Air France $3,625 (1 stop, 16 hr 55 min): +$377, under the $500 nonstop-worth knob"
+    "note": "nonstop Turkish Airlines preferred over Delta and Air France $3,662 (1 stop, 16 hr 55 min): +$340, under the $500 nonstop-worth knob"
    }
   },
   "other_order": {
    "order": "SIN-first",
    "order_label": "Singapore first",
-   "total": 5455,
-   "delta": 542,
+   "total": 5454,
+   "delta": 541,
    "valid": true,
    "flag": null,
    "sg_nights": 4,
@@ -100,7 +100,7 @@
    "dhaka_days": 20,
    "ticket1_total": 4357,
    "ticket1_airline": "Turkish Airlines",
-   "ticket2_total": 1098,
+   "ticket2_total": 1097,
    "ticket2_airlines": "US-Bangla Airlines + Thai AirAsia",
    "ticket2_kind": "2 one-ways"
   },
@@ -182,7 +182,7 @@
   "name": "Istanbul 2-night stopover + Singapore \u00b7 1 ticket middle",
   "kind": "sg-stopover2",
   "trip": "via-SIN",
-  "total": 7018,
+  "total": 6184,
   "valid": true,
   "flag": null,
   "home": "Feb 7",
@@ -191,20 +191,20 @@
   "sg_nights": 2,
   "ist_nights": 2,
   "sg_preferred": false,
-  "sg_airlines": "Malaysia Airlines and Singapore Airlines",
+  "sg_airlines": "Batik Air",
   "alt_note": null,
   "legs": [],
   "sg_ticket": {
    "out_date": "January 30, 2027",
    "ret_date": "February 1, 2027",
-   "price_total": 2799,
-   "airline": "Malaysia Airlines and Singapore Airlines",
+   "price_total": 1965,
+   "airline": "Batik Air",
    "out_arrive": "January 30, 2027",
-   "out_depart_time": "12:30 PM",
-   "out_arrive_time": "9:55 PM",
+   "out_depart_time": "1:10 AM",
+   "out_arrive_time": "9:30 AM",
    "stops": "1 stop",
-   "duration": "7 hr 25 min",
-   "layovers": "1 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "duration": "6 hr 20 min",
+   "layovers": "1 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOGh4SCjIwMjctMDItMDFqBwgBEgNTSU5yBwgBEgNEUFNAAUABQAJIAXABggELCP___________wGYAQM&hl=en",
    "kind": "sg-ticket",
    "route": "DAC\u2192SIN\u2192DPS"
@@ -231,8 +231,8 @@
   "order_label": "Singapore \u2192 Bali",
   "other_bali": {
    "order_label": "Bali \u2192 Singapore",
-   "total": 4979,
-   "delta": -2039,
+   "total": 5014,
+   "delta": -1170,
    "valid": false,
    "flag": "only a 6-night Bali pairing today"
   },
@@ -267,23 +267,14 @@
     "route": "DAC\u2192SIN",
     "label": "Dhaka \u2192 Singapore",
     "ticket": 2,
-    "carrier": "Malaysia Airlines",
-    "checked": "30 kg (Basic fares less)",
-    "cabin": "1 \u00d7 7 kg",
-    "note": "",
-    "url": "https://www.malaysiaairlines.com/us/en/plan/baggage-information.html",
-    "confidence": "typical",
-    "others": [
-     {
-      "carrier": "Singapore Airlines",
-      "checked": "Economy Lite 25 kg \u00b7 Standard 30 kg \u00b7 Flexi 35 kg",
-      "cabin": "1 \u00d7 7 kg (115 cm total)",
-      "note": "Allowance follows the fare brand \u2014 Lite is the cheap one you'll be quoted.",
-      "url": "https://www.singaporeair.com/en_UK/us/travel-info/baggage/free-baggage-allowance/",
-      "confidence": "verified"
-     }
-    ],
-    "summary": "Malaysia Airlines: 30 kg (Basic fares less) \u00b7 Singapore Airlines: Economy Lite 25 kg \u00b7 Standard 30 kg \u00b7 Flexi 35 kg"
+    "carrier": "Batik Air",
+    "checked": "20 kg (varies by market/fare)",
+    "cabin": "7 kg",
+    "note": "Allowance differs between Batik Air Malaysia and Indonesia \u2014 verify.",
+    "url": "https://www.batikair.com/en-ID/Baggage",
+    "confidence": "varies",
+    "others": [],
+    "summary": "20 kg (varies by market/fare)"
    },
    {
     "route": "SIN\u2192DPS",
@@ -314,8 +305,7 @@
   "baggage_warnings": [
    "Two separate purchases \u2192 bags are NOT checked through. Collect them in Dhaka and re-check for Ticket \u2461; same again in Singapore if the middle is two one-way tickets.",
    "Allowance is per person and the child with a seat normally gets the adult allowance \u2014 infants on a lap do not.",
-   "Ticket \u2461's Singapore\u2192Bali carrier isn't visible on Google's multi-city page \u2014 confirm that leg's allowance before paying.",
-   "This itinerary mixes airlines on one ticket (Malaysia Airlines + partners) \u2014 the operating carrier's rule applies per leg."
+   "Ticket \u2461's Singapore\u2192Bali carrier isn't visible on Google's multi-city page \u2014 confirm that leg's allowance before paying."
   ],
   "baggage_checked": "2026-07-25",
   "hotel": {
@@ -335,7 +325,7 @@
    "warn": null,
    "checked": "2026-07-27"
   },
-  "delta_vs_main": 2105
+  "delta_vs_main": 1271
  },
  "hotel": {
   "city": "Bangkok",
@@ -364,52 +354,52 @@
   "hotel": {
    "key": "kempinski_sin",
    "name": "The Capitol Kempinski",
-   "rate": 375,
-   "checked": "2026-09-02",
+   "rate": 376,
+   "checked": "2026-09-03",
    "program": "FHR",
-   "allin_night": 441.18,
+   "allin_night": 442.36,
    "anchor_date": "2026-08-22"
   },
   "rows": [
    {
     "n": 2,
     "flights": 4913,
-    "hotel_net": 337,
-    "allin": 5250,
-    "score": 5250
+    "hotel_net": 340,
+    "allin": 5253,
+    "score": 5253
    },
    {
     "n": 3,
     "flights": 4913,
-    "hotel_net": 719,
-    "allin": 5632,
-    "score": 5407
+    "hotel_net": 722,
+    "allin": 5635,
+    "score": 5410
    },
    {
     "n": 4,
     "flights": 4913,
-    "hotel_net": 659,
-    "allin": 5572,
-    "score": 5097
+    "hotel_net": 662,
+    "allin": 5575,
+    "score": 5100
    }
   ],
   "picked_n": 4,
-  "trip_allin": 5572,
+  "trip_allin": 5575,
   "watchdog": null,
   "warning": null,
   "note": null,
-  "assumption": "The Capitol Kempinski est. $441/paid night all-in (FHR portal 2026-08-22, drifted by the public rate $375 checked 2026-09-02) \u00b7 credits $300+$125/stay + $60/day \u00b7 free night from 4n"
+  "assumption": "The Capitol Kempinski est. $442/paid night all-in (FHR portal 2026-08-22, drifted by the public rate $376 checked 2026-09-03) \u00b7 credits $300+$125/stay + $60/day \u00b7 free night from 4n"
  },
  "ticket1_options": [
   {
    "kind": "1 ticket",
    "airline": "Delta and Air France",
-   "price": 3625,
+   "price": 3662,
    "stops": "1 stop",
    "duration": "16 hr 55 min",
    "layovers": "6 hr 25 min at A\u00e9roport de Paris-Charles de Gaulle in Paris",
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDSVNUGh4SCjIwMjctMDEtMDdqBwgBEgNJU1RyBwgBEgNEQUMaHhIKMjAyNy0wMi0wNmoHCAESA1NJTnIHCAESA0JPU0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
-   "delta": -377,
+   "delta": -340,
    "chosen": false,
    "baggage": {
     "carrier": "Delta",
@@ -434,12 +424,12 @@
   {
    "kind": "1 ticket",
    "airline": "Air France",
-   "price": 3625,
+   "price": 3662,
    "stops": "1 stop",
    "duration": "15 hr 35 min",
    "layovers": "5 hr 20 min at A\u00e9roport de Paris-Charles de Gaulle in Paris",
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDSVNUGh4SCjIwMjctMDEtMDdqBwgBEgNJU1RyBwgBEgNEQUMaHhIKMjAyNy0wMi0wNmoHCAESA1NJTnIHCAESA0JPU0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
-   "delta": -377,
+   "delta": -340,
    "chosen": false,
    "baggage": {
     "carrier": "Air France",
@@ -557,12 +547,12 @@
   {
    "kind": "1 ticket",
    "airline": "Lufthansa and Turkish Airlines",
-   "price": 15912,
+   "price": 21505,
    "stops": "1 stop",
    "duration": "14 hr 50 min",
    "layovers": "4 hr 50 min at Munich International Airport in Munich",
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDSVNUGh4SCjIwMjctMDEtMDdqBwgBEgNJU1RyBwgBEgNEQUMaHhIKMjAyNy0wMi0wNmoHCAESA1NJTnIHCAESA0JPU0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
-   "delta": 11910,
+   "delta": 17503,
    "chosen": false,
    "baggage": {
     "carrier": "Lufthansa",
@@ -586,13 +576,13 @@
   },
   {
    "kind": "1 ticket",
-   "airline": "Emirates",
-   "price": 31500,
+   "airline": "Emirates and flydubai",
+   "price": 31310,
    "stops": "1 stop",
-   "duration": "32 hr 15 min",
-   "layovers": "14 hr 55 min at Dubai International Airport in Dubai",
+   "duration": "35 hr 25 min",
+   "layovers": "18 hr 10 min at Dubai International Airport in Dubai",
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDSVNUGh4SCjIwMjctMDEtMDdqBwgBEgNJU1RyBwgBEgNEQUMaHhIKMjAyNy0wMi0wNmoHCAESA1NJTnIHCAESA0JPU0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
-   "delta": 27498,
+   "delta": 27308,
    "chosen": false,
    "baggage": {
     "carrier": "Emirates",
@@ -601,8 +591,17 @@
     "note": "",
     "url": "https://www.emirates.com/us/english/before-you-fly/baggage/",
     "confidence": "typical",
-    "others": [],
-    "summary": "2 \u00d7 23 kg per person"
+    "others": [
+     {
+      "checked": "not published for this carrier here",
+      "cabin": "\u2014",
+      "confidence": "unknown",
+      "note": "Carrier isn't in the reference table \u2014 open its baggage page before paying.",
+      "url": "https://www.google.com/search?q=flydubai+checked+baggage+allowance+economy",
+      "carrier": "flydubai"
+     }
+    ],
+    "summary": "Emirates: 2 \u00d7 23 kg per person \u00b7 flydubai: not published for this carrier here"
    }
   }
  ],
@@ -722,7 +721,7 @@
   {
    "kind": "2 tickets",
    "airline": "US-Bangla Airlines + Thai AirAsia",
-   "price": 954,
+   "price": 953,
    "stops": "Nonstop / Nonstop",
    "duration": "2 hr 35 min / 2 hr 40 min",
    "layovers": null,
@@ -731,7 +730,7 @@
    "depart_time": "9:35 AM",
    "arrive_time": "1:10 PM",
    "chosen": false,
-   "delta": 43,
+   "delta": 42,
    "baggage": {
     "carrier": "US-Bangla Airlines",
     "checked": "30 kg (max 2 pieces) per person",
@@ -755,7 +754,7 @@
   {
    "kind": "2 tickets",
    "airline": "THAI + Thai AirAsia",
-   "price": 978,
+   "price": 977,
    "stops": "Nonstop / Nonstop",
    "duration": "2 hr 30 min / 2 hr 40 min",
    "layovers": null,
@@ -764,7 +763,7 @@
    "depart_time": "1:40 PM",
    "arrive_time": "5:10 PM",
    "chosen": false,
-   "delta": 67,
+   "delta": 66,
    "baggage": {
     "carrier": "THAI Airways",
     "checked": "Economy Saver 23 kg \u00b7 Flexi/Full 30 kg",
@@ -844,7 +843,7 @@
   {
    "kind": "2 tickets",
    "airline": "US-Bangla Airlines + THAI",
-   "price": 1055,
+   "price": 1054,
    "stops": "Nonstop / Nonstop",
    "duration": "2 hr 35 min / 2 hr 20 min",
    "layovers": null,
@@ -853,7 +852,7 @@
    "depart_time": "9:35 AM",
    "arrive_time": "1:10 PM",
    "chosen": false,
-   "delta": 144,
+   "delta": 143,
    "baggage": {
     "carrier": "US-Bangla Airlines",
     "checked": "30 kg (max 2 pieces) per person",
@@ -877,7 +876,7 @@
   {
    "kind": "2 tickets",
    "airline": "US-Bangla Airlines + Thai Lion Air",
-   "price": 1072,
+   "price": 1071,
    "stops": "Nonstop / Nonstop",
    "duration": "2 hr 35 min / 2 hr 25 min",
    "layovers": null,
@@ -886,7 +885,7 @@
    "depart_time": "9:35 AM",
    "arrive_time": "1:10 PM",
    "chosen": false,
-   "delta": 161,
+   "delta": 160,
    "baggage": {
     "carrier": "US-Bangla Airlines",
     "checked": "30 kg (max 2 pieces) per person",
@@ -912,7 +911,7 @@
   {
    "out_date": "January 28, 2027",
    "ret_date": "February 1, 2027",
-   "price_total": 4300,
+   "price_total": 4293,
    "airline": "Malaysia Airlines and Singapore Airlines",
    "out_arrive": "January 28, 2027",
    "out_depart_time": "12:30 PM",
@@ -928,7 +927,7 @@
   {
    "out_date": "January 28, 2027",
    "ret_date": "February 1, 2027",
-   "price_total": 4389,
+   "price_total": 4381,
    "airline": "Malaysia Airlines",
    "out_arrive": "January 29, 2027",
    "out_depart_time": "12:30 PM",
@@ -944,7 +943,7 @@
   {
    "out_date": "January 28, 2027",
    "ret_date": "February 1, 2027",
-   "price_total": 4389,
+   "price_total": 4381,
    "airline": "Malaysia Airlines",
    "out_arrive": "January 29, 2027",
    "out_depart_time": "10:55 PM",
@@ -960,7 +959,7 @@
   {
    "out_date": "January 28, 2027",
    "ret_date": "February 1, 2027",
-   "price_total": 4389,
+   "price_total": 4381,
    "airline": "Malaysia Airlines",
    "out_arrive": "January 29, 2027",
    "out_depart_time": "10:55 PM",
@@ -976,119 +975,7 @@
   {
    "out_date": "January 29, 2027",
    "ret_date": "January 31, 2027",
-   "price_total": 1089,
-   "airline": "US-Bangla Airlines",
-   "out_arrive": "January 30, 2027",
-   "out_depart_time": "10:15 PM",
-   "out_arrive_time": "4:30 AM",
-   "stops": "Nonstop",
-   "duration": "4 hr 15 min",
-   "layovers": "none",
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOGiMSCjIwMjctMDEtMzFqBwgBEgNTSU5yDAgDEggvbS8wZm4yZ0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
-   "kind": "sg-ticket",
-   "order": "SIN-first",
-   "route": "DAC\u2192SIN\u2192BKK"
-  },
-  {
-   "out_date": "January 29, 2027",
-   "ret_date": "January 31, 2027",
-   "price_total": 1715,
-   "airline": "Batik Air",
-   "out_arrive": "January 30, 2027",
-   "out_depart_time": "11:10 PM",
-   "out_arrive_time": "11:30 AM",
-   "stops": "1 stop",
-   "duration": "10 hr 20 min",
-   "layovers": "5 hr 30 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOGiMSCjIwMjctMDEtMzFqBwgBEgNTSU5yDAgDEggvbS8wZm4yZ0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
-   "kind": "sg-ticket",
-   "order": "SIN-first",
-   "route": "DAC\u2192SIN\u2192BKK"
-  },
-  {
-   "out_date": "January 29, 2027",
-   "ret_date": "January 31, 2027",
-   "price_total": 1835,
-   "airline": "Batik Air",
-   "out_arrive": "January 30, 2027",
-   "out_depart_time": "11:10 PM",
-   "out_arrive_time": "9:30 AM",
-   "stops": "1 stop",
-   "duration": "8 hr 20 min",
-   "layovers": "3 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOGiMSCjIwMjctMDEtMzFqBwgBEgNTSU5yDAgDEggvbS8wZm4yZ0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
-   "kind": "sg-ticket",
-   "order": "SIN-first",
-   "route": "DAC\u2192SIN\u2192BKK"
-  },
-  {
-   "out_date": "January 29, 2027",
-   "ret_date": "January 31, 2027",
-   "price_total": 1895,
-   "airline": "Batik Air",
-   "out_arrive": "January 29, 2027",
-   "out_depart_time": "1:10 AM",
-   "out_arrive_time": "9:30 AM",
-   "stops": "1 stop",
-   "duration": "6 hr 20 min",
-   "layovers": "1 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOGiMSCjIwMjctMDEtMzFqBwgBEgNTSU5yDAgDEggvbS8wZm4yZ0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
-   "kind": "sg-ticket",
-   "order": "SIN-first",
-   "route": "DAC\u2192SIN\u2192BKK"
-  },
-  {
-   "out_date": "January 29, 2027",
-   "ret_date": "January 31, 2027",
-   "price_total": 2652,
-   "airline": "Malaysia Airlines and Singapore Airlines",
-   "out_arrive": "January 30, 2027",
-   "out_depart_time": "10:55 PM",
-   "out_arrive_time": "10:20 AM",
-   "stops": "1 stop",
-   "duration": "9 hr 25 min",
-   "layovers": "4 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOGiMSCjIwMjctMDEtMzFqBwgBEgNTSU5yDAgDEggvbS8wZm4yZ0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
-   "kind": "sg-ticket",
-   "order": "SIN-first",
-   "route": "DAC\u2192SIN\u2192BKK"
-  },
-  {
-   "out_date": "January 29, 2027",
-   "ret_date": "January 31, 2027",
-   "price_total": 2798,
-   "airline": "Malaysia Airlines and Singapore Airlines",
-   "out_arrive": "January 29, 2027",
-   "out_depart_time": "12:30 PM",
-   "out_arrive_time": "9:55 PM",
-   "stops": "1 stop",
-   "duration": "7 hr 25 min",
-   "layovers": "1 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOGiMSCjIwMjctMDEtMzFqBwgBEgNTSU5yDAgDEggvbS8wZm4yZ0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
-   "kind": "sg-ticket",
-   "order": "SIN-first",
-   "route": "DAC\u2192SIN\u2192BKK"
-  },
-  {
-   "out_date": "January 29, 2027",
-   "ret_date": "January 31, 2027",
-   "price_total": 4728,
-   "airline": "Malaysia Airlines",
-   "out_arrive": "January 30, 2027",
-   "out_depart_time": "10:55 PM",
-   "out_arrive_time": "10:30 AM",
-   "stops": "1 stop",
-   "duration": "9 hr 35 min",
-   "layovers": "4 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOGiMSCjIwMjctMDEtMzFqBwgBEgNTSU5yDAgDEggvbS8wZm4yZ0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
-   "kind": "sg-ticket",
-   "order": "SIN-first",
-   "route": "DAC\u2192SIN\u2192BKK"
-  },
-  {
-   "out_date": "January 29, 2027",
-   "ret_date": "January 31, 2027",
-   "price_total": 4848,
+   "price_total": 4262,
    "airline": "Malaysia Airlines",
    "out_arrive": "January 30, 2027",
    "out_depart_time": "10:55 PM",
@@ -1102,9 +989,121 @@
    "route": "DAC\u2192SIN\u2192BKK"
   },
   {
+   "out_date": "January 29, 2027",
+   "ret_date": "January 31, 2027",
+   "price_total": 4262,
+   "airline": "Malaysia Airlines",
+   "out_arrive": "January 30, 2027",
+   "out_depart_time": "10:55 PM",
+   "out_arrive_time": "10:30 AM",
+   "stops": "1 stop",
+   "duration": "9 hr 35 min",
+   "layovers": "4 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOGiMSCjIwMjctMDEtMzFqBwgBEgNTSU5yDAgDEggvbS8wZm4yZ0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
+   "kind": "sg-ticket",
+   "order": "SIN-first",
+   "route": "DAC\u2192SIN\u2192BKK"
+  },
+  {
+   "out_date": "January 29, 2027",
+   "ret_date": "January 31, 2027",
+   "price_total": 4262,
+   "airline": "Malaysia Airlines",
+   "out_arrive": "January 30, 2027",
+   "out_depart_time": "10:55 PM",
+   "out_arrive_time": "11:55 AM",
+   "stops": "1 stop",
+   "duration": "11 hr",
+   "layovers": "5 hr 45 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOGiMSCjIwMjctMDEtMzFqBwgBEgNTSU5yDAgDEggvbS8wZm4yZ0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
+   "kind": "sg-ticket",
+   "order": "SIN-first",
+   "route": "DAC\u2192SIN\u2192BKK"
+  },
+  {
+   "out_date": "January 29, 2027",
+   "ret_date": "January 31, 2027",
+   "price_total": 4293,
+   "airline": "Malaysia Airlines and Singapore Airlines",
+   "out_arrive": "January 29, 2027",
+   "out_depart_time": "12:30 PM",
+   "out_arrive_time": "9:55 PM",
+   "stops": "1 stop",
+   "duration": "7 hr 25 min",
+   "layovers": "1 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOGiMSCjIwMjctMDEtMzFqBwgBEgNTSU5yDAgDEggvbS8wZm4yZ0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
+   "kind": "sg-ticket",
+   "order": "SIN-first",
+   "route": "DAC\u2192SIN\u2192BKK"
+  },
+  {
+   "out_date": "January 29, 2027",
+   "ret_date": "January 31, 2027",
+   "price_total": 4381,
+   "airline": "Malaysia Airlines",
+   "out_arrive": "January 30, 2027",
+   "out_depart_time": "12:30 PM",
+   "out_arrive_time": "12:30 AM",
+   "stops": "1 stop",
+   "duration": "10 hr",
+   "layovers": "4 hr 40 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOGiMSCjIwMjctMDEtMzFqBwgBEgNTSU5yDAgDEggvbS8wZm4yZ0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
+   "kind": "sg-ticket",
+   "order": "SIN-first",
+   "route": "DAC\u2192SIN\u2192BKK"
+  },
+  {
+   "out_date": "January 29, 2027",
+   "ret_date": "January 31, 2027",
+   "price_total": 6128,
+   "airline": "China Southern",
+   "out_arrive": "January 30, 2027",
+   "out_depart_time": "11:15 PM",
+   "out_arrive_time": "12:25 PM",
+   "stops": "1 stop",
+   "duration": "11 hr 10 min",
+   "layovers": "3 hr 30 min at Guangzhou Baiyun International Airport in Guangzhou",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOGiMSCjIwMjctMDEtMzFqBwgBEgNTSU5yDAgDEggvbS8wZm4yZ0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
+   "kind": "sg-ticket",
+   "order": "SIN-first",
+   "route": "DAC\u2192SIN\u2192BKK"
+  },
+  {
+   "out_date": "January 29, 2027",
+   "ret_date": "January 31, 2027",
+   "price_total": 6128,
+   "airline": "China Southern",
+   "out_arrive": "January 30, 2027",
+   "out_depart_time": "11:15 PM",
+   "out_arrive_time": "4:45 PM",
+   "stops": "1 stop",
+   "duration": "15 hr 30 min",
+   "layovers": "7 hr 45 min at Guangzhou Baiyun International Airport in Guangzhou",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOGiMSCjIwMjctMDEtMzFqBwgBEgNTSU5yDAgDEggvbS8wZm4yZ0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
+   "kind": "sg-ticket",
+   "order": "SIN-first",
+   "route": "DAC\u2192SIN\u2192BKK"
+  },
+  {
+   "out_date": "January 29, 2027",
+   "ret_date": "January 31, 2027",
+   "price_total": 6128,
+   "airline": "China Southern",
+   "out_arrive": "January 30, 2027",
+   "out_depart_time": "11:15 PM",
+   "out_arrive_time": "11:00 PM",
+   "stops": "1 stop",
+   "duration": "21 hr 45 min",
+   "layovers": "14 hr 5 min at Guangzhou Baiyun International Airport in Guangzhou",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOGiMSCjIwMjctMDEtMzFqBwgBEgNTSU5yDAgDEggvbS8wZm4yZ0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
+   "kind": "sg-ticket",
+   "order": "SIN-first",
+   "route": "DAC\u2192SIN\u2192BKK"
+  },
+  {
    "out_date": "January 30, 2027",
    "ret_date": "February 1, 2027",
-   "price_total": 1098,
+   "price_total": 1097,
    "airline": "US-Bangla Airlines",
    "out_arrive": "January 31, 2027",
    "out_depart_time": "10:15 PM",
@@ -1120,7 +1119,7 @@
   {
    "out_date": "January 30, 2027",
    "ret_date": "February 1, 2027",
-   "price_total": 1788,
+   "price_total": 1749,
    "airline": "Batik Air",
    "out_arrive": "January 31, 2027",
    "out_depart_time": "11:10 PM",
@@ -1136,7 +1135,7 @@
   {
    "out_date": "January 30, 2027",
    "ret_date": "February 1, 2027",
-   "price_total": 1908,
+   "price_total": 1868,
    "airline": "Batik Air",
    "out_arrive": "January 31, 2027",
    "out_depart_time": "11:10 PM",
@@ -1152,7 +1151,7 @@
   {
    "out_date": "January 30, 2027",
    "ret_date": "February 1, 2027",
-   "price_total": 1938,
+   "price_total": 1898,
    "airline": "Batik Air",
    "out_arrive": "January 30, 2027",
    "out_depart_time": "1:10 AM",
@@ -1168,7 +1167,7 @@
   {
    "out_date": "January 30, 2027",
    "ret_date": "February 1, 2027",
-   "price_total": 2679,
+   "price_total": 2674,
    "airline": "Malaysia Airlines and Singapore Airlines",
    "out_arrive": "January 31, 2027",
    "out_depart_time": "10:55 PM",
@@ -1184,7 +1183,7 @@
   {
    "out_date": "January 30, 2027",
    "ret_date": "February 1, 2027",
-   "price_total": 2798,
+   "price_total": 2794,
    "airline": "Malaysia Airlines and Singapore Airlines",
    "out_arrive": "January 30, 2027",
    "out_depart_time": "12:30 PM",
@@ -1200,7 +1199,7 @@
   {
    "out_date": "January 30, 2027",
    "ret_date": "February 1, 2027",
-   "price_total": 4728,
+   "price_total": 4720,
    "airline": "Malaysia Airlines",
    "out_arrive": "January 31, 2027",
    "out_depart_time": "10:55 PM",
@@ -1216,7 +1215,7 @@
   {
    "out_date": "January 30, 2027",
    "ret_date": "February 1, 2027",
-   "price_total": 4848,
+   "price_total": 4840,
    "airline": "Malaysia Airlines",
    "out_arrive": "January 31, 2027",
    "out_depart_time": "12:30 PM",
@@ -1232,7 +1231,7 @@
   {
    "out_date": "January 31, 2027",
    "ret_date": "February 2, 2027",
-   "price_total": 4269,
+   "price_total": 4262,
    "airline": "Malaysia Airlines",
    "out_arrive": "February 1, 2027",
    "out_depart_time": "10:55 PM",
@@ -1248,7 +1247,7 @@
   {
    "out_date": "January 31, 2027",
    "ret_date": "February 2, 2027",
-   "price_total": 4269,
+   "price_total": 4262,
    "airline": "Malaysia Airlines",
    "out_arrive": "February 1, 2027",
    "out_depart_time": "10:55 PM",
@@ -1264,7 +1263,7 @@
   {
    "out_date": "January 31, 2027",
    "ret_date": "February 2, 2027",
-   "price_total": 4269,
+   "price_total": 4262,
    "airline": "Malaysia Airlines",
    "out_arrive": "February 1, 2027",
    "out_depart_time": "10:55 PM",
@@ -1280,7 +1279,7 @@
   {
    "out_date": "January 31, 2027",
    "ret_date": "February 2, 2027",
-   "price_total": 4300,
+   "price_total": 4293,
    "airline": "Malaysia Airlines and Singapore Airlines",
    "out_arrive": "January 31, 2027",
    "out_depart_time": "12:30 PM",
@@ -1296,7 +1295,7 @@
   {
    "out_date": "January 31, 2027",
    "ret_date": "February 2, 2027",
-   "price_total": 4389,
+   "price_total": 4381,
    "airline": "Malaysia Airlines",
    "out_arrive": "February 1, 2027",
    "out_depart_time": "12:30 PM",
@@ -1360,7 +1359,7 @@
   {
    "out_date": "January 28, 2027",
    "ret_date": "February 2, 2027",
-   "price_total": 1598,
+   "price_total": 1596,
    "airline": "AirAsia",
    "out_arrive": "January 29, 2027",
    "out_depart_time": "10:40 PM",
@@ -1376,7 +1375,7 @@
   {
    "out_date": "January 28, 2027",
    "ret_date": "February 2, 2027",
-   "price_total": 1960,
+   "price_total": 1881,
    "airline": "Batik Air",
    "out_arrive": "January 28, 2027",
    "out_depart_time": "1:10 AM",
@@ -1392,7 +1391,7 @@
   {
    "out_date": "January 28, 2027",
    "ret_date": "February 2, 2027",
-   "price_total": 1987,
+   "price_total": 1902,
    "airline": "Batik Air",
    "out_arrive": "January 29, 2027",
    "out_depart_time": "11:10 PM",
@@ -1408,14 +1407,14 @@
   {
    "out_date": "January 28, 2027",
    "ret_date": "February 2, 2027",
-   "price_total": 2668,
-   "airline": "Malaysia Airlines and THAI",
+   "price_total": 2642,
+   "airline": "Malaysia Airlines",
    "out_arrive": "January 28, 2027",
    "out_depart_time": "12:30 PM",
-   "out_arrive_time": "10:10 PM",
+   "out_arrive_time": "11:10 PM",
    "stops": "1 stop",
-   "duration": "8 hr 40 min",
-   "layovers": "2 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "duration": "9 hr 40 min",
+   "layovers": "3 hr 20 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI4agcIARIDREFDcgwIAxIIL20vMGZuMmcaIxIKMjAyNy0wMi0wMmoMCAMSCC9tLzBmbjJncgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAED&hl=en",
    "kind": "sg-ticket",
    "order": "BKK-first",
@@ -1424,7 +1423,7 @@
   {
    "out_date": "January 28, 2027",
    "ret_date": "February 2, 2027",
-   "price_total": 2668,
+   "price_total": 2663,
    "airline": "Malaysia Airlines",
    "out_arrive": "January 29, 2027",
    "out_depart_time": "10:55 PM",
@@ -1440,14 +1439,14 @@
   {
    "out_date": "January 28, 2027",
    "ret_date": "February 2, 2027",
-   "price_total": 2668,
-   "airline": "Malaysia Airlines and THAI",
-   "out_arrive": "January 29, 2027",
-   "out_depart_time": "10:55 PM",
-   "out_arrive_time": "2:10 PM",
+   "price_total": 5049,
+   "airline": "China Southern",
+   "out_arrive": "January 30, 2027",
+   "out_depart_time": "11:15 PM",
+   "out_arrive_time": "1:05 AM",
    "stops": "1 stop",
-   "duration": "14 hr 15 min",
-   "layovers": "8 hr 10 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "duration": "24 hr 50 min",
+   "layovers": "18 hr 15 min at Guangzhou Baiyun International Airport in Guangzhou",
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI4agcIARIDREFDcgwIAxIIL20vMGZuMmcaIxIKMjAyNy0wMi0wMmoMCAMSCC9tLzBmbjJncgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAED&hl=en",
    "kind": "sg-ticket",
    "order": "BKK-first",
@@ -1456,7 +1455,7 @@
   {
    "out_date": "January 28, 2027",
    "ret_date": "February 2, 2027",
-   "price_total": 3944,
+   "price_total": 7475,
    "airline": "Malaysia Airlines and THAI",
    "out_arrive": "January 29, 2027",
    "out_depart_time": "10:55 PM",
@@ -1520,7 +1519,7 @@
   {
    "out_date": "January 29, 2027",
    "ret_date": "February 3, 2027",
-   "price_total": 1581,
+   "price_total": 1579,
    "airline": "AirAsia",
    "out_arrive": "January 30, 2027",
    "out_depart_time": "10:40 PM",
@@ -1536,7 +1535,7 @@
   {
    "out_date": "January 29, 2027",
    "ret_date": "February 3, 2027",
-   "price_total": 1899,
+   "price_total": 1784,
    "airline": "Batik Air",
    "out_arrive": "January 30, 2027",
    "out_depart_time": "11:10 PM",
@@ -1552,7 +1551,7 @@
   {
    "out_date": "January 29, 2027",
    "ret_date": "February 3, 2027",
-   "price_total": 1942,
+   "price_total": 1815,
    "airline": "Batik Air",
    "out_arrive": "January 30, 2027",
    "out_depart_time": "11:10 PM",
@@ -1568,14 +1567,14 @@
   {
    "out_date": "January 29, 2027",
    "ret_date": "February 3, 2027",
-   "price_total": 2668,
-   "airline": "Malaysia Airlines and THAI",
+   "price_total": 2663,
+   "airline": "Malaysia Airlines",
    "out_arrive": "January 29, 2027",
    "out_depart_time": "12:30 PM",
-   "out_arrive_time": "10:10 PM",
+   "out_arrive_time": "11:10 PM",
    "stops": "1 stop",
-   "duration": "8 hr 40 min",
-   "layovers": "2 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "duration": "9 hr 40 min",
+   "layovers": "3 hr 20 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI5agcIARIDREFDcgwIAxIIL20vMGZuMmcaIxIKMjAyNy0wMi0wM2oMCAMSCC9tLzBmbjJncgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAED&hl=en",
    "kind": "sg-ticket",
    "order": "BKK-first",
@@ -1584,7 +1583,7 @@
   {
    "out_date": "January 29, 2027",
    "ret_date": "February 3, 2027",
-   "price_total": 2668,
+   "price_total": 2663,
    "airline": "Malaysia Airlines",
    "out_arrive": "January 30, 2027",
    "out_depart_time": "10:55 PM",
@@ -1600,7 +1599,7 @@
   {
    "out_date": "January 29, 2027",
    "ret_date": "February 3, 2027",
-   "price_total": 5017,
+   "price_total": 5009,
    "airline": "China Southern",
    "out_arrive": "January 30, 2027",
    "out_depart_time": "11:15 PM",
@@ -1616,7 +1615,23 @@
   {
    "out_date": "January 30, 2027",
    "ret_date": "February 4, 2027",
-   "price_total": 1289,
+   "price_total": 911,
+   "airline": "US-Bangla Airlines",
+   "out_arrive": "January 30, 2027",
+   "out_depart_time": "9:35 AM",
+   "out_arrive_time": "1:10 PM",
+   "stops": "Nonstop",
+   "duration": "2 hr 35 min",
+   "layovers": "none",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMwagcIARIDREFDcgwIAxIIL20vMGZuMmcaIxIKMjAyNy0wMi0wNGoMCAMSCC9tLzBmbjJncgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAED&hl=en",
+   "kind": "sg-ticket",
+   "order": "BKK-first",
+   "route": "DAC\u2192BKK\u2192SIN"
+  },
+  {
+   "out_date": "January 30, 2027",
+   "ret_date": "February 4, 2027",
+   "price_total": 935,
    "airline": "THAI",
    "out_arrive": "January 30, 2027",
    "out_depart_time": "2:00 AM",
@@ -1632,7 +1647,7 @@
   {
    "out_date": "January 30, 2027",
    "ret_date": "February 4, 2027",
-   "price_total": 1289,
+   "price_total": 935,
    "airline": "THAI",
    "out_arrive": "January 30, 2027",
    "out_depart_time": "1:40 PM",
@@ -1648,7 +1663,39 @@
   {
    "out_date": "January 30, 2027",
    "ret_date": "February 4, 2027",
-   "price_total": 4576,
+   "price_total": 1582,
+   "airline": "Batik Air",
+   "out_arrive": "January 31, 2027",
+   "out_depart_time": "11:10 PM",
+   "out_arrive_time": "11:05 AM",
+   "stops": "1 stop",
+   "duration": "10 hr 55 min",
+   "layovers": "4 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMwagcIARIDREFDcgwIAxIIL20vMGZuMmcaIxIKMjAyNy0wMi0wNGoMCAMSCC9tLzBmbjJncgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAED&hl=en",
+   "kind": "sg-ticket",
+   "order": "BKK-first",
+   "route": "DAC\u2192BKK\u2192SIN"
+  },
+  {
+   "out_date": "January 30, 2027",
+   "ret_date": "February 4, 2027",
+   "price_total": 1784,
+   "airline": "Batik Air",
+   "out_arrive": "January 31, 2027",
+   "out_depart_time": "11:10 PM",
+   "out_arrive_time": "12:40 PM",
+   "stops": "1 stop",
+   "duration": "12 hr 30 min",
+   "layovers": "6 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMwagcIARIDREFDcgwIAxIIL20vMGZuMmcaIxIKMjAyNy0wMi0wNGoMCAMSCC9tLzBmbjJncgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAED&hl=en",
+   "kind": "sg-ticket",
+   "order": "BKK-first",
+   "route": "DAC\u2192BKK\u2192SIN"
+  },
+  {
+   "out_date": "January 30, 2027",
+   "ret_date": "February 4, 2027",
+   "price_total": 2642,
    "airline": "Malaysia Airlines",
    "out_arrive": "January 30, 2027",
    "out_depart_time": "12:30 PM",
@@ -1664,7 +1711,7 @@
   {
    "out_date": "January 30, 2027",
    "ret_date": "February 4, 2027",
-   "price_total": 4576,
+   "price_total": 3505,
    "airline": "Malaysia Airlines",
    "out_arrive": "January 31, 2027",
    "out_depart_time": "10:55 PM",
@@ -1680,39 +1727,7 @@
   {
    "out_date": "January 30, 2027",
    "ret_date": "February 4, 2027",
-   "price_total": 5856,
-   "airline": "China Southern",
-   "out_arrive": "January 30, 2027",
-   "out_depart_time": "1:15 PM",
-   "out_arrive_time": "10:30 PM",
-   "stops": "1 stop",
-   "duration": "8 hr 15 min",
-   "layovers": "1 hr 45 min at Guangzhou Baiyun International Airport in Guangzhou",
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMwagcIARIDREFDcgwIAxIIL20vMGZuMmcaIxIKMjAyNy0wMi0wNGoMCAMSCC9tLzBmbjJncgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAED&hl=en",
-   "kind": "sg-ticket",
-   "order": "BKK-first",
-   "route": "DAC\u2192BKK\u2192SIN"
-  },
-  {
-   "out_date": "January 30, 2027",
-   "ret_date": "February 4, 2027",
-   "price_total": 5856,
-   "airline": "China Southern",
-   "out_arrive": "January 31, 2027",
-   "out_depart_time": "1:15 PM",
-   "out_arrive_time": "1:05 AM",
-   "stops": "1 stop",
-   "duration": "10 hr 50 min",
-   "layovers": "4 hr 25 min at Guangzhou Baiyun International Airport in Guangzhou",
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMwagcIARIDREFDcgwIAxIIL20vMGZuMmcaIxIKMjAyNy0wMi0wNGoMCAMSCC9tLzBmbjJncgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAED&hl=en",
-   "kind": "sg-ticket",
-   "order": "BKK-first",
-   "route": "DAC\u2192BKK\u2192SIN"
-  },
-  {
-   "out_date": "January 30, 2027",
-   "ret_date": "February 4, 2027",
-   "price_total": 5856,
+   "price_total": 5009,
    "airline": "China Southern",
    "out_arrive": "January 31, 2027",
    "out_depart_time": "11:15 PM",
@@ -1728,14 +1743,14 @@
   {
    "out_date": "January 30, 2027",
    "ret_date": "February 4, 2027",
-   "price_total": 5856,
-   "airline": "China Southern",
+   "price_total": 10737,
+   "airline": "Cathay Pacific and THAI",
    "out_arrive": "January 31, 2027",
    "out_depart_time": "11:15 PM",
-   "out_arrive_time": "11:25 AM",
+   "out_arrive_time": "9:50 AM",
    "stops": "1 stop",
-   "duration": "11 hr 10 min",
-   "layovers": "4 hr 30 min at Guangzhou Baiyun International Airport in Guangzhou",
+   "duration": "9 hr 35 min",
+   "layovers": "3 hr 10 min at Hong Kong International Airport in Hong Kong",
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMwagcIARIDREFDcgwIAxIIL20vMGZuMmcaIxIKMjAyNy0wMi0wNGoMCAMSCC9tLzBmbjJncgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAED&hl=en",
    "kind": "sg-ticket",
    "order": "BKK-first",
@@ -1747,26 +1762,26 @@
    "route": "BKK\u2192SIN",
    "depart": "February 2, 2027",
    "arrive": "February 2, 2027",
-   "depart_time": "9:15 AM",
-   "arrive_time": "12:50 PM",
-   "airline": "Scoot",
-   "stops": "Nonstop",
-   "duration": "2 hr 35 min",
-   "layovers": "none",
-   "price_total": 321,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
-  },
-  {
-   "route": "BKK\u2192SIN",
-   "depart": "February 2, 2027",
-   "arrive": "February 2, 2027",
    "depart_time": "11:50 AM",
    "arrive_time": "3:25 PM",
    "airline": "Scoot",
    "stops": "Nonstop",
    "duration": "2 hr 35 min",
    "layovers": "none",
-   "price_total": 321,
+   "price_total": 322,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "BKK\u2192SIN",
+   "depart": "February 2, 2027",
+   "arrive": "February 2, 2027",
+   "depart_time": "9:15 AM",
+   "arrive_time": "12:50 PM",
+   "airline": "Scoot",
+   "stops": "Nonstop",
+   "duration": "2 hr 35 min",
+   "layovers": "none",
+   "price_total": 322,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -1779,7 +1794,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 40 min",
    "layovers": "none",
-   "price_total": 321,
+   "price_total": 322,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -1792,7 +1807,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 35 min",
    "layovers": "none",
-   "price_total": 321,
+   "price_total": 322,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -1805,7 +1820,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 35 min",
    "layovers": "none",
-   "price_total": 321,
+   "price_total": 322,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -1818,21 +1833,8 @@
    "stops": "Nonstop",
    "duration": "2 hr 50 min",
    "layovers": "none",
-   "price_total": 321,
+   "price_total": 322,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
-  },
-  {
-   "route": "BKK\u2192SIN",
-   "depart": "February 3, 2027",
-   "arrive": "February 3, 2027",
-   "depart_time": "9:15 AM",
-   "arrive_time": "12:50 PM",
-   "airline": "Scoot",
-   "stops": "Nonstop",
-   "duration": "2 hr 35 min",
-   "layovers": "none",
-   "price_total": 321,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAzagwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
    "route": "BKK\u2192SIN",
@@ -1844,7 +1846,20 @@
    "stops": "Nonstop",
    "duration": "2 hr 35 min",
    "layovers": "none",
-   "price_total": 321,
+   "price_total": 322,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAzagwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "BKK\u2192SIN",
+   "depart": "February 3, 2027",
+   "arrive": "February 3, 2027",
+   "depart_time": "9:15 AM",
+   "arrive_time": "12:50 PM",
+   "airline": "Scoot",
+   "stops": "Nonstop",
+   "duration": "2 hr 35 min",
+   "layovers": "none",
+   "price_total": 322,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAzagwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -1857,7 +1872,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 40 min",
    "layovers": "none",
-   "price_total": 321,
+   "price_total": 322,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAzagwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -1870,7 +1885,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 35 min",
    "layovers": "none",
-   "price_total": 321,
+   "price_total": 322,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAzagwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -1883,7 +1898,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 35 min",
    "layovers": "none",
-   "price_total": 321,
+   "price_total": 322,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAzagwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -1896,7 +1911,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 50 min",
    "layovers": "none",
-   "price_total": 321,
+   "price_total": 322,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAzagwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -1909,7 +1924,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 35 min",
    "layovers": "none",
-   "price_total": 321,
+   "price_total": 322,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTA0agwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -1922,7 +1937,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 35 min",
    "layovers": "none",
-   "price_total": 321,
+   "price_total": 322,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTA0agwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -1935,7 +1950,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 40 min",
    "layovers": "none",
-   "price_total": 321,
+   "price_total": 322,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTA0agwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -1948,7 +1963,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 35 min",
    "layovers": "none",
-   "price_total": 321,
+   "price_total": 322,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTA0agwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -1961,7 +1976,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 35 min",
    "layovers": "none",
-   "price_total": 321,
+   "price_total": 322,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTA0agwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -1974,7 +1989,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 50 min",
    "layovers": "none",
-   "price_total": 321,
+   "price_total": 322,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTA0agwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2195,7 +2210,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 30 min",
    "layovers": "none",
-   "price_total": 371,
+   "price_total": 372,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2208,7 +2223,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 25 min",
    "layovers": "none",
-   "price_total": 383,
+   "price_total": 384,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2221,7 +2236,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 25 min",
    "layovers": "none",
-   "price_total": 383,
+   "price_total": 384,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2234,7 +2249,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 25 min",
    "layovers": "none",
-   "price_total": 383,
+   "price_total": 384,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2306,19 +2321,6 @@
    "route": "BKK\u2192SIN",
    "depart": "February 3, 2027",
    "arrive": "February 3, 2027",
-   "depart_time": "4:35 PM",
-   "arrive_time": "7:55 PM",
-   "airline": "THAI",
-   "stops": "Nonstop",
-   "duration": "2 hr 20 min",
-   "layovers": "none",
-   "price_total": 465,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAzagwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
-  },
-  {
-   "route": "BKK\u2192SIN",
-   "depart": "February 3, 2027",
-   "arrive": "February 3, 2027",
    "depart_time": "7:45 AM",
    "arrive_time": "11:15 AM",
    "airline": "THAI",
@@ -2350,6 +2352,19 @@
    "airline": "THAI",
    "stops": "Nonstop",
    "duration": "2 hr 35 min",
+   "layovers": "none",
+   "price_total": 465,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAzagwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "BKK\u2192SIN",
+   "depart": "February 3, 2027",
+   "arrive": "February 3, 2027",
+   "depart_time": "4:35 PM",
+   "arrive_time": "7:55 PM",
+   "airline": "THAI",
+   "stops": "Nonstop",
+   "duration": "2 hr 20 min",
    "layovers": "none",
    "price_total": 465,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAzagwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
@@ -2371,19 +2386,6 @@
    "route": "BKK\u2192SIN",
    "depart": "February 4, 2027",
    "arrive": "February 4, 2027",
-   "depart_time": "4:35 PM",
-   "arrive_time": "7:55 PM",
-   "airline": "THAI",
-   "stops": "Nonstop",
-   "duration": "2 hr 20 min",
-   "layovers": "none",
-   "price_total": 465,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTA0agwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
-  },
-  {
-   "route": "BKK\u2192SIN",
-   "depart": "February 4, 2027",
-   "arrive": "February 4, 2027",
    "depart_time": "7:45 AM",
    "arrive_time": "11:15 AM",
    "airline": "THAI",
@@ -2415,6 +2417,19 @@
    "airline": "THAI",
    "stops": "Nonstop",
    "duration": "2 hr 35 min",
+   "layovers": "none",
+   "price_total": 465,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTA0agwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "BKK\u2192SIN",
+   "depart": "February 4, 2027",
+   "arrive": "February 4, 2027",
+   "depart_time": "4:35 PM",
+   "arrive_time": "7:55 PM",
+   "airline": "THAI",
+   "stops": "Nonstop",
+   "duration": "2 hr 20 min",
    "layovers": "none",
    "price_total": 465,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTA0agwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
@@ -2481,7 +2496,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 30 min",
    "layovers": "none",
-   "price_total": 513,
+   "price_total": 514,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2494,7 +2509,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 30 min",
    "layovers": "none",
-   "price_total": 513,
+   "price_total": 514,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2507,7 +2522,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 30 min",
    "layovers": "none",
-   "price_total": 513,
+   "price_total": 514,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2520,7 +2535,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 30 min",
    "layovers": "none",
-   "price_total": 513,
+   "price_total": 514,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2533,7 +2548,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 20 min",
    "layovers": "none",
-   "price_total": 570,
+   "price_total": 571,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2546,7 +2561,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 20 min",
    "layovers": "none",
-   "price_total": 570,
+   "price_total": 571,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2559,7 +2574,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 20 min",
    "layovers": "none",
-   "price_total": 570,
+   "price_total": 571,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2572,7 +2587,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 20 min",
    "layovers": "none",
-   "price_total": 570,
+   "price_total": 571,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2585,7 +2600,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 20 min",
    "layovers": "none",
-   "price_total": 570,
+   "price_total": 571,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2598,7 +2613,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 20 min",
    "layovers": "none",
-   "price_total": 570,
+   "price_total": 571,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2611,7 +2626,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 20 min",
    "layovers": "none",
-   "price_total": 570,
+   "price_total": 571,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2624,7 +2639,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 20 min",
    "layovers": "none",
-   "price_total": 570,
+   "price_total": 571,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2637,7 +2652,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 35 min",
    "layovers": "none",
-   "price_total": 590,
+   "price_total": 589,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI3agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2650,7 +2665,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 35 min",
    "layovers": "none",
-   "price_total": 590,
+   "price_total": 589,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI4agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2663,7 +2678,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 35 min",
    "layovers": "none",
-   "price_total": 590,
+   "price_total": 589,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI5agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2676,7 +2691,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 35 min",
    "layovers": "none",
-   "price_total": 590,
+   "price_total": 589,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMwagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2689,7 +2704,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 35 min",
    "layovers": "none",
-   "price_total": 590,
+   "price_total": 589,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2702,7 +2717,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 35 min",
    "layovers": "none",
-   "price_total": 590,
+   "price_total": 589,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2715,7 +2730,7 @@
    "stops": "1 stop",
    "duration": "5 hr 35 min",
    "layovers": "2 hr 20 min at Phuket International Airport in Phuket",
-   "price_total": 601,
+   "price_total": 602,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2728,7 +2743,7 @@
    "stops": "1 stop",
    "duration": "5 hr 35 min",
    "layovers": "2 hr 20 min at Phuket International Airport in Phuket",
-   "price_total": 608,
+   "price_total": 610,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2741,7 +2756,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 30 min",
    "layovers": "none",
-   "price_total": 614,
+   "price_total": 613,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI3agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2754,7 +2769,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 30 min",
    "layovers": "none",
-   "price_total": 614,
+   "price_total": 613,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI4agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2767,7 +2782,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 30 min",
    "layovers": "none",
-   "price_total": 614,
+   "price_total": 613,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI5agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2780,7 +2795,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 30 min",
    "layovers": "none",
-   "price_total": 614,
+   "price_total": 613,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMwagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2793,7 +2808,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 30 min",
    "layovers": "none",
-   "price_total": 614,
+   "price_total": 613,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMwagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2806,7 +2821,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 30 min",
    "layovers": "none",
-   "price_total": 614,
+   "price_total": 613,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2819,7 +2834,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 30 min",
    "layovers": "none",
-   "price_total": 614,
+   "price_total": 613,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2832,21 +2847,8 @@
    "stops": "Nonstop",
    "duration": "2 hr 30 min",
    "layovers": "none",
-   "price_total": 614,
+   "price_total": 613,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
-  },
-  {
-   "route": "SIN\u2192BKK",
-   "depart": "February 1, 2027",
-   "arrive": "February 1, 2027",
-   "depart_time": "12:25 PM",
-   "arrive_time": "1:45 PM",
-   "airline": "THAI",
-   "stops": "Nonstop",
-   "duration": "2 hr 20 min",
-   "layovers": "none",
-   "price_total": 628,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
    "route": "SIN\u2192BKK",
@@ -2858,7 +2860,20 @@
    "stops": "Nonstop",
    "duration": "2 hr 20 min",
    "layovers": "none",
-   "price_total": 628,
+   "price_total": 629,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "SIN\u2192BKK",
+   "depart": "February 1, 2027",
+   "arrive": "February 1, 2027",
+   "depart_time": "12:25 PM",
+   "arrive_time": "1:45 PM",
+   "airline": "THAI",
+   "stops": "Nonstop",
+   "duration": "2 hr 20 min",
+   "layovers": "none",
+   "price_total": 629,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2871,7 +2886,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 20 min",
    "layovers": "none",
-   "price_total": 628,
+   "price_total": 629,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2884,7 +2899,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 20 min",
    "layovers": "none",
-   "price_total": 628,
+   "price_total": 629,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2897,7 +2912,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 20 min",
    "layovers": "none",
-   "price_total": 628,
+   "price_total": 629,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2910,7 +2925,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 20 min",
    "layovers": "none",
-   "price_total": 628,
+   "price_total": 629,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2923,7 +2938,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 20 min",
    "layovers": "none",
-   "price_total": 628,
+   "price_total": 629,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2936,7 +2951,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 30 min",
    "layovers": "none",
-   "price_total": 714,
+   "price_total": 713,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI3agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2949,7 +2964,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 30 min",
    "layovers": "none",
-   "price_total": 714,
+   "price_total": 713,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI4agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2962,7 +2977,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 30 min",
    "layovers": "none",
-   "price_total": 714,
+   "price_total": 713,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI5agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -2975,8 +2990,21 @@
    "stops": "Nonstop",
    "duration": "2 hr 30 min",
    "layovers": "none",
-   "price_total": 714,
+   "price_total": 713,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "SIN\u2192BKK",
+   "depart": "January 31, 2027",
+   "arrive": "February 1, 2027",
+   "depart_time": "9:20 PM",
+   "arrive_time": "11:05 AM",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "14 hr 45 min",
+   "layovers": "11 hr 35 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 718,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
    "route": "DAC\u2192SIN",
@@ -2988,7 +3016,7 @@
    "stops": "Nonstop",
    "duration": "4 hr 15 min",
    "layovers": "none",
-   "price_total": 748,
+   "price_total": 747,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI3agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3001,7 +3029,7 @@
    "stops": "Nonstop",
    "duration": "4 hr 15 min",
    "layovers": "none",
-   "price_total": 748,
+   "price_total": 747,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI4agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3014,7 +3042,7 @@
    "stops": "Nonstop",
    "duration": "4 hr 15 min",
    "layovers": "none",
-   "price_total": 748,
+   "price_total": 747,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3027,7 +3055,7 @@
    "stops": "Nonstop",
    "duration": "4 hr 15 min",
    "layovers": "none",
-   "price_total": 748,
+   "price_total": 747,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3040,7 +3068,7 @@
    "stops": "Nonstop",
    "duration": "4 hr 15 min",
    "layovers": "none",
-   "price_total": 748,
+   "price_total": 747,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3053,21 +3081,8 @@
    "stops": "Nonstop",
    "duration": "4 hr 15 min",
    "layovers": "none",
-   "price_total": 748,
+   "price_total": 747,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
-  },
-  {
-   "route": "SIN\u2192BKK",
-   "depart": "January 31, 2027",
-   "arrive": "February 1, 2027",
-   "depart_time": "9:20 PM",
-   "arrive_time": "11:05 AM",
-   "airline": "Batik Air",
-   "stops": "1 stop",
-   "duration": "14 hr 45 min",
-   "layovers": "11 hr 35 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 754,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
    "route": "SIN\u2192BKK",
@@ -3079,7 +3094,7 @@
    "stops": "1 stop",
    "duration": "5 hr 30 min",
    "layovers": "2 hr 15 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 848,
+   "price_total": 812,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3092,7 +3107,7 @@
    "stops": "1 stop",
    "duration": "5 hr 30 min",
    "layovers": "2 hr 15 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 848,
+   "price_total": 812,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3105,8 +3120,21 @@
    "stops": "1 stop",
    "duration": "15 hr 10 min",
    "layovers": "8 hr 10 min at Colombo Bandaranaike International Airport in Colombo",
-   "price_total": 852,
+   "price_total": 850,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI3agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "DAC\u2192BKK",
+   "depart": "January 30, 2027",
+   "arrive": "January 31, 2027",
+   "depart_time": "1:00 PM",
+   "arrive_time": "12:35 PM",
+   "airline": "SriLankan",
+   "stops": "1 stop",
+   "duration": "22 hr 35 min",
+   "layovers": "15 hr 35 min at Colombo Bandaranaike International Airport in Colombo",
+   "price_total": 850,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMwagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
    "route": "DAC\u2192BKK",
@@ -3118,7 +3146,7 @@
    "stops": "1 stop",
    "duration": "22 hr 35 min",
    "layovers": "15 hr 35 min at Colombo Bandaranaike International Airport in Colombo",
-   "price_total": 852,
+   "price_total": 850,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3131,7 +3159,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 25 min",
    "layovers": "none",
-   "price_total": 857,
+   "price_total": 859,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3144,7 +3172,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 45 min",
    "layovers": "none",
-   "price_total": 857,
+   "price_total": 859,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3157,7 +3185,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 30 min",
    "layovers": "none",
-   "price_total": 857,
+   "price_total": 859,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3170,7 +3198,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 25 min",
    "layovers": "none",
-   "price_total": 857,
+   "price_total": 859,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3183,7 +3211,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 45 min",
    "layovers": "none",
-   "price_total": 857,
+   "price_total": 859,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3196,7 +3224,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 20 min",
    "layovers": "none",
-   "price_total": 857,
+   "price_total": 859,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3209,7 +3237,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 35 min",
    "layovers": "none",
-   "price_total": 857,
+   "price_total": 859,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3222,7 +3250,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 25 min",
    "layovers": "none",
-   "price_total": 857,
+   "price_total": 859,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3235,7 +3263,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 45 min",
    "layovers": "none",
-   "price_total": 857,
+   "price_total": 859,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3248,7 +3276,7 @@
    "stops": "Nonstop",
    "duration": "2 hr 30 min",
    "layovers": "none",
-   "price_total": 857,
+   "price_total": 859,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagcIARIDU0lOcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3261,7 +3289,7 @@
    "stops": "1 stop",
    "duration": "7 hr 15 min",
    "layovers": "2 hr 15 min at Suvarnabhumi Airport in Bangkok",
-   "price_total": 881,
+   "price_total": 880,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI3agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3274,7 +3302,7 @@
    "stops": "1 stop",
    "duration": "6 hr 40 min",
    "layovers": "1 hr 35 min at Suvarnabhumi Airport in Bangkok",
-   "price_total": 881,
+   "price_total": 880,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI3agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3287,7 +3315,7 @@
    "stops": "1 stop",
    "duration": "7 hr 15 min",
    "layovers": "2 hr 15 min at Suvarnabhumi Airport in Bangkok",
-   "price_total": 881,
+   "price_total": 880,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI4agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3300,7 +3328,7 @@
    "stops": "1 stop",
    "duration": "6 hr 40 min",
    "layovers": "1 hr 35 min at Suvarnabhumi Airport in Bangkok",
-   "price_total": 881,
+   "price_total": 880,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI4agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3313,7 +3341,7 @@
    "stops": "1 stop",
    "duration": "7 hr 15 min",
    "layovers": "2 hr 15 min at Suvarnabhumi Airport in Bangkok",
-   "price_total": 881,
+   "price_total": 880,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3326,7 +3354,7 @@
    "stops": "1 stop",
    "duration": "6 hr 40 min",
    "layovers": "1 hr 35 min at Suvarnabhumi Airport in Bangkok",
-   "price_total": 881,
+   "price_total": 880,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3339,7 +3367,7 @@
    "stops": "1 stop",
    "duration": "7 hr 15 min",
    "layovers": "2 hr 15 min at Suvarnabhumi Airport in Bangkok",
-   "price_total": 881,
+   "price_total": 880,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3352,7 +3380,7 @@
    "stops": "1 stop",
    "duration": "6 hr 40 min",
    "layovers": "1 hr 35 min at Suvarnabhumi Airport in Bangkok",
-   "price_total": 881,
+   "price_total": 880,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3365,7 +3393,7 @@
    "stops": "1 stop",
    "duration": "7 hr 15 min",
    "layovers": "2 hr 15 min at Suvarnabhumi Airport in Bangkok",
-   "price_total": 881,
+   "price_total": 880,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3378,7 +3406,7 @@
    "stops": "1 stop",
    "duration": "6 hr 40 min",
    "layovers": "1 hr 35 min at Suvarnabhumi Airport in Bangkok",
-   "price_total": 881,
+   "price_total": 880,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3391,7 +3419,7 @@
    "stops": "1 stop",
    "duration": "7 hr 15 min",
    "layovers": "2 hr 15 min at Suvarnabhumi Airport in Bangkok",
-   "price_total": 881,
+   "price_total": 880,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3404,7 +3432,7 @@
    "stops": "1 stop",
    "duration": "6 hr 40 min",
    "layovers": "1 hr 35 min at Suvarnabhumi Airport in Bangkok",
-   "price_total": 881,
+   "price_total": 880,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3417,7 +3445,7 @@
    "stops": "1 stop",
    "duration": "16 hr 20 min",
    "layovers": "9 hr 20 min at Colombo Bandaranaike International Airport in Colombo",
-   "price_total": 921,
+   "price_total": 920,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI4agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3430,21 +3458,8 @@
    "stops": "1 stop",
    "duration": "16 hr 20 min",
    "layovers": "9 hr 20 min at Colombo Bandaranaike International Airport in Colombo",
-   "price_total": 921,
+   "price_total": 920,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI5agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
-  },
-  {
-   "route": "DAC\u2192BKK",
-   "depart": "January 30, 2027",
-   "arrive": "January 31, 2027",
-   "depart_time": "1:00 PM",
-   "arrive_time": "6:20 AM",
-   "airline": "SriLankan",
-   "stops": "1 stop",
-   "duration": "16 hr 20 min",
-   "layovers": "9 hr 20 min at Colombo Bandaranaike International Airport in Colombo",
-   "price_total": 921,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMwagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
    "route": "DAC\u2192SIN",
@@ -3456,7 +3471,7 @@
    "stops": "1 stop",
    "duration": "16 hr",
    "layovers": "8 hr 30 min at Colombo Bandaranaike International Airport in Colombo",
-   "price_total": 994,
+   "price_total": 992,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI3agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3469,7 +3484,7 @@
    "stops": "1 stop",
    "duration": "17 hr 10 min",
    "layovers": "9 hr 40 min at Colombo Bandaranaike International Airport in Colombo",
-   "price_total": 994,
+   "price_total": 992,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI4agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3482,7 +3497,7 @@
    "stops": "1 stop",
    "duration": "17 hr 10 min",
    "layovers": "9 hr 40 min at Colombo Bandaranaike International Airport in Colombo",
-   "price_total": 994,
+   "price_total": 992,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3495,8 +3510,21 @@
    "stops": "1 stop",
    "duration": "17 hr 10 min",
    "layovers": "9 hr 40 min at Colombo Bandaranaike International Airport in Colombo",
-   "price_total": 994,
+   "price_total": 992,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
+  },
+  {
+   "route": "DAC\u2192SIN",
+   "depart": "January 31, 2027",
+   "arrive": "February 1, 2027",
+   "depart_time": "1:00 PM",
+   "arrive_time": "8:10 AM",
+   "airline": "SriLankan",
+   "stops": "1 stop",
+   "duration": "17 hr 10 min",
+   "layovers": "9 hr 40 min at Colombo Bandaranaike International Airport in Colombo",
+   "price_total": 992,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
    "route": "DAC\u2192SIN",
@@ -3508,7 +3536,7 @@
    "stops": "1 stop",
    "duration": "17 hr 10 min",
    "layovers": "9 hr 40 min at Colombo Bandaranaike International Airport in Colombo",
-   "price_total": 994,
+   "price_total": 992,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3521,7 +3549,7 @@
    "stops": "1 stop",
    "duration": "22 hr 35 min",
    "layovers": "15 hr 35 min at Colombo Bandaranaike International Airport in Colombo",
-   "price_total": 1005,
+   "price_total": 1004,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3534,7 +3562,20 @@
    "stops": "1 stop",
    "duration": "7 hr 25 min",
    "layovers": "1 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1051,
+   "price_total": 1049,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI3agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
+  },
+  {
+   "route": "DAC\u2192SIN",
+   "depart": "January 27, 2027",
+   "arrive": "January 28, 2027",
+   "depart_time": "10:55 PM",
+   "arrive_time": "10:20 AM",
+   "airline": "Malaysia Airlines and Singapore Airlines",
+   "stops": "1 stop",
+   "duration": "9 hr 25 min",
+   "layovers": "4 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1049,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI3agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3547,8 +3588,34 @@
    "stops": "1 stop",
    "duration": "7 hr 25 min",
    "layovers": "1 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1051,
+   "price_total": 1049,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI4agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
+  },
+  {
+   "route": "DAC\u2192SIN",
+   "depart": "January 28, 2027",
+   "arrive": "January 29, 2027",
+   "depart_time": "10:55 PM",
+   "arrive_time": "10:20 AM",
+   "airline": "Malaysia Airlines and Singapore Airlines",
+   "stops": "1 stop",
+   "duration": "9 hr 25 min",
+   "layovers": "4 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1049,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI4agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
+  },
+  {
+   "route": "DAC\u2192SIN",
+   "depart": "January 29, 2027",
+   "arrive": "January 30, 2027",
+   "depart_time": "10:55 PM",
+   "arrive_time": "10:20 AM",
+   "airline": "Malaysia Airlines and Singapore Airlines",
+   "stops": "1 stop",
+   "duration": "9 hr 25 min",
+   "layovers": "4 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1049,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
    "route": "DAC\u2192SIN",
@@ -3560,7 +3627,20 @@
    "stops": "1 stop",
    "duration": "7 hr 25 min",
    "layovers": "1 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1051,
+   "price_total": 1049,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
+  },
+  {
+   "route": "DAC\u2192SIN",
+   "depart": "January 30, 2027",
+   "arrive": "January 31, 2027",
+   "depart_time": "10:55 PM",
+   "arrive_time": "10:20 AM",
+   "airline": "Malaysia Airlines and Singapore Airlines",
+   "stops": "1 stop",
+   "duration": "9 hr 25 min",
+   "layovers": "4 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1049,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3573,7 +3653,20 @@
    "stops": "1 stop",
    "duration": "7 hr 25 min",
    "layovers": "1 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1051,
+   "price_total": 1049,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
+  },
+  {
+   "route": "DAC\u2192SIN",
+   "depart": "January 31, 2027",
+   "arrive": "February 1, 2027",
+   "depart_time": "10:55 PM",
+   "arrive_time": "10:20 AM",
+   "airline": "Malaysia Airlines and Singapore Airlines",
+   "stops": "1 stop",
+   "duration": "9 hr 25 min",
+   "layovers": "4 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1049,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3586,21 +3679,8 @@
    "stops": "1 stop",
    "duration": "9 hr 25 min",
    "layovers": "4 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1051,
+   "price_total": 1049,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
-  },
-  {
-   "route": "DAC\u2192SIN",
-   "depart": "January 27, 2027",
-   "arrive": "January 28, 2027",
-   "depart_time": "11:10 PM",
-   "arrive_time": "9:30 AM",
-   "airline": "Batik Air",
-   "stops": "1 stop",
-   "duration": "8 hr 20 min",
-   "layovers": "3 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1123,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI3agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
    "route": "DAC\u2192BKK",
@@ -3612,7 +3692,7 @@
    "stops": "1 stop",
    "duration": "10 hr 25 min",
    "layovers": "4 hr 15 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1131,
+   "price_total": 1129,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI3agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3625,7 +3705,7 @@
    "stops": "1 stop",
    "duration": "10 hr",
    "layovers": "4 hr 40 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1132,
+   "price_total": 1130,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI3agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3638,21 +3718,8 @@
    "stops": "1 stop",
    "duration": "8 hr 10 min",
    "layovers": "2 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1132,
+   "price_total": 1130,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI3agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
-  },
-  {
-   "route": "DAC\u2192SIN",
-   "depart": "January 28, 2027",
-   "arrive": "January 29, 2027",
-   "depart_time": "10:55 PM",
-   "arrive_time": "9:05 AM",
-   "airline": "Malaysia Airlines",
-   "stops": "1 stop",
-   "duration": "8 hr 10 min",
-   "layovers": "2 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1132,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI4agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
    "route": "DAC\u2192SIN",
@@ -3664,7 +3731,20 @@
    "stops": "1 stop",
    "duration": "10 hr",
    "layovers": "4 hr 40 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1132,
+   "price_total": 1130,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI4agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
+  },
+  {
+   "route": "DAC\u2192SIN",
+   "depart": "January 28, 2027",
+   "arrive": "January 29, 2027",
+   "depart_time": "10:55 PM",
+   "arrive_time": "9:05 AM",
+   "airline": "Malaysia Airlines",
+   "stops": "1 stop",
+   "duration": "8 hr 10 min",
+   "layovers": "2 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1130,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI4agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3677,7 +3757,7 @@
    "stops": "1 stop",
    "duration": "8 hr 10 min",
    "layovers": "2 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1132,
+   "price_total": 1130,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3690,7 +3770,7 @@
    "stops": "1 stop",
    "duration": "10 hr",
    "layovers": "4 hr 40 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1132,
+   "price_total": 1130,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3703,7 +3783,7 @@
    "stops": "1 stop",
    "duration": "9 hr 35 min",
    "layovers": "4 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1132,
+   "price_total": 1130,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3716,7 +3796,7 @@
    "stops": "1 stop",
    "duration": "10 hr",
    "layovers": "4 hr 40 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1132,
+   "price_total": 1130,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3729,7 +3809,7 @@
    "stops": "1 stop",
    "duration": "8 hr 10 min",
    "layovers": "2 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1132,
+   "price_total": 1130,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3742,21 +3822,8 @@
    "stops": "1 stop",
    "duration": "8 hr 10 min",
    "layovers": "2 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1132,
+   "price_total": 1130,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
-  },
-  {
-   "route": "DAC\u2192SIN",
-   "depart": "January 28, 2027",
-   "arrive": "January 29, 2027",
-   "depart_time": "11:10 PM",
-   "arrive_time": "9:30 AM",
-   "airline": "Batik Air",
-   "stops": "1 stop",
-   "duration": "8 hr 20 min",
-   "layovers": "3 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1145,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI4agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
    "route": "DAC\u2192SIN",
@@ -3768,8 +3835,34 @@
    "stops": "1 stop",
    "duration": "8 hr 20 min",
    "layovers": "3 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1145,
+   "price_total": 1143,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
+  },
+  {
+   "route": "DAC\u2192SIN",
+   "depart": "January 31, 2027",
+   "arrive": "February 1, 2027",
+   "depart_time": "11:10 PM",
+   "arrive_time": "9:30 AM",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "8 hr 20 min",
+   "layovers": "3 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1143,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
+  },
+  {
+   "route": "DAC\u2192SIN",
+   "depart": "February 1, 2027",
+   "arrive": "February 2, 2027",
+   "depart_time": "11:10 PM",
+   "arrive_time": "9:30 AM",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "8 hr 20 min",
+   "layovers": "3 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1143,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
    "route": "DAC\u2192BKK",
@@ -3781,7 +3874,7 @@
    "stops": "1 stop",
    "duration": "8 hr 10 min",
    "layovers": "2 hr at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1152,
+   "price_total": 1150,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI3agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3794,7 +3887,7 @@
    "stops": "1 stop",
    "duration": "8 hr 10 min",
    "layovers": "2 hr at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1152,
+   "price_total": 1150,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3807,7 +3900,7 @@
    "stops": "1 stop",
    "duration": "9 hr 40 min",
    "layovers": "3 hr 35 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1152,
+   "price_total": 1150,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3820,7 +3913,7 @@
    "stops": "1 stop",
    "duration": "11 hr",
    "layovers": "4 hr 45 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1152,
+   "price_total": 1150,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3833,7 +3926,7 @@
    "stops": "1 stop",
    "duration": "13 hr 10 min",
    "layovers": "7 hr at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1152,
+   "price_total": 1150,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3846,7 +3939,7 @@
    "stops": "1 stop",
    "duration": "10 hr 20 min",
    "layovers": "3 hr 45 min at Hong Kong International Airport in Hong Kong",
-   "price_total": 1160,
+   "price_total": 1158,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI4agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3859,47 +3952,8 @@
    "stops": "1 stop",
    "duration": "11 hr 5 min",
    "layovers": "4 hr 25 min at Hong Kong International Airport in Hong Kong",
-   "price_total": 1160,
+   "price_total": 1158,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMwagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
-  },
-  {
-   "route": "DAC\u2192SIN",
-   "depart": "January 30, 2027",
-   "arrive": "January 31, 2027",
-   "depart_time": "11:10 PM",
-   "arrive_time": "9:30 AM",
-   "airline": "Batik Air",
-   "stops": "1 stop",
-   "duration": "8 hr 20 min",
-   "layovers": "3 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1175,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
-  },
-  {
-   "route": "DAC\u2192SIN",
-   "depart": "January 31, 2027",
-   "arrive": "February 1, 2027",
-   "depart_time": "11:10 PM",
-   "arrive_time": "9:30 AM",
-   "airline": "Batik Air",
-   "stops": "1 stop",
-   "duration": "8 hr 20 min",
-   "layovers": "3 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1175,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
-  },
-  {
-   "route": "DAC\u2192SIN",
-   "depart": "February 1, 2027",
-   "arrive": "February 2, 2027",
-   "depart_time": "11:10 PM",
-   "arrive_time": "9:30 AM",
-   "airline": "Batik Air",
-   "stops": "1 stop",
-   "duration": "8 hr 20 min",
-   "layovers": "3 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1175,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
    "route": "DAC\u2192SIN",
@@ -3911,7 +3965,7 @@
    "stops": "1 stop",
    "duration": "6 hr 20 min",
    "layovers": "1 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1184,
+   "price_total": 1182,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI4agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3924,7 +3978,7 @@
    "stops": "1 stop",
    "duration": "11 hr 55 min",
    "layovers": "5 hr 50 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1194,
+   "price_total": 1192,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI3agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3937,7 +3991,7 @@
    "stops": "1 stop",
    "duration": "11 hr 55 min",
    "layovers": "5 hr 50 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1194,
+   "price_total": 1192,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3950,7 +4004,7 @@
    "stops": "1 stop",
    "duration": "13 hr 10 min",
    "layovers": "7 hr at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1203,
+   "price_total": 1200,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI3agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3963,7 +4017,7 @@
    "stops": "1 stop",
    "duration": "15 hr",
    "layovers": "8 hr 50 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1203,
+   "price_total": 1200,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI3agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -3976,7 +4030,7 @@
    "stops": "1 stop",
    "duration": "6 hr 20 min",
    "layovers": "1 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1205,
+   "price_total": 1203,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI3agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -3989,21 +4043,21 @@
    "stops": "1 stop",
    "duration": "6 hr 20 min",
    "layovers": "1 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1205,
+   "price_total": 1203,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
    "route": "DAC\u2192SIN",
-   "depart": "January 30, 2027",
-   "arrive": "January 30, 2027",
+   "depart": "February 1, 2027",
+   "arrive": "February 1, 2027",
    "depart_time": "1:10 AM",
    "arrive_time": "9:30 AM",
    "airline": "Batik Air",
    "stops": "1 stop",
    "duration": "6 hr 20 min",
    "layovers": "1 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1205,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMwagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
+   "price_total": 1203,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
    "route": "DAC\u2192BKK",
@@ -4015,7 +4069,7 @@
    "stops": "1 stop",
    "duration": "8 hr 10 min",
    "layovers": "2 hr at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1216,
+   "price_total": 1214,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4028,7 +4082,7 @@
    "stops": "1 stop",
    "duration": "9 hr 40 min",
    "layovers": "3 hr 35 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1216,
+   "price_total": 1214,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4041,7 +4095,7 @@
    "stops": "1 stop",
    "duration": "13 hr 10 min",
    "layovers": "7 hr at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1216,
+   "price_total": 1214,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4054,7 +4108,7 @@
    "stops": "1 stop",
    "duration": "15 hr",
    "layovers": "8 hr 50 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1216,
+   "price_total": 1214,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4067,34 +4121,8 @@
    "stops": "1 stop",
    "duration": "9 hr 40 min",
    "layovers": "3 hr 35 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1234,
+   "price_total": 1231,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI3agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
-  },
-  {
-   "route": "DAC\u2192SIN",
-   "depart": "January 31, 2027",
-   "arrive": "January 31, 2027",
-   "depart_time": "1:10 AM",
-   "arrive_time": "9:30 AM",
-   "airline": "Batik Air",
-   "stops": "1 stop",
-   "duration": "6 hr 20 min",
-   "layovers": "1 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1236,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTMxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
-  },
-  {
-   "route": "DAC\u2192SIN",
-   "depart": "February 1, 2027",
-   "arrive": "February 1, 2027",
-   "depart_time": "1:10 AM",
-   "arrive_time": "9:30 AM",
-   "airline": "Batik Air",
-   "stops": "1 stop",
-   "duration": "6 hr 20 min",
-   "layovers": "1 hr 25 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1236,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
    "route": "DAC\u2192BKK",
@@ -4106,7 +4134,7 @@
    "stops": "1 stop",
    "duration": "11 hr 55 min",
    "layovers": "5 hr 50 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1258,
+   "price_total": 1256,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4119,7 +4147,7 @@
    "stops": "1 stop",
    "duration": "8 hr 10 min",
    "layovers": "2 hr at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1260,
+   "price_total": 1257,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI5agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4132,7 +4160,7 @@
    "stops": "1 stop",
    "duration": "9 hr 40 min",
    "layovers": "3 hr 35 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1260,
+   "price_total": 1257,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI5agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4145,7 +4173,7 @@
    "stops": "1 stop",
    "duration": "13 hr 10 min",
    "layovers": "7 hr at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1260,
+   "price_total": 1257,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI5agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4158,8 +4186,60 @@
    "stops": "1 stop",
    "duration": "15 hr",
    "layovers": "8 hr 50 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1260,
+   "price_total": 1257,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI5agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "DAC\u2192BKK",
+   "depart": "January 30, 2027",
+   "arrive": "January 31, 2027",
+   "depart_time": "11:10 PM",
+   "arrive_time": "11:05 AM",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "10 hr 55 min",
+   "layovers": "4 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1260,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMwagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "DAC\u2192BKK",
+   "depart": "January 31, 2027",
+   "arrive": "February 1, 2027",
+   "depart_time": "11:10 PM",
+   "arrive_time": "11:05 AM",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "10 hr 55 min",
+   "layovers": "4 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1260,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "DAC\u2192BKK",
+   "depart": "February 1, 2027",
+   "arrive": "February 2, 2027",
+   "depart_time": "11:10 PM",
+   "arrive_time": "11:05 AM",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "10 hr 55 min",
+   "layovers": "4 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1260,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "DAC\u2192BKK",
+   "depart": "January 27, 2027",
+   "arrive": "January 28, 2027",
+   "depart_time": "11:10 PM",
+   "arrive_time": "7:15 PM",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "19 hr 5 min",
+   "layovers": "13 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1267,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI3agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
    "route": "DAC\u2192SIN",
@@ -4171,7 +4251,7 @@
    "stops": "1 stop",
    "duration": "7 hr 25 min",
    "layovers": "1 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1273,
+   "price_total": 1271,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
   },
   {
@@ -4184,7 +4264,7 @@
    "stops": "1 stop",
    "duration": "8 hr 10 min",
    "layovers": "2 hr at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1277,
+   "price_total": 1274,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI4agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4197,7 +4277,7 @@
    "stops": "1 stop",
    "duration": "9 hr 40 min",
    "layovers": "3 hr 35 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1277,
+   "price_total": 1274,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI4agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4210,7 +4290,7 @@
    "stops": "1 stop",
    "duration": "11 hr",
    "layovers": "4 hr 45 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1277,
+   "price_total": 1274,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI4agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4223,7 +4303,7 @@
    "stops": "1 stop",
    "duration": "13 hr 10 min",
    "layovers": "7 hr at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1277,
+   "price_total": 1274,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI4agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4236,7 +4316,7 @@
    "stops": "1 stop",
    "duration": "10 hr 25 min",
    "layovers": "4 hr 15 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1287,
+   "price_total": 1285,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI4agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4249,7 +4329,7 @@
    "stops": "1 stop",
    "duration": "10 hr 25 min",
    "layovers": "4 hr 15 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1287,
+   "price_total": 1285,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI5agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4262,7 +4342,7 @@
    "stops": "1 stop",
    "duration": "10 hr 25 min",
    "layovers": "4 hr 15 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1287,
+   "price_total": 1285,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMwagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4275,7 +4355,7 @@
    "stops": "1 stop",
    "duration": "10 hr 25 min",
    "layovers": "4 hr 15 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1287,
+   "price_total": 1285,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4288,7 +4368,46 @@
    "stops": "1 stop",
    "duration": "10 hr 25 min",
    "layovers": "4 hr 15 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1287,
+   "price_total": 1285,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "DAC\u2192BKK",
+   "depart": "January 27, 2027",
+   "arrive": "January 28, 2027",
+   "depart_time": "11:10 PM",
+   "arrive_time": "11:05 AM",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "10 hr 55 min",
+   "layovers": "4 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1291,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI3agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "DAC\u2192BKK",
+   "depart": "January 29, 2027",
+   "arrive": "January 30, 2027",
+   "depart_time": "11:10 PM",
+   "arrive_time": "11:05 AM",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "10 hr 55 min",
+   "layovers": "4 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1291,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI5agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "DAC\u2192BKK",
+   "depart": "February 1, 2027",
+   "arrive": "February 2, 2027",
+   "depart_time": "11:10 PM",
+   "arrive_time": "10:45 AM",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "10 hr 35 min",
+   "layovers": "4 hr 30 min at Federal Territory of Kuala Lumpur. Transfer here from Kuala Lumpur International Airport",
+   "price_total": 1291,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4301,47 +4420,8 @@
    "stops": "1 stop",
    "duration": "10 hr 20 min",
    "layovers": "3 hr 45 min at Hong Kong International Airport in Hong Kong",
-   "price_total": 1297,
+   "price_total": 1295,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMwagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
-  },
-  {
-   "route": "DAC\u2192BKK",
-   "depart": "January 30, 2027",
-   "arrive": "January 31, 2027",
-   "depart_time": "11:10 PM",
-   "arrive_time": "7:15 PM",
-   "airline": "Batik Air",
-   "stops": "1 stop",
-   "duration": "19 hr 5 min",
-   "layovers": "13 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1306,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMwagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
-  },
-  {
-   "route": "DAC\u2192BKK",
-   "depart": "January 31, 2027",
-   "arrive": "February 1, 2027",
-   "depart_time": "11:10 PM",
-   "arrive_time": "7:15 PM",
-   "airline": "Batik Air",
-   "stops": "1 stop",
-   "duration": "19 hr 5 min",
-   "layovers": "13 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1306,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
-  },
-  {
-   "route": "DAC\u2192BKK",
-   "depart": "February 1, 2027",
-   "arrive": "February 2, 2027",
-   "depart_time": "11:10 PM",
-   "arrive_time": "7:15 PM",
-   "airline": "Batik Air",
-   "stops": "1 stop",
-   "duration": "19 hr 5 min",
-   "layovers": "13 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1306,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
    "route": "DAC\u2192BKK",
@@ -4353,7 +4433,7 @@
    "stops": "1 stop",
    "duration": "11 hr 55 min",
    "layovers": "5 hr 50 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1309,
+   "price_total": 1306,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI4agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4366,125 +4446,112 @@
    "stops": "1 stop",
    "duration": "11 hr 55 min",
    "layovers": "5 hr 50 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1309,
+   "price_total": 1306,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI5agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
    "route": "DAC\u2192BKK",
    "depart": "January 27, 2027",
+   "arrive": "January 27, 2027",
+   "depart_time": "1:10 AM",
+   "arrive_time": "11:05 AM",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "8 hr 55 min",
+   "layovers": "2 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1321,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI3agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "DAC\u2192BKK",
+   "depart": "January 28, 2027",
    "arrive": "January 28, 2027",
+   "depart_time": "1:10 AM",
+   "arrive_time": "7:15 PM",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "17 hr 5 min",
+   "layovers": "11 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1321,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI4agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "DAC\u2192BKK",
+   "depart": "January 31, 2027",
+   "arrive": "January 31, 2027",
+   "depart_time": "1:10 AM",
+   "arrive_time": "11:05 AM",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "8 hr 55 min",
+   "layovers": "2 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1321,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "DAC\u2192BKK",
+   "depart": "February 1, 2027",
+   "arrive": "February 1, 2027",
+   "depart_time": "1:10 AM",
+   "arrive_time": "11:05 AM",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "8 hr 55 min",
+   "layovers": "2 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1321,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "DAC\u2192BKK",
+   "depart": "January 29, 2027",
+   "arrive": "January 30, 2027",
+   "depart_time": "11:10 PM",
+   "arrive_time": "10:45 AM",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "10 hr 35 min",
+   "layovers": "4 hr 30 min at Federal Territory of Kuala Lumpur. Transfer here from Kuala Lumpur International Airport",
+   "price_total": 1322,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI5agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "DAC\u2192BKK",
+   "depart": "January 28, 2027",
+   "arrive": "January 29, 2027",
    "depart_time": "11:10 PM",
    "arrive_time": "11:05 AM",
    "airline": "Batik Air",
    "stops": "1 stop",
    "duration": "10 hr 55 min",
    "layovers": "4 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1329,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI3agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
-  },
-  {
-   "route": "DAC\u2192BKK",
-   "depart": "January 29, 2027",
-   "arrive": "January 30, 2027",
-   "depart_time": "11:10 PM",
-   "arrive_time": "7:15 PM",
-   "airline": "Batik Air",
-   "stops": "1 stop",
-   "duration": "19 hr 5 min",
-   "layovers": "13 hr 5 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1336,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI5agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
-  },
-  {
-   "route": "DAC\u2192BKK",
-   "depart": "February 1, 2027",
-   "arrive": "February 2, 2027",
-   "depart_time": "11:10 PM",
-   "arrive_time": "10:45 AM",
-   "airline": "Batik Air",
-   "stops": "1 stop",
-   "duration": "10 hr 35 min",
-   "layovers": "4 hr 30 min at Federal Territory of Kuala Lumpur. Transfer here from Kuala Lumpur International Airport",
-   "price_total": 1345,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
-  },
-  {
-   "route": "DAC\u2192SIN",
-   "depart": "January 29, 2027",
-   "arrive": "January 30, 2027",
-   "depart_time": "12:30 PM",
-   "arrive_time": "12:30 AM",
-   "airline": "Malaysia Airlines",
-   "stops": "1 stop",
-   "duration": "10 hr",
-   "layovers": "4 hr 40 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1351,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTI5agcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
-  },
-  {
-   "route": "DAC\u2192SIN",
-   "depart": "February 1, 2027",
-   "arrive": "February 2, 2027",
-   "depart_time": "12:30 PM",
-   "arrive_time": "12:30 AM",
-   "airline": "Malaysia Airlines",
-   "stops": "1 stop",
-   "duration": "10 hr",
-   "layovers": "4 hr 40 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1351,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
-  },
-  {
-   "route": "DAC\u2192BKK",
-   "depart": "January 31, 2027",
-   "arrive": "January 31, 2027",
-   "depart_time": "1:10 AM",
-   "arrive_time": "11:05 AM",
-   "airline": "Batik Air",
-   "stops": "1 stop",
-   "duration": "8 hr 55 min",
-   "layovers": "2 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1359,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
-  },
-  {
-   "route": "DAC\u2192BKK",
-   "depart": "February 1, 2027",
-   "arrive": "February 1, 2027",
-   "depart_time": "1:10 AM",
-   "arrive_time": "11:05 AM",
-   "airline": "Batik Air",
-   "stops": "1 stop",
-   "duration": "8 hr 55 min",
-   "layovers": "2 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1359,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
-  },
-  {
-   "route": "DAC\u2192BKK",
-   "depart": "January 28, 2027",
-   "arrive": "January 30, 2027",
-   "depart_time": "11:10 PM",
-   "arrive_time": "10:45 AM",
-   "airline": "Batik Air",
-   "stops": "1 stop",
-   "duration": "34 hr 35 min",
-   "layovers": "28 hr 30 min at Federal Territory of Kuala Lumpur. Transfer here from Kuala Lumpur International Airport",
-   "price_total": 1375,
+   "price_total": 1342,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI4agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
    "route": "DAC\u2192BKK",
-   "depart": "January 29, 2027",
-   "arrive": "January 30, 2027",
-   "depart_time": "11:10 PM",
-   "arrive_time": "10:45 AM",
+   "depart": "January 28, 2027",
+   "arrive": "January 28, 2027",
+   "depart_time": "1:10 AM",
+   "arrive_time": "11:05 AM",
    "airline": "Batik Air",
    "stops": "1 stop",
-   "duration": "10 hr 35 min",
-   "layovers": "4 hr 30 min at Federal Territory of Kuala Lumpur. Transfer here from Kuala Lumpur International Airport",
-   "price_total": 1375,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI5agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+   "duration": "8 hr 55 min",
+   "layovers": "2 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1351,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI4agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "DAC\u2192BKK",
+   "depart": "January 30, 2027",
+   "arrive": "January 30, 2027",
+   "depart_time": "1:10 AM",
+   "arrive_time": "11:05 AM",
+   "airline": "Batik Air",
+   "stops": "1 stop",
+   "duration": "8 hr 55 min",
+   "layovers": "2 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1351,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMwagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
    "route": "DAC\u2192BKK",
@@ -4496,7 +4563,7 @@
    "stops": "1 stop",
    "duration": "9 hr 55 min",
    "layovers": "3 hr 20 min at Guangzhou Baiyun International Airport in Guangzhou",
-   "price_total": 1378,
+   "price_total": 1376,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI3agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4509,7 +4576,7 @@
    "stops": "1 stop",
    "duration": "9 hr 55 min",
    "layovers": "3 hr 20 min at Guangzhou Baiyun International Airport in Guangzhou",
-   "price_total": 1378,
+   "price_total": 1376,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI4agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4522,21 +4589,8 @@
    "stops": "1 stop",
    "duration": "9 hr 55 min",
    "layovers": "3 hr 20 min at Guangzhou Baiyun International Airport in Guangzhou",
-   "price_total": 1378,
+   "price_total": 1376,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI5agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
-  },
-  {
-   "route": "DAC\u2192BKK",
-   "depart": "January 30, 2027",
-   "arrive": "January 31, 2027",
-   "depart_time": "11:15 PM",
-   "arrive_time": "10:10 AM",
-   "airline": "China Southern",
-   "stops": "1 stop",
-   "duration": "9 hr 55 min",
-   "layovers": "3 hr 20 min at Guangzhou Baiyun International Airport in Guangzhou",
-   "price_total": 1378,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMwagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
    "route": "DAC\u2192BKK",
@@ -4548,7 +4602,7 @@
    "stops": "1 stop",
    "duration": "9 hr 55 min",
    "layovers": "3 hr 20 min at Guangzhou Baiyun International Airport in Guangzhou",
-   "price_total": 1378,
+   "price_total": 1376,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
@@ -4561,34 +4615,8 @@
    "stops": "1 stop",
    "duration": "9 hr 55 min",
    "layovers": "3 hr 20 min at Guangzhou Baiyun International Airport in Guangzhou",
-   "price_total": 1378,
+   "price_total": 1376,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
-  },
-  {
-   "route": "DAC\u2192BKK",
-   "depart": "January 28, 2027",
-   "arrive": "January 28, 2027",
-   "depart_time": "1:10 AM",
-   "arrive_time": "11:05 AM",
-   "airline": "Batik Air",
-   "stops": "1 stop",
-   "duration": "8 hr 55 min",
-   "layovers": "2 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1390,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI4agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
-  },
-  {
-   "route": "DAC\u2192BKK",
-   "depart": "January 30, 2027",
-   "arrive": "January 30, 2027",
-   "depart_time": "1:10 AM",
-   "arrive_time": "11:05 AM",
-   "airline": "Batik Air",
-   "stops": "1 stop",
-   "duration": "8 hr 55 min",
-   "layovers": "2 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1390,
-   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMwagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   },
   {
    "route": "DAC\u2192BKK",
@@ -4600,8 +4628,34 @@
    "stops": "1 stop",
    "duration": "8 hr 55 min",
    "layovers": "2 hr 55 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
-   "price_total": 1451,
+   "price_total": 1403,
    "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI5agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+  },
+  {
+   "route": "DAC\u2192SIN",
+   "depart": "February 1, 2027",
+   "arrive": "February 2, 2027",
+   "depart_time": "12:30 PM",
+   "arrive_time": "12:30 AM",
+   "airline": "Malaysia Airlines",
+   "stops": "1 stop",
+   "duration": "10 hr",
+   "layovers": "4 hr 40 min at Kuala Lumpur International Airport in Federal Territory of Kuala Lumpur",
+   "price_total": 1488,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAyLTAxagcIARIDREFDcgcIARIDU0lOQAFAAUACSAFwAYIBCwj___________8BmAEC&hl=en"
+  },
+  {
+   "route": "DAC\u2192BKK",
+   "depart": "January 31, 2027",
+   "arrive": "February 1, 2027",
+   "depart_time": "6:45 PM",
+   "arrive_time": "10:05 AM",
+   "airline": "Emirates and flydubai",
+   "stops": "1 stop",
+   "duration": "14 hr 20 min",
+   "layovers": "2 hr 35 min at Dubai International Airport in Dubai",
+   "price_total": 3024,
+   "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTMxagcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
   }
  ],
  "history": [
@@ -12464,6 +12518,197 @@
      "ticket1_total": 4357,
      "ticket1_airline": "Turkish Airlines",
      "ticket2_total": 1098,
+     "ticket2_airlines": "US-Bangla Airlines + Thai AirAsia",
+     "ticket2_kind": "2 one-ways"
+    },
+    "baggage": [
+     {
+      "route": "BOS\u2192IST",
+      "label": "Boston \u2192 Istanbul",
+      "ticket": 1,
+      "carrier": "Turkish Airlines",
+      "checked": "2 \u00d7 23 kg per person",
+      "cabin": "1 \u00d7 8 kg (55\u00d740\u00d723 cm)",
+      "note": "US piece rule applies in both directions and to the onward IST\u2192DAC leg of the same ticket. Deep-promo/EcoFly fares can differ \u2014 the fare page shows the real number.",
+      "url": "https://www.turkishairlines.com/en-us/any-questions/baggage-information/usa-free-baggage-rules/",
+      "confidence": "verified",
+      "others": [],
+      "summary": "2 \u00d7 23 kg per person"
+     },
+     {
+      "route": "IST\u2192DAC",
+      "label": "Istanbul \u2192 Dhaka",
+      "ticket": 1,
+      "carrier": "Turkish Airlines",
+      "checked": "2 \u00d7 23 kg per person",
+      "cabin": "1 \u00d7 8 kg (55\u00d740\u00d723 cm)",
+      "note": "US piece rule applies in both directions and to the onward IST\u2192DAC leg of the same ticket. Deep-promo/EcoFly fares can differ \u2014 the fare page shows the real number.",
+      "url": "https://www.turkishairlines.com/en-us/any-questions/baggage-information/usa-free-baggage-rules/",
+      "confidence": "verified",
+      "others": [],
+      "summary": "2 \u00d7 23 kg per person"
+     },
+     {
+      "route": "DAC\u2192BKK",
+      "label": "Dhaka \u2192 Bangkok",
+      "ticket": 2,
+      "carrier": "US-Bangla Airlines",
+      "checked": "30 kg (max 2 pieces) per person",
+      "cabin": "7 kg (published per ticket)",
+      "note": "Dhaka\u2192Singapore is one of their most generous routes: 40 kg in two bags.",
+      "url": "https://usbair.com/free-baggage-allowence",
+      "confidence": "verified",
+      "others": [],
+      "summary": "30 kg (max 2 pieces) per person"
+     },
+     {
+      "route": "BKK\u2192SIN",
+      "label": "Bangkok \u2192 Singapore",
+      "ticket": 2,
+      "carrier": "Scoot",
+      "checked": "NONE on Fly fares \u2014 prepay 20 kg+",
+      "cabin": "10 kg total (2 items)",
+      "note": "Low-cost carrier: bags are an add-on.",
+      "url": "https://www.flyscoot.com/en/plan/booking-your-flight/baggage",
+      "confidence": "verified",
+      "others": [],
+      "summary": "NONE on Fly fares \u2014 prepay 20 kg+"
+     },
+     {
+      "route": "SIN\u2192BOS",
+      "label": "Singapore \u2192 Boston",
+      "ticket": 1,
+      "carrier": "Turkish Airlines",
+      "checked": "2 \u00d7 23 kg per person",
+      "cabin": "1 \u00d7 8 kg (55\u00d740\u00d723 cm)",
+      "note": "US piece rule applies in both directions and to the onward IST\u2192DAC leg of the same ticket. Deep-promo/EcoFly fares can differ \u2014 the fare page shows the real number.",
+      "url": "https://www.turkishairlines.com/en-us/any-questions/baggage-information/usa-free-baggage-rules/",
+      "confidence": "verified",
+      "others": [],
+      "summary": "2 \u00d7 23 kg per person"
+     }
+    ],
+    "baggage_warnings": [
+     "Two separate purchases \u2192 bags are NOT checked through. Collect them in Dhaka and re-check for Ticket \u2461; same again in Bangkok if the middle is two one-way tickets.",
+     "Allowance is per person and the child with a seat normally gets the adult allowance \u2014 infants on a lap do not."
+    ],
+    "baggage_checked": "2026-07-25"
+   }
+  },
+  {
+   "date": "2026-09-04",
+   "main_total": 4913,
+   "combined_total": 4913,
+   "ticket1_total": 4002,
+   "ticket2_total": 911,
+   "ticket1_airline": "Turkish Airlines",
+   "ticket2_airline": "US-Bangla Airlines + Scoot",
+   "order": "Bangkok first",
+   "ist_nights": 2,
+   "sg_nights": 4,
+   "sg_allin": 5575,
+   "stay_mode": "steering",
+   "bkk_nights": 5,
+   "other_order_total": 5454,
+   "bali_total": 6184,
+   "dhaka_days": 21,
+   "home": "Feb 7",
+   "valid": true,
+   "flag": null,
+   "budget_total": null,
+   "best_total": 4913,
+   "best_structure": "Bangkok first \u00b7 2 one-ways middle",
+   "best_detail": {
+    "name": "Bangkok first \u00b7 2 one-ways middle",
+    "kind": "sg-stopover2",
+    "trip": "DAC\u2192BKK\u2192SIN\u2192BOS",
+    "order": "BKK-first",
+    "order_label": "Bangkok first",
+    "total": 4913,
+    "cheapest_total": 4573,
+    "valid": true,
+    "flag": null,
+    "home": "Feb 7",
+    "dhaka_days": 21,
+    "bkk_nights": 5,
+    "sg_nights": 4,
+    "ist_nights": 2,
+    "sg_preferred": false,
+    "sg_airlines": "US-Bangla Airlines + Scoot",
+    "alt_note": "THAI/Singapore Airlines option +$24 (THAI)",
+    "legs": [
+     {
+      "route": "DAC\u2192BKK",
+      "depart": "January 28, 2027",
+      "arrive": "January 28, 2027",
+      "depart_time": "9:35 AM",
+      "arrive_time": "1:10 PM",
+      "airline": "US-Bangla Airlines",
+      "stops": "Nonstop",
+      "duration": "2 hr 35 min",
+      "layovers": "none",
+      "price_total": 589,
+      "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAxLTI4agcIARIDREFDcgwIAxIIL20vMGZuMmdAAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+     },
+     {
+      "route": "BKK\u2192SIN",
+      "depart": "February 2, 2027",
+      "arrive": "February 2, 2027",
+      "depart_time": "11:50 AM",
+      "arrive_time": "3:25 PM",
+      "airline": "Scoot",
+      "stops": "Nonstop",
+      "duration": "2 hr 35 min",
+      "layovers": "none",
+      "price_total": 322,
+      "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI3LTAyLTAyagwIAxIIL20vMGZuMmdyBwgBEgNTSU5AAUABQAJIAXABggELCP___________wGYAQI&hl=en"
+     }
+    ],
+    "sg_ticket": null,
+    "openjaw": {
+     "out_date": "January 4, 2027",
+     "ret_date": "February 6, 2027",
+     "price_total": 4002,
+     "airline": "Turkish Airlines",
+     "out_arrive": "January 8, 2027",
+     "out_depart_time": "8:00 PM",
+     "out_arrive_time": "1:20 PM",
+     "stops": "Nonstop",
+     "duration": "9 hr 20 min",
+     "layovers": "none",
+     "link": "https://www.google.com/travel/flights/search?tfs=CBwQAhoeEgoyMDI3LTAxLTA0agcIARIDQk9TcgcIARIDSVNUGh4SCjIwMjctMDEtMDdqBwgBEgNJU1RyBwgBEgNEQUMaHhIKMjAyNy0wMi0wNmoHCAESA1NJTnIHCAESA0JPU0ABQAFAAkgBcAGCAQsI____________AZgBAw&hl=en",
+     "kind": "stopover2",
+     "label": "Istanbul 2n + return from Singapore (Bangkok-first order)",
+     "desc": "BOS\u2192IST Jan 4 \u00b7 2 nights Istanbul \u00b7 IST\u2192DAC Jan 7 + SIN\u2192BOS Feb 6 \u2014 one ticket",
+     "note": "2 full Istanbul nights (US passports visa-free). On Turkish, the 20h\u20137d connection still qualifies for ONE free 4-star hotel night via their Stopover Booker (\u226572h before; not on N/R fares) \u2014 night 2 is on you.",
+     "ist_nights": 2,
+     "ret_city": "SIN",
+     "route": "BOS\u2192IST\u2192DAC + SIN\u2192BOS",
+     "pick": {
+      "premium": 340,
+      "over": {
+       "airline": "Delta and Air France",
+       "price_total": 3662,
+       "stops": "1 stop",
+       "duration": "16 hr 55 min"
+      },
+      "knob": 500,
+      "note": "nonstop Turkish Airlines preferred over Delta and Air France $3,662 (1 stop, 16 hr 55 min): +$340, under the $500 nonstop-worth knob"
+     }
+    },
+    "other_order": {
+     "order": "SIN-first",
+     "order_label": "Singapore first",
+     "total": 5454,
+     "delta": 541,
+     "valid": true,
+     "flag": null,
+     "sg_nights": 4,
+     "bkk_nights": 5,
+     "dhaka_days": 20,
+     "ticket1_total": 4357,
+     "ticket1_airline": "Turkish Airlines",
+     "ticket2_total": 1097,
      "ticket2_airlines": "US-Bangla Airlines + Thai AirAsia",
      "ticket2_kind": "2 one-ways"
     },
