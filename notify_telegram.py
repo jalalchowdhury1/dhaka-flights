@@ -27,6 +27,7 @@ Format rules:
 """
 import os
 import re
+import urllib.parse
 import urllib.request
 import json
 from typing import Optional
@@ -99,6 +100,25 @@ def send_due_reminders(today=None, stamp_path=REMINDER_STAMP, send=None) -> bool
     with open(stamp_path, "a") as f:
         f.write("".join(k + "\n" for k in keys if k not in done))
     return True
+
+
+def digest_post(item_id, text, parse_mode="HTML", photo=None, caption=None) -> bool:
+    """Hand an overnight message to the health-hub Silent digest instead of the chat
+    (one 07:00 card, a button per item; a tap replays the full message — 11 Sep 2026).
+    True = stored; False = caller sends to Telegram as before. Needs DIGEST_URL + DIGEST_KEY."""
+    url, key = os.environ.get("DIGEST_URL"), os.environ.get("DIGEST_KEY")
+    if not url or not key:
+        return False
+    body = json.dumps({"id": item_id, "text": text, "parse_mode": parse_mode,
+                       "photo": photo, "caption": caption}).encode()
+    req = urllib.request.Request(f"{url}?k={urllib.parse.quote(key)}", data=body,
+                                 headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            return json.loads(r.read().decode() or "{}").get("ok") is True
+    except Exception as e:  # noqa: BLE001
+        print(f"digest hand-off failed ({e}); sending directly")
+        return False
 
 
 def send_message(text: str, parse_mode: str = "HTML", silent: bool = False) -> bool:
@@ -487,7 +507,7 @@ def _safe_send(text: str) -> bool:
     this is the last line of defense before notify_cheapest itself."""
     try:
         try:
-            return send_message(text, silent=True)   # the 00:00 nightly brief — no buzz (11 Sep 2026)
+            return digest_post("flights", text, "HTML") or send_message(text, silent=True)   # Silent digest first (11 Sep 2026)
         except TypeError:                            # a stub without the kwarg (tests, older patches)
             return send_message(text)
     except Exception as e:  # noqa: BLE001

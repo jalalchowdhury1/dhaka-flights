@@ -763,3 +763,7 @@ protection story when buying in September.
 the hotel-rates line land without a buzz — they are read in the morning, not at midnight.
 `_safe_send` tries the silent form first and falls back to the one-arg call if a stub
 (tests, older patches) does not accept the kwarg. Errors and other alerts stay loud.
+
+## Silent digest hand-off (11 Sep 2026)
+
+The overnight send calls `digest_post("flights / hotels", text, parse_mode)` first (health-hub `api/digest.js`, env `DIGEST_URL` + `DIGEST_KEY` — in the repo .env, gitignored; flights = the 00:00 brief, hotels = the 05:00 rate movers). Stored → no direct message; the 07:00 ⚪ Silent digest card carries a button that replays it in full (36 h). Collector down or env missing → the old silent direct send. Never make the direct send loud again.
