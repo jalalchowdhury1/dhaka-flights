@@ -756,3 +756,10 @@ protection story when buying in September.
 - `main.py` — manual run: scrape + sheet + terminal summary (no Telegram/publish)
 - `tests/` — pytest suite (296 tests; `test_main_trip.py` holds the shared trip
   fixtures, `test_baggage.py` guards the allowance table's honesty)
+
+## Telegram: the nightly brief is silent (11 Sep 2026)
+
+`send_message(text, silent=True)` sets `disable_notification`, so the 00:00 brief and
+the hotel-rates line land without a buzz — they are read in the morning, not at midnight.
+`_safe_send` tries the silent form first and falls back to the one-arg call if a stub
+(tests, older patches) does not accept the kwarg. Errors and other alerts stay loud.

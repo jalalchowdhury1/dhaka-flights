@@ -275,7 +275,7 @@ def main():
                else hotel_rates.deal_message(prev, data))
         if msg:
             from notify_telegram import send_message
-            send_message(msg)
+            send_message(msg, silent=True)   # ~05:00 rate movers — no buzz (11 Sep 2026)
     except Exception as e:                       # noqa: BLE001
         print(f"WARN: telegram moves alert failed: {e}")
 

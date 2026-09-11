@@ -101,13 +101,14 @@ def send_due_reminders(today=None, stamp_path=REMINDER_STAMP, send=None) -> bool
     return True
 
 
-def send_message(text: str, parse_mode: str = "HTML") -> bool:
+def send_message(text: str, parse_mode: str = "HTML", silent: bool = False) -> bool:
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     payload = json.dumps({
         "chat_id": TELEGRAM_CHAT_ID,
         "text": text,
         "parse_mode": parse_mode,
         "disable_web_page_preview": True,
+        "disable_notification": silent,   # overnight digests arrive without a buzz (11 Sep 2026)
     }).encode()
     req = urllib.request.Request(url, data=payload,
                                  headers={"Content-Type": "application/json"})
@@ -485,7 +486,10 @@ def _safe_send(text: str) -> bool:
     (tests, or a future patch) can replace it with something that doesn't —
     this is the last line of defense before notify_cheapest itself."""
     try:
-        return send_message(text)
+        try:
+            return send_message(text, silent=True)   # the 00:00 nightly brief — no buzz (11 Sep 2026)
+        except TypeError:                            # a stub without the kwarg (tests, older patches)
+            return send_message(text)
     except Exception as e:  # noqa: BLE001
         print(f"send_message raised: {e}")
         return False
