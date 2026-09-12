@@ -1,5 +1,5 @@
 {
- "updated": "2026-09-11",
+ "updated": "2026-09-12",
  "stays": {
   "IST": {
    "checkin": "2027-01-05",
@@ -97,11 +97,11 @@
     "net": 431
    },
    "suspect": null,
-   "rate_src": "$350 Official Site (ignored Super.com $325)",
+   "rate_src": "$350 Expedia.com (ignored Super.com $324)",
    "rate_basis": "trusted-min",
    "bold": false,
    "rate": 350,
-   "checked": "2026-09-11",
+   "checked": "2026-09-12",
    "anchor": {
     "date": "2026-08-22",
     "total": 956.12,
@@ -136,16 +136,16 @@
    "rank": 1,
    "stay": {
     "nights": 2,
-    "total": 1245.12,
+    "total": 1234.52,
     "credits": 470,
-    "net": 775
+    "net": 765
    },
    "suspect": null,
-   "rate_src": "$470 Expedia.com (ignored Super.com $447)",
+   "rate_src": "$466 Trip.com",
    "rate_basis": "trusted-min",
    "bold": true,
-   "rate": 470,
-   "checked": "2026-09-11",
+   "rate": 466,
+   "checked": "2026-09-12",
    "anchor": {
     "date": "2026-08-22",
     "total": 1250.42,
@@ -159,10 +159,10 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 622.56,
-   "avg_allin_night": 622.56,
-   "public_allin_night": 526.4,
-   "drift_pct": 0,
+   "est_allin_night": 617.26,
+   "avg_allin_night": 617.26,
+   "public_allin_night": 521.92,
+   "drift_pct": -1,
    "offsets": [
     {
      "label": "2n",
@@ -176,10 +176,10 @@
     "credit": 250.0,
     "date": "2026-08-23",
     "benefits": "breakfast + $100 property credit + Bonvoy (if flagged eligible in cart)",
-    "public_stay": 1052.8,
-    "premium": 232.2,
+    "public_stay": 1043.84,
+    "premium": 241.16,
     "net_after_credit": 1035.0,
-    "edge": 17.8
+    "edge": 8.84
    }
   },
   {
@@ -191,16 +191,16 @@
    "rank": 4,
    "stay": {
     "nights": 2,
-    "total": 1125.54,
+    "total": 1117.1,
     "credits": 520,
-    "net": 606
+    "net": 597
    },
    "suspect": null,
-   "rate_src": "$400 Official Site (ignored Super.com $321)",
+   "rate_src": "$397 Booking.com (ignored Super.com $326)",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 400,
-   "checked": "2026-09-11",
+   "rate": 397,
+   "checked": "2026-09-12",
    "anchor": {
     "date": "2026-08-22",
     "total": 1133.98,
@@ -214,14 +214,14 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 562.77,
-   "avg_allin_night": 562.77,
-   "public_allin_night": 448.0,
+   "est_allin_night": 558.55,
+   "avg_allin_night": 558.55,
+   "public_allin_night": 444.64,
    "drift_pct": -1,
    "offsets": [
     {
      "label": "2n",
-     "pct": 46,
+     "pct": 47,
      "band": "dim"
     }
    ]
@@ -235,16 +235,16 @@
    "rank": 2,
    "stay": {
     "nights": 2,
-    "total": 1302.54,
+    "total": 1291.32,
     "credits": 520,
-    "net": 783
+    "net": 771
    },
    "suspect": null,
-   "rate_src": "$464 Expedia.com",
+   "rate_src": "$460 Booking.com (ignored Super.com $422)",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 464,
-   "checked": "2026-09-11",
+   "rate": 460,
+   "checked": "2026-09-12",
    "anchor": {
     "date": "2026-08-22",
     "total": 1190.26,
@@ -258,10 +258,10 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 651.27,
-   "avg_allin_night": 651.27,
-   "public_allin_night": 519.68,
-   "drift_pct": 9,
+   "est_allin_night": 645.66,
+   "avg_allin_night": 645.66,
+   "public_allin_night": 515.2,
+   "drift_pct": 8,
    "offsets": [
     {
      "label": "2n",
@@ -279,16 +279,16 @@
    "rank": 5,
    "stay": {
     "nights": 2,
-    "total": 1433.48,
+    "total": 1430.84,
     "credits": 520,
-    "net": 913
+    "net": 911
    },
    "suspect": null,
-   "rate_src": "$543 Booking.com",
+   "rate_src": "$542 Booking.com",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 543,
-   "checked": "2026-09-11",
+   "rate": 542,
+   "checked": "2026-09-12",
    "anchor": {
     "date": "2026-08-22",
     "total": 1438.76,
@@ -302,10 +302,10 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 716.74,
-   "avg_allin_night": 716.74,
-   "public_allin_night": 608.16,
-   "drift_pct": 0,
+   "est_allin_night": 715.42,
+   "avg_allin_night": 715.42,
+   "public_allin_night": 607.04,
+   "drift_pct": -1,
    "offsets": [
     {
      "label": "2n",
@@ -323,16 +323,16 @@
    "rank": 6,
    "stay": {
     "nights": 2,
-    "total": 1466.0,
+    "total": 1463.28,
     "credits": 520,
-    "net": 946
+    "net": 943
    },
    "suspect": null,
-   "rate_src": "$537 Expedia.com",
+   "rate_src": "$536 Expedia.com (ignored Super.com $470)",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 537,
-   "checked": "2026-09-11",
+   "rate": 536,
+   "checked": "2026-09-12",
    "anchor": {
     "date": "2026-08-22",
     "total": 1471.46,
@@ -346,14 +346,14 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 733.0,
-   "avg_allin_night": 733.0,
-   "public_allin_night": 601.44,
-   "drift_pct": 0,
+   "est_allin_night": 731.64,
+   "avg_allin_night": 731.64,
+   "public_allin_night": 600.32,
+   "drift_pct": -1,
    "offsets": [
     {
      "label": "2n",
-     "pct": 35,
+     "pct": 36,
      "band": "dim"
     }
    ]
@@ -372,11 +372,11 @@
     "net": 1249
    },
    "suspect": null,
-   "rate_src": "$789 Official Site (ignored Super.com $670)",
+   "rate_src": "$789 Expedia.com (ignored Super.com $683)",
    "rate_basis": "trusted-min",
    "bold": false,
    "rate": 789,
-   "checked": "2026-09-11",
+   "checked": "2026-09-12",
    "anchor": {
     "date": "2026-08-22",
     "total": 1569.54,
@@ -411,16 +411,16 @@
    "rank": 8,
    "stay": {
     "nights": 2,
-    "total": 1625.98,
+    "total": 1853.14,
     "credits": 520,
-    "net": 1106
+    "net": 1333
    },
    "suspect": null,
-   "rate_src": "$544 Hotels.com",
+   "rate_src": "$620 Expedia.com",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 544,
-   "checked": "2026-09-11",
+   "rate": 620,
+   "checked": "2026-09-12",
    "anchor": {
     "date": "2026-08-22",
     "total": 1634.94,
@@ -434,14 +434,14 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 812.99,
-   "avg_allin_night": 812.99,
-   "public_allin_night": 609.28,
-   "drift_pct": -1,
+   "est_allin_night": 926.57,
+   "avg_allin_night": 926.57,
+   "public_allin_night": 694.4,
+   "drift_pct": 13,
    "offsets": [
     {
      "label": "2n",
-     "pct": 32,
+     "pct": 28,
      "band": "dim"
     }
    ]
@@ -455,16 +455,16 @@
    "rank": 1,
    "stay": {
     "nights": 4,
-    "total": 1330.62,
+    "total": 1185.9,
     "credits": 665,
-    "net": 666
+    "net": 521
    },
    "suspect": null,
-   "rate_src": "$377 Expedia.com (ignored Super.com $311)",
+   "rate_src": "$336 Booking.com (ignored Super.com $300)",
    "rate_basis": "trusted-min",
    "bold": true,
-   "rate": 377,
-   "checked": "2026-09-11",
+   "rate": 336,
+   "checked": "2026-09-12",
    "anchor": {
     "date": "2026-08-22",
     "total": 1327.08,
@@ -478,19 +478,19 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 443.54,
-   "avg_allin_night": 332.66,
-   "public_allin_night": 452.4,
-   "drift_pct": 0,
+   "est_allin_night": 395.3,
+   "avg_allin_night": 296.48,
+   "public_allin_night": 403.2,
+   "drift_pct": -11,
    "offsets": [
     {
      "label": "2n",
-     "pct": 61,
+     "pct": 69,
      "band": "warn"
     },
     {
      "label": "4n",
-     "pct": 50,
+     "pct": 56,
      "band": "warn"
     }
    ]
@@ -504,16 +504,16 @@
    "rank": 2,
    "stay": {
     "nights": 4,
-    "total": 1696.24,
+    "total": 1636.6,
     "credits": 640,
-    "net": 1056
+    "net": 997
    },
    "suspect": null,
-   "rate_src": "$313 Official Site",
+   "rate_src": "$302 Agoda",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 313,
-   "checked": "2026-09-11",
+   "rate": 302,
+   "checked": "2026-09-12",
    "anchor": {
     "date": "2026-08-22",
     "total": 1734.16,
@@ -527,19 +527,19 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 424.06,
-   "avg_allin_night": 424.06,
-   "public_allin_night": 375.6,
-   "drift_pct": -2,
+   "est_allin_night": 409.15,
+   "avg_allin_night": 409.15,
+   "public_allin_night": 362.4,
+   "drift_pct": -6,
    "offsets": [
     {
      "label": "2n",
-     "pct": 61,
+     "pct": 64,
      "band": "warn"
     },
     {
      "label": "4n",
-     "pct": 38,
+     "pct": 39,
      "band": "dim"
     }
    ]
@@ -553,16 +553,16 @@
    "rank": 3,
    "stay": {
     "nights": 4,
-    "total": 1889.72,
+    "total": 1894.24,
     "credits": 640,
-    "net": 1250
+    "net": 1254
    },
    "suspect": null,
-   "rate_src": "$418 Expedia.com",
+   "rate_src": "$419 Booking.com",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 418,
-   "checked": "2026-09-11",
+   "rate": 419,
+   "checked": "2026-09-12",
    "anchor": {
     "date": "2026-08-22",
     "total": 1853.56,
@@ -576,9 +576,9 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 472.43,
-   "avg_allin_night": 472.43,
-   "public_allin_night": 501.6,
+   "est_allin_night": 473.56,
+   "avg_allin_night": 473.56,
+   "public_allin_night": 502.8,
    "drift_pct": 2,
    "offsets": [
     {
@@ -602,16 +602,16 @@
    "rank": 4,
    "stay": {
     "nights": 4,
-    "total": 2375.16,
+    "total": 2380.64,
     "credits": 665,
-    "net": 1710
+    "net": 1716
    },
    "suspect": null,
-   "rate_src": "$433 Booking.com",
+   "rate_src": "$434 Booking.com (ignored Stayforlong.com $306)",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 433,
-   "checked": "2026-09-11",
+   "rate": 434,
+   "checked": "2026-09-12",
    "anchor": {
     "date": "2026-08-22",
     "total": 1936.31,
@@ -625,9 +625,9 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 593.79,
-   "avg_allin_night": 593.79,
-   "public_allin_night": 519.6,
+   "est_allin_night": 595.16,
+   "avg_allin_night": 595.16,
+   "public_allin_night": 520.8,
    "drift_pct": 23,
    "offsets": [
     {
@@ -656,11 +656,11 @@
     "net": 1716
    },
    "suspect": null,
-   "rate_src": "$540 Expedia.com (ignored Super.com $455)",
+   "rate_src": "$540 Expedia.com (ignored Super.com $440)",
    "rate_basis": "trusted-min",
    "bold": false,
    "rate": 540,
-   "checked": "2026-09-11",
+   "checked": "2026-09-12",
    "anchor": {
     "date": "2026-08-22",
     "total": 2351.92,
@@ -705,11 +705,11 @@
     "net": 1787
    },
    "suspect": null,
-   "rate_src": "$521 Expedia.com (ignored Catchit.com $193)",
+   "rate_src": "$521 Expedia.com (ignored Catchit.com $191)",
    "rate_basis": "trusted-min",
    "bold": false,
    "rate": 521,
-   "checked": "2026-09-11",
+   "checked": "2026-09-12",
    "anchor": {
     "date": "2026-08-22",
     "total": 2418.0,
@@ -749,16 +749,16 @@
    "rank": 8,
    "stay": {
     "nights": 4,
-    "total": 2977.53,
+    "total": 2635.44,
     "credits": 665,
-    "net": 2313
+    "net": 1970
    },
    "suspect": null,
-   "rate_src": "$618 Expedia.com (ignored Super.com $540)",
+   "rate_src": "$547 Priceline (ignored Super.com $545)",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 618,
-   "checked": "2026-09-11",
+   "rate": 547,
+   "checked": "2026-09-12",
    "anchor": {
     "date": "2026-08-22",
     "total": 2625.82,
@@ -772,19 +772,19 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 992.51,
-   "avg_allin_night": 744.38,
-   "public_allin_night": 741.6,
-   "drift_pct": 13,
+   "est_allin_night": 878.48,
+   "avg_allin_night": 658.86,
+   "public_allin_night": 656.4,
+   "drift_pct": 0,
    "offsets": [
     {
      "label": "2n",
-     "pct": 27,
+     "pct": 31,
      "band": "dim"
     },
     {
      "label": "4n",
-     "pct": 22,
+     "pct": 25,
      "band": "dim"
     }
    ]
@@ -807,7 +807,7 @@
    "rate_basis": "trusted-min",
    "bold": false,
    "rate": 590,
-   "checked": "2026-09-11",
+   "checked": "2026-09-12",
    "anchor": {
     "date": "2026-08-22",
     "total": 2643.77,
@@ -847,16 +847,16 @@
    "rank": 10,
    "stay": {
     "nights": 4,
-    "total": 2384.84,
+    "total": 2390.08,
     "credits": 640,
-    "net": 1745
+    "net": 1750
    },
    "suspect": null,
-   "rate_src": "$455 Hotels.com",
+   "rate_src": "$456 Booking.com",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 455,
-   "checked": "2026-09-11",
+   "rate": 456,
+   "checked": "2026-09-12",
    "anchor": {
     "date": "2026-08-22",
     "total": 2720.28,
@@ -870,9 +870,9 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 596.21,
-   "avg_allin_night": 596.21,
-   "public_allin_night": 546.0,
+   "est_allin_night": 597.52,
+   "avg_allin_night": 597.52,
+   "public_allin_night": 547.2,
    "drift_pct": -12,
    "offsets": [
     {
@@ -896,16 +896,16 @@
    "rank": 5,
    "stay": {
     "nights": 4,
-    "total": 1706.76,
+    "total": 1863.52,
     "credits": 590,
-    "net": 1117
+    "net": 1274
    },
    "suspect": null,
-   "rate_src": "$294 Official Site (ignored Super.com $272)",
+   "rate_src": "$321 Booking.com (ignored Super.com $269)",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 294,
-   "checked": "2026-09-11",
+   "rate": 321,
+   "checked": "2026-09-12",
    "anchor": {
     "date": "2026-08-22",
     "total": 1747.39,
@@ -919,19 +919,19 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 426.69,
-   "avg_allin_night": 426.69,
-   "public_allin_night": 352.8,
-   "drift_pct": -2,
+   "est_allin_night": 465.88,
+   "avg_allin_night": 465.88,
+   "public_allin_night": 385.2,
+   "drift_pct": 7,
    "offsets": [
     {
      "label": "2n",
-     "pct": 55,
+     "pct": 50,
      "band": "warn"
     },
     {
      "label": "4n",
-     "pct": 35,
+     "pct": 32,
      "band": "dim"
     }
    ]
@@ -945,20 +945,20 @@
    "rank": 11,
    "stay": {
     "nights": 4,
-    "total": 2481.6,
+    "total": 2505.6,
     "credits": 590,
-    "net": 1892
+    "net": 1916
    },
    "suspect": null,
-   "rate_src": "$517 Expedia.com",
+   "rate_src": "$522 Booking.com",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 517,
-   "checked": "2026-09-11",
+   "rate": 522,
+   "checked": "2026-09-12",
    "anchor": null,
-   "est_allin_night": 620.4,
-   "avg_allin_night": 620.4,
-   "public_allin_night": 620.4,
+   "est_allin_night": 626.4,
+   "avg_allin_night": 626.4,
+   "public_allin_night": 626.4,
    "drift_pct": null,
    "offsets": [
     {
