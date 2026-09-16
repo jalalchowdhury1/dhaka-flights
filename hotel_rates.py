@@ -876,6 +876,47 @@ def _shquote(s):
     return "'" + s.replace("'", "'\\''") + "'"
 
 
+# First seen 2026-09-16: Google interposed a cookie/consent interstitial
+# ("Before you continue to Google Search") in front of EVERY property that
+# night — 0/19 refreshed, all MISSing with the SAME title. Nothing before this
+# ever clicked through it, so it is unknown whether Google shows it once per
+# session or once per navigation; the flights side (scraper.py) re-checks on
+# every search rather than assume "once", and this does the same.
+CONSENT_LABELS = ("reject all", "accept all", "i agree", "accept")
+
+CONSENT_JS = """(function(){
+  var labels = %s;
+  var els = [].slice.call(document.querySelectorAll(
+      "button, div[role=button], span[role=button]"));
+  for (var i = 0; i < els.length; i++) {
+    var t = (els[i].innerText || "").trim().toLowerCase();
+    for (var j = 0; j < labels.length; j++) {
+      if (t === labels[j]) { els[i].click(); return JSON.stringify({clicked: labels[j]}); }
+    }
+  }
+  return JSON.stringify({clicked: null});
+})()"""
+
+
+def _dismiss_consent(scraper):
+    """Click Google's consent interstitial if one is showing right now.
+
+    Returns the matched button label, or None when no such page was found —
+    the harmless, fast-returning case that runs on every property whether or
+    not Google ever shows the wall."""
+    js = CONSENT_JS % json.dumps(list(CONSENT_LABELS))
+    raw = scraper._run("browse eval " + _shquote(js.replace("\n", " ")))
+    if not raw:
+        return None
+    try:
+        outer = json.loads(raw)
+        inner = outer.get("result") if isinstance(outer, dict) else outer
+        payload = json.loads(inner) if isinstance(inner, str) else inner
+        return payload.get("clicked") if isinstance(payload, dict) else None
+    except Exception:                              # noqa: BLE001
+        return None
+
+
 # Substrings that mean "no browser ever ran", not "the page misbehaved".
 # Browserbase answers an out-of-quota account with HTTP 402 on EVERY command,
 # so all eight properties fail identically and the night looks exactly like a
@@ -975,6 +1016,8 @@ def scrape_rate(entry, checkin, checkout, scraper=None, attempts=2):
             if infra:
                 return None, infra
             time.sleep(1)                          # let the navigation commit
+            if _dismiss_consent(scraper):
+                time.sleep(1)                      # let the dismissal commit
             payload = _wait_for_page(scraper, checkin, checkout)
             rate, note = parse_rate(payload, entry, checkin, checkout)
             if rate is not None:
