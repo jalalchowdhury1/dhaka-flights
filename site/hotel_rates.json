@@ -1,5 +1,5 @@
 {
- "updated": "2026-09-15",
+ "updated": "2026-09-16",
  "stays": {
   "IST": {
    "checkin": "2027-01-05",
@@ -974,5 +974,25 @@
    ]
   }
  ],
- "notes": []
+ "notes": [
+  "Sanasaryan Han (Lux. Coll.): resolved to 'Before you continue', expected Sanasaryan",
+  "Ritz-Carlton Istanbul: resolved to 'Before you continue', expected Ritz-Carlton",
+  "Park Hyatt Ma\u00e7ka Palas: resolved to 'Before you continue', expected Park Hyatt",
+  "Shangri-La Bosphorus: resolved to 'Before you continue', expected Shangri-La",
+  "St. Regis Istanbul: resolved to 'Before you continue', expected St. Regis",
+  "\u00c7\u0131ra\u011fan Palace Kempinski: resolved to 'Before you continue', expected Kempinski",
+  "Four Seasons Bosphorus: resolved to 'Before you continue', expected Bosphorus",
+  "Raffles Istanbul: resolved to 'Before you continue', expected Raffles",
+  "The Capitol Kempinski: resolved to 'Before you continue', expected Kempinski",
+  "Shangri-La Singapore: resolved to 'Before you continue', expected Shangri-La",
+  "Four Seasons Singapore: resolved to 'Before you continue', expected Four Seasons",
+  "Artyzen Singapore: resolved to 'Before you continue', expected Artyzen",
+  "Ritz-Carlton Millenia: resolved to 'Before you continue', expected Ritz-Carlton",
+  "St. Regis Singapore: resolved to 'Before you continue', expected St. Regis",
+  "Fullerton Bay Hotel: resolved to 'Before you continue', expected Fullerton Bay",
+  "Mandarin Oriental: resolved to 'Before you continue', expected Mandarin Oriental",
+  "Singapore EDITION: resolved to 'Before you continue', expected EDITION",
+  "Pan Pacific Orchard: resolved to 'Before you continue', expected Pan Pacific Orchard",
+  "JW Marriott South Beach: resolved to 'Before you continue', expected JW Marriott"
+ ]
 }
