@@ -184,7 +184,17 @@ _SESSION_STARTED = False
 def _ensure_session(fresh: bool = False) -> None:
     global _SESSION_STARTED
     if fresh or not _SESSION_STARTED:
+        before = DIAG["timeouts"]
         _run("browse stop")
+        if DIAG["timeouts"] > before:
+            # 'browse stop' itself timed out: Chrome died under the daemon
+            # (sandbox crash, 2026-09-14) but the daemon process didn't, so it
+            # keeps accepting commands and timing every one out at 30s forever
+            # — including its own recovery command. --force kills the
+            # daemon's Chrome directly; the next 'browse env local' below
+            # auto-spawns a fresh daemon+Chrome pair.
+            print("  WARN: 'browse stop' wedged — force-killing the daemon")
+            _run("browse stop --force")
         time.sleep(1)
         _run("browse env local")
         _SESSION_STARTED = True

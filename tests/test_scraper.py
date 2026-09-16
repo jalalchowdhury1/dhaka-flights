@@ -137,6 +137,46 @@ def test_browser_session_is_reused_until_marked_dirty(monkeypatch):
     scraper._session_dirty()
 
 
+# ── Wedged-daemon self-heal (2026-09-15) ─────────────────────────────────────
+# 2026-09-14: Chrome crashed under the browse daemon (sandbox init failure)
+# but the daemon process itself stayed up, so 'browse stop' — the session's
+# OWN recovery command — timed out just like every other command, and the
+# entire night's run got 0 results. _ensure_session must notice that and
+# force-kill the daemon so the next 'browse env local' spawns a fresh one.
+def test_wedged_daemon_is_force_killed_before_restart(monkeypatch):
+    import scraper
+    cmds = []
+
+    def fake_run(cmd):
+        cmds.append(cmd)
+        if cmd == "browse stop":
+            scraper.DIAG["timeouts"] += 1   # simulate the daemon timing out
+            return ""
+        return ""
+
+    monkeypatch.setattr(scraper, "_run", fake_run)
+    monkeypatch.setattr(scraper.time, "sleep", lambda s: None)
+    scraper.DIAG["timeouts"] = 0
+    scraper._session_dirty()
+
+    scraper._ensure_session()
+
+    assert cmds == ["browse stop", "browse stop --force", "browse env local"]
+
+
+def test_healthy_stop_never_force_kills(monkeypatch):
+    import scraper
+    cmds = []
+    monkeypatch.setattr(scraper, "_run", lambda c: cmds.append(c) or "")
+    monkeypatch.setattr(scraper.time, "sleep", lambda s: None)
+    scraper.DIAG["timeouts"] = 0
+    scraper._session_dirty()
+
+    scraper._ensure_session()
+
+    assert "browse stop --force" not in cmds
+
+
 # ── Thin-results guard (2026-08-23) ──────────────────────────────────────────
 # A multi-city page read before it finished rendering yields a SHORT list whose
 # cheapest row is a premium fare (3 options, BA $18,913, while Air France
