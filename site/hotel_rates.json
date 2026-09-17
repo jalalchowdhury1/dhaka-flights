@@ -1,5 +1,5 @@
 {
- "updated": "2026-09-16",
+ "updated": "2026-09-17",
  "stays": {
   "IST": {
    "checkin": "2027-01-05",
@@ -92,16 +92,16 @@
    "rank": 3,
    "stay": {
     "nights": 2,
-    "total": 945.26,
+    "total": 942.54,
     "credits": 520,
-    "net": 425
+    "net": 423
    },
    "suspect": null,
-   "rate_src": "$348 Official Site (ignored Super.com $332)",
+   "rate_src": "$347 Official Site (ignored Super.com $319)",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 348,
-   "checked": "2026-09-15",
+   "rate": 347,
+   "checked": "2026-09-17",
    "anchor": {
     "date": "2026-08-22",
     "total": 956.12,
@@ -115,9 +115,9 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 472.63,
-   "avg_allin_night": 472.63,
-   "public_allin_night": 389.76,
+   "est_allin_night": 471.27,
+   "avg_allin_night": 471.27,
+   "public_allin_night": 388.64,
    "drift_pct": -1,
    "offsets": [
     {
@@ -136,16 +136,16 @@
    "rank": 1,
    "stay": {
     "nights": 2,
-    "total": 1237.18,
+    "total": 1218.62,
     "credits": 470,
-    "net": 767
+    "net": 749
    },
    "suspect": null,
-   "rate_src": "$467 Official Site (ignored Super.com $463)",
+   "rate_src": "$460 Trip.com",
    "rate_basis": "trusted-min",
    "bold": true,
-   "rate": 467,
-   "checked": "2026-09-15",
+   "rate": 460,
+   "checked": "2026-09-17",
    "anchor": {
     "date": "2026-08-22",
     "total": 1250.42,
@@ -159,14 +159,14 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 618.59,
-   "avg_allin_night": 618.59,
-   "public_allin_night": 523.04,
-   "drift_pct": -1,
+   "est_allin_night": 609.31,
+   "avg_allin_night": 609.31,
+   "public_allin_night": 515.2,
+   "drift_pct": -3,
    "offsets": [
     {
      "label": "2n",
-     "pct": 38,
+     "pct": 39,
      "band": "dim"
     }
    ],
@@ -176,10 +176,10 @@
     "credit": 250.0,
     "date": "2026-08-23",
     "benefits": "breakfast + $100 property credit + Bonvoy (if flagged eligible in cart)",
-    "public_stay": 1046.08,
-    "premium": 238.92,
+    "public_stay": 1030.4,
+    "premium": 254.6,
     "net_after_credit": 1035.0,
-    "edge": 11.08
+    "edge": -4.6
    }
   },
   {
@@ -191,16 +191,16 @@
    "rank": 4,
    "stay": {
     "nights": 2,
-    "total": 1103.02,
+    "total": 1077.7,
     "credits": 520,
-    "net": 583
+    "net": 558
    },
    "suspect": null,
-   "rate_src": "$392 Expedia.com (ignored Super.com $330)",
+   "rate_src": "$383 Official Site (ignored Super.com $304)",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 392,
-   "checked": "2026-09-15",
+   "rate": 383,
+   "checked": "2026-09-17",
    "anchor": {
     "date": "2026-08-22",
     "total": 1133.98,
@@ -214,14 +214,14 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 551.51,
-   "avg_allin_night": 551.51,
-   "public_allin_night": 439.04,
-   "drift_pct": -3,
+   "est_allin_night": 538.85,
+   "avg_allin_night": 538.85,
+   "public_allin_night": 428.96,
+   "drift_pct": -5,
    "offsets": [
     {
      "label": "2n",
-     "pct": 47,
+     "pct": 48,
      "band": "dim"
     }
    ]
@@ -235,16 +235,16 @@
    "rank": 2,
    "stay": {
     "nights": 2,
-    "total": 1294.12,
+    "total": 1288.52,
     "credits": 520,
-    "net": 774
+    "net": 769
    },
    "suspect": null,
-   "rate_src": "$461 Official Site (ignored Super.com $423)",
+   "rate_src": "$459 Official Site",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 461,
-   "checked": "2026-09-15",
+   "rate": 459,
+   "checked": "2026-09-17",
    "anchor": {
     "date": "2026-08-22",
     "total": 1190.26,
@@ -258,10 +258,10 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 647.06,
-   "avg_allin_night": 647.06,
-   "public_allin_night": 516.32,
-   "drift_pct": 9,
+   "est_allin_night": 644.26,
+   "avg_allin_night": 644.26,
+   "public_allin_night": 514.08,
+   "drift_pct": 8,
    "offsets": [
     {
      "label": "2n",
@@ -279,16 +279,16 @@
    "rank": 5,
    "stay": {
     "nights": 2,
-    "total": 1422.92,
+    "total": 1415.0,
     "credits": 520,
-    "net": 903
+    "net": 895
    },
    "suspect": null,
-   "rate_src": "$539 Agoda",
+   "rate_src": "$536 Hotels.com",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 539,
-   "checked": "2026-09-15",
+   "rate": 536,
+   "checked": "2026-09-17",
    "anchor": {
     "date": "2026-08-22",
     "total": 1438.76,
@@ -302,10 +302,10 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 711.46,
-   "avg_allin_night": 711.46,
-   "public_allin_night": 603.68,
-   "drift_pct": -1,
+   "est_allin_night": 707.5,
+   "avg_allin_night": 707.5,
+   "public_allin_night": 600.32,
+   "drift_pct": -2,
    "offsets": [
     {
      "label": "2n",
@@ -323,16 +323,16 @@
    "rank": 6,
    "stay": {
     "nights": 2,
-    "total": 1457.82,
+    "total": 1449.62,
     "credits": 520,
-    "net": 938
+    "net": 930
    },
    "suspect": null,
-   "rate_src": "$534 Booking.com",
+   "rate_src": "$531 Official Site (ignored Super.com $449)",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 534,
-   "checked": "2026-09-15",
+   "rate": 531,
+   "checked": "2026-09-17",
    "anchor": {
     "date": "2026-08-22",
     "total": 1471.46,
@@ -346,9 +346,9 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 728.91,
-   "avg_allin_night": 728.91,
-   "public_allin_night": 598.08,
+   "est_allin_night": 724.81,
+   "avg_allin_night": 724.81,
+   "public_allin_night": 594.72,
    "drift_pct": -1,
    "offsets": [
     {
@@ -367,16 +367,16 @@
    "rank": 7,
    "stay": {
     "nights": 2,
-    "total": 1757.88,
+    "total": 1748.92,
     "credits": 520,
-    "net": 1238
+    "net": 1229
    },
    "suspect": null,
-   "rate_src": "$784 Official Site (ignored Super.com $689)",
+   "rate_src": "$780 Official Site (ignored Super.com $663)",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 784,
-   "checked": "2026-09-15",
+   "rate": 780,
+   "checked": "2026-09-17",
    "anchor": {
     "date": "2026-08-22",
     "total": 1569.54,
@@ -390,10 +390,10 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 878.94,
-   "avg_allin_night": 878.94,
-   "public_allin_night": 878.08,
-   "drift_pct": 12,
+   "est_allin_night": 874.46,
+   "avg_allin_night": 874.46,
+   "public_allin_night": 873.6,
+   "drift_pct": 11,
    "offsets": [
     {
      "label": "2n",
@@ -411,16 +411,16 @@
    "rank": 8,
    "stay": {
     "nights": 2,
-    "total": 1844.16,
+    "total": 1954.76,
     "credits": 520,
-    "net": 1324
+    "net": 1435
    },
    "suspect": null,
-   "rate_src": "$617 Hotels.com (ignored Super.com $571)",
+   "rate_src": "$654 Official Site",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 617,
-   "checked": "2026-09-15",
+   "rate": 654,
+   "checked": "2026-09-17",
    "anchor": {
     "date": "2026-08-22",
     "total": 1634.94,
@@ -434,14 +434,14 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 922.08,
-   "avg_allin_night": 922.08,
-   "public_allin_night": 691.04,
-   "drift_pct": 13,
+   "est_allin_night": 977.38,
+   "avg_allin_night": 977.38,
+   "public_allin_night": 732.48,
+   "drift_pct": 20,
    "offsets": [
     {
      "label": "2n",
-     "pct": 28,
+     "pct": 27,
      "band": "dim"
     }
    ]
@@ -455,16 +455,16 @@
    "rank": 1,
    "stay": {
     "nights": 4,
-    "total": 1182.36,
+    "total": 1178.85,
     "credits": 665,
-    "net": 517
+    "net": 514
    },
    "suspect": null,
-   "rate_src": "$335 Booking.com (ignored Super.com $313)",
+   "rate_src": "$334 Booking.com (ignored Super.com $286)",
    "rate_basis": "trusted-min",
    "bold": true,
-   "rate": 335,
-   "checked": "2026-09-15",
+   "rate": 334,
+   "checked": "2026-09-17",
    "anchor": {
     "date": "2026-08-22",
     "total": 1327.08,
@@ -478,9 +478,9 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 394.12,
-   "avg_allin_night": 295.59,
-   "public_allin_night": 402.0,
+   "est_allin_night": 392.95,
+   "avg_allin_night": 294.71,
+   "public_allin_night": 400.8,
    "drift_pct": -11,
    "offsets": [
     {
@@ -504,16 +504,16 @@
    "rank": 2,
    "stay": {
     "nights": 4,
-    "total": 1663.72,
+    "total": 1647.44,
     "credits": 640,
-    "net": 1024
+    "net": 1007
    },
    "suspect": null,
-   "rate_src": "$307 Official Site",
+   "rate_src": "$304 Official Site",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 307,
-   "checked": "2026-09-15",
+   "rate": 304,
+   "checked": "2026-09-17",
    "anchor": {
     "date": "2026-08-22",
     "total": 1734.16,
@@ -527,10 +527,10 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 415.93,
-   "avg_allin_night": 415.93,
-   "public_allin_night": 368.4,
-   "drift_pct": -4,
+   "est_allin_night": 411.86,
+   "avg_allin_night": 411.86,
+   "public_allin_night": 364.8,
+   "drift_pct": -5,
    "offsets": [
     {
      "label": "2n",
@@ -539,7 +539,7 @@
     },
     {
      "label": "4n",
-     "pct": 38,
+     "pct": 39,
      "band": "dim"
     }
    ]
@@ -553,16 +553,16 @@
    "rank": 3,
    "stay": {
     "nights": 4,
-    "total": 1885.2,
+    "total": 1880.68,
     "credits": 640,
-    "net": 1245
+    "net": 1241
    },
    "suspect": null,
-   "rate_src": "$417 Official Site",
+   "rate_src": "$416 Official Site",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 417,
-   "checked": "2026-09-15",
+   "rate": 416,
+   "checked": "2026-09-17",
    "anchor": {
     "date": "2026-08-22",
     "total": 1853.56,
@@ -576,10 +576,10 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 471.3,
-   "avg_allin_night": 471.3,
-   "public_allin_night": 500.4,
-   "drift_pct": 2,
+   "est_allin_night": 470.17,
+   "avg_allin_night": 470.17,
+   "public_allin_night": 499.2,
+   "drift_pct": 1,
    "offsets": [
     {
      "label": "2n",
@@ -602,16 +602,16 @@
    "rank": 4,
    "stay": {
     "nights": 4,
-    "total": 2375.16,
+    "total": 1612.68,
     "credits": 665,
-    "net": 1710
+    "net": 948
    },
    "suspect": null,
-   "rate_src": "$433 Expedia.com (ignored Super.com $292)",
+   "rate_src": "headline (no trusted seller parsed)",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 433,
-   "checked": "2026-09-15",
+   "rate": 294,
+   "checked": "2026-09-17",
    "anchor": {
     "date": "2026-08-22",
     "total": 1936.31,
@@ -625,19 +625,19 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 593.79,
-   "avg_allin_night": 593.79,
-   "public_allin_night": 519.6,
-   "drift_pct": 23,
+   "est_allin_night": 403.17,
+   "avg_allin_night": 403.17,
+   "public_allin_night": 352.8,
+   "drift_pct": -17,
    "offsets": [
     {
      "label": "2n",
-     "pct": 46,
-     "band": "dim"
+     "pct": 68,
+     "band": "warn"
     },
     {
      "label": "4n",
-     "pct": 28,
+     "pct": 41,
      "band": "dim"
     }
    ]
@@ -651,16 +651,16 @@
    "rank": 6,
    "stay": {
     "nights": 4,
-    "total": 2347.56,
+    "total": 2343.2,
     "credits": 640,
-    "net": 1708
+    "net": 1703
    },
    "suspect": null,
-   "rate_src": "$538 Official Site",
+   "rate_src": "$537 Official Site (ignored Super.com $399)",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 538,
-   "checked": "2026-09-15",
+   "rate": 537,
+   "checked": "2026-09-17",
    "anchor": {
     "date": "2026-08-22",
     "total": 2351.92,
@@ -674,9 +674,9 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 586.89,
-   "avg_allin_night": 586.89,
-   "public_allin_night": 645.6,
+   "est_allin_night": 585.8,
+   "avg_allin_night": 585.8,
+   "public_allin_night": 644.4,
    "drift_pct": 0,
    "offsets": [
     {
@@ -700,16 +700,16 @@
    "rank": 7,
    "stay": {
     "nights": 4,
-    "total": 2418.0,
+    "total": 2408.68,
     "credits": 640,
-    "net": 1778
+    "net": 1769
    },
    "suspect": null,
-   "rate_src": "$519 Official Site (ignored Catchit.com $196)",
+   "rate_src": "$517 Official Site (ignored Catchit.com $195)",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 519,
-   "checked": "2026-09-15",
+   "rate": 517,
+   "checked": "2026-09-17",
    "anchor": {
     "date": "2026-08-22",
     "total": 2418.0,
@@ -723,9 +723,9 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 604.5,
-   "avg_allin_night": 604.5,
-   "public_allin_night": 622.8,
+   "est_allin_night": 602.17,
+   "avg_allin_night": 602.17,
+   "public_allin_night": 620.4,
    "drift_pct": 0,
    "offsets": [
     {
@@ -735,7 +735,7 @@
     },
     {
      "label": "4n",
-     "pct": 26,
+     "pct": 27,
      "band": "dim"
     }
    ]
@@ -749,16 +749,16 @@
    "rank": 8,
    "stay": {
     "nights": 4,
-    "total": 2895.63,
+    "total": 2466.81,
     "credits": 665,
-    "net": 2231
+    "net": 1802
    },
    "suspect": null,
-   "rate_src": "$601 Official Site",
+   "rate_src": "headline (no trusted seller parsed)",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 601,
-   "checked": "2026-09-15",
+   "rate": 512,
+   "checked": "2026-09-17",
    "anchor": {
     "date": "2026-08-22",
     "total": 2625.82,
@@ -772,19 +772,19 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 965.21,
-   "avg_allin_night": 723.91,
-   "public_allin_night": 721.2,
-   "drift_pct": 10,
+   "est_allin_night": 822.27,
+   "avg_allin_night": 616.7,
+   "public_allin_night": 614.4,
+   "drift_pct": -6,
    "offsets": [
     {
      "label": "2n",
-     "pct": 28,
+     "pct": 33,
      "band": "dim"
     },
     {
      "label": "4n",
-     "pct": 23,
+     "pct": 27,
      "band": "dim"
     }
    ]
@@ -798,16 +798,16 @@
    "rank": 9,
    "stay": {
     "nights": 4,
-    "total": 2574.54,
+    "total": 2492.34,
     "credits": 640,
-    "net": 1935
+    "net": 1852
    },
    "suspect": null,
-   "rate_src": "$595 Official Site",
+   "rate_src": "$576 Official Site",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 595,
-   "checked": "2026-09-15",
+   "rate": 576,
+   "checked": "2026-09-17",
    "anchor": {
     "date": "2026-08-22",
     "total": 2643.77,
@@ -821,19 +821,19 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 858.18,
-   "avg_allin_night": 643.63,
-   "public_allin_night": 714.0,
-   "drift_pct": -3,
+   "est_allin_night": 830.78,
+   "avg_allin_night": 623.09,
+   "public_allin_night": 691.2,
+   "drift_pct": -6,
    "offsets": [
     {
      "label": "2n",
-     "pct": 30,
+     "pct": 31,
      "band": "dim"
     },
     {
      "label": "4n",
-     "pct": 25,
+     "pct": 26,
      "band": "dim"
     }
    ]
@@ -847,16 +847,16 @@
    "rank": 10,
    "stay": {
     "nights": 4,
-    "total": 2379.6,
+    "total": 2374.36,
     "credits": 640,
-    "net": 1740
+    "net": 1734
    },
    "suspect": null,
-   "rate_src": "$454 Official Site",
+   "rate_src": "$453 Official Site",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 454,
-   "checked": "2026-09-15",
+   "rate": 453,
+   "checked": "2026-09-17",
    "anchor": {
     "date": "2026-08-22",
     "total": 2720.28,
@@ -870,9 +870,9 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 594.9,
-   "avg_allin_night": 594.9,
-   "public_allin_night": 544.8,
+   "est_allin_night": 593.59,
+   "avg_allin_night": 593.59,
+   "public_allin_night": 543.6,
    "drift_pct": -13,
    "offsets": [
     {
@@ -896,16 +896,16 @@
    "rank": 5,
    "stay": {
     "nights": 4,
-    "total": 1625.48,
+    "total": 1579.04,
     "credits": 590,
-    "net": 1035
+    "net": 989
    },
    "suspect": null,
-   "rate_src": "$280 Official Site (ignored Super.com $274)",
+   "rate_src": "$272 Official Site (ignored Super.com $266)",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 280,
-   "checked": "2026-09-15",
+   "rate": 272,
+   "checked": "2026-09-17",
    "anchor": {
     "date": "2026-08-22",
     "total": 1747.39,
@@ -919,19 +919,19 @@
     "google_date": "2026-08-25",
     "google_basis": "trusted-min"
    },
-   "est_allin_night": 406.37,
-   "avg_allin_night": 406.37,
-   "public_allin_night": 336.0,
-   "drift_pct": -7,
+   "est_allin_night": 394.76,
+   "avg_allin_night": 394.76,
+   "public_allin_night": 326.4,
+   "drift_pct": -10,
    "offsets": [
     {
      "label": "2n",
-     "pct": 58,
+     "pct": 60,
      "band": "warn"
     },
     {
      "label": "4n",
-     "pct": 36,
+     "pct": 37,
      "band": "dim"
     }
    ]
@@ -945,20 +945,20 @@
    "rank": 11,
    "stay": {
     "nights": 4,
-    "total": 2414.4,
+    "total": 2404.8,
     "credits": 590,
-    "net": 1824
+    "net": 1815
    },
    "suspect": null,
-   "rate_src": "$503 Official Site (ignored Etrip.net $458)",
+   "rate_src": "$501 Official Site",
    "rate_basis": "trusted-min",
    "bold": false,
-   "rate": 503,
-   "checked": "2026-09-15",
+   "rate": 501,
+   "checked": "2026-09-17",
    "anchor": null,
-   "est_allin_night": 603.6,
-   "avg_allin_night": 603.6,
-   "public_allin_night": 603.6,
+   "est_allin_night": 601.2,
+   "avg_allin_night": 601.2,
+   "public_allin_night": 601.2,
    "drift_pct": null,
    "offsets": [
     {
@@ -974,25 +974,5 @@
    ]
   }
  ],
- "notes": [
-  "Sanasaryan Han (Lux. Coll.): resolved to 'Before you continue', expected Sanasaryan",
-  "Ritz-Carlton Istanbul: resolved to 'Before you continue', expected Ritz-Carlton",
-  "Park Hyatt Ma\u00e7ka Palas: resolved to 'Before you continue', expected Park Hyatt",
-  "Shangri-La Bosphorus: resolved to 'Before you continue', expected Shangri-La",
-  "St. Regis Istanbul: resolved to 'Before you continue', expected St. Regis",
-  "\u00c7\u0131ra\u011fan Palace Kempinski: resolved to 'Before you continue', expected Kempinski",
-  "Four Seasons Bosphorus: resolved to 'Before you continue', expected Bosphorus",
-  "Raffles Istanbul: resolved to 'Before you continue', expected Raffles",
-  "The Capitol Kempinski: resolved to 'Before you continue', expected Kempinski",
-  "Shangri-La Singapore: resolved to 'Before you continue', expected Shangri-La",
-  "Four Seasons Singapore: resolved to 'Before you continue', expected Four Seasons",
-  "Artyzen Singapore: resolved to 'Before you continue', expected Artyzen",
-  "Ritz-Carlton Millenia: resolved to 'Before you continue', expected Ritz-Carlton",
-  "St. Regis Singapore: resolved to 'Before you continue', expected St. Regis",
-  "Fullerton Bay Hotel: resolved to 'Before you continue', expected Fullerton Bay",
-  "Mandarin Oriental: resolved to 'Before you continue', expected Mandarin Oriental",
-  "Singapore EDITION: resolved to 'Before you continue', expected EDITION",
-  "Pan Pacific Orchard: resolved to 'Before you continue', expected Pan Pacific Orchard",
-  "JW Marriott South Beach: resolved to 'Before you continue', expected JW Marriott"
- ]
+ "notes": []
 }
