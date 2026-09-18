@@ -311,24 +311,35 @@ def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
         _run(f"browse click {dep_ref}")
         time.sleep(0.3)
         _run(f'browse type "{depart}"')
-        time.sleep(0.5)
-        snap = wait_for(lambda t: depart.lower() in t.lower(), timeout=3.0, step=0.25)
+        time.sleep(1.0)
+        snap = _snap()
+        
+        # Google Flights abbreviates month: "Jan 7" for "January 7"
+        # Check for abbreviated month in the tree
+        month_abbr = depart.split(" ")[0][:3]  # "January" → "Jan"
+        day = depart.split(" ")[1].rstrip(",")  # "7," → "7"
+        date_short = f"{month_abbr} {day}"
+        
+        if date_short.lower() not in _get_tree(snap).lower():
+            DIAG["wait_timeouts"] += 1
+            print(f"  WARN: date may not have been entered correctly (looking for '{date_short}')")
         
         done_ref = _find_ref(snap, "button:", "Done")
         if done_ref:
             _run(f"browse click {done_ref}")
-            snap = wait_for(lambda t: "button: Search" in t.lower() or "button: Explore destinations" not in t.lower(), timeout=5.0, step=0.25)
+            time.sleep(0.5)
+            snap = _snap()
     
     # Search
     print("  Searching...")
-    # First try Enter (the date field is likely focused)
-    _run("browse press Enter")
-    time.sleep(2)
-    snap = _snap()
-    tree = _get_tree(snap)
-    
-    # Check if we got results or moved to a search results URL
-    # Fall through to wait_for_results anyway
+    search_ref = _find_ref(snap, "button:", "Search")
+    if search_ref:
+        _run(f"browse click {search_ref}")
+    else:
+        _run("browse press Enter")
+    time.sleep(8)
+
+    # Use legacy wait_for_results for proper settle check
     snap = _legacy._wait_for_results(_snap())
     tree = _legacy._get_tree(snap)
 
