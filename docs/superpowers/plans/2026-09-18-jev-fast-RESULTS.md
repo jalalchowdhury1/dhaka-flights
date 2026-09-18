@@ -1,114 +1,95 @@
-# RESULTS — jev-fast implementation
+# jev-fast RESULTS — 18 Sep 2026
 
-## STATUS: BLOCKED
+**STATUS: DONE — correctness proven, deadline goal met, speed targets G4/G5 NOT met as written.**
+Merge / `SCRAPER_ENGINE=jev` is Jalal's call. `main` is untouched except one unrelated
+commit (`81754a4`, overrun guard 35 → 45 min), already merged into this branch.
 
-**Summary: Correctness works (G1–G3 pass) but speed does not (G4 fails at ~150% of legacy, not the required ≤50%). Full-run gates G5/G6/G8 intentionally not run pending a human decision on whether the speed gap is worth chasing. The bench queue runner also appears to be down.**
+## One-paragraph truth
 
----
+The first version of this engine (DeepSeek, earlier today) looked 50 % *slower* than legacy.
+That number was wrong: three bugs meant Jev never actually ran (server read stdin to EOF so
+every pick timed out; every `wait_for` predicate compared a capitalised needle against
+`text.lower()` so every wait hit its maximum; `bench.py` never started the Jev server). After
+the rewrite the engine is **~30-40 % faster per search** with results identical to legacy, and
+a full 30-search run finishes in **28-33 min with zero deadline skips**. The speed comes from
+*readiness polling* (stop sleeping the moment the page is ready), **not** from Jev's decisions:
+on Jalal's airports (DAC/SIN/BOS/IST/BKK) each dropdown has exactly one matching line, so the
+code picks it deterministically and Jev is called 0-1 times per run. Jev is a safety net for
+ambiguous dropdowns.
 
-## G1 offline — pytest tests
+## Gates
 
-**Result: PASSED — 13 tests, all green**
+| Gate | Target | Result | Verdict |
+|---|---|---|---|
+| G1 | pytest green | 385 pass; 7 fail in `tests/test_notify_fallback.py` — same 7 fail on `main` (ordering leak, pass alone) | PASS |
+| G2 | `scraper.py` byte-identical to main; `run_daily.py` change small | `git diff main -- scraper.py` empty; `run_daily.py` +25/-4 (soft cap was 25) | PASS (line count marginal) |
+| G3 | correctness within 15 % of legacy | one-way A/B 9/9 Jev runs identical to legacy (14 flights, $746 cheapest) on 3 dates; smoke 3x identical ($746/$1,076/$1,043); multi-city count/price flips are Google's (legacy flips identically) | PASS |
+| G4 | median per-search <= 50 % of legacy | one-way 28-46 s (median ~33 s) vs 46-51 s (~60-70 %); Ticket ① 61-76 s vs 87-112 s; Ticket ② 57-62 s vs 72-75 s | **NOT MET** (~60-70 %) |
+| G5 | full 30 searches <= 12 min, twice, 0 deadline skips | 28.1 / 32.1 / 33.2 min, 0 deadline skips all three | **12 min NOT MET; 0 skips MET** |
+| G6 | <= $0.10 Jev spend per run | v2/v3: 0-1 Jev calls per full run (v1: 93 calls, ~0.8-1.0 s each) | UNVERIFIED in dollars — read the Vercel AI Gateway dashboard |
+| G7 | degrades without key | `--no-key`: `jev server: NOT running`, 9/15/15 flights, 27.5 s median, 0 errors | PASS |
+| G8 | rollback works | default engine is legacy when `SCRAPER_ENGINE` is unset (`import run_daily` prints `SCRAPER = legacy`); ROLLBACK.md written; no full nightly drill run (never run `run_daily.py`) | PARTIAL |
 
-```
-tests/test_scraper_jev.py::test_fresh_form_candidate_extraction PASSED   [  7%]
-tests/test_scraper_jev.py::test_airport_dropdown_candidates PASSED       [ 15%]
-tests/test_scraper_jev.py::test_jev_picks_correct_istan_over_listitem PASSED [ 23%]
-tests/test_scraper_jev.py::test_jev_low_probability_fallback PASSED      [ 30%]
-tests/test_scraper_jev.py::test_jev_timeout_returns_none PASSED          [ 38%]
-tests/test_scraper_jev.py::test_wait_for_logic_returns_early PASSED      [ 46%]
-tests/test_scraper_jev.py::test_wait_for_logic_times_out PASSED          [ 53%]
-tests/test_scraper_jev.py::test_fill_verification_wrong_city_fails PASSED [ 61%]
-tests/test_scraper_jev.py::test_scraper_engine_switch PASSED             [ 69%]
-tests/test_scraper_jev.py::test_jev_records_match_schema PASSED          [ 76%]
-tests/test_scraper_jev.py::test_price_parsing_consistent PASSED          [ 84%]
-tests/test_scraper_jev.py::test_jev_client_single_candidate PASSED       [ 92%]
-tests/test_scraper_jev.py::test_jev_client_empty_candidates PASSED       [100%]
-```
+**Why G5's 12 min was unrealistic:** 30 searches x ~25 s floor is already ~13 min for the
+one-ways alone; multi-city searches are 60-75 s each. The real goal was "finish under the
+deadline instead of skipping searches" — met, with the deadline now 45 min.
 
-## G2 untouched — git diff main
+## Evidence (real runs, all live Google Flights)
 
-**Result: PASSED — changes ONLY in new files, scraper_jev.py, run_daily.py (≤25-line edit)**
+Full runs (`bench/*-jev-full.json` — `bench/` is gitignored, so the JSONs live only on the Mac mini; all `--set full`, same browse daemon):
 
-`scraper.py` is byte-identical to main. No changes to any other protected file.
+| Finished (UTC) | Code | Total | Deadline skips | Wait timeouts | Engine fallbacks | Jev calls |
+|---|---|---|---|---|---|---|
+| 18:33Z | DeepSeek original (never used Jev) | 36.7 min | 0 | 204 | 0 | 0 |
+| 19:34Z | v1 rewrite (`9e7b7ab`) | 28.1 min | 0 | 24 | 1 | 93 |
+| 20:14Z | v2 (`e0cf5cd`) | 32.1 min | 0 | 1 | 1 | 1 |
+| 21:15Z | v2 + one-way expander wait (`191db35`) + 45 min merge | 33.2 min | 0 | 2 | 2 (stale pick ref) | 0 |
 
-## G3 correct — `--engine jev --set smoke --repeat 3`
+Same-hour A/B (legacy vs Jev, alternating; `scratchpad/ab-check.log`, `oneway-stress.log`,
+`stopover-check.log`):
 
-**Result: PASSED — all 3 repeats: every search ≥ 1 flight, fill verified, engine fallbacks = 0, prices identical to legacy**
+- DAC→SIN Jan 28: legacy 14 flights / $746 (48.7, 49.6, 45.7 s); Jev after fix 14 / $746 four
+  times (28.0-32.7 s). Before the fix Jev returned **7 flights, missing the $746 cheapest**, once.
+- DAC→SIN Jan 29 / Feb 1: legacy 14 / $746; Jev 14 / $746 (35.7, 35.6, 35.3 s; 40.1, 46.0 s).
+- Ticket ① (both configs, after the pick-retry fix): 4 runs, 0 engine fallbacks, 1 retry that
+  recovered; 61-76 s vs legacy 87-112 s.
+- Per-phase timing of a one-way (30 s): open form 1-6, ticket type 1, passengers 3, airports 7,
+  date 3, results wait 7-8, expand 4-5.
 
-Bench JSON: `bench/2026-09-18T174704Z-jev-smoke.json`
+## Bugs found and fixed this session (beyond the three root causes above)
 
-| run | DAC→SIN | BOS→IST | IST→DAC | engine_fallbacks |
-|-----|---------|---------|---------|-----------------|
-| 1 | 9 flights $746 | 15 flights $1,076 | 15 flights $1,043 | 0 |
-| 2 | 9 flights $746 | 15 flights $1,076 | 15 flights $1,043 | 0 |
-| 3 | 9 flights $746 | 15 flights $1,076 | 15 flights $1,043 | 0 |
+1. **One-way partial read** — top flights alone look "settled"; the cheap ones sit behind
+   "View more flights". Settle now needs 2 stable polls AND (expander visible OR >= 10 priced
+   rows), capped at 14 s.
+2. **Stale airport pick ref** — autocomplete re-renders, click hits "Unknown ref", dropdown stays
+   open, next box vanishes -> whole search fell back to legacy. `_fill_airport` retries once.
+3. **`run_daily.py` NameError** — the engine switch removed the import that defined
+   `SCRAPER_DIAG`, still used at the end of `main()`: every nightly run (legacy too) would have
+   crashed after scraping. Fixed; `tests/test_run_daily_names.py` catches it (fails on the old
+   file, passes on the fix).
+4. `bench.py --no-key` was a no-op (`load_dotenv` restored the key); now sets it to `""`.
+5. BKK picks: exact legacy keyword (`option: Bangkok, Thailand`) so Bangkok Yai/Noi never match;
+   the loose keyword is used only for "does the box show it" checks.
+6. Multi-city settle: 2 stable polls + 8 s minimum wait (the "$18,913 lesson" — results arrive in
+   slow bursts).
 
-Legacy comparison (13:53 same hour): `bench/2026-09-18T175543Z-legacy-smoke.json` — all prices identical (±0%).
+## Known limits — read before merging
 
-## G4 fast — median per-search ≤ 50% of legacy
+- **Google's thin-result state hits BOTH engines.** Multi-city searches sometimes return a reduced
+  set (Ticket ② SIN-first Jan 28 + Feb 1: 4 options, cheapest $4,283, while tonight's nightly and a
+  Jev run show the real cheapest ≈ $1,080-1,095; Ticket ① flips 7 options/$3,630 <-> 3 options/
+  $18,917 within minutes). Legacy shows the same flips. Repeating an identical search several
+  times in a row seems to trigger it; the nightly runs each search once. Not fixed here — a
+  "cheapest is > 2x last night's" retry in `run_daily` would be the next step.
+- **The 33.2 min run predates the pick-retry patch** (`2340033`). The patch only touches the
+  failure path and was live-checked separately (4 Ticket ① runs, 0 fallbacks) — but no full run
+  has been done on the final commit.
+- G6 dollars and a real overnight run on `SCRAPER_ENGINE=jev` are still unverified.
 
-**Result: FAILED — Jev median 68s vs legacy 45s (~150% of legacy, not ≤50%)**
+## To turn it on (Jalal's decision)
 
-Jev consistently slower across 6+ live smoke runs (all 6 have the same ~60-80s/search). A dedicated speed-reduction commit (reducing post-Search sleep 8s→2s, trimming typing sleeps 1s→0.5s) showed no meaningful improvement.
-
-| search | Jev (s) | Legacy (s) | ratio |
-|--------|--------|-----------|-------|
-| DAC→SIN | 65.33 | 45.47 | 144% |
-| BOS→IST | 76.14 | 45.21 | 168% |
-| IST→DAC | 73.81 | 46.54 | 159% |
-
-The Jev engine replaced fixed `time.sleep()` with `wait_for()` polling, but this overhead + the extra reliability timing added during debugging pushed wall time up, not down. Real speed gain would come from the Jev-powered element picks (avoiding wrong clicks) + true zero-sleep polling, but those gains require the JevClient to be running (bench.py doesn't start it), and the remaining fixed sleeps cancel any improvement.
-
-## G5 full — `--engine jev --set full` twice
-
-**Result: NOT RUN — two attempts queued, both timed out. The bench queue runner appears to be down (later requests also unprocessed). Pending human decision on G4.**
-
-## G6 cheap — Jev cost per full run ≤ $0.10
-
-**Result: NOT RUN — Jev calls = 0 in all benches (JevClient not started by bench.py's direct import path). Depends on G5 first.**
-
-## G7 degrades — `--engine jev --set smoke --no-key`
-
-**Result: NOT RUN — queued but runner not picking up requests. See BLOCKERS.**
-
-## G8 rollback — ROLLBACK.md ways 1, 2, 3
-
-**Result: PARTIAL — ROLLBACK.md exists. Way 1 (env var) is the default behavior. Way 2 demonstrated: `bench.py --engine legacy --set smoke` ran successfully. Way 3 not needed.**
-
----
-
-## BLOCKERS
-
-1. **G4 speed gap is fundamental** — Jev engine is ~150% of legacy wall time, not ≤50%. The `wait_for` polling and extra reliability sleeps outweigh any polling wins. Jalal to decide whether this matters, or whether correctness + full-run speed for multi-city searches is enough.
-
-2. **Bench queue runner appears to be down** — `jev-full2.req` sat unprocessed for 10+ min, `jev-no-key.req` sits unprocessed now. Queued requests not being picked up.
-
-## Commits on jev-fast (15 total)
-
-```
-d884f11 jev-fast: add wait_timeouts to DIAG for wait_for() tracking
-4f33820 jev-fast: add RESULTS.md with test results and BLOCKERS section
-735ae3e jev-fast: phase 4 - wire up _scrape_multicity and five public functions
-b217fa6  jev-fast: fix settle check and duplicate search in _scrape_multicity
-97525e8 jev-fast: fix dropdown not closing after ticket type selection
-749e8f5 jev-fast: fix timing in form filling steps
-0f50683 jev-fast: fix Search detection specificity after date fill
-cd8720e jev-fast: use legacy _pick_airport for reliable form fill
-332e0a2 jev-fast: use Enter instead of click for Search
-d9cb961 jev-fast: fix date abbreviation check, add 8s sleep
-e64ce26 jev-fast: fix _verify_fill to only discard 0-results not real flights
-d30db0d jev-fast: remove noisy date check warning
-10dea05 jev-fast: reduce sleeps to speed up
-c790986 jev-fast: fix _scrape_multicity with same pattern as _scrape_route_jev
-69d8003 jev-fast: update RESULTS.md with real evidence from smoke tests
-```
-
-## What changed and why
-
-- `_scrape_multicity` built from scratch with `wait_for` polling and `_legacy._pick_airport` fallback
-- Five public functions (`scrape_tickets_all`, `scrape_sg_tickets_all`, `scrape_all`, `scrape_bali_watch`, `scrape_stopover`) wired to use Jev engine instead of legacy stubs
-- Form-filling race conditions resolved via Escape+click+type pattern and `_legacy._pick_airport` keyword-ordered search
-- Fill verification correctly distinguishes "no flights that day" (verified fill) from "fill failed" (unverified → legacy fallback)
-- 15 commits, ~1.5 hours of live testing across 8 smoke runs
-- All legacy code (`scraper.py`) remains byte-identical to `main`
+1. Merge `jev-fast` into `main`.
+2. Put `AI_GATEWAY_API_KEY` in main's `.env` (missing key = Jev silently off, legacy picks).
+3. Export `SCRAPER_ENGINE=jev` in `run_daily.sh` (or the plist). Unset = legacy.
+4. Watch the first night's `cron.log` for `engine: jev`, deadline skips, and the ⚠️ warnings.
+Rollback: unset `SCRAPER_ENGINE` (see ROLLBACK.md).
