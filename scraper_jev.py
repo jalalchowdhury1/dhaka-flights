@@ -1,22 +1,28 @@
 #!/usr/bin/env python3
 """
-Jev-powered fast scraping engine for Google Flights.
-Same public API as scraper.py, HALF the wall time via:
-1. Readiness polling instead of fixed sleeps
-2. Jev picks for ambiguous element selection  
-3. No blind waits - each sleep >= 0.5s becomes wait_for()
+Jev-powered fast engine for Google Flights. Same public API as scraper.py.
+
+Where the speed comes from:
+1. Readiness polling (`wait_for`) instead of fixed sleeps — each step waits
+   only until the page shows what the next step needs.
+2. Results polling at a 1 s step (legacy: 8 s blind sleep + 5 s steps), with
+   the "$18,913" settle check kept (priced-row count equal on two
+   consecutive snapshots 2 s apart).
+3. Jev picks the airport suggestion when the dropdown offers several; the
+   legacy keyword match is the guardrail and the fallback.
+
+Parsers, constants and session management are imported from scraper.py —
+only the driving code is re-implemented.
 """
-import os
 import re
-import time
 import json
+import time
 import subprocess
-from typing import Union, Tuple, Optional, List
+from typing import Optional
 
-# Import Jev client
 import jev_client
+import scraper as _legacy
 
-# Global DIAG for Jev engine - mirrors scraper.py
 DIAG = {
     "timeouts": 0,
     "blank_pages": 0,
@@ -27,11 +33,8 @@ DIAG = {
     "jev_calls": 0,
     "jev_ms": 0,
     "jev_fallbacks": 0,
-    "engine_fallbacks": 0
+    "engine_fallbacks": 0,
 }
-
-# Constants - import from legacy scraper
-import scraper as _legacy
 
 RUN_DEADLINE_MIN = _legacy.RUN_DEADLINE_MIN
 LEGS = _legacy.LEGS
@@ -43,13 +46,18 @@ TICKET1_BKK_RETURN = _legacy.TICKET1_BKK_RETURN
 STOPOVER_SEARCHES = _legacy.STOPOVER_SEARCHES
 TICKET2_SEARCHES = _legacy.TICKET2_SEARCHES
 TRIP_YEAR = _legacy.TRIP_YEAR
+parse_price = _legacy.parse_price
+DEBUG_TREE_FILE = _legacy.DEBUG_TREE_FILE
 
-# Global start time for deadline tracking
+FLIGHTS_URL = "https://www.google.com/travel/flights?hl=en&curr=USD&gl=us"
+JEV_P_FLOOR = 0.6
+SETTLE_S = _legacy.SETTLE_POLL_SECONDS          # 2 s, the $18,913 lesson
+RESULT_BUDGET_S = _legacy.RESULT_WAIT_SECONDS + 8   # legacy: 8 s sleep + 40 s poll
+
 _run_start = None
 
 
 def begin_run() -> None:
-    """Called once by run_daily at run start; arms the deadline clock."""
     global _run_start
     _run_start = time.monotonic()
     DIAG["deadline_skips"] = []
@@ -62,25 +70,17 @@ def _past_deadline() -> bool:
 
 
 def end_session() -> None:
-    """Call ONCE when a run's scraping is finished."""
-    pass  # Session management handled by scrape functions
+    _legacy.end_session()
 
 
-def parse_price(raw: str) -> Union[int, str]:
-    if not raw:
-        return "N/A"
-    cleaned = re.sub(r"[^\d]", "", raw)
-    return int(cleaned) if cleaned else "N/A"
-
-
-DEBUG_TREE_FILE = "debug_last_zero.txt"
-
+# ── browse plumbing ─────────────────────────────────────────────────────────
 
 def _run(cmd: str) -> str:
     try:
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
     except subprocess.TimeoutExpired:
         DIAG["timeouts"] += 1
+        _legacy.DIAG["timeouts"] += 1        # _ensure_session's wedge detector reads this
         print(f"  WARN: command timed out after 30s: {cmd}")
         return ""
     err = result.stderr.strip()
@@ -90,512 +90,385 @@ def _run(cmd: str) -> str:
     return result.stdout.strip()
 
 
-def _get_tree(snap_raw: str) -> str:
-    try:
-        return json.loads(snap_raw).get("tree", snap_raw)
-    except Exception:
-        return snap_raw
-
-
-def _find_ref(snap_raw: str, *keywords) -> str:
-    """Find the first accessibility ref matching all keywords."""
-    tree = _get_tree(snap_raw)
-    for line in tree.splitlines():
-        if all(kw.lower() in line.lower() for kw in keywords):
-            refs = re.findall(r'\[(\d+-\d+)\]', line)
-            if refs:
-                return "@" + refs[-1]
-    return ""
-
-
-def _find_refs(snap_raw: str, *keywords) -> list:
-    """All refs whose line matches all keywords."""
-    tree = _get_tree(snap_raw)
-    out = []
-    for line in tree.splitlines():
-        if all(kw.lower() in line.lower() for kw in keywords):
-            refs = re.findall(r'\[(\d+-\d+)\]', line)
-            if refs:
-                out.append("@" + refs[-1])
-    return out
-
-
 def _snap() -> str:
     return _run("browse snapshot")
 
 
-def wait_for(pred, timeout: float, step: float = 0.25) -> str:
-    """Poll browse snapshot until pred(tree) is true; return the snapshot.
-    
-    On timeout returns the last snapshot and counts DIAG['wait_timeouts'] += 1.
-    """
-    end_time = time.time() + timeout
-    last_snap = ""
-    while time.time() < end_time:
-        snap = _snap()
-        tree = _get_tree(snap)
-        if pred(tree):
-            return snap
-        last_snap = snap
-        time.sleep(step)
-    DIAG["wait_timeouts"] += 1
-    return last_snap
+_get_tree = _legacy._get_tree
+_find_ref = _legacy._find_ref
+_find_refs = _legacy._find_refs
 
+
+def _url() -> str:
+    raw = _run("browse get url")
+    try:
+        return json.loads(raw).get("url", raw)
+    except Exception:
+        return raw
+
+
+def _has(tree: str, *needles: str) -> bool:
+    tl = tree.lower()
+    return all(n.lower() in tl for n in needles)
+
+
+def _lines_with(tree: str, needle: str) -> list:
+    return [l for l in tree.splitlines() if needle.lower() in l.lower()]
+
+
+def wait_for(pred, timeout: float, step: float = 0.25, count_timeout: bool = True) -> str:
+    """Poll `browse snapshot` until pred(tree) is true; return the snapshot.
+    On timeout return the last snapshot and count DIAG['wait_timeouts'] += 1."""
+    end_time = time.time() + timeout
+    snap = ""
+    while True:
+        snap = _snap()
+        if pred(_get_tree(snap)):
+            return snap
+        if time.time() >= end_time:
+            break
+        time.sleep(step)
+    if count_timeout:
+        DIAG["wait_timeouts"] += 1
+    return snap
+
+
+# ── Jev ─────────────────────────────────────────────────────────────────────
 
 def _pick_element(instructions: str, candidates: list, state: str = "") -> Optional[str]:
-    """Use Jev to pick with floor and fallback.
-    
-    Returns the ref if p >= 0.6 and valid; otherwise None.
-    """
+    """One Jev decision with the p >= 0.6 floor. None means: use the fallback."""
     if not candidates:
         return None
     if len(candidates) == 1:
         return candidates[0]
-    
-    choice, p = jev_client.pick(instructions, candidates, state)
-    DIAG["jev_calls"] += 1
-    
-    if choice is None or p < 0.6:
+    client = jev_client.get_client()
+    if not client.started:
         DIAG["jev_fallbacks"] += 1
         return None
-    
+    t0 = time.time()
+    choice, p = client.pick(instructions, candidates, state)
+    DIAG["jev_calls"] += 1
+    DIAG["jev_ms"] += int((time.time() - t0) * 1000)
+    if choice is None or p < JEV_P_FLOOR or choice not in candidates:
+        DIAG["jev_fallbacks"] += 1
+        return None
     return choice
 
 
-def _verify_fill(tree: str, legs: list) -> bool:
-    """Verify the results page shows our form inputs (supports multi-city).
-    
-    Args:
-        tree: Accessibility tree string
-        legs: List of (origin, dest, date) tuples
-    
-    Returns True if all legs are found in the tree.
-    """
-    tree_lower = tree.lower()
-    for origin, dest, depart in legs:
-        origin_found = any(kw.lower() in tree_lower for kw in AIRPORT_PICK.get(origin, [origin]))
-        dest_found = any(kw.lower() in tree_lower for kw in AIRPORT_PICK.get(dest, [dest]))
-        date_found = depart.lower() in tree_lower
-        if not (origin_found and dest_found and date_found):
-            return False
-    return True
+def _airport_keywords(code: str) -> list:
+    kws = [k.replace("option: ", "").split(",")[0] for k in AIRPORT_PICK.get(code, [])]
+    return kws + [code]
 
 
-def scrape_route(origin: str, dest: str, depart: str) -> list:
-    """One-way search using Jev engine with legacy fallback."""
-    try:
-        return _scrape_route_jev(origin, dest, depart)
-    except Exception as e:
-        DIAG["engine_fallbacks"] += 1
-        print(f"  Jev scrape failed ({e}), falling back to legacy")
-        import scraper as legacy
-        return legacy.scrape_route(origin, dest, depart)
+def _pick_airport(snap: str, code: str) -> str:
+    """Ref of the dropdown suggestion for `code`. Jev decides when the
+    dropdown offers several options; the legacy keyword match must agree
+    with the choice (guardrail) and is the fallback."""
+    tree = _get_tree(snap)
+    legacy_ref = _legacy._pick_airport(snap, code)
+    candidates = [l.strip() for l in tree.splitlines()
+                  if "option:" in l.lower() and re.search(r"\[\d+-\d+\]", l)][:40]
+    if len(candidates) >= 2:
+        want = (AIRPORT_PICK.get(code) or [code])[0].replace("option: ", "")
+        instr = (f"Pick the dropdown entry for '{want}' (airport code {code}). "
+                 f"If no entry is named exactly that, pick the one that best matches it; "
+                 f"never a different city, region or nearby airport.")
+        choice = _pick_element(instr, candidates)
+        if choice:
+            if any(kw.lower() in choice.lower() for kw in _airport_keywords(code)):
+                return "@" + re.findall(r"\[(\d+-\d+)\]", choice)[-1]
+            DIAG["jev_fallbacks"] += 1      # Jev disagreed with the keyword guardrail
+    return legacy_ref
 
 
-def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
-    """Jev-powered one-way search with readiness polling."""
-    # Open page
-    _run("browse open https://www.google.com/travel/flights?hl=en&curr=USD&gl=us")
-    wait_for(lambda t: "Where from" in t.lower() and "Where to" in t.lower(), timeout=10.0, step=0.5)
-    
-    # Dismiss consent
-    for label in ["Accept all", "I agree", "Accept"]:
-        ref = _find_ref(_snap(), f"button: {label}")
+# ── form steps ──────────────────────────────────────────────────────────────
+
+def _open_form() -> str:
+    """Open Google Flights and return a snapshot showing the search form ("" = blank page)."""
+    _legacy._ensure_session()
+    _run(f"browse open {FLIGHTS_URL}")
+    form = lambda t: _has(t, "where from?")
+    snap = wait_for(form, timeout=12.0, step=0.5)
+
+    for label in ("Accept all", "I agree", "Accept"):
+        ref = _find_ref(snap, f"button: {label}")
         if ref:
             _run(f"browse click {ref}")
-            wait_for(lambda t: "Where from" in t.lower(), timeout=3.0, step=0.25)
+            snap = wait_for(form, timeout=5.0)
             break
-    
-    # Check for Explore page
-    current_url_raw = _run("browse get url")
-    try:
-        current_url = json.loads(current_url_raw).get("url", current_url_raw)
-    except Exception:
-        current_url = current_url_raw
-    
-    if "explore" in current_url or "Where from" not in _get_tree(_snap()):
-        flights_ref = _find_ref(_snap(), "link: Flights")
+
+    if "explore" in _url() or not form(_get_tree(snap)):
+        flights_ref = _find_ref(snap, "link: Flights")
         if flights_ref:
             _run(f"browse click {flights_ref}")
-        wait_for(lambda t: "Where from" in t.lower(), timeout=10.0, step=0.5)
-    
-    snap = _snap()
-    if "Where from" not in _get_tree(snap):
+        else:
+            _run(f"browse open {FLIGHTS_URL}")
+        snap = wait_for(form, timeout=10.0, step=0.5)
+
+    if not form(_get_tree(snap)):
         DIAG["blank_pages"] += 1
-        print("  ERROR: Flights page never loaded (blank/stub tree)")
-        return []
-    
-    # Switch to one-way
-    print("  Switching to one-way...")
+        _legacy._session_dirty()
+        print("  ERROR: Flights page never loaded (blank/stub tree) — local browser problem, NOT a Google block")
+        return ""
+    return snap
+
+
+def _set_ticket_type(snap: str, label: str) -> str:
+    """label = 'One way' or 'Multi-city'."""
     tt_ref = _find_ref(snap, "Change ticket type")
-    if tt_ref:
-        _run(f"browse click {tt_ref}")
-        snap = wait_for(lambda t: "option:" in t.lower(), timeout=5.0, step=0.25)
-        ow_ref = _find_ref(snap, "option:", "One way")
-        if ow_ref:
-            _run(f"browse click {ow_ref}")
-            _run("browse press Escape")  # Close the dropdown
-            time.sleep(0.5)
-            snap = _snap()
-    
-    # Set passengers
-    print("  Setting passengers: 2 adults + 1 child...")
+    if not tt_ref:
+        return snap
+    _run(f"browse click {tt_ref}")
+    snap = wait_for(lambda t: _has(t, f"option: {label}"), timeout=4.0)
+    opt_ref = _find_ref(snap, f"option: {label}")
+    if opt_ref:
+        _run(f"browse click {opt_ref}")
+    chosen = lambda t: _has(t, f"change ticket type. {label}") and not _has(t, "option: round trip")
+    snap = wait_for(chosen, timeout=4.0)
+    if _has(_get_tree(snap), "option: round trip"):        # listbox still open
+        _run("browse press Escape")
+        snap = wait_for(lambda t: not _has(t, "option: round trip"), timeout=2.0)
+    if not _has(_get_tree(snap), f"change ticket type. {label}"):
+        print(f"  WARN: trip type may not be {label}")
+    return snap
+
+
+def _set_passengers(snap: str) -> str:
+    """2 adults + 1 child."""
     pax_ref = _find_ref(snap, "passenger")
-    if pax_ref:
-        _run(f"browse click {pax_ref}")
-        snap = wait_for(lambda t: "Add adult" in t.lower() or "Done" in t.lower(), timeout=5.0, step=0.25)
-        
-        add_adult = _find_ref(snap, "button:", "Add adult")
-        if add_adult:
-            _run(f"browse click {add_adult}")
-            snap = _snap()
-        
-        add_child = _find_ref(snap, "button:", "Add child")
-        if add_child:
-            _run(f"browse click {add_child}")
-            snap = _snap()
-        
-        done_ref = _find_ref(snap, "button:", "Done")
-        if done_ref:
-            _run(f"browse click {done_ref}")
-            snap = wait_for(lambda t: "Where from" in t.lower(), timeout=3.0, step=0.25)
-    
-    # Fill origin
-    print(f"  Filling origin: {origin}...")
-    origin_ref = _find_ref(snap, "Where from")
-    if origin_ref:
-        _run(f"browse click {origin_ref}")
+    if not pax_ref:
+        return snap
+    _run(f"browse click {pax_ref}")
+    snap = wait_for(lambda t: _has(t, "button: add adult"), timeout=4.0)
+    add_adult = _find_ref(snap, "button: Add adult")
+    if add_adult:
+        _run(f"browse click {add_adult}")
         time.sleep(0.3)
-        _run("browse press Escape")
-        time.sleep(0.2)
-        _run(f"browse click {origin_ref}")
+    snap = _snap()
+    add_child = _find_ref(snap, "button: Add child")
+    if add_child:
+        _run(f"browse click {add_child}")
         time.sleep(0.3)
-        _run(f"browse type {TYPE_AS.get(origin, origin)}")
-        time.sleep(0.5)
-        snap = _snap()
-        
-        pick = _legacy._pick_airport(snap, origin)
-        if pick:
-            _run(f"browse click {pick}")
-        else:
-            _run("browse press Enter")
-        time.sleep(0.5)
-        snap = _snap()
-    
-    # Fill destination
-    print(f"  Filling destination: {dest}...")
-    dest_ref = _find_ref(snap, "Where to")
-    if dest_ref:
-        _run(f"browse click {dest_ref}")
-        time.sleep(0.3)
-        _run("browse press Escape")
-        time.sleep(0.2)
-        _run(f"browse click {dest_ref}")
-        time.sleep(0.3)
-        _run(f"browse type {TYPE_AS.get(dest, dest)}")
-        time.sleep(0.5)
-        snap = _snap()
-        
-        pick = _legacy._pick_airport(snap, dest)
-        if pick:
-            _run(f"browse click {pick}")
-        else:
-            _run("browse press Enter")
-        time.sleep(0.5)
-        snap = _snap()
-    
-    # Fill date
-    print(f"  Filling departure date: {depart}...")
-    dep_ref = _find_ref(snap, "textbox:", "Departure")
-    if dep_ref:
-        _run(f"browse click {dep_ref}")
-        time.sleep(0.3)
-        _run(f'browse type "{depart}"')
-        time.sleep(0.5)
-        snap = _snap()
-        
-        # Google Flights abbreviates month: "Jan 7" for "January 7"
-        # Check for abbreviated month in the tree
-        month_abbr = depart.split(" ")[0][:3]  # "January" → "Jan"
-        day = depart.split(" ")[1].rstrip(",")  # "7," → "7"
-        date_short = f"{month_abbr} {day}"
-        
-        done_ref = _find_ref(snap, "button:", "Done")
-        if done_ref:
-            _run(f"browse click {done_ref}")
-            time.sleep(0.5)
-            snap = _snap()
-    
-    # Search
-    print("  Searching...")
-    search_ref = _find_ref(snap, "button:", "Search")
+    snap = _snap()
+    done_ref = _find_ref(snap, "button: Done")
+    if done_ref:
+        _run(f"browse click {done_ref}")
+    snap = wait_for(lambda t: _has(t, "3 passengers") and not _has(t, "button: add adult"), timeout=4.0)
+    if not _has(_get_tree(snap), "3 passengers"):
+        print("  WARN: passenger count may not be 3")
+    return snap
+
+
+def _fill_airport(snap: str, box_ref: str, label: str, code: str, row: int = 0) -> str:
+    """Type into a 'Where from?'/'Where to?' box and pick the suggestion."""
+    if not box_ref:
+        raise RuntimeError(f"no '{label}' box on the form")
+    # click → Escape → click: the first click sometimes only focuses the row
+    _run(f"browse click {box_ref}"); time.sleep(0.3)
+    _run("browse press Escape"); time.sleep(0.2)
+    _run(f"browse click {box_ref}"); time.sleep(0.3)
+    _run(f"browse type {TYPE_AS.get(code, code)}")
+    snap = wait_for(lambda t: bool(_legacy._pick_airport(t, code)), timeout=5.0)
+    pick = _pick_airport(snap, code)
+    if pick:
+        _run(f"browse click {pick}")
+    else:
+        _run("browse press Enter")
+    kws = [k.lower() for k in _airport_keywords(code)]
+
+    def filled(t: str) -> bool:
+        boxes = _lines_with(t, label)
+        return row < len(boxes) and any(k in boxes[row].lower() for k in kws)
+
+    snap = wait_for(filled, timeout=4.0)
+    if not filled(_get_tree(snap)):
+        print(f"  WARN: '{label}' may not show {code} after the pick")
+    return snap
+
+
+def _fill_date(snap: str, box_ref: str, depart: str) -> str:
+    if not box_ref:
+        raise RuntimeError("no 'Departure' box on the form")
+    _run(f"browse click {box_ref}"); time.sleep(0.3)
+    _run(f'browse type "{depart}"')
+    snap = wait_for(lambda t: _has(t, "button: done"), timeout=3.0, count_timeout=False)
+    done_ref = _find_ref(snap, "button: Done")
+    if done_ref:
+        _run(f"browse click {done_ref}")
+        snap = wait_for(lambda t: not _has(t, "button: done"), timeout=3.0)
+    return snap
+
+
+def _search(snap: str) -> None:
+    search_ref = _find_ref(snap, "button: Search")
     if search_ref:
         _run(f"browse click {search_ref}")
     else:
         _run("browse press Enter")
-    time.sleep(8)
 
-    # Use legacy wait_for_results for proper settle check
-    snap = _legacy._wait_for_results(_snap())
-    tree = _legacy._get_tree(snap)
 
-    # View more flights
-    more_ref = _find_ref(snap, "View more flights")
-    if more_ref:
-        _run(f"browse click {more_ref}")
-        time.sleep(1)
+def _wait_for_results() -> str:
+    """Poll at 1 s until prices show, then keep the legacy settle rule: the
+    priced-row count must be the same on two snapshots 2 s apart."""
+    deadline = time.time() + RESULT_BUDGET_S
+    last_n, snap = -1, ""
+    while time.time() < deadline:
         snap = _snap()
-        tree = _get_tree(snap)
+        n = _get_tree(snap).lower().count("us dollars")
+        if n and n == last_n:
+            return snap
+        last_n = n
+        time.sleep(SETTLE_S if n else 1.0)
+    DIAG["wait_timeouts"] += 1
+    return snap
 
-    # Parse results
-    results = _parse_results(tree, origin, dest, snap, depart)
+
+def _expand_more(snap: str) -> str:
+    more_ref = _find_ref(snap, "View more flights")
+    if not more_ref:
+        return snap
+    before = _get_tree(snap).lower().count("us dollars")
+    _run(f"browse click {more_ref}")
+    snap = wait_for(lambda t: t.lower().count("us dollars") > before, timeout=4.0, step=0.5,
+                    count_timeout=False)
+    time.sleep(0.5)                       # let the last expanded rows land
+    return _snap()
+
+
+def _verify_fill(tree: str, legs: list) -> bool:
+    """The results page must still show every leg's origin, destination and date."""
+    tl = tree.lower()
+    for origin, dest, depart in legs:
+        parts = depart.replace(",", "").split()
+        month, day = parts[0], parts[1] if len(parts) > 1 else ""
+        date_ok = f"{month} {day}".lower() in tl or f"{month[:3]} {day}".lower() in tl
+        origin_ok = any(k.lower() in tl for k in _airport_keywords(origin))
+        dest_ok = any(k.lower() in tl for k in _airport_keywords(dest))
+        if not (origin_ok and dest_ok and date_ok):
+            return False
+    return True
+
+
+def _save_debug(tag: str, url: str, tree: str) -> None:
+    with open(DEBUG_TREE_FILE, "w") as f:
+        f.write(f"{tag}\nurl: {url}\n\n{tree}")
+    print(f"  (tree saved to {DEBUG_TREE_FILE})")
+
+
+# ── one-way ─────────────────────────────────────────────────────────────────
+
+def scrape_route(origin: str, dest: str, depart: str) -> list:
+    """One-way search; any failure re-runs the search through the legacy engine."""
+    try:
+        return _scrape_route_jev(origin, dest, depart)
+    except Exception as e:
+        DIAG["engine_fallbacks"] += 1
+        print(f"  Jev engine failed ({e}) — falling back to legacy for this search")
+        return _legacy.scrape_route(origin, dest, depart)
+
+
+def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
+    snap = _open_form()
+    if not snap:
+        raise RuntimeError("blank-page")
+
+    print("  Switching to one-way...")
+    snap = _set_ticket_type(snap, "One way")
+    print("  Setting passengers: 2 adults + 1 child...")
+    snap = _set_passengers(snap)
+    print(f"  Filling origin: {origin}...")
+    snap = _fill_airport(snap, _find_ref(snap, "Where from"), "Where from?", origin)
+    print(f"  Filling destination: {dest}...")
+    snap = _fill_airport(snap, _find_ref(snap, "Where to"), "Where to?", dest)
+    print(f"  Filling departure date: {depart}...")
+    snap = _fill_date(snap, _find_ref(snap, "textbox: Departure"), depart)
+    print("  Searching...")
+    _search(snap)
+    snap = _wait_for_results()
+    result_url = _url()
+    snap = _expand_more(snap)
+    tree = _get_tree(snap)
+
+    results = _legacy._parse_results(tree, origin, dest, result_url, depart)
     print(f"  Parsed {len(results)} flights")
-    
-    # Fill verification - per brief: verified fill + 0 results = no flights that day (OK)
-    # Unverified fill + 0 results = fill failure → trigger legacy fallback via exception
+    verified = _verify_fill(tree, [(origin, dest, depart)])
     if not results:
-        if not _verify_fill(tree, [(origin, dest, depart)]):
-            print("  0 results + fill NOT verified — triggering legacy fallback")
+        _save_debug(f"route: {origin}->{dest} {depart} (one-way)", result_url, tree)
+        if not verified:
             raise RuntimeError("fill-not-verified")
-    elif not _verify_fill(tree, [(origin, dest, depart)]):
-        print("  WARN: fill verification failed (results page may show route differently)")
-        # Results are real even if verification text matching is imperfect
-    
-    if not results:
-        with open(DEBUG_TREE_FILE, "w") as f:
-            f.write(f"route: {origin}->{dest} {depart} (one-way)\nurl: {snap}\n\n{tree}")
-    
+    elif not verified:
+        print("  WARN: fill verification text not found on results page")
     return results
 
 
-def _parse_results(tree: str, origin: str, dest: str, url: str, depart: str = "") -> list:
-    """Parse one-way flights from the accessibility tree."""
-    import scraper as sc
-    return sc._parse_results(tree, origin, dest, url, depart)
-
-
-# --- Public API: exported names that run_daily.py imports ---
-
-# Constants
-LEGLS = LEGS
-TICKET2_SEARCHES = _legacy.TICKET2_SEARCHES
-STOPOVER_SEARCHES = _legacy.STOPOVER_SEARCHES
-TRIP_YEAR = _legacy.TRIP_YEAR
-
-# Re-export from legacy
-TICKET1_SIN_RETURN = _legacy.TICKET1_SIN_RETURN
-TICKET1_BKK_RETURN = _legacy.TICKET1_BKK_RETURN
-AIRPORT_PICK = _legacy.AIRPORT_PICK
-TYPE_AS = _legacy.TYPE_AS
-MAX_RESULTS = _legacy.MAX_RESULTS
-
-# Also re-export max_results constant from legacy for compatibility
-max_results = MAX_RESULTS
-
+# ── multi-city ──────────────────────────────────────────────────────────────
 
 def _scrape_multicity(legs: list, parse_fn, tag: str) -> list:
-    """Fill Google Flights' multi-city form with the given (origin, dest, date)
-    legs and parse the first-leg selection page. Jev-powered implementation."""
-    results = []
+    """Fill the multi-city form with (origin, dest, date) legs and parse the
+    first-leg selection page. Falls back to the legacy engine on failure."""
     try:
-        # Ensure session
-        _legacy._ensure_session()
-        
-        # Open page
-        _run("browse open https://www.google.com/travel/flights?hl=en&curr=USD&gl=us")
-        wait_for(lambda t: "Where from" in t.lower() and "Where to" in t.lower(), timeout=10.0, step=0.5)
-        
-        # Dismiss consent
-        for label in ["Accept all", "I agree", "Accept"]:
-            ref = _find_ref(_snap(), f"button: {label}")
-            if ref:
-                _run(f"browse click {ref}")
-                wait_for(lambda t: "Where from" in t.lower(), timeout=3.0, step=0.25)
-                break
-        
-        # Check for Explore page
-        current_url_raw = _run("browse get url")
-        try:
-            current_url = json.loads(current_url_raw).get("url", current_url_raw)
-        except Exception:
-            current_url = current_url_raw
-        
-        if "explore" in current_url or "Where from" not in _get_tree(_snap()):
-            flights_ref = _find_ref(_snap(), "link: Flights")
-            if flights_ref:
-                _run(f"browse click {flights_ref}")
-            wait_for(lambda t: "Where from" in t.lower(), timeout=10.0, step=0.5)
-        
-        snap = _snap()
-        if "Where from" not in _get_tree(snap):
-            DIAG["blank_pages"] += 1
-            print("  ERROR: Flights page never loaded (blank/stub tree)")
-            return results
-        
-        # Switch to multi-city
-        print("  Switching to multi-city...")
-        tt_ref = _find_ref(snap, "Change ticket type")
-        if tt_ref:
-            _run(f"browse click {tt_ref}")
-            snap = wait_for(lambda t: "option:" in t.lower(), timeout=5.0, step=0.25)
-            mc_ref = _find_ref(snap, "option:", "Multi-city")
-            if mc_ref:
-                _run(f"browse click {mc_ref}")
-            _run("browse press Escape")  # Close the dropdown
-            time.sleep(0.5)
-            snap = wait_for(lambda t: "Where from" in t.lower() and "Where to" in t.lower(), timeout=5.0, step=0.25)
-        
-        # Set passengers
-        print("  Setting passengers: 2 adults + 1 child...")
-        pax_ref = _find_ref(snap, "passenger")
-        if pax_ref:
-            _run(f"browse click {pax_ref}")
-            snap = wait_for(lambda t: "Add adult" in t.lower() or "Done" in t.lower(), timeout=5.0, step=0.25)
-            
-            add_adult = _find_ref(snap, "button:", "Add adult")
-            if add_adult:
-                _run(f"browse click {add_adult}")
-                snap = _snap()
-            
-            add_child = _find_ref(snap, "button:", "Add child")
-            if add_child:
-                _run(f"browse click {add_child}")
-                snap = _snap()
-            
-            done_ref = _find_ref(snap, "button:", "Done")
-            if done_ref:
-                _run(f"browse click {done_ref}")
-                snap = wait_for(lambda t: "Where from" in t.lower(), timeout=3.0, step=0.25)
-        
-        # The multi-city form starts with 2 flight rows; add more if needed
-        snap = _snap()
-        froms = _find_refs(snap, "Where from")
-        while len(froms) < len(legs):
-            add_ref = _find_ref(snap, "Add flight")
-            if not add_ref:
-                print("  ERROR: could not add a flight row to the multi-city form")
-                return results
-            _run(f"browse click {add_ref}")
-            snap = wait_for(lambda t: True, timeout=3.0, step=0.5)
-            froms = _find_refs(snap, "Where from")
-        
-        # Fill each leg
-        for i, (o, d, dep) in enumerate(legs):
-            snap = _snap()
-            froms = _find_refs(snap, "Where from")
-            if i >= len(froms):
-                print("  ERROR: multi-city form has too few flight rows")
-                return results
-            
-            print(f"  Row {i+1}: {o}→{d} {dep}")
-            
-            # Fill origin
-            _run(f"browse click {froms[i]}")
-            time.sleep(0.3)
-            _run("browse press Escape")
-            time.sleep(0.2)
-            _run(f"browse click {froms[i]}")
-            time.sleep(0.3)
-            _run(f"browse type {TYPE_AS.get(o, o)}")
-            time.sleep(0.5)
-            snap = _snap()
-            
-            pick = _legacy._pick_airport(snap, o)
-            if pick:
-                _run(f"browse click {pick}")
-            else:
-                _run("browse press Enter")
-            time.sleep(0.5)
-            snap = _snap()
-            
-            # Fill destination
-            tos = _find_refs(snap, "Where to")
-            _run(f"browse click {tos[i]}")
-            time.sleep(0.3)
-            _run("browse press Escape")
-            time.sleep(0.2)
-            _run(f"browse click {tos[i]}")
-            time.sleep(0.3)
-            _run(f"browse type {TYPE_AS.get(d, d)}")
-            time.sleep(0.5)
-            snap = _snap()
-            
-            pick = _legacy._pick_airport(snap, d)
-            if pick:
-                _run(f"browse click {pick}")
-            else:
-                _run("browse press Enter")
-            time.sleep(0.5)
-            snap = _snap()
-            
-            # Fill date
-            deps = _find_refs(snap, "textbox: Departure")
-            _run(f"browse click {deps[i]}")
-            time.sleep(0.3)
-            _run(f'browse type "{dep}"')
-            time.sleep(0.5)
-            snap = _snap()
-            
-            done_ref = _find_ref(snap, "button:", "Done")
-            if done_ref:
-                _run(f"browse click {done_ref}")
-                time.sleep(0.5)
-                snap = _snap()
-        
-        # Click Search
-        snap = _snap()
-        search_ref = _find_ref(snap, "button:", "Search")
-        if search_ref:
-            _run(f"browse click {search_ref}")
-        else:
-            _run("browse press Enter")
-        time.sleep(8)
-
-        # Use legacy wait_for_results for proper settle check
-        snap = _legacy._wait_for_results(_snap())
-        tree = _legacy._get_tree(snap)
-        
-        # Get the URL for parsing
-        raw_url = _run("browse get url")
-        try:
-            result_url = json.loads(raw_url).get("url", raw_url)
-        except Exception:
-            result_url = raw_url
-        
-        # View more flights
-        more_ref = _find_ref(snap, "View more flights")
-        if more_ref:
-            _run(f"browse click {more_ref}")
-            time.sleep(1)
-            snap = _snap()
-            tree = _get_tree(snap)
-        
-        results = parse_fn(tree, result_url)
-        print(f"  Parsed {len(results)} multi-city options")
-        
-        if not results:
-            with open(DEBUG_TREE_FILE, "w") as f:
-                f.write(f"{tag}\nurl: {result_url}\n\n{tree}")
-            print(f"  (tree saved to {DEBUG_TREE_FILE})")
-        
-        # Fill verification - similar to one-way: don't discard real results
-        if not results:
-            if not _verify_fill(tree, legs):
-                print("  0 results + fill NOT verified — triggering legacy fallback")
-                raise RuntimeError("fill-not-verified")
-        elif not _verify_fill(tree, legs):
-            print("  WARN: fill verification failed (results page may show route differently)")
-            # Results are real even if verification text matching is imperfect
-            
+        return _scrape_multicity_jev(legs, parse_fn, tag)
     except Exception as e:
-        _legacy._session_dirty()
-        print(f"  Error: {e}")
-    
+        DIAG["engine_fallbacks"] += 1
+        if str(e) not in ("fill-not-verified",):
+            _legacy._session_dirty()
+        print(f"  Jev engine failed ({e}) — falling back to legacy for this search")
+        return _legacy._scrape_multicity(legs, parse_fn, tag)
+
+
+def _scrape_multicity_jev(legs: list, parse_fn, tag: str) -> list:
+    snap = _open_form()
+    if not snap:
+        raise RuntimeError("blank-page")
+
+    print("  Switching to multi-city...")
+    snap = _set_ticket_type(snap, "Multi-city")
+    print("  Setting passengers: 2 adults + 1 child...")
+    snap = _set_passengers(snap)
+
+    froms = _find_refs(snap, "Where from")
+    while len(froms) < len(legs):
+        add_ref = _find_ref(snap, "Add flight")
+        if not add_ref:
+            raise RuntimeError("could not add a flight row to the multi-city form")
+        have = len(froms)
+        _run(f"browse click {add_ref}")
+        snap = wait_for(lambda t: len(_find_refs(t, "Where from")) > have, timeout=3.0)
+        froms = _find_refs(snap, "Where from")
+
+    for i, (o, d, dep) in enumerate(legs):
+        print(f"  Row {i + 1}: {o}→{d} {dep}")
+        froms = _find_refs(snap, "Where from")
+        if i >= len(froms):
+            raise RuntimeError("multi-city form has too few flight rows")
+        snap = _fill_airport(snap, froms[i], "Where from?", o, row=i)
+        tos = _find_refs(snap, "Where to")
+        snap = _fill_airport(snap, tos[i] if i < len(tos) else "", "Where to?", d, row=i)
+        deps = _find_refs(snap, "textbox: Departure")
+        snap = _fill_date(snap, deps[i] if i < len(deps) else "", dep)
+
+    print("  Searching...")
+    _search(snap)
+    snap = _wait_for_results()
+    result_url = _url()
+    snap = _expand_more(snap)
+    tree = _get_tree(snap)
+
+    results = parse_fn(tree, result_url)
+    print(f"  Parsed {len(results)} multi-city options")
+    verified = _verify_fill(tree, legs)
+    if not results:
+        _save_debug(tag, result_url, tree)
+        if not verified:
+            raise RuntimeError("fill-not-verified")
+    elif not verified:
+        print("  WARN: fill verification text not found on results page")
     return results
 
 
+# ── wrappers (mirror scraper.py, routed to the engine above) ────────────────
+
 def scrape_stopover(cfg=None) -> list:
-    """Single multi-city stopover search."""
     cfg = cfg or _legacy.STOPOVER_SEARCH
 
     def parse(tree, url):
@@ -618,25 +491,25 @@ def scrape_stopover(cfg=None) -> list:
 
 
 def scrape_tickets_all() -> list:
-    """Ticket ① searches: BOS→IST + IST→DAC + DPS→BOS on one multi-city ticket."""
     all_results = []
     for cfg in STOPOVER_SEARCHES:
         print(f"[{cfg['kind']}] {cfg['label']}")
         results, thin_retried = [], False
-        for attempt in range(1, 3 + 1):  # TICKET1_ATTEMPTS = 3
+        for attempt in range(1, _legacy.TICKET1_ATTEMPTS + 1):
             got = scrape_stopover(cfg)
             if len(got) > len(results):
                 results = got
-            if len(results) >= 4:  # THIN_TICKET1_OPTIONS = 4
+            if len(results) >= _legacy.THIN_TICKET1_OPTIONS:
                 break
             if results and thin_retried:
                 break
             if results:
                 thin_retried = True
-                print(f"  only {len(results)} options (attempt {attempt}/3) — page may be half-rendered, retrying once with a fresh session...")
+                print(f"  only {len(results)} options (attempt {attempt}/{_legacy.TICKET1_ATTEMPTS}) "
+                      f"— page may be half-rendered, retrying once with a fresh session...")
                 _legacy._session_dirty()
             else:
-                print(f"  0 results (attempt {attempt}/3) — retrying with a fresh session...")
+                print(f"  0 results (attempt {attempt}/{_legacy.TICKET1_ATTEMPTS}) — retrying with a fresh session...")
             time.sleep(5)
         all_results += results
         print(f"  Got {len(results)} options")
@@ -644,20 +517,16 @@ def scrape_tickets_all() -> list:
 
 
 def scrape_sg_tickets_all() -> list:
-    """All Ticket ② multi-city searches, both orders."""
     all_results = []
-    ORDER_ROUTES = _legacy.ORDER_ROUTES
     for i, (order, d1, d2) in enumerate(TICKET2_SEARCHES, 1):
         print(f"[ticket2 {i}/{len(TICKET2_SEARCHES)}] {order} {d1} + {d2}")
-        
-        (o1, dst1), (o2, dst2) = ORDER_ROUTES[order]
+        (o1, dst1), (o2, dst2) = _legacy.ORDER_ROUTES[order]
         legs = [(o1, dst1, d1), (o2, dst2, d2)]
 
-        def parse(tree, url):
+        def parse(tree, url, d1=d1, d2=d2, order=order, o1=o1, dst1=dst1, dst2=dst2):
             out = []
             for f in _legacy._parse_openjaw_results(tree, d1, d2, url):
-                f.update(kind="sg-ticket", order=order,
-                         route=f"{o1}→{dst1}→{dst2}")
+                f.update(kind="sg-ticket", order=order, route=f"{o1}→{dst1}→{dst2}")
                 out.append(f)
             return out
 
@@ -672,12 +541,10 @@ def scrape_sg_tickets_all() -> list:
 
 
 def scrape_all() -> list:
-    """All one-way legs using Jev engine."""
     all_results = []
     total = sum(len(leg["dates"]) for leg in LEGS)
     n = 0
     consecutive_failures = 0
-
     DIAG.update(timeouts=0, blank_pages=0, aborted_early=False)
 
     for leg in LEGS:
@@ -686,16 +553,13 @@ def scrape_all() -> list:
             if _past_deadline():
                 remaining = total - n
                 DIAG["deadline_skips"].append(
-                    f"one-way legs: {remaining} of {total} searches "
-                    f"(past {RUN_DEADLINE_MIN} min)")
+                    f"one-way legs: {remaining} of {total} searches (past {RUN_DEADLINE_MIN} min)")
                 print(f"DEADLINE: skipping remaining {remaining} one-way searches")
                 return all_results
             n += 1
             print(f"[{n}/{total}] {origin}→{dest}  {depart} (one-way)")
             results = scrape_route(origin, dest, depart)
             if not results:
-                # One retry after a full stop: a fresh session recovers
-                # transient hiccups (each route already restarts the env).
                 print("  0 results — retrying route once with a fresh session...")
                 time.sleep(5)
                 results = scrape_route(origin, dest, depart)
@@ -704,23 +568,14 @@ def scrape_all() -> list:
 
             consecutive_failures = 0 if results else consecutive_failures + 1
             if consecutive_failures >= 4:
-                # 4 routes (8 attempts) in a row with nothing = the browser
-                # side is dead; grinding through the rest just burns time
-                # and produces the same nothing.
                 DIAG["aborted_early"] = True
-                print(f"ABORTING: {consecutive_failures} consecutive routes returned "
-                      f"0 results (timeouts={DIAG['timeouts']}, blank_pages={DIAG['blank_pages']})")
+                print(f"ABORTING: {consecutive_failures} consecutive routes returned 0 results "
+                      f"(timeouts={DIAG['timeouts']}, blank_pages={DIAG['blank_pages']})")
                 return all_results
-
     return all_results
 
 
 def scrape_bali_watch():
-    """(tickets1, fwd_tickets, rev_tickets) for the retired Bali trip, both
-    orders. Runs LAST in the nightly order — the Bangkok trip is the product,
-    so a throttled night degrades the comparison before the headline."""
-    from scraper import OPENJAW_SEARCHES, BALI_WATCH_PAIRS
-    
     if _past_deadline():
         DIAG["deadline_skips"].append(
             f"🌴 Bali watch: all 3 searches (past {RUN_DEADLINE_MIN} min)")
@@ -729,23 +584,21 @@ def scrape_bali_watch():
     print("[bali-watch] Ticket ① (DPS return)")
     tickets1 = scrape_stopover(_legacy.ISTANBUL2_SEARCH)
     fwd, rev = [], []
-    for i, (direction, d1, d2) in enumerate(BALI_WATCH_PAIRS, 1):
-        print(f"[bali-watch {direction} {i}/{len(BALI_WATCH_PAIRS)}] {d1} + {d2}")
+    for i, (direction, d1, d2) in enumerate(_legacy.BALI_WATCH_PAIRS, 1):
+        print(f"[bali-watch {direction} {i}/{len(_legacy.BALI_WATCH_PAIRS)}] {d1} + {d2}")
         if direction == "fwd":
             legs = [("DAC", "SIN", d1), ("SIN", "DPS", d2)]
         else:
             legs = [("DAC", "DPS", d1), ("DPS", "SIN", d2)]
-        
-        def parse(tree, url):
+
+        def parse(tree, url, d1=d1, d2=d2, direction=direction):
             out = []
             for f in _legacy._parse_openjaw_results(tree, d1, d2, url):
-                if direction == "fwd":
-                    f.update(kind="sg-ticket", route="DAC→SIN→DPS")
-                else:
-                    f.update(kind="sg-ticket", route="DAC→DPS→SIN")
+                f.update(kind="sg-ticket",
+                         route="DAC→SIN→DPS" if direction == "fwd" else "DAC→DPS→SIN")
                 out.append(f)
             return out
-        
+
         tag = f"bali-{direction}: {legs[0][0]}->{legs[0][1]} {d1} + {legs[1][0]}->{legs[1][1]} {d2}"
         r = _scrape_multicity(legs, parse, tag)
         if not r:
@@ -753,5 +606,3 @@ def scrape_bali_watch():
             r = _scrape_multicity(legs, parse, tag)
         (fwd if direction == "fwd" else rev).extend(r)
     return tickets1, fwd, rev
-
-

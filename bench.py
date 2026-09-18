@@ -31,11 +31,16 @@ def _check_time_window():
         sys.exit(1)
 
 
-def run_bench(engine: str, search_set: str, repeat: int = 1):
+def run_bench(engine: str, search_set: str, repeat: int = 1, no_key: bool = False):
     """Run benchmark for the given engine and search set."""
     # Import the appropriate scraper module
     if engine == "jev":
+        if no_key:
+            os.environ.pop("AI_GATEWAY_API_KEY", None)
+        import jev_client
         import scraper_jev as scraper
+        started = jev_client.start().started       # same wiring as run_daily.py
+        print(f"jev server: {'running' if started else 'NOT running (fallback picks only)'}")
     else:
         import scraper
 
@@ -121,14 +126,37 @@ def run_bench(engine: str, search_set: str, repeat: int = 1):
                     })
 
             scraper.end_session()
+        elif search_set == "multi":
+            # One real multi-city search (Ticket ① config 0), the nightly's main shape
+            cfg = scraper.STOPOVER_SEARCHES[0]
+            print(f"[{cfg['kind']}] {cfg['label']}")
+            calls_before = scraper.DIAG.get("jev_calls", 0)
+            t0 = time.time()
+            options = scraper.scrape_stopover(cfg)
+            elapsed = time.time() - t0
+            prices = [o.get("price_total") for o in options if isinstance(o.get("price_total"), (int, float))]
+            run_data["searches"].append({
+                "type": "multicity",
+                "legs": cfg["legs"],
+                "seconds": round(elapsed, 2),
+                "flights": len(options),
+                "cheapest_price": min(prices, default="N/A"),
+                "jev_calls": scraper.DIAG.get("jev_calls", 0) - calls_before,
+            })
+            print(f"  -> {len(options)} options, cheapest {min(prices, default='N/A')}, "
+                  f"{elapsed:.1f}s, jev calls {scraper.DIAG.get('jev_calls', 0) - calls_before}")
         else:
             # Smoke run: just a few key searches
             import time as time_module
 
             for search_type, origin, dest, depart in smoke_searches[:3]:
+                calls_before = scraper.DIAG.get("jev_calls", 0)
                 t0 = time_module.time()
                 results_here = scraper.scrape_route(origin, dest, depart)
                 elapsed = time_module.time() - t0
+                print(f"  -> {len(results_here)} flights, {elapsed:.1f}s, "
+                      f"jev calls {scraper.DIAG.get('jev_calls', 0) - calls_before}, "
+                      f"wait timeouts so far {scraper.DIAG.get('wait_timeouts', 0)}")
 
                 fill_verified = False
                 if results_here:
@@ -145,6 +173,7 @@ def run_bench(engine: str, search_set: str, repeat: int = 1):
                     "flights": len(results_here),
                     "cheapest_price": min((r.get("price_total") for r in results_here if isinstance(r.get("price_total"), (int, float))), default="N/A"),
                     "fill_verified": fill_verified,
+                    "jev_calls": scraper.DIAG.get("jev_calls", 0) - calls_before,
                 })
 
         run_data["total_seconds"] = round(time.monotonic() - run_start, 2)
@@ -159,6 +188,8 @@ def run_bench(engine: str, search_set: str, repeat: int = 1):
 
         all_search_results.append(run_data)
 
+    if engine == "jev":
+        jev_client.stop()
     return all_search_results
 
 
@@ -166,10 +197,12 @@ def main():
     parser = argparse.ArgumentParser(description="Benchmark scraping engines")
     parser.add_argument("--engine", required=True, choices=["legacy", "jev"],
                        help="Scraping engine to benchmark")
-    parser.add_argument("--set", required=True, choices=["smoke", "full"],
-                       help="Search set: 'smoke' (3 searches) or 'full' (30 searches)")
+    parser.add_argument("--set", required=True, choices=["smoke", "multi", "full"],
+                       help="Search set: 'smoke' (3 one-ways), 'multi' (1 multi-city), 'full' (30 searches)")
     parser.add_argument("--repeat", type=int, default=1,
                        help="Number of times to repeat the benchmark")
+    parser.add_argument("--no-key", action="store_true",
+                       help="Run the jev engine with AI_GATEWAY_API_KEY removed (gate G7)")
     args = parser.parse_args()
 
     _check_time_window()
@@ -179,10 +212,10 @@ def main():
     os.makedirs(bench_dir, exist_ok=True)
 
     # Run benchmark
-    results = run_bench(args.engine, args.set, args.repeat)
+    results = run_bench(args.engine, args.set, args.repeat, args.no_key)
 
     # Calculate median per-search time
-    if args.set == "smoke":
+    if args.set in ("smoke", "multi"):
         all_times = []
         for r in results:
             for s in r["searches"]:
@@ -206,6 +239,7 @@ def main():
 
     total_time = sum(r["total_seconds"] for r in results)
     total_jev_calls = sum(r.get("jev_calls", 0) for r in results)
+    total_jev_ms = sum(r.get("jev_ms", 0) for r in results)
     total_jev_fallbacks = sum(r.get("jev_fallbacks", 0) for r in results)
     total_engine_fallbacks = sum(r.get("engine_fallbacks", 0) for r in results)
     total_timeouts = sum(r.get("wait_timeouts", 0) for r in results)
@@ -215,6 +249,7 @@ def main():
     print(f"{'Total time (seconds)':<30} {total_time:>20.2f}")
     print(f"{'Median per-search (seconds)':<30} {median_time:>20.2f}")
     print(f"{'Jev calls':<30} {total_jev_calls:>20}")
+    print(f"{'Jev ms total':<30} {total_jev_ms:>20}")
     print(f"{'Jev fallbacks':<30} {total_jev_fallbacks:>20}")
     print(f"{'Engine fallbacks':<30} {total_engine_fallbacks:>20}")
     print(f"{'Wait timeouts':<30} {total_timeouts:>20}")

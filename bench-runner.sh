@@ -23,7 +23,7 @@ export PATH="/Users/jalalchowdhury/.nvm/versions/node/v24.15.0/bin:/opt/homebrew
 mkdir -p bench/queue
 echo "bench-runner up $(date '+%F %T') in $(pwd)"
 
-ALLOWED='^(bench\.py( --engine (legacy|jev))?( --set (smoke|full))?( --repeat [1-5])?( --no-key)?|profile_legacy\.py)$'
+ALLOWED='^(bench\.py( --engine (legacy|jev))?( --set (smoke|multi|full))?( --repeat [1-5])?( --no-key)?|profile_legacy\.py)$'
 
 while true; do
   for req in bench/queue/*.req; do

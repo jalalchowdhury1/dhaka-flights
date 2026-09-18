@@ -1,117 +1,76 @@
 #!/usr/bin/env node
 /**
- * Jev Server - A long-lived Node process that picks elements from accessibility trees.
- * 
- * This is the jev-server.mjs extracted from browser-use/jev-ultrafast and
- * ~/.claude/skills/webai/jev-pick.mjs reference code.
- * 
- * Request format (line-delimited JSON):
- *   {"id": n, "site": "google-flights", "instructions": "Pick the airport...", "state": "...", "candidates": ["..."]}
- * 
- * Response format (line-delimited JSON):
- *   {"id": n, "choice": "...", "index": i, "p": 0.93, "ms": 142}
- *   or
- *   {"id": n, "error": "..."}
- * 
- * Request per site format (as per brief):
- *   {"sites": [{"name":"...", "instructions":"...","state":"...","candidates":["..."]}]}
+ * Jev server — ONE long-lived process per run, line-delimited JSON over
+ * stdin/stdout. Each stdin line is a request; each stdout line is a reply.
+ *
+ *   in : {"id": n, "instructions": "...", "state": "...", "candidates": ["...", ...]}
+ *   out: {"id": n, "choice": "...", "index": i, "p": 0.93, "ms": 142}
+ *        {"id": n, "choice": null, "index": -1, "p": 0, "ms": 0, "error": "..."}
+ *
+ * A {"sites": [...]} batch line answers one reply line per site (same shape).
+ * Requests are handled concurrently; replies carry the request id, so the
+ * client matches on id, not on order.
  */
-
+import { createInterface } from 'node:readline';
 import { experimental_evaluate as evaluate } from 'ai';
 import { gateway } from '@ai-sdk/gateway';
 
-let currentId = 0;
+let autoId = 0;
 
-const chunks = [];
-process.stdin.setEncoding('utf8');
-
-process.stdin.on('data', (chunk) => {
-  chunks.push(chunk);
-});
-
-process.stdin.on('end', async () => {
-  let input;
+async function pick(req) {
+  const id = req.id ?? ++autoId;
+  const candidates = Array.isArray(req.candidates) ? req.candidates : [];
+  if (candidates.length === 0) {
+    return { id, ms: 0, choice: null, index: -1, p: 0, error: 'no-candidates' };
+  }
+  if (candidates.length === 1) {
+    return { id, ms: 0, choice: candidates[0], index: 0, p: 1 };
+  }
+  const t0 = performance.now();
   try {
-    input = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-  } catch (e) {
-    console.error(JSON.stringify({ id: ++currentId, error: `Invalid JSON input: ${e.message}` }));
-    process.exit(1);
+    const result = await evaluate({
+      model: gateway.evaluationModel('typesafe-ai/jev'),
+      state: req.state || `Real accessibility-tree elements read from the live ${req.site || 'page'} right now.`,
+      questions: {
+        pick: {
+          type: 'choice',
+          instructions: req.instructions || 'Pick the element that is the correct match.',
+          criteria: Object.fromEntries(candidates.map((c) => [c, c])),
+        },
+      },
+    });
+    const ms = Math.round(performance.now() - t0);
+    const choice = result.answers.pick.choice;
+    const index = candidates.indexOf(choice);
+    const p = result.answers.pick.probabilities?.[choice] ?? 0;
+    return { id, ms, choice, index, p };
+  } catch (err) {
+    const ms = Math.round(performance.now() - t0);
+    return { id, ms, choice: null, index: -1, p: 0, error: String(err?.message || err) };
   }
+}
 
-  // Handle the sites format from the brief
-  const sites = input.sites || [input];
-  const siteArray = Array.isArray(sites) ? sites : [sites];
-  
-  const results = await Promise.all(
-    siteArray.map(async (site, idx) => {
-      const id = site.id || ++currentId;
-      
-      // Handle empty or missing candidates
-      if (!site.candidates || site.candidates.length === 0) {
-        return {
-          id,
-          ms: 0,
-          choice: null,
-          index: -1,
-          p: 0,
-          error: 'no-candidates'
-        };
-      }
-      
-      // Single candidate - no need to call Jev
-      if (site.candidates.length === 1) {
-        return {
-          id,
-          ms: 0,
-          choice: site.candidates[0],
-          index: 0,
-          p: 1
-        };
-      }
-      
-      // Use Jev for multiple candidates
-      const t0 = performance.now();
-      try {
-        const result = await evaluate({
-          model: gateway.evaluationModel('typesafe-ai/jev'),
-          state: site.state || `Real accessibility-tree elements read from the live ${site.name || 'page'} right now.`,
-          questions: {
-            pick: {
-              type: 'choice',
-              instructions: site.instructions || 'Pick the element that is the correct match.',
-              criteria: Object.fromEntries(site.candidates.map((c) => [c, c])),
-            },
-          },
-        });
-        
-        const ms = performance.now() - t0;
-        const choice = result.answers.pick.choice;
-        const index = site.candidates.indexOf(choice);
-        const p = result.answers.pick.probabilities[choice];
-        
-        return {
-          id,
-          ms,
-          choice,
-          index,
-          p
-        };
-      } catch (err) {
-        const ms = performance.now() - t0;
-        return {
-          id,
-          ms,
-          choice: null,
-          index: -1,
-          p: 0,
-          error: String(err.message || err)
-        };
-      }
-    })
-  );
-  
-  // Output results line by line
-  for (const r of results) {
-    console.log(JSON.stringify(r));
+function reply(obj) {
+  process.stdout.write(JSON.stringify(obj) + '\n');
+}
+
+const pending = new Set();
+const rl = createInterface({ input: process.stdin, crlfDelay: Infinity });
+rl.on('line', (line) => {
+  line = line.trim();
+  if (!line) return;
+  let req;
+  try {
+    req = JSON.parse(line);
+  } catch (e) {
+    reply({ id: null, ms: 0, choice: null, index: -1, p: 0, error: `bad-json: ${e.message}` });
+    return;
+  }
+  const reqs = Array.isArray(req.sites) ? req.sites : [req];
+  for (const r of reqs) {
+    const job = pick(r).then(reply).finally(() => pending.delete(job));
+    pending.add(job);
   }
 });
+// stdin EOF = the client is done; answer what is still in flight, then exit.
+rl.on('close', () => Promise.allSettled([...pending]).then(() => process.exit(0)));
