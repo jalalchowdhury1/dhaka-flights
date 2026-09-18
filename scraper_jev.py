@@ -271,7 +271,7 @@ def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
         _run(f"browse click {origin_ref}")
         time.sleep(0.3)
         _run(f"browse type {TYPE_AS.get(origin, origin)}")
-        time.sleep(1.0)
+        time.sleep(0.5)
         snap = _snap()
         
         pick = _legacy._pick_airport(snap, origin)
@@ -293,7 +293,7 @@ def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
         _run(f"browse click {dest_ref}")
         time.sleep(0.3)
         _run(f"browse type {TYPE_AS.get(dest, dest)}")
-        time.sleep(1.0)
+        time.sleep(0.5)
         snap = _snap()
         
         pick = _legacy._pick_airport(snap, dest)
@@ -311,7 +311,7 @@ def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
         _run(f"browse click {dep_ref}")
         time.sleep(0.3)
         _run(f'browse type "{depart}"')
-        time.sleep(1.0)
+        time.sleep(0.5)
         snap = _snap()
         
         # Google Flights abbreviates month: "Jan 7" for "January 7"
@@ -333,7 +333,7 @@ def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
         _run(f"browse click {search_ref}")
     else:
         _run("browse press Enter")
-    time.sleep(8)
+    time.sleep(2)
 
     # Use legacy wait_for_results for proper settle check
     snap = _legacy._wait_for_results(_snap())
