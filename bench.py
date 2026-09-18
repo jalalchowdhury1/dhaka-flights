@@ -36,7 +36,9 @@ def run_bench(engine: str, search_set: str, repeat: int = 1, no_key: bool = Fals
     # Import the appropriate scraper module
     if engine == "jev":
         if no_key:
-            os.environ.pop("AI_GATEWAY_API_KEY", None)
+            # empty, not popped: load_dotenv() inside jev_client.start() would
+            # otherwise put the key straight back from .env
+            os.environ["AI_GATEWAY_API_KEY"] = ""
         import jev_client
         import scraper_jev as scraper
         started = jev_client.start().started       # same wiring as run_daily.py

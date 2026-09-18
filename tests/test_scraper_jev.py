@@ -27,7 +27,7 @@ def _reset_diag(monkeypatch):
 
 
 def _fake_jev_client(started: bool = True,
-                     choice: str = "[0-152] option: Istanbul, Turkey",
+                     choice: str = "[0-152] option: Istanbul Airport, Turkey",
                      p: float = 0.9):
     """Build a fake JevClient duck that returns the given pick."""
     class Fake:
@@ -109,17 +109,20 @@ def test_price_parsing_consistent():
 
 # Tests (b)–(g) all exercise sjev._pick_airport(snap, code) with a monkeypatched
 # jev_client.get_client() that returns a fake JevClient, plus DIAG reset.
+# Both dropdown lines contain the FIRST legacy keyword ("Istanbul Airport") on
+# purpose: when exactly one option matches it, _pick_airport takes that option
+# without asking Jev, so an unambiguous tree would never reach the code under test.
 
 # ── (b) Jev picks the correct airport over the legacy substring match ──────────
 
 def test_jev_pick_overrides_legacy(monkeypatch):
     _reset_diag(monkeypatch)
     tree = """  [0-151] option: Istanbul Airport (IST)
-  [0-152] option: Istanbul, Turkey"""
+  [0-152] option: Istanbul Airport, Turkey"""
     snap = _snap_with(tree)
     monkeypatch.setattr(jev_client, "get_client",
                         lambda: _fake_jev_client(started=True,
-                                                 choice="[0-152] option: Istanbul, Turkey",
+                                                 choice="[0-152] option: Istanbul Airport, Turkey",
                                                  p=0.9))
     result = sjev._pick_airport(snap, "IST")
     # Legacy would return @0-151 (first keyword match); Jev decides @0-152.
@@ -133,12 +136,12 @@ def test_jev_pick_overrides_legacy(monkeypatch):
 def test_jev_low_probability_fallback(monkeypatch):
     _reset_diag(monkeypatch)
     tree = """  [0-151] option: Istanbul Airport (IST)
-  [0-152] option: Istanbul, Turkey"""
+  [0-152] option: Istanbul Airport, Turkey"""
     snap = _snap_with(tree)
     legacy_ref = scraper._pick_airport(snap, "IST")      # @0-151
     monkeypatch.setattr(jev_client, "get_client",
                         lambda: _fake_jev_client(started=True,
-                                                 choice="[0-152] option: Istanbul, Turkey",
+                                                 choice="[0-152] option: Istanbul Airport, Turkey",
                                                  p=0.4))
     result = sjev._pick_airport(snap, "IST")
     assert result == legacy_ref, f"Expected legacy {legacy_ref}, got {result}"
@@ -150,7 +153,7 @@ def test_jev_low_probability_fallback(monkeypatch):
 def test_jev_guardrail_rejects_wrong_city(monkeypatch):
     _reset_diag(monkeypatch)
     tree = """  [0-151] option: Istanbul Airport (IST)
-  [0-152] option: Istanbul, Turkey
+  [0-152] option: Istanbul Airport, Turkey
   [0-153] option: Isparta, Turkey"""
     snap = _snap_with(tree)
     legacy_ref = scraper._pick_airport(snap, "IST")      # @0-151
@@ -168,7 +171,7 @@ def test_jev_guardrail_rejects_wrong_city(monkeypatch):
 def test_jev_none_choice_fallback(monkeypatch):
     _reset_diag(monkeypatch)
     tree = """  [0-151] option: Istanbul Airport (IST)
-  [0-152] option: Istanbul, Turkey"""
+  [0-152] option: Istanbul Airport, Turkey"""
     snap = _snap_with(tree)
     legacy_ref = scraper._pick_airport(snap, "IST")
     monkeypatch.setattr(jev_client, "get_client",
@@ -184,7 +187,7 @@ def test_jev_none_choice_fallback(monkeypatch):
 def test_jev_client_not_started_fallback(monkeypatch):
     _reset_diag(monkeypatch)
     tree = """  [0-151] option: Istanbul Airport (IST)
-  [0-152] option: Istanbul, Turkey"""
+  [0-152] option: Istanbul Airport, Turkey"""
     snap = _snap_with(tree)
     legacy_ref = scraper._pick_airport(snap, "IST")
     monkeypatch.setattr(jev_client, "get_client",

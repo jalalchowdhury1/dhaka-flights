@@ -155,28 +155,48 @@ def _pick_element(instructions: str, candidates: list, state: str = "") -> Optio
     return choice
 
 
+def _pick_keywords(code: str) -> list:
+    """The legacy pick keywords, exact ('Bangkok, Thailand', not 'Bangkok')."""
+    return [k.replace("option: ", "") for k in AIRPORT_PICK.get(code, [])] + [code]
+
+
 def _airport_keywords(code: str) -> list:
-    kws = [k.replace("option: ", "").split(",")[0] for k in AIRPORT_PICK.get(code, [])]
-    return kws + [code]
+    """Loose names for checking a filled box / results page ('Bangkok')."""
+    return [k.split(",")[0] for k in _pick_keywords(code)]
+
+
+def _ref_of(line: str) -> str:
+    refs = re.findall(r"\[(\d+-\d+)\]", line)
+    return "@" + refs[-1] if refs else ""
 
 
 def _pick_airport(snap: str, code: str) -> str:
-    """Ref of the dropdown suggestion for `code`. Jev decides when the
-    dropdown offers several options; the legacy keyword match must agree
-    with the choice (guardrail) and is the fallback."""
+    """Ref of the dropdown suggestion for `code`.
+
+    The legacy rule (first option line matching the first keyword) has run
+    nightly for months, so when it is unambiguous it is used as-is. Jev
+    decides only when the keyword filter leaves several options or none,
+    and its choice must still contain one of the keywords (guardrail)."""
     tree = _get_tree(snap)
+    options = [l.strip() for l in tree.splitlines()
+               if "option:" in l.lower() and re.search(r"\[\d+-\d+\]", l)][:40]
+    kws = [k.lower() for k in _pick_keywords(code)]
+    first_kw = [l for l in options if kws[0] in l.lower()]
+    if len(first_kw) == 1:
+        return _ref_of(first_kw[0])
+    keyword_hits = [l for l in options if any(k in l.lower() for k in kws)]
+    if len(keyword_hits) == 1:
+        return _ref_of(keyword_hits[0])
     legacy_ref = _legacy._pick_airport(snap, code)
-    candidates = [l.strip() for l in tree.splitlines()
-                  if "option:" in l.lower() and re.search(r"\[\d+-\d+\]", l)][:40]
-    if len(candidates) >= 2:
-        want = (AIRPORT_PICK.get(code) or [code])[0].replace("option: ", "")
+    if len(options) >= 2:
+        want = _pick_keywords(code)[0]
         instr = (f"Pick the dropdown entry for '{want}' (airport code {code}). "
                  f"If no entry is named exactly that, pick the one that best matches it; "
                  f"never a different city, region or nearby airport.")
-        choice = _pick_element(instr, candidates)
+        choice = _pick_element(instr, options)
         if choice:
-            if any(kw.lower() in choice.lower() for kw in _airport_keywords(code)):
-                return "@" + re.findall(r"\[(\d+-\d+)\]", choice)[-1]
+            if any(k in choice.lower() for k in kws):
+                return _ref_of(choice)
             DIAG["jev_fallbacks"] += 1      # Jev disagreed with the keyword guardrail
     return legacy_ref
 
@@ -259,13 +279,34 @@ def _set_passengers(snap: str) -> str:
     return snap
 
 
-def _fill_airport(snap: str, box_ref: str, label: str, code: str, row: int = 0) -> str:
-    """Type into a 'Where from?'/'Where to?' box and pick the suggestion."""
+def _box_ref(label: str, row: int) -> str:
+    """Fresh ref for the row-th box labelled `label` (refs go stale whenever
+    the form re-renders, so resolve right before clicking)."""
+    refs = _find_refs(_snap(), label)
+    return refs[row] if row < len(refs) else ""
+
+
+def _box_shows(tree: str, label: str, row: int, names: list) -> bool:
+    """Google puts the chosen value either on the combobox line itself
+    ('combobox: Where to? Dhaka DAC') or on the child line below it
+    ('combobox: Where to?' / 'StaticText: Bangkok')."""
+    lines = tree.splitlines()
+    idx = [i for i, l in enumerate(lines) if label.lower() in l.lower()]
+    if row >= len(idx):
+        return False
+    text = " ".join(lines[idx[row]:idx[row] + 3]).lower()
+    return any(n.lower() in text for n in names)
+
+
+def _fill_airport(label: str, code: str, row: int = 0) -> str:
+    """Type into the row-th 'Where from?'/'Where to?' box and pick the suggestion."""
+    box_ref = _box_ref(label, row)
     if not box_ref:
         raise RuntimeError(f"no '{label}' box on the form")
     # click → Escape → click: the first click sometimes only focuses the row
     _run(f"browse click {box_ref}"); time.sleep(0.3)
     _run("browse press Escape"); time.sleep(0.2)
+    box_ref = _box_ref(label, row) or box_ref
     _run(f"browse click {box_ref}"); time.sleep(0.3)
     _run(f"browse type {TYPE_AS.get(code, code)}")
     snap = wait_for(lambda t: bool(_legacy._pick_airport(t, code)), timeout=5.0)
@@ -274,19 +315,15 @@ def _fill_airport(snap: str, box_ref: str, label: str, code: str, row: int = 0) 
         _run(f"browse click {pick}")
     else:
         _run("browse press Enter")
-    kws = [k.lower() for k in _airport_keywords(code)]
-
-    def filled(t: str) -> bool:
-        boxes = _lines_with(t, label)
-        return row < len(boxes) and any(k in boxes[row].lower() for k in kws)
-
-    snap = wait_for(filled, timeout=4.0)
-    if not filled(_get_tree(snap)):
+    names = _airport_keywords(code)
+    snap = wait_for(lambda t: _box_shows(t, label, row, names), timeout=4.0)
+    if not _box_shows(_get_tree(snap), label, row, names):
         print(f"  WARN: '{label}' may not show {code} after the pick")
     return snap
 
 
-def _fill_date(snap: str, box_ref: str, depart: str) -> str:
+def _fill_date(depart: str, row: int = 0) -> str:
+    box_ref = _box_ref("textbox: Departure", row)
     if not box_ref:
         raise RuntimeError("no 'Departure' box on the form")
     _run(f"browse click {box_ref}"); time.sleep(0.3)
@@ -307,15 +344,24 @@ def _search(snap: str) -> None:
         _run("browse press Enter")
 
 
-def _wait_for_results() -> str:
+def _count_prices(snap: str) -> int:
+    return _get_tree(snap).lower().count("us dollars")
+
+
+def _wait_for_results(stable_polls: int = 1, min_wait: float = 0.0) -> str:
     """Poll at 1 s until prices show, then keep the legacy settle rule: the
-    priced-row count must be the same on two snapshots 2 s apart."""
-    deadline = time.time() + RESULT_BUDGET_S
-    last_n, snap = -1, ""
+    priced-row count must be unchanged across `stable_polls` consecutive
+    checks 2 s apart. Multi-city pages render their itineraries in slow
+    bursts, so they use 2 stable polls and a minimum wait (legacy slept a
+    blind 10 s there and still saw half-rendered pages)."""
+    t0 = time.time()
+    deadline = t0 + RESULT_BUDGET_S
+    last_n, stable, snap = -1, 0, ""
     while time.time() < deadline:
         snap = _snap()
-        n = _get_tree(snap).lower().count("us dollars")
-        if n and n == last_n:
+        n = _count_prices(snap)
+        stable = stable + 1 if (n and n == last_n) else 0
+        if stable >= stable_polls and time.time() - t0 >= min_wait:
             return snap
         last_n = n
         time.sleep(SETTLE_S if n else 1.0)
@@ -323,16 +369,24 @@ def _wait_for_results() -> str:
     return snap
 
 
-def _expand_more(snap: str) -> str:
+def _expand_more(snap: str, stable_polls: int = 1) -> str:
     more_ref = _find_ref(snap, "View more flights")
     if not more_ref:
         return snap
-    before = _get_tree(snap).lower().count("us dollars")
+    before = _count_prices(snap)
     _run(f"browse click {more_ref}")
     snap = wait_for(lambda t: t.lower().count("us dollars") > before, timeout=4.0, step=0.5,
                     count_timeout=False)
-    time.sleep(0.5)                       # let the last expanded rows land
-    return _snap()
+    last_n, stable = _count_prices(snap), 0
+    for _ in range(4):                    # expanded rows land in bursts too
+        time.sleep(1.0)
+        snap = _snap()
+        n = _count_prices(snap)
+        stable = stable + 1 if n == last_n else 0
+        last_n = n
+        if stable >= stable_polls:
+            break
+    return snap
 
 
 def _verify_fill(tree: str, legs: list) -> bool:
@@ -377,11 +431,11 @@ def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
     print("  Setting passengers: 2 adults + 1 child...")
     snap = _set_passengers(snap)
     print(f"  Filling origin: {origin}...")
-    snap = _fill_airport(snap, _find_ref(snap, "Where from"), "Where from?", origin)
+    _fill_airport("Where from?", origin)
     print(f"  Filling destination: {dest}...")
-    snap = _fill_airport(snap, _find_ref(snap, "Where to"), "Where to?", dest)
+    _fill_airport("Where to?", dest)
     print(f"  Filling departure date: {depart}...")
-    snap = _fill_date(snap, _find_ref(snap, "textbox: Departure"), depart)
+    snap = _fill_date(depart)
     print("  Searching...")
     _search(snap)
     snap = _wait_for_results()
@@ -436,22 +490,19 @@ def _scrape_multicity_jev(legs: list, parse_fn, tag: str) -> list:
         snap = wait_for(lambda t: len(_find_refs(t, "Where from")) > have, timeout=3.0)
         froms = _find_refs(snap, "Where from")
 
+    if len(_find_refs(snap, "Where from")) < len(legs):
+        raise RuntimeError("multi-city form has too few flight rows")
     for i, (o, d, dep) in enumerate(legs):
         print(f"  Row {i + 1}: {o}→{d} {dep}")
-        froms = _find_refs(snap, "Where from")
-        if i >= len(froms):
-            raise RuntimeError("multi-city form has too few flight rows")
-        snap = _fill_airport(snap, froms[i], "Where from?", o, row=i)
-        tos = _find_refs(snap, "Where to")
-        snap = _fill_airport(snap, tos[i] if i < len(tos) else "", "Where to?", d, row=i)
-        deps = _find_refs(snap, "textbox: Departure")
-        snap = _fill_date(snap, deps[i] if i < len(deps) else "", dep)
+        _fill_airport("Where from?", o, row=i)
+        _fill_airport("Where to?", d, row=i)
+        snap = _fill_date(dep, row=i)
 
     print("  Searching...")
     _search(snap)
-    snap = _wait_for_results()
+    snap = _wait_for_results(stable_polls=2, min_wait=8.0)
     result_url = _url()
-    snap = _expand_more(snap)
+    snap = _expand_more(snap, stable_polls=2)
     tree = _get_tree(snap)
 
     results = parse_fn(tree, result_url)
