@@ -199,7 +199,7 @@ from. Rules now:
    00:00, since the flight run is always active then — silently, with exit 0.
 8. **Own job, own file, own slot** (`com.jalal.dhaka-hotels`, 5:00 AM): the
    hotel searches (19 since 2026-08-22) would push the flight run past its 25-min budget and into
-   the 35-min overrun guard. It writes only `hotel_rates.json` (never
+   the 45-min overrun guard. It writes only `hotel_rates.json` (never
    data.json, so no race with publish.py), pulls --rebase before pushing, and
    stands down entirely if a flight run is still active. Delays between
    properties are jittered (4–11 s), not a fixed cadence.
@@ -701,7 +701,7 @@ protection story when buying in September.
 - `scraper.py` — browse-CLI form driving + parsing (one-way & multi-city); LEGS,
   STOPOVER_SEARCHES (2 Ticket ① variants), TICKET2_SEARCHES + ORDER_ROUTES
   (+ retired configs, kept). ⏱ Overrun guard (2026-08-02): past
-  `RUN_DEADLINE_MIN` (35 min from `begin_run()`), `scrape_bali_watch` skips
+  `RUN_DEADLINE_MIN` (45 min from `begin_run()`; was 35 until 2026-09-18), `scrape_bali_watch` skips
   entirely and `scrape_all` drops its remaining one-ways — skips land in
   `DIAG["deadline_skips"]`; Ticket ①/② multi-city searches are never skipped.
   Interactive use has no deadline (`begin_run` is opt-in)

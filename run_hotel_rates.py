@@ -3,7 +3,7 @@
 
 Runs as its OWN launchd job, deliberately NOT inside run_daily.py: the flight
 run is budgeted at 25 minutes (AGENTS.md §1 speed rules) and eight hotel
-searches would push it past that and into the 35-minute overrun guard. This
+searches would push it past that and into the 45-minute overrun guard. This
 job runs after every flight slot has finished.
 
 It writes site/hotel_rates.json only — never data.json — so it can never race
