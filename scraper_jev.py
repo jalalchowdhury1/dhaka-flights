@@ -234,7 +234,9 @@ def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
         ow_ref = _find_ref(snap, "option:", "One way")
         if ow_ref:
             _run(f"browse click {ow_ref}")
-            wait_for(lambda t: "Change ticket type. One way" in t, timeout=3.0, step=0.25)
+            _run("browse press Escape")  # Close the dropdown
+            time.sleep(0.5)
+            snap = _snap()
     
     # Set passengers
     print("  Setting passengers: 2 adults + 1 child...")
@@ -438,6 +440,8 @@ def _scrape_multicity(legs: list, parse_fn, tag: str) -> list:
             mc_ref = _find_ref(snap, "option:", "Multi-city")
             if mc_ref:
                 _run(f"browse click {mc_ref}")
+            _run("browse press Escape")  # Close the dropdown
+            time.sleep(0.5)
             snap = wait_for(lambda t: "Where from" in t.lower() and "Where to" in t.lower(), timeout=5.0, step=0.25)
         
         # Set passengers
