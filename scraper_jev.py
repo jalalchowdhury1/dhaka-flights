@@ -23,6 +23,7 @@ DIAG = {
     "aborted_early": False,
     "deadline_skips": [],
     "last_stderr": "",
+    "wait_timeouts": 0,
     "jev_calls": 0,
     "jev_ms": 0,
     "jev_fallbacks": 0,
