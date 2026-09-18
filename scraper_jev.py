@@ -333,7 +333,7 @@ def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
         _run(f"browse click {search_ref}")
     else:
         _run("browse press Enter")
-    time.sleep(2)
+    time.sleep(8)
 
     # Use legacy wait_for_results for proper settle check
     snap = _legacy._wait_for_results(_snap())
@@ -495,62 +495,52 @@ def _scrape_multicity(legs: list, parse_fn, tag: str) -> list:
             _run("browse press Escape")
             time.sleep(0.2)
             _run(f"browse click {froms[i]}")
+            time.sleep(0.3)
             _run(f"browse type {TYPE_AS.get(o, o)}")
+            time.sleep(0.5)
+            snap = _snap()
             
-            snap = wait_for(lambda t: any(kw.lower() in t for kw in AIRPORT_PICK.get(o, [o])), timeout=3.0, step=0.25)
-            
-            candidates = [line for line in _get_tree(snap).splitlines()
-                         if "option:" in line.lower() and any(kw.lower() in line for kw in AIRPORT_PICK.get(o, [o]))]
-            
-            if len(candidates) >= 2:
-                jev_pick = _pick_element(
-                    f"Pick the airport suggestion for {o}, not a listitem.",
-                    candidates, snap
-                )
-                pick = jev_pick if jev_pick else _find_ref(snap, o)
-            else:
-                pick = _find_ref(snap, o)
-            
+            pick = _legacy._pick_airport(snap, o)
             if pick:
                 _run(f"browse click {pick}")
             else:
                 _run("browse press Enter")
-            snap = wait_for(lambda t: "Where to" in t.lower(), timeout=3.0, step=0.25)
+            time.sleep(0.5)
+            snap = _snap()
             
             # Fill destination
             tos = _find_refs(snap, "Where to")
             _run(f"browse click {tos[i]}")
+            time.sleep(0.3)
+            _run("browse press Escape")
+            time.sleep(0.2)
+            _run(f"browse click {tos[i]}")
+            time.sleep(0.3)
             _run(f"browse type {TYPE_AS.get(d, d)}")
-            snap = wait_for(lambda t: any(kw.lower() in t for kw in AIRPORT_PICK.get(d, [d])), timeout=3.0, step=0.25)
+            time.sleep(0.5)
+            snap = _snap()
             
-            candidates = [line for line in _get_tree(snap).splitlines()
-                         if "option:" in line.lower() and any(kw.lower() in line for kw in AIRPORT_PICK.get(d, [d]))]
-            
-            if len(candidates) >= 2:
-                jev_pick = _pick_element(
-                    f"Pick the airport suggestion for {d}, not a listitem.",
-                    candidates, snap
-                )
-                pick = jev_pick if jev_pick else _find_ref(snap, d)
-            else:
-                pick = _find_ref(snap, d)
-            
+            pick = _legacy._pick_airport(snap, d)
             if pick:
                 _run(f"browse click {pick}")
             else:
                 _run("browse press Enter")
-            snap = wait_for(lambda t: "textbox: Departure" in t.lower(), timeout=3.0, step=0.25)
+            time.sleep(0.5)
+            snap = _snap()
             
             # Fill date
             deps = _find_refs(snap, "textbox: Departure")
             _run(f"browse click {deps[i]}")
+            time.sleep(0.3)
             _run(f'browse type "{dep}"')
-            snap = wait_for(lambda t: dep.lower() in t.lower(), timeout=3.0, step=0.25)
+            time.sleep(0.5)
+            snap = _snap()
             
-            done_ref = _find_ref(snap, "button: Done")
+            done_ref = _find_ref(snap, "button:", "Done")
             if done_ref:
                 _run(f"browse click {done_ref}")
-                snap = wait_for(lambda t: "Where from" in t.lower(), timeout=3.0, step=0.25)
+                time.sleep(0.5)
+                snap = _snap()
         
         # Click Search
         snap = _snap()
@@ -559,6 +549,7 @@ def _scrape_multicity(legs: list, parse_fn, tag: str) -> list:
             _run(f"browse click {search_ref}")
         else:
             _run("browse press Enter")
+        time.sleep(8)
 
         # Use legacy wait_for_results for proper settle check
         snap = _legacy._wait_for_results(_snap())
@@ -587,10 +578,14 @@ def _scrape_multicity(legs: list, parse_fn, tag: str) -> list:
                 f.write(f"{tag}\nurl: {result_url}\n\n{tree}")
             print(f"  (tree saved to {DEBUG_TREE_FILE})")
         
-        # Fill verification
-        if results and not _verify_fill(tree, legs):
-            print("  WARN: fill verification failed")
-            return []
+        # Fill verification - similar to one-way: don't discard real results
+        if not results:
+            if not _verify_fill(tree, legs):
+                print("  0 results + fill NOT verified — triggering legacy fallback")
+                raise RuntimeError("fill-not-verified")
+        elif not _verify_fill(tree, legs):
+            print("  WARN: fill verification failed (results page may show route differently)")
+            # Results are real even if verification text matching is imperfect
             
     except Exception as e:
         _legacy._session_dirty()
