@@ -269,23 +269,12 @@ def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
         _run("browse press Escape")
         time.sleep(0.2)
         _run(f"browse click {origin_ref}")
+        time.sleep(0.3)
         _run(f"browse type {TYPE_AS.get(origin, origin)}")
+        time.sleep(1.0)
+        snap = _snap()
         
-        snap = wait_for(lambda t: any(kw.lower() in t for kw in AIRPORT_PICK.get(origin, [origin])), timeout=3.0, step=0.25)
-        
-        # Jev pick for ambiguous airport matches
-        candidates = [line for line in _get_tree(snap).splitlines()
-                     if "option:" in line.lower() and any(kw.lower() in line for kw in AIRPORT_PICK.get(origin, [origin]))]
-        
-        if len(candidates) >= 2:
-            jev_pick = _pick_element(
-                f"Pick the airport suggestion for {origin}, not a listitem.",
-                candidates, snap
-            )
-            pick = jev_pick if jev_pick else _find_ref(snap, origin)
-        else:
-            pick = _find_ref(snap, origin)
-        
+        pick = _legacy._pick_airport(snap, origin)
         if pick:
             _run(f"browse click {pick}")
         else:
@@ -299,27 +288,21 @@ def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
     if dest_ref:
         _run(f"browse click {dest_ref}")
         time.sleep(0.3)
+        _run("browse press Escape")
+        time.sleep(0.2)
+        _run(f"browse click {dest_ref}")
+        time.sleep(0.3)
         _run(f"browse type {TYPE_AS.get(dest, dest)}")
-        time.sleep(0.5)
-        snap = wait_for(lambda t: any(kw.lower() in t for kw in AIRPORT_PICK.get(dest, [dest])), timeout=5.0, step=0.25)
+        time.sleep(1.0)
+        snap = _snap()
         
-        candidates = [line for line in _get_tree(snap).splitlines()
-                     if "option:" in line.lower() and any(kw.lower() in line for kw in AIRPORT_PICK.get(dest, [dest]))]
-        
-        if len(candidates) >= 2:
-            jev_pick = _pick_element(
-                f"Pick the airport suggestion for {dest}, not a listitem.",
-                candidates, snap
-            )
-            pick = jev_pick if jev_pick else _find_ref(snap, dest)
-        else:
-            pick = _find_ref(snap, dest)
-        
+        pick = _legacy._pick_airport(snap, dest)
         if pick:
             _run(f"browse click {pick}")
         else:
             _run("browse press Enter")
-        snap = wait_for(lambda t: "textbox: Departure" in t.lower(), timeout=3.0, step=0.25)
+        time.sleep(0.5)
+        snap = _snap()
     
     # Fill date
     print(f"  Filling departure date: {depart}...")
