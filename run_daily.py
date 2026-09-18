@@ -35,7 +35,7 @@ scrape_sg_tickets_all = scraper.scrape_sg_tickets_all
 scrape_bali_watch = scraper.scrape_bali_watch
 begin_run = scraper.begin_run
 end_session = scraper.end_session
-DIAG = scraper.DIAG
+SCRAPER_DIAG = scraper.DIAG      # main() folds its deadline_skips into the warnings
 
 from sheet_writer import write_to_sheet, multicity_as_rows
 from notify_telegram import notify_cheapest
@@ -88,7 +88,7 @@ def _fold_warnings(payload, findings, mark, log_prefix):
 
 def main():
     print(f"engine: {SCRAPER}")
-    
+
     # ⏰ Day-of reminders go out FIRST and on their own — before the scrape can
     # fail or the already-ran stamp can short-circuit. Idempotent (stamped).
     try:
@@ -115,7 +115,7 @@ def main():
     # night hurts the benchmark before it hurts the product.
     bali_t1, bali_fwd, bali_rev = scrape_bali_watch()
     end_session()                             # one browser session per run
-    
+
     if SCRAPER_ENGINE == "jev":  # cleanup jev client
         jev_client.stop()
 
