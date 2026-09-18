@@ -52,6 +52,8 @@ DEBUG_TREE_FILE = _legacy.DEBUG_TREE_FILE
 FLIGHTS_URL = "https://www.google.com/travel/flights?hl=en&curr=USD&gl=us"
 JEV_P_FLOOR = 0.6
 SETTLE_S = _legacy.SETTLE_POLL_SECONDS          # 2 s, the $18,913 lesson
+FULL_LIST_ROWS = 10        # priced rows at which a one-way list counts as already expanded
+ONEWAY_READY_CAP_S = 14.0  # wait this long for the expander before taking the page as is
 RESULT_BUDGET_S = _legacy.RESULT_WAIT_SECONDS + 8   # legacy: 8 s sleep + 40 s poll
 
 _run_start = None
@@ -348,12 +350,24 @@ def _count_prices(snap: str) -> int:
     return _get_tree(snap).lower().count("us dollars")
 
 
-def _wait_for_results(stable_polls: int = 1, min_wait: float = 0.0) -> str:
+def _has_more_button_or_full(snap: str) -> bool:
+    """One-way page is 'whole' once the expander is showing, or the list is
+    already long. Top flights alone (5-7 rows) look settled but hide the cheap
+    ones behind 'View more flights' (A/B 18 Sep: a 7-flight read missed $746)."""
+    return bool(_find_ref(snap, "View more flights")) or _count_prices(snap) >= FULL_LIST_ROWS
+
+
+def _wait_for_results(stable_polls: int = 1, min_wait: float = 0.0,
+                      ready=None, ready_cap_s: float = 0.0) -> str:
     """Poll at 1 s until prices show, then keep the legacy settle rule: the
     priced-row count must be unchanged across `stable_polls` consecutive
     checks 2 s apart. Multi-city pages render their itineraries in slow
     bursts, so they use 2 stable polls and a minimum wait (legacy slept a
-    blind 10 s there and still saw half-rendered pages)."""
+    blind 10 s there and still saw half-rendered pages).
+
+    `ready(snap)` is an extra condition that must also hold before we settle,
+    but only until `ready_cap_s` seconds have passed (then the page is taken
+    as it is - some result lists genuinely have no expander)."""
     t0 = time.time()
     deadline = t0 + RESULT_BUDGET_S
     last_n, stable, snap = -1, 0, ""
@@ -362,7 +376,8 @@ def _wait_for_results(stable_polls: int = 1, min_wait: float = 0.0) -> str:
         n = _count_prices(snap)
         stable = stable + 1 if (n and n == last_n) else 0
         if stable >= stable_polls and time.time() - t0 >= min_wait:
-            return snap
+            if ready is None or ready(snap) or time.time() - t0 >= ready_cap_s:
+                return snap
         last_n = n
         time.sleep(SETTLE_S if n else 1.0)
     DIAG["wait_timeouts"] += 1
@@ -438,13 +453,16 @@ def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
     snap = _fill_date(depart)
     print("  Searching...")
     _search(snap)
-    snap = _wait_for_results()
+    snap = _wait_for_results(stable_polls=2, ready=_has_more_button_or_full,
+                             ready_cap_s=ONEWAY_READY_CAP_S)
     result_url = _url()
-    snap = _expand_more(snap)
+    snap = _expand_more(snap, stable_polls=2)
     tree = _get_tree(snap)
 
     results = _legacy._parse_results(tree, origin, dest, result_url, depart)
     print(f"  Parsed {len(results)} flights")
+    if 0 < len(results) < 8:
+        _save_debug(f"THIN one-way {origin}->{dest} {depart}: {len(results)} flights", result_url, tree)
     verified = _verify_fill(tree, [(origin, dest, depart)])
     if not results:
         _save_debug(f"route: {origin}->{dest} {depart} (one-way)", result_url, tree)
