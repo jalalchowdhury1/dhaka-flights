@@ -12,3 +12,5 @@ debug_last_hotel.txt
 .reminders_sent
 .vercel
 bench/
+profile_legacy.py
+save_fixtures.py
