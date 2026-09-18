@@ -290,15 +290,18 @@ def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
             _run(f"browse click {pick}")
         else:
             _run("browse press Enter")
-        snap = wait_for(lambda t: "Where to" in t.lower(), timeout=3.0, step=0.25)
+        time.sleep(0.5)
+        snap = _snap()
     
     # Fill destination
     print(f"  Filling destination: {dest}...")
     dest_ref = _find_ref(snap, "Where to")
     if dest_ref:
         _run(f"browse click {dest_ref}")
+        time.sleep(0.3)
         _run(f"browse type {TYPE_AS.get(dest, dest)}")
-        snap = wait_for(lambda t: any(kw.lower() in t for kw in AIRPORT_PICK.get(dest, [dest])), timeout=3.0, step=0.25)
+        time.sleep(0.5)
+        snap = wait_for(lambda t: any(kw.lower() in t for kw in AIRPORT_PICK.get(dest, [dest])), timeout=5.0, step=0.25)
         
         candidates = [line for line in _get_tree(snap).splitlines()
                      if "option:" in line.lower() and any(kw.lower() in line for kw in AIRPORT_PICK.get(dest, [dest]))]
@@ -323,7 +326,9 @@ def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
     dep_ref = _find_ref(snap, "textbox:", "Departure")
     if dep_ref:
         _run(f"browse click {dep_ref}")
+        time.sleep(0.3)
         _run(f'browse type "{depart}"')
+        time.sleep(0.5)
         snap = wait_for(lambda t: depart.lower() in t.lower(), timeout=3.0, step=0.25)
         
         done_ref = _find_ref(snap, "button:", "Done")
