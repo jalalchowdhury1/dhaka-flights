@@ -334,7 +334,7 @@ def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
         done_ref = _find_ref(snap, "button:", "Done")
         if done_ref:
             _run(f"browse click {done_ref}")
-            snap = wait_for(lambda t: "Search" in t, timeout=3.0, step=0.25)
+            snap = wait_for(lambda t: "button: Search" in t.lower() or "button: Explore destinations" not in t.lower(), timeout=5.0, step=0.25)
     
     # Search
     print("  Searching...")
