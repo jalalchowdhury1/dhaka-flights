@@ -1,36 +1,34 @@
-# ROLLBACK — three ways to revert the jev-fast changes
+# ROLLBACK — going back to the legacy engine
 
-## 1. Env var (fastest, preferred)
+Since 18 Sep 2026 the nightly runs the **jev engine** (`scraper_jev.py`) by default.
+The legacy engine (`scraper.py`, unchanged) is the backup — and the jev engine already
+falls back to it per search when anything goes wrong.
 
-Unset `SCRAPER_ENGINE` on the nightly machine:
+## 1. Force the legacy engine (fastest, preferred)
 
-```bash
-unset SCRAPER_ENGINE
-```
-
-Or edit the launchd plist to remove any environment setting:
+In `run_daily.sh`, uncomment the one line:
 
 ```bash
-# Nightly runs SCRAPER_ENGINE=unset = legacy engine
-# Nothing Jev-related executes
+export SCRAPER_ENGINE=legacy
 ```
 
-Nothing to do — the default is legacy engine. This is the normal nightly behavior.
+Manual / catch-up runs: `SCRAPER_ENGINE=legacy python3 run_daily.py`.
+`run_daily.py` prints `engine: legacy` (or `engine: jev`) at the top of every run.
 
-## 2. Per search (graceful degradation)
+## 2. Jev without the AI (keep the new engine, drop the model)
 
-Delete `AI_GATEWAY_API_KEY` from `.env` for one run.
+Delete `AI_GATEWAY_API_KEY` from `.env`. `jev_client` returns `(None, 0)`, the engine counts a
+`jev_fallback` and uses the deterministic/legacy airport picks. This is what happens on Jalal's
+airports anyway — Jev is called 0-1 times per run.
 
-When `jev_client.pick()` cannot call Jev (key missing, API down, timeout), it returns `(None, 0)` and increments `DIAG["jev_fallbacks"]`. The scraper_jev engine falls back to legacy `_find_ref` substring matching and keeps working — just without the speed benefit and potential Jev picks.
+## 3. Automatic fallbacks already in place
 
-## 3. Git
+- `run_daily.py`: if `scraper_jev` cannot be imported, it warns and uses the legacy engine.
+- Per search: any jev-engine failure re-runs that one search through the legacy engine
+  (`DIAG["engine_fallbacks"]`).
 
-`main` never moved; the whole feature is branch `jev-fast` in a separate worktree. Discard everything with:
+## 4. Git
 
-```bash
-# From any terminal:
-git worktree remove --force /Users/jalalchowdhury/PycharmProjects/dhaka-flights-jev
-git branch -D jev-fast
-```
-
-(Jalal or Claude runs this, not you.)
+The whole change is the commit range `81754a4..b5c1e83` plus the default-engine commit on top.
+`git revert` that range, or `git checkout 81754a4 -- run_daily.py` (the last pre-jev version).
+Jalal or Claude runs this, not a nightly job.

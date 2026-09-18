@@ -704,6 +704,13 @@ protection story when buying in September.
   `RUN_DEADLINE_MIN` (45 min from `begin_run()`; was 35 until 2026-09-18), `scrape_bali_watch` skips
   entirely and `scrape_all` drops its remaining one-ways — skips land in
   `DIAG["deadline_skips"]`; Ticket ①/② multi-city searches are never skipped.
+  🚀 **Engines (2026-09-18):** the nightly runs `scraper_jev.py` by default (readiness polling
+  instead of fixed sleeps, deterministic airport picks, Jev/AI only for ambiguous dropdowns;
+  ~30-40 % faster per search, full run ~28-33 min). `scraper.py` is the untouched backup:
+  `SCRAPER_ENGINE=legacy` (see `run_daily.sh`, `ROLLBACK.md`) forces it, and the jev engine falls
+  back to it per search on any failure. Needs `AI_GATEWAY_API_KEY` in `.env` (missing = Jev off,
+  still works) and `npm ci` in `jev/`. Evidence + limits:
+  `docs/superpowers/plans/2026-09-18-jev-fast-RESULTS.md`.
   Interactive use has no deadline (`begin_run` is opt-in)
 - `combo.py` — trip rules, `ORDERS`, `order_trip`, `main_trip`, `budget_trip`,
   `ticket1_options`, `ticket2_options`, `sin_night_flight_totals` (+ retired

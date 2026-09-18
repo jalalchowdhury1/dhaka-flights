@@ -14,6 +14,9 @@ export PATH="/Users/jalalchowdhury/.nvm/versions/node/v24.15.0/bin:/usr/local/bi
 
 cd "/Users/jalalchowdhury/PycharmProjects/Dhaka flights"
 
+# Engine: jev is the default (run_daily.py). Backup = the old engine: uncomment this line.
+# export SCRAPER_ENGINE=legacy
+
 # Policy: never START a run after 5:30 AM — Jalal is awake and working. Catches
 # launchd wake-replays of a missed midnight/2:00 slot, which would otherwise
 # fire the moment the Mac wakes and land mid-workday. (run_daily.py's own

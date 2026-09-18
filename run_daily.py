@@ -17,16 +17,21 @@ from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
-# Engine selection: legacy (default) or jev
-SCRAPER_ENGINE = os.environ.get("SCRAPER_ENGINE", "")
-if SCRAPER_ENGINE == "jev":
-    import scraper_jev as scraper
-    jev_client = __import__("jev_client")
-    jev_client.start()
-    SCRAPER = "jev"
-else:
+# Engine selection (18 Sep 2026): jev is the default; SCRAPER_ENGINE=legacy forces
+# the old engine (the backup — see ROLLBACK.md). If the jev engine cannot even
+# load, fall back to legacy instead of failing the whole night.
+SCRAPER_ENGINE = os.environ.get("SCRAPER_ENGINE", "jev")
+SCRAPER = "legacy"
+if SCRAPER_ENGINE != "legacy":
+    try:
+        import scraper_jev as scraper
+        import jev_client
+        jev_client.start()          # False = no key/node: jev still runs, legacy picks only
+        SCRAPER = "jev"
+    except Exception as _e:
+        print(f"WARN: jev engine unavailable ({_e}) — using the legacy engine")
+if SCRAPER == "legacy":
     import scraper
-    SCRAPER = "legacy"
 
 # Import scraping functions from selected scraper
 scrape_all = scraper.scrape_all
@@ -116,7 +121,7 @@ def main():
     bali_t1, bali_fwd, bali_rev = scrape_bali_watch()
     end_session()                             # one browser session per run
 
-    if SCRAPER_ENGINE == "jev":  # cleanup jev client
+    if SCRAPER == "jev":  # cleanup jev client
         jev_client.stop()
 
     if not (tickets1 or sg_tickets or flights):
