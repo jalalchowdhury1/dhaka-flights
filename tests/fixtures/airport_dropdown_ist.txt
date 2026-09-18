@@ -1,0 +1,11 @@
+[0-100] RootWebArea: Google Flights
+  [0-500] html
+    [0-100] body
+      [0-101] div
+        [0-150] combobox: Where from?
+          [0-151] option: Istanbul Airport (IST)
+          [0-152] option: Istanbul, Turkey
+          [0-153] listitem: IST appears in other contexts
+          [0-154] listitem: This is NOT Istanbul Airport
+          [0-155] button: Cancel
+          [0-156] button: Done

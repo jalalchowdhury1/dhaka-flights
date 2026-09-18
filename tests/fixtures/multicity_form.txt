@@ -1,0 +1,18 @@
+[0-1] RootWebArea: Google Flights
+  [0-2] html
+    [0-3] body
+      [0-4] div
+        [0-5] navigation
+          [0-6] heading: Flights
+        [0-7] main
+          [0-8] search: Multi-city search
+            [0-9] section
+              [0-10] group: Flight 1
+                [0-11] combobox: Where from?
+                [0-12] combobox: Where to?
+                [0-13] textbox: Departure
+              [0-14] button: Add flight
+              [0-15] combobox: Change ticket type
+                [0-16] option: Round trip
+                [0-17] option: One way
+                [0-18] option: Multi-city

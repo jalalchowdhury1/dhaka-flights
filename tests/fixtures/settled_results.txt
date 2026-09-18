@@ -1,0 +1,18 @@
+[0-1] RootWebArea: Google Flights
+  [0-2] html
+    [0-3] body
+      [0-4] main
+        [0-5] section
+          [0-6] list
+            [0-7] link: From 542 US dollars. Nonstop flight with Emirates.
+              Leaves Hazrat Shahjalal International Airport at 10:40 PM on
+              Monday, February 1 and arrives at Singapore Changi Airport at
+              6:15 AM on Tuesday, February 2. Total duration 6 hr 45 min.
+            [0-8] link: From 689 US dollars. 1 stop flight with Qatar Airways.
+              Leaves Hazrat Shahjalal International Airport at 8:30 PM on
+              Monday, February 1 and arrives at Singapore Changi Airport at
+              2:45 PM on Tuesday, February 2. Total duration 10 hr 15 min.
+            [0-9] link: From 723 US dollars. Nonstop flight with Singapore Airlines.
+              Leaves Hazrat Shahjalal International Airport at 6:00 PM on
+              Monday, February 1 and arrives at Singapore Changi Airport at
+              10:45 PM on Monday, February 1. Total duration 2 hr 45 min.

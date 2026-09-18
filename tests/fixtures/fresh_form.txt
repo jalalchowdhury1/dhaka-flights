@@ -1,0 +1,52 @@
+[0-70] RootWebArea: Find Cheap Flights Worldwide & Book Your Ticket - Google Flights
+  [0-387] scrollable, html
+    [0-71] body
+      [0-73] banner
+        [0-565] div
+          [0-566] div
+            [0-76] button: Main menu
+              [0-77] image
+            [0-79] link: Google
+          [0-579] div
+            [0-581] div
+              [0-80] div
+                [0-81] button: Skip to main content
+                [0-84] button: Accessibility feedback
+              [0-88] navigation
+                [0-89] link: Explore
+                  [0-91] image
+                [0-93] link: Flights
+                  [0-95] image
+                [0-97] link: Hotels
+                  [0-99] image
+                [0-101] link: Vacation rentals
+                  [0-103] image
+            [0-106] button: Change appearance
+              [0-108] image
+          [0-661] div
+            [0-111] button: Google apps
+            [0-114] link: Sign in
+      [0-805] div
+        [0-808] heading: Flights
+        [0-809] div
+          [0-135] search: Flight
+            [0-811] div
+              [0-817] combobox: Change ticket type. Round trip
+              [0-139] button: 1 passenger, change number of passengers.
+              [0-1044] combobox: Change seating class. Economy
+            [0-1105] div
+              [0-1106] div
+                [0-1111] div
+                  [0-58] combobox: Where from?
+                    [0-148] StaticText: Providence
+                  [0-150] image
+                  [0-151] button: Swap origin and destination.
+                  [0-1188] div
+                    [0-60] combobox: Where to?
+                    [0-155] image
+                [0-1251] div
+                  [0-1253] div
+                    [0-156] image
+                    [0-62] textbox: Departure
+                    [0-63] textbox: Return
+            [0-165] main
