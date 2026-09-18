@@ -17,8 +17,26 @@ from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
-from scraper import (scrape_all, scrape_tickets_all, scrape_sg_tickets_all,
-                     scrape_bali_watch)
+# Engine selection: legacy (default) or jev
+SCRAPER_ENGINE = os.environ.get("SCRAPER_ENGINE", "")
+if SCRAPER_ENGINE == "jev":
+    import scraper_jev as scraper
+    jev_client = __import__("jev_client")
+    jev_client.start()
+    SCRAPER = "jev"
+else:
+    import scraper
+    SCRAPER = "legacy"
+
+# Import scraping functions from selected scraper
+scrape_all = scraper.scrape_all
+scrape_tickets_all = scraper.scrape_tickets_all
+scrape_sg_tickets_all = scraper.scrape_sg_tickets_all
+scrape_bali_watch = scraper.scrape_bali_watch
+begin_run = scraper.begin_run
+end_session = scraper.end_session
+DIAG = scraper.DIAG
+
 from sheet_writer import write_to_sheet, multicity_as_rows
 from notify_telegram import notify_cheapest
 import publish
@@ -69,6 +87,8 @@ def _fold_warnings(payload, findings, mark, log_prefix):
 
 
 def main():
+    print(f"engine: {SCRAPER}")
+    
     # ⏰ Day-of reminders go out FIRST and on their own — before the scrape can
     # fail or the already-ran stamp can short-circuit. Idempotent (stamped).
     try:
@@ -84,7 +104,6 @@ def main():
 
     print("=== Daily flight search starting ===")
 
-    from scraper import begin_run, DIAG as SCRAPER_DIAG
     begin_run()
 
     # Ticket ① goes FIRST: it's the one search nothing else can substitute for,
@@ -95,8 +114,10 @@ def main():
     # 🌴 comparison watch: the retired Bali trip, scraped LAST so a throttled
     # night hurts the benchmark before it hurts the product.
     bali_t1, bali_fwd, bali_rev = scrape_bali_watch()
-    from scraper import end_session
     end_session()                             # one browser session per run
+    
+    if SCRAPER_ENGINE == "jev":  # cleanup jev client
+        jev_client.stop()
 
     if not (tickets1 or sg_tickets or flights):
         from notify_telegram import send_message
