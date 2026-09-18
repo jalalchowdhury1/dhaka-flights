@@ -12,5 +12,6 @@ debug_last_hotel.txt
 .reminders_sent
 .vercel
 bench/
+jev/node_modules/
 profile_legacy.py
 save_fixtures.py

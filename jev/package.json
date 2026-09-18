@@ -1,0 +1,9 @@
+{
+  "name": "jev-server",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "ai": "^7.0.105",
+    "@ai-sdk/gateway": "^4.0.85"
+  }
+}
