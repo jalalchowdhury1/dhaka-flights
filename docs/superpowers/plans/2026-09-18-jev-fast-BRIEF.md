@@ -111,7 +111,21 @@ fragile.
 12. **Do not build URL-direct searches** (encoding the search into the
     Google Flights `tfs` URL parameter). Out of scope for this brief; noted
     for a later one.
-13. **Don't ask Jalal questions mid-task and don't send Telegram.** If you
+13. **You NEVER run a `browse` command, and never touch the browser or the
+    daemon in any way.** (Added 2026-09-18 09:45 after you wedged the shared
+    daemon for everyone.) Proven fact: a `browse` daemon started from inside
+    your sandbox cannot launch Chrome and then hangs every caller for 30 s,
+    including the nightly run. So, from your shell: no `browse stop/start/env/
+    open/snapshot`, no `--ws 9223`, no `--auto-connect`, no `curl` to port
+    9223 or any DevTools endpoint, no Browserbase, no `playwright install`,
+    no wrapper scripts around `browse`. Ignore the `--ws 9223` rule in
+    `~/.dsh/AGENTS.md` for this repo — it is for other tasks. Delete
+    `browse_wrapper.sh` if it exists.
+    **Live runs happen through the bench queue instead** (see §4 "How live
+    runs actually execute"). Your job is the code and the offline tests; the
+    runner executes the live benches outside the sandbox and you read the
+    results back from files.
+14. **Don't ask Jalal questions mid-task and don't send Telegram.** If you
     are blocked, write the blocker under "BLOCKERS" in `RESULTS.md` (§5),
     commit, and stop.
 
@@ -207,6 +221,28 @@ bench.py --engine legacy|jev --set smoke|full [--repeat N]
   seconds.
 - `--engine legacy` runs `scraper` untouched, so it doubles as the rollback
   drill.
+
+### How live runs actually execute (the bench queue)
+
+`bench-runner.sh` runs in a tmux session OUTSIDE your sandbox (Claude/Jalal
+start it; if `bench/queue/` requests sit unanswered for > 10 min, write that
+under BLOCKERS and stop — the runner is down). You never run `bench.py` or
+`profile_legacy.py` directly. Instead:
+
+1. Write ONE line into `bench/queue/<short-name>.req`, one of:
+   `bench.py --engine legacy --set smoke`, `bench.py --engine jev --set smoke --repeat 3`,
+   `bench.py --engine jev --set full`, `bench.py --engine jev --set smoke --no-key`,
+   `profile_legacy.py`. Anything else is refused.
+2. Poll (every 30 s, `ls bench/queue/`) until `<short-name>.done` appears.
+   A smoke run takes ~3–5 min, a full run 12–35 min. Do not queue a second
+   request while one is `.running`.
+3. Read `bench/queue/<short-name>.log` (full stdout) and the JSON that
+   `bench.py` wrote under `bench/`. Paste from those files into RESULTS.md.
+
+`bench.py --no-key` must remove `AI_GATEWAY_API_KEY` from the environment it
+gives the Jev server (gate G7). `profile_legacy.py` is your Phase-1 profiler;
+it must load `.env` itself like `run_daily.py` does and must not import
+anything that starts a browser at import time.
 
 ### Gates — ALL must be green before you write "DONE"
 

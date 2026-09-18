@@ -11,3 +11,4 @@ backups/
 debug_last_hotel.txt
 .reminders_sent
 .vercel
+bench/
