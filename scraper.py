@@ -95,7 +95,10 @@ DIAG = {"timeouts": 0, "blank_pages": 0, "aborted_early": False,
 # dropped in reverse priority (Bali watch, then remaining one-way legs) so a
 # Google slow-walk night degrades instead of grinding for hours. Ticket ① /
 # Ticket ② multi-city searches are never skipped — they're the product.
-RUN_DEADLINE_MIN = 35
+# Raised 35 -> 45 on 2026-09-18: the flight slots are 2 h apart, the reaper cap
+# is 100 min and hotels start >= 05:00 (and stand down if this run is alive),
+# so 45 collides with no other overnight job.
+RUN_DEADLINE_MIN = 45
 _run_start = None
 
 

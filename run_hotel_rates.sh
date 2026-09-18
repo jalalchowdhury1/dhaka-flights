@@ -22,7 +22,7 @@ export BROWSE_SESSION=hotels
 set -a; [ -f .env ] && . ./.env; set +a
 
 # Jitter the start 0-35 min LATER — never earlier. 5:00 AM already sits after
-# every flight slot (0:00/2:00/4:00) and after the 35-min overrun guard; drifting
+# every flight slot (0:00/2:00/4:00) and after the 45-min overrun guard; drifting
 # earlier would walk straight back into the flight run and its git push.
 # Applied EVERY night, not only on the nights that fall back to local Chrome:
 # jittering only the local nights would make the jitter itself the tell. Sleeping
