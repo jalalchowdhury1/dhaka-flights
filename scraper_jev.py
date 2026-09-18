@@ -301,26 +301,44 @@ def _box_shows(tree: str, label: str, row: int, names: list) -> bool:
 
 
 def _fill_airport(label: str, code: str, row: int = 0) -> str:
-    """Type into the row-th 'Where from?'/'Where to?' box and pick the suggestion."""
-    box_ref = _box_ref(label, row)
-    if not box_ref:
-        raise RuntimeError(f"no '{label}' box on the form")
-    # click → Escape → click: the first click sometimes only focuses the row
-    _run(f"browse click {box_ref}"); time.sleep(0.3)
-    _run("browse press Escape"); time.sleep(0.2)
-    box_ref = _box_ref(label, row) or box_ref
-    _run(f"browse click {box_ref}"); time.sleep(0.3)
-    _run(f"browse type {TYPE_AS.get(code, code)}")
-    snap = wait_for(lambda t: bool(_legacy._pick_airport(t, code)), timeout=5.0)
-    pick = _pick_airport(snap, code)
-    if pick:
-        _run(f"browse click {pick}")
-    else:
-        _run("browse press Enter")
+    """Type into the row-th 'Where from?'/'Where to?' box and pick the suggestion.
+
+    The suggestion list re-renders while Google's autocomplete answers, so a
+    pick ref taken a moment ago can be stale ("Unknown ref") and leave the
+    dropdown open over the form. If the box does not show the airport after
+    the pick, Escape and redo the whole fill once before giving up (18 Sep
+    full run: two Ticket 1 searches fell back to legacy on exactly this)."""
     names = _airport_keywords(code)
-    snap = wait_for(lambda t: _box_shows(t, label, row, names), timeout=4.0)
-    if not _box_shows(_get_tree(snap), label, row, names):
-        print(f"  WARN: '{label}' may not show {code} after the pick")
+    snap = ""
+    for attempt in (1, 2):
+        box_ref = ""
+        for _ in range(3):                    # an open dropdown can hide the boxes briefly
+            box_ref = _box_ref(label, row)
+            if box_ref:
+                break
+            _run("browse press Escape"); time.sleep(0.5)
+        if not box_ref:
+            raise RuntimeError(f"no '{label}' box on the form")
+        # click → Escape → click: the first click sometimes only focuses the row
+        _run(f"browse click {box_ref}"); time.sleep(0.3)
+        _run("browse press Escape"); time.sleep(0.2)
+        box_ref = _box_ref(label, row) or box_ref
+        _run(f"browse click {box_ref}"); time.sleep(0.3)
+        _run(f"browse type {TYPE_AS.get(code, code)}")
+        snap = wait_for(lambda t: bool(_legacy._pick_airport(t, code)), timeout=5.0)
+        pick = _pick_airport(snap, code)
+        if pick:
+            _run(f"browse click {pick}")
+        else:
+            _run("browse press Enter")
+        snap = wait_for(lambda t: _box_shows(t, label, row, names), timeout=4.0)
+        if _box_shows(_get_tree(snap), label, row, names):
+            return snap
+        if attempt == 1:
+            print(f"  retrying '{label}' {code} once (the pick did not stick)")
+            DIAG["pick_retries"] = DIAG.get("pick_retries", 0) + 1
+            _run("browse press Escape"); time.sleep(0.5)
+    print(f"  WARN: '{label}' may not show {code} after the pick")
     return snap
 
 

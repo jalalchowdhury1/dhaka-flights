@@ -305,3 +305,42 @@ def test_jev_client_pick_empty_candidates(monkeypatch):
     choice, p = client.pick("x", [], "")
     assert choice is None
     assert p == 0
+
+# ── (i) _fill_airport retries once when the pick does not stick ────────────────
+
+def _stub_fill_airport(monkeypatch, shows):
+    """Stub every browser touchpoint of _fill_airport; `shows` = _box_shows answers."""
+    calls = []
+    answers = iter(shows)
+    monkeypatch.setitem(sjev.DIAG, "pick_retries", 0)
+    monkeypatch.setattr(sjev, "_run", lambda cmd: calls.append(cmd) or "")
+    monkeypatch.setattr(sjev.time, "sleep", lambda s: None)
+    monkeypatch.setattr(sjev, "_box_ref", lambda label, row: "@0-1")
+    monkeypatch.setattr(sjev, "_pick_airport", lambda snap, code: "@0-9")
+    monkeypatch.setattr(sjev._legacy, "_pick_airport", lambda snap, code: "@0-9")
+    monkeypatch.setattr(sjev, "wait_for", lambda pred, timeout=5.0, **k: "{}")
+    monkeypatch.setattr(sjev, "_get_tree", lambda snap: "")
+    monkeypatch.setattr(sjev, "_box_shows", lambda tree, label, row, names: next(answers))
+    return calls
+
+
+def test_fill_airport_retries_once_and_recovers(monkeypatch):
+    calls = _stub_fill_airport(monkeypatch, [False, True])
+    sjev._fill_airport("Where to?", "DAC")
+    assert sjev.DIAG["pick_retries"] == 1
+    assert calls.count("browse type DAC") == 2      # typed again on the retry
+    assert calls.count("browse click @0-9") == 2    # picked again on the retry
+
+
+def test_fill_airport_gives_up_after_one_retry(monkeypatch, capsys):
+    calls = _stub_fill_airport(monkeypatch, [False, False])
+    sjev._fill_airport("Where to?", "DAC")           # must not raise
+    assert calls.count("browse type DAC") == 2       # exactly one retry, not a loop
+    assert "may not show DAC" in capsys.readouterr().out
+
+
+def test_fill_airport_happy_path_does_not_retry(monkeypatch):
+    calls = _stub_fill_airport(monkeypatch, [True])
+    sjev._fill_airport("Where to?", "DAC")
+    assert sjev.DIAG["pick_retries"] == 0
+    assert calls.count("browse type DAC") == 1
