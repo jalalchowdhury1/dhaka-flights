@@ -336,30 +336,19 @@ def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
         _run(f"browse click {search_ref}")
     else:
         _run("browse press Enter")
-    
-    # Wait for results with settle check (G1 gate requirement)
-    last_count = -1
-    settled_snap = None
-    for _ in range(20):
-        snap = _snap()
-        tree = _get_tree(snap)
-        count = tree.lower().count("us dollars")
-        if count > 0 and count == last_count:
-            settled_snap = snap
-            break
-        last_count = count
-        time.sleep(0.25)
-    
-    snap = settled_snap or snap
-    tree = _get_tree(snap)
-    
+
+    # Use legacy wait_for_results for proper settle check
+    snap = _legacy._wait_for_results(_snap())
+    tree = _legacy._get_tree(snap)
+
     # View more flights
     more_ref = _find_ref(snap, "View more flights")
     if more_ref:
         _run(f"browse click {more_ref}")
         time.sleep(1)
         snap = _snap()
-    
+        tree = _get_tree(snap)
+
     # Parse results
     results = _parse_results(tree, origin, dest, snap, depart)
     print(f"  Parsed {len(results)} flights")
@@ -565,22 +554,10 @@ def _scrape_multicity(legs: list, parse_fn, tag: str) -> list:
             _run(f"browse click {search_ref}")
         else:
             _run("browse press Enter")
-        
-        # Wait for results with settle check
-        last_count = -1
-        settled_snap = None
-        for _ in range(20):
-            snap = _snap()
-            tree = _get_tree(snap)
-            count = tree.lower().count("us dollars")
-            if count > 0 and count == last_count:
-                settled_snap = snap
-                break
-            last_count = count
-            time.sleep(0.25)
-        
-        snap = settled_snap or snap
-        tree = _get_tree(snap)
+
+        # Use legacy wait_for_results for proper settle check
+        snap = _legacy._wait_for_results(_snap())
+        tree = _legacy._get_tree(snap)
         
         # Get the URL for parsing
         raw_url = _run("browse get url")
@@ -593,7 +570,9 @@ def _scrape_multicity(legs: list, parse_fn, tag: str) -> list:
         more_ref = _find_ref(snap, "View more flights")
         if more_ref:
             _run(f"browse click {more_ref}")
-            snap = wait_for(lambda t: True, timeout=5.0, step=0.5)
+            time.sleep(1)
+            snap = _snap()
+            tree = _get_tree(snap)
         
         results = parse_fn(tree, result_url)
         print(f"  Parsed {len(results)} multi-city options")
