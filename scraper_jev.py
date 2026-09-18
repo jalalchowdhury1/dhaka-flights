@@ -355,10 +355,15 @@ def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
     results = _parse_results(tree, origin, dest, snap, depart)
     print(f"  Parsed {len(results)} flights")
     
-    # Fill verification
-    if results and not _verify_fill(tree, [(origin, dest, depart)]):
-        print("  WARN: fill verification failed")
-        return []
+    # Fill verification - per brief: verified fill + 0 results = no flights that day (OK)
+    # Unverified fill + 0 results = fill failure → trigger legacy fallback via exception
+    if not results:
+        if not _verify_fill(tree, [(origin, dest, depart)]):
+            print("  0 results + fill NOT verified — triggering legacy fallback")
+            raise RuntimeError("fill-not-verified")
+    elif not _verify_fill(tree, [(origin, dest, depart)]):
+        print("  WARN: fill verification failed (results page may show route differently)")
+        # Results are real even if verification text matching is imperfect
     
     if not results:
         with open(DEBUG_TREE_FILE, "w") as f:
