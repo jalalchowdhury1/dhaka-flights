@@ -321,13 +321,14 @@ def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
     
     # Search
     print("  Searching...")
-    search_ref = _find_ref(snap, "button:", "Search")
-    if search_ref:
-        _run(f"browse click {search_ref}")
-    else:
-        _run("browse press Enter")
-
-    # Use legacy wait_for_results for proper settle check
+    # First try Enter (the date field is likely focused)
+    _run("browse press Enter")
+    time.sleep(2)
+    snap = _snap()
+    tree = _get_tree(snap)
+    
+    # Check if we got results or moved to a search results URL
+    # Fall through to wait_for_results anyway
     snap = _legacy._wait_for_results(_snap())
     tree = _legacy._get_tree(snap)
 
