@@ -320,10 +320,6 @@ def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
         day = depart.split(" ")[1].rstrip(",")  # "7," → "7"
         date_short = f"{month_abbr} {day}"
         
-        if date_short.lower() not in _get_tree(snap).lower():
-            DIAG["wait_timeouts"] += 1
-            print(f"  WARN: date may not have been entered correctly (looking for '{date_short}')")
-        
         done_ref = _find_ref(snap, "button:", "Done")
         if done_ref:
             _run(f"browse click {done_ref}")
