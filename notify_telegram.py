@@ -107,7 +107,9 @@ def digest_post(item_id, text, parse_mode="HTML", photo=None, caption=None) -> b
     (one 07:00 card, a button per item; a tap replays the full message — 11 Sep 2026).
     True = stored; False = caller sends to Telegram as before. Needs DIGEST_URL + DIGEST_KEY."""
     url, key = os.environ.get("DIGEST_URL"), os.environ.get("DIGEST_KEY")
-    if not url or not key:
+    # Under pytest the shell's real DIGEST_KEY once let a fixture overwrite the
+    # live "flights" item (2026-09-19); tests/conftest.py stubs this too.
+    if not url or not key or os.environ.get("PYTEST_CURRENT_TEST"):
         return False
     body = json.dumps({"id": item_id, "text": text, "parse_mode": parse_mode,
                        "photo": photo, "caption": caption}).encode()
