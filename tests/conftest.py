@@ -15,6 +15,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import notify_telegram  # noqa: E402
 
 _LIVE_VARS = ("DIGEST_URL", "DIGEST_KEY", "TELEGRAM_TOKEN", "TELEGRAM_CHAT_ID")
+REAL_DIGEST_POST = notify_telegram.digest_post   # for test_no_live_sends only
 
 
 @pytest.fixture(autouse=True)

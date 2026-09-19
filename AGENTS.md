@@ -426,7 +426,9 @@ launchd 12:00am + 2:00am retry slot (com.jalal.dhaka-flights.plist, parallel wit
 ## 3. How to run / test / deploy
 
 - Tests: `python3 -m pytest tests/ -q` (pure logic only — parsers, combos,
-  baggage table, sheets rows; no browser).
+  baggage table, sheets rows; no browser). `tests/conftest.py` makes the suite
+  unable to reach the live digest/Telegram even with real keys in the shell —
+  see "Silent digest hand-off" below (19 Sep 2026) before touching any sender.
 - Manual full run: `./run_daily.sh` (delete `.last_run_date` first or it skips).
 - One search interactively: `python3 -c "from scraper import scrape_route; print(scrape_route('DAC','SIN','January 30, 2027'))"`.
 - Dashboard deploy: the Vercel project (`dhaka-flights`, account
@@ -821,3 +823,5 @@ the hotel-rates line land without a buzz — they are read in the morning, not a
 ## Silent digest hand-off (11 Sep 2026)
 
 The overnight send calls `digest_post("flights / hotels", text, parse_mode)` first (health-hub `api/digest.js`, env `DIGEST_URL` + `DIGEST_KEY` — in the repo .env, gitignored; flights = the 00:00 brief, hotels = the 05:00 rate movers). Stored → no direct message; the 07:00 ⚪ Silent digest card carries a button that replays it in full (36 h). Collector down or env missing → the old silent direct send. Never make the direct send loud again.
+
+**Same-id overwrite is a loaded gun (19 Sep 2026).** A `pytest` run in a shell that had sourced `~/.config/secrets.env` (which carries `DIGEST_KEY`) posted `tests/test_notify_fallback.py`'s fixture (`$4,626 · SIN-first · ① ? $0`) to the live collector as id `flights`, replacing the real 00:33 brief; the 06:50 card replayed the fixture. Tests stubbed `send_message` but never `digest_post`. Two guards now hold and `tests/test_no_live_sends.py` asserts both with `urlopen` booby-trapped: `tests/conftest.py` (autouse) strips `DIGEST_URL/KEY` + `TELEGRAM_*` and stubs `digest_post`; `digest_post` itself returns False when `PYTEST_CURRENT_TEST` is set. Rules: every new sender path must be exercised only through `notify_cheapest`/`_safe_send` under the conftest; never call `digest_post` from a script "to test" — use the collector's `GET ?k=APP_KEY` status (ids, `at`, `chars`, never text) and, if a card ever shows fixture-looking numbers, re-post from `build_message(json.load(open("site/data.json")))` (the button replays live from KV, so a re-post repairs an already-sent card).
