@@ -14,11 +14,12 @@ Where the speed comes from:
 Parsers, constants and session management are imported from scraper.py —
 only the driving code is re-implemented.
 """
+import os
 import re
 import json
 import time
 import subprocess
-from typing import Optional
+from typing import Optional, Tuple
 
 import jev_client
 import scraper as _legacy
@@ -34,6 +35,9 @@ DIAG = {
     "jev_ms": 0,
     "jev_fallbacks": 0,
     "engine_fallbacks": 0,
+    "pick_retries": 0,
+    "judge_disagreements": 0,
+    "gates": {},               # gate -> judged / disagreed / by_jev / unavailable
 }
 
 RUN_DEADLINE_MIN = _legacy.RUN_DEADLINE_MIN
@@ -51,6 +55,25 @@ DEBUG_TREE_FILE = _legacy.DEBUG_TREE_FILE
 
 FLIGHTS_URL = "https://www.google.com/travel/flights?hl=en&curr=USD&gl=us"
 JEV_P_FLOOR = 0.6
+
+
+# Gates Jev decides by default — the four it proved on 19 Sep 2026 (two live
+# calibration rounds, one injected failure per gate per round, 0 confident
+# errors): landing 18/18, ticket_type 17/17, passengers 18/18, airports 43/44.
+# date / results_ready / fill_verified stay on rules (AGENTS.md "Jev's limits").
+DEFAULT_DECIDES = {"landing", "ticket_type", "passengers", "airports"}
+
+
+def _parse_decides(raw) -> set:
+    """Gates where Jev's verdict is the decision. Unset = the proven default;
+    empty string = rules everywhere (the rollback); "airports,date" = your list."""
+    if raw is None:
+        return set(DEFAULT_DECIDES)
+    return {g.strip() for g in raw.split(",") if g.strip()}
+
+
+JEV_DECIDES = _parse_decides(os.environ.get("JEV_DECIDES"))
+JUDGE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bench", "judge")
 SETTLE_S = _legacy.SETTLE_POLL_SECONDS          # 2 s, the $18,913 lesson
 FULL_LIST_ROWS = 10        # priced rows at which a one-way list counts as already expanded
 ONEWAY_READY_CAP_S = 14.0  # wait this long for the expander before taking the page as is
@@ -77,6 +100,10 @@ def end_session() -> None:
         f"{k}={DIAG.get(k, 0)}" for k in (
             "jev_calls", "jev_ms", "jev_fallbacks", "pick_retries",
             "judge_disagreements", "engine_fallbacks", "wait_timeouts")))
+    if DIAG["gates"]:
+        print("jev gates: " + " ".join(
+            f"{g}={s['judged']}/{s['disagreed']}/{s['by_jev']}" for g, s in DIAG["gates"].items())
+              + "  (judged/disagreed/by_jev; deciding: " + ",".join(sorted(JEV_DECIDES)) + ")")
 
 
 # ── browse plumbing ─────────────────────────────────────────────────────────
@@ -141,21 +168,29 @@ def wait_for(pred, timeout: float, step: float = 0.25, count_timeout: bool = Tru
 
 # ── Jev ─────────────────────────────────────────────────────────────────────
 
+def _ask_jev(instructions: str, candidates: list, state: str = "") -> Tuple[Optional[str], float]:
+    """One raw Jev decision: (choice, p). (None, 0) when Jev is off or answered
+    outside the candidates. No confidence floor here — callers apply it."""
+    client = jev_client.get_client()
+    if not client.started:
+        return None, 0.0
+    t0 = time.time()
+    choice, p = client.pick(instructions, candidates, state)
+    DIAG["jev_calls"] += 1
+    DIAG["jev_ms"] += int((time.time() - t0) * 1000)
+    if choice is None or choice not in candidates:
+        return None, 0.0
+    return choice, p
+
+
 def _pick_element(instructions: str, candidates: list, state: str = "") -> Optional[str]:
     """One Jev decision with the p >= 0.6 floor. None means: use the fallback."""
     if not candidates:
         return None
     if len(candidates) == 1:
         return candidates[0]
-    client = jev_client.get_client()
-    if not client.started:
-        DIAG["jev_fallbacks"] += 1
-        return None
-    t0 = time.time()
-    choice, p = client.pick(instructions, candidates, state)
-    DIAG["jev_calls"] += 1
-    DIAG["jev_ms"] += int((time.time() - t0) * 1000)
-    if choice is None or p < JEV_P_FLOOR or choice not in candidates:
+    choice, p = _ask_jev(instructions, candidates, state)
+    if choice is None or p < JEV_P_FLOOR:
         DIAG["jev_fallbacks"] += 1
         return None
     return choice
@@ -231,7 +266,16 @@ def _open_form() -> str:
             _run(f"browse open {FLIGHTS_URL}")
         snap = wait_for(form, timeout=10.0, step=0.5)
 
-    if not form(_get_tree(snap)):
+    landed = _gate("landing", _region_head(_get_tree(snap)),
+                   "We just opened Google Flights. Which statement describes the page?",
+                   form(_get_tree(snap)))
+    if not landed:
+        _run(f"browse open {FLIGHTS_URL}")
+        snap = wait_for(form, timeout=10.0, step=0.5)
+        landed = _gate("landing", _region_head(_get_tree(snap)),
+                       "We reopened Google Flights after a bad load. Which statement describes the page?",
+                       form(_get_tree(snap)))
+    if not landed:
         DIAG["blank_pages"] += 1
         _legacy._session_dirty()
         print("  ERROR: Flights page never loaded (blank/stub tree) — local browser problem, NOT a Google block")
@@ -239,49 +283,98 @@ def _open_form() -> str:
     return snap
 
 
+def _ticket_type_set(tree: str, label: str) -> bool:
+    return _has(tree, f"change ticket type. {label}") and not _has(tree, "option: round trip")
+
+
 def _set_ticket_type(snap: str, label: str) -> str:
-    """label = 'One way' or 'Multi-city'."""
-    tt_ref = _find_ref(snap, "Change ticket type")
-    if not tt_ref:
-        return snap
-    _run(f"browse click {tt_ref}")
-    snap = wait_for(lambda t: _has(t, f"option: {label}"), timeout=4.0)
-    opt_ref = _find_ref(snap, f"option: {label}")
-    if opt_ref:
-        _run(f"browse click {opt_ref}")
-    chosen = lambda t: _has(t, f"change ticket type. {label}") and not _has(t, "option: round trip")
-    snap = wait_for(chosen, timeout=4.0)
-    if _has(_get_tree(snap), "option: round trip"):        # listbox still open
-        _run("browse press Escape")
-        snap = wait_for(lambda t: not _has(t, "option: round trip"), timeout=2.0)
-    if not _has(_get_tree(snap), f"change ticket type. {label}"):
-        print(f"  WARN: trip type may not be {label}")
+    """label = 'One way' or 'Multi-city'. Gate 'ticket_type' judges the result; redo once."""
+    for attempt in (1, 2):
+        tt_ref = _find_ref(snap, "Change ticket type")
+        if not tt_ref:
+            return snap
+        _run(f"browse click {tt_ref}")
+        snap = wait_for(lambda t: _has(t, f"option: {label}"), timeout=4.0)
+        opt_ref = _find_ref(snap, f"option: {label}")
+        if opt_ref:
+            _run(f"browse click {opt_ref}")
+        snap = wait_for(lambda t: _ticket_type_set(t, label), timeout=4.0)
+        if _has(_get_tree(snap), "option: round trip"):        # listbox still open
+            _run("browse press Escape")
+            snap = wait_for(lambda t: not _has(t, "option: round trip"), timeout=2.0)
+        tree = _get_tree(snap)
+        if _gate("ticket_type", _region_around(tree, "Change ticket type", 0, 2, 10),
+                 f"We set the ticket type to '{label}'. Which statement describes the ticket-type control now?",
+                 _ticket_type_set(tree, label)):
+            return snap
+        if attempt == 1:
+            print(f"  redoing ticket type {label} once (it did not land)")
+            _run("browse press Escape"); time.sleep(0.4)
+            snap = _snap()
+    print(f"  WARN: trip type may not be {label}")
     return snap
 
 
+def _passengers_set(tree: str) -> bool:
+    return _has(tree, "3 passengers") and not _has(tree, "button: add adult")
+
+
+def _dialog_counts(tree: str) -> Tuple[int, int]:
+    """(adults, children) as the open passengers dialog shows them: the number
+    sits between 'Remove adult' and 'Add adult' (same for child). -1 = not found."""
+    def count(kind: str) -> int:
+        lines = [l.strip().lower() for l in tree.splitlines()]
+        try:
+            i = next(k for k, l in enumerate(lines) if f"button: remove {kind}" in l)
+        except StopIteration:
+            return -1
+        for l in lines[i + 1:i + 6]:
+            m = re.search(r"statictext:\s*(\d+)$", l)
+            if m:
+                return int(m.group(1))
+            if f"button: add {kind}" in l:
+                break
+        return -1
+    return count("adult"), count("child")
+
+
 def _set_passengers(snap: str) -> str:
-    """2 adults + 1 child."""
-    pax_ref = _find_ref(snap, "passenger")
-    if not pax_ref:
-        return snap
-    _run(f"browse click {pax_ref}")
-    snap = wait_for(lambda t: _has(t, "button: add adult"), timeout=4.0)
-    add_adult = _find_ref(snap, "button: Add adult")
-    if add_adult:
-        _run(f"browse click {add_adult}")
-        time.sleep(0.3)
-    snap = _snap()
-    add_child = _find_ref(snap, "button: Add child")
-    if add_child:
-        _run(f"browse click {add_child}")
-        time.sleep(0.3)
-    snap = _snap()
-    done_ref = _find_ref(snap, "button: Done")
-    if done_ref:
-        _run(f"browse click {done_ref}")
-    snap = wait_for(lambda t: _has(t, "3 passengers") and not _has(t, "button: add adult"), timeout=4.0)
-    if not _has(_get_tree(snap), "3 passengers"):
-        print("  WARN: passenger count may not be 3")
+    """2 adults + 1 child. Gate 'passengers' judges the result; redo once.
+    The redo reads the dialog's counts and adds only what is missing — the
+    calibration run of 19 Sep showed a blind redo ending at 5 passengers."""
+    for attempt in (1, 2):
+        pax_ref = _find_ref(snap, "passenger")
+        if not pax_ref:
+            return snap
+        _run(f"browse click {pax_ref}")
+        snap = wait_for(lambda t: _has(t, "button: add adult"), timeout=4.0)
+        adults, children = _dialog_counts(_get_tree(snap))
+        if adults < 2 or (adults < 0 and attempt == 1):
+            add_adult = _find_ref(snap, "button: Add adult")
+            if add_adult:
+                _run(f"browse click {add_adult}")
+                time.sleep(0.3)
+            snap = _snap()
+        if children < 1 or (children < 0 and attempt == 1):
+            add_child = _find_ref(snap, "button: Add child")
+            if add_child:
+                _run(f"browse click {add_child}")
+                time.sleep(0.3)
+            snap = _snap()
+        done_ref = _find_ref(snap, "button: Done")
+        if done_ref:
+            _run(f"browse click {done_ref}")
+        snap = wait_for(_passengers_set, timeout=4.0)
+        tree = _get_tree(snap)
+        if _gate("passengers", _region_around(tree, "passenger", 0, 2, 12),
+                 "We set the passengers to 2 adults + 1 child (3 passengers). Which statement describes the passengers control now?",
+                 _passengers_set(tree)):
+            return snap
+        if attempt == 1:
+            print("  redoing passengers once (it did not land)")
+            _run("browse press Escape"); time.sleep(0.4)
+            snap = _snap()
+    print("  WARN: passenger count may not be 3")
     return snap
 
 
@@ -322,6 +415,61 @@ def _form_region(tree: str, label: str, row: int, before: int = 6, after: int = 
     return "\n".join(l.strip() for l in lines[max(0, i - before):i + after])
 
 
+GATE_VERDICTS = {
+    "landing": {
+        "form-visible": "The Google Flights search form is visible (a 'Where from?' box exists)",
+        "popup-or-consent": "A consent, sign-in or cookie popup or dialog covers the page",
+        "blank-or-error": "The page is blank, an error page, or not the flight search form",
+    },
+    "ticket_type": {
+        "selected": "The ticket-type control shows the wanted type selected and its menu is closed",
+        "other-type": "The ticket-type control shows a different type (for example Round trip)",
+        "menu-still-open": "The ticket-type menu is still open, listing options such as Round trip / One way / Multi-city",
+    },
+    "passengers": {
+        "three-passengers": "The passengers control shows 3 passengers and the passengers dialog is closed",
+        "other-count": "The passengers control shows a count other than 3",
+        "dialog-still-open": "The passengers dialog is still open (Add adult / Add child / Done buttons visible)",
+    },
+    "date": {
+        "date-shown": "The Departure box shows the wanted date and the calendar is closed",
+        "calendar-still-open": "The date picker calendar is still open (a Done button or a month grid is visible)",
+        "empty-or-other-date": "The Departure box is empty or shows a different date",
+    },
+    "results_ready": {
+        "list-complete": "A full list of priced flight results is showing (a 'View more flights' button is present, or the list is already long) and nothing is still loading",
+        "still-loading": "Results are still loading, or only a few top flights are showing so far",
+        "no-results-or-error": "There are no flight results, or an error / empty-state message is showing",
+    },
+    "fill_verified": {
+        "matches-search": "The results shown are for the wanted route(s) and date(s)",
+        "different-route-or-date": "The results shown are for a different route or date",
+        "cannot-tell": "The route or date cannot be determined from this text",
+    },
+}
+GATE_GOOD = {"landing": "form-visible", "ticket_type": "selected", "passengers": "three-passengers",
+             "date": "date-shown", "results_ready": "list-complete", "fill_verified": "matches-search"}
+
+
+def _region_around(tree: str, needle: str, row: int = 0, before: int = 3, after: int = 12) -> str:
+    """Stripped window around the row-th line containing `needle` ('' if absent)."""
+    lines = tree.splitlines()
+    idx = [i for i, l in enumerate(lines) if needle.lower() in l.lower()]
+    if row >= len(idx):
+        return ""
+    i = idx[row]
+    return "\n".join(l.strip() for l in lines[max(0, i - before):i + after])
+
+
+def _region_head(tree: str, n: int = 40) -> str:
+    return "\n".join(l.strip() for l in tree.splitlines()[:n])
+
+
+def _gate(gate: str, region: str, question: str, rule: bool) -> bool:
+    return _judge(gate, region or "(region not found in the page tree)", question,
+                  GATE_VERDICTS[gate], rule, GATE_GOOD[gate])
+
+
 PICK_VERDICTS = {
     "settled": "The box shows the wanted airport/city and NO suggestion list "
                "(no 'option:' lines) is open beneath it — the pick has landed",
@@ -331,23 +479,55 @@ PICK_VERDICTS = {
 }
 
 
+def _save_judgment(gate: str, verdict: str, p: float, rule: bool, decided_by: str,
+                   region: str) -> None:
+    """Evidence trail for calibration: one JSON line per judgment, and the
+    region itself whenever Jev and the rule disagree."""
+    try:
+        os.makedirs(JUDGE_DIR, exist_ok=True)
+        ts = time.strftime("%Y%m%dT%H%M%S")
+        with open(os.path.join(JUDGE_DIR, "log.jsonl"), "a") as f:
+            f.write(json.dumps({"ts": ts, "gate": gate, "verdict": verdict, "p": p,
+                                "rule": rule, "decided_by": decided_by}) + "\n")
+        if (verdict == "good") != rule:
+            name = f"{gate}-{ts}-{int(time.time() * 1000) % 1000:03d}.txt"
+            with open(os.path.join(JUDGE_DIR, name), "w") as f:
+                f.write(f"gate: {gate}\njev: {verdict} p={p}\nrule landed: {rule}\n\n{region}")
+    except OSError as e:
+        print(f"  WARN: could not save judgment: {e}")
+
+
+def _judge(gate: str, region: str, question: str, verdicts: dict, rule: bool, good: str) -> bool:
+    """One gate decision. Jev names the verdict that describes `region`; the
+    verdict is the decision only when `gate` is in JEV_DECIDES and Jev is at
+    least JEV_P_FLOOR sure — every other gate is shadow: the rule decides and
+    Jev's answer is only recorded. Disagreements are counted and saved."""
+    stats = DIAG["gates"].setdefault(gate, {"judged": 0, "disagreed": 0, "by_jev": 0, "unavailable": 0})
+    choice, p = _ask_jev(question, list(verdicts.values()), state=region)
+    if choice is None:
+        stats["unavailable"] += 1
+        return rule
+    verdict = next(k for k, v in verdicts.items() if v == choice)
+    landed = verdict == good
+    stats["judged"] += 1
+    if landed != rule:
+        stats["disagreed"] += 1
+        DIAG["judge_disagreements"] += 1
+        print(f"  jev judged {gate} as {verdict} p={p:.2f} (rule said {'landed' if rule else 'not landed'})")
+    decide = gate in JEV_DECIDES and p >= JEV_P_FLOOR
+    if decide:
+        stats["by_jev"] += 1
+    _save_judgment(gate, "good" if landed else verdict, p, rule, "jev" if decide else "rule", region)
+    return landed if decide else rule
+
+
 def _judge_pick(tree: str, label: str, row: int, code: str, names: list) -> bool:
-    """Jev decides whether the airport pick landed, from the live form region.
-    The deterministic rule answers only when Jev is unavailable or unsure, and
-    every disagreement between the two is counted in DIAG."""
+    """Gate 'airports': did the suggestion pick land? (proven live 19 Sep)"""
     rule = _pick_settled(tree, label, row, names)
     instr = (f"Google Flights search form. We typed into the '{label}' box (row {row + 1}) "
              f"to select {names[0]} ({code}) and clicked a suggestion. "
              f"Which statement describes the current state of that box?")
-    choice = _pick_element(instr, list(PICK_VERDICTS.values()), state=_form_region(tree, label, row))
-    if choice is None:
-        return rule
-    verdict = next(k for k, v in PICK_VERDICTS.items() if v == choice)
-    settled = verdict == "settled"
-    if settled != rule:
-        DIAG["judge_disagreements"] = DIAG.get("judge_disagreements", 0) + 1
-        print(f"  jev judged '{label}' {code} as {verdict} (rule said {'settled' if rule else 'not settled'})")
-    return settled
+    return _judge("airports", _form_region(tree, label, row), instr, PICK_VERDICTS, rule, "settled")
 
 
 def _fill_airport(label: str, code: str, row: int = 0) -> str:
@@ -392,17 +572,42 @@ def _fill_airport(label: str, code: str, row: int = 0) -> str:
     return snap
 
 
+def _date_names(depart: str) -> list:
+    parts = depart.replace(",", "").split()
+    month, day = parts[0], parts[1] if len(parts) > 1 else ""
+    return [f"{month} {day}", f"{month[:3]} {day}"]
+
+
+def _date_set(tree: str, depart: str, row: int) -> bool:
+    return (not _has(tree, "button: done")
+            and _box_shows(tree, "textbox: Departure", row, _date_names(depart)))
+
+
 def _fill_date(depart: str, row: int = 0) -> str:
-    box_ref = _box_ref("textbox: Departure", row)
-    if not box_ref:
-        raise RuntimeError("no 'Departure' box on the form")
-    _run(f"browse click {box_ref}"); time.sleep(0.3)
-    _run(f'browse type "{depart}"')
-    snap = wait_for(lambda t: _has(t, "button: done"), timeout=3.0, count_timeout=False)
-    done_ref = _find_ref(snap, "button: Done")
-    if done_ref:
-        _run(f"browse click {done_ref}")
-        snap = wait_for(lambda t: not _has(t, "button: done"), timeout=3.0)
+    """Gate 'date' judges the result; redo once."""
+    for attempt in (1, 2):
+        box_ref = _box_ref("textbox: Departure", row)
+        if not box_ref:
+            raise RuntimeError("no 'Departure' box on the form")
+        _run(f"browse click {box_ref}"); time.sleep(0.3)
+        _run(f'browse type "{depart}"')
+        snap = wait_for(lambda t: _has(t, "button: done"), timeout=3.0, count_timeout=False)
+        done_ref = _find_ref(snap, "button: Done")
+        if done_ref:
+            _run(f"browse click {done_ref}")
+            snap = wait_for(lambda t: _date_set(t, depart, row), timeout=3.0)
+        tree = _get_tree(snap)
+        region = _region_around(tree, "textbox: Departure", row, 2, 8)
+        if _has(tree, "button: done"):
+            region += "\n...\n" + _region_around(tree, "button: Done", 0, 6, 4)
+        if _gate("date", region,
+                 f"We typed the departure date '{depart}' into the Departure box (row {row + 1}) and pressed Done. Which statement describes it now?",
+                 _date_set(tree, depart, row)):
+            return snap
+        if attempt == 1:
+            print(f"  redoing date {depart} once (it did not land)")
+            _run("browse press Escape"); time.sleep(0.4)
+    print(f"  WARN: departure date may not be {depart}")
     return snap
 
 
@@ -486,6 +691,44 @@ def _verify_fill(tree: str, legs: list) -> bool:
     return True
 
 
+def _results_region(tree: str) -> str:
+    """Header before the first price, then every priced row / expander /
+    loading line — the whole list, compressed (a 60-line window showed Jev
+    one flight and it said 'still loading' at p=0.98 every time, 19 Sep)."""
+    lines = [l.strip() for l in tree.splitlines()]
+    idx = [i for i, l in enumerate(lines) if "us dollars" in l.lower()]
+    if not idx:
+        return _region_head(tree, 60)
+    keep = lines[max(0, idx[0] - 6):idx[0]]
+    for l in lines[idx[0]:]:
+        low = l.lower()
+        if "us dollars" in low or "view more flights" in low or "loading" in low or "progressbar" in low:
+            keep.append(l[:160])
+    return "\n".join(keep[:90])
+
+
+def _judge_results_ready(snap: str, one_way: bool) -> str:
+    """Gate 'results_ready': is the results list whole? Not landed = one more settle wait."""
+    rule = (_has_more_button_or_full(snap) if one_way else _count_prices(snap) > 0)
+    q = ("A Google Flights results page after a one-way search. Which statement describes the results list?"
+         if one_way else
+         "A Google Flights results page after a multi-city search. Which statement describes the results list?")
+    if _gate("results_ready", _results_region(_get_tree(snap)), q, rule):
+        return snap
+    print("  results not whole yet — one extra settle wait")
+    return _wait_for_results(stable_polls=2, min_wait=4.0,
+                             ready=_has_more_button_or_full if one_way else None, ready_cap_s=10.0)
+
+
+def _judge_fill(tree: str, legs: list) -> bool:
+    """Gate 'fill_verified': do the results match the searched legs?"""
+    want = "; ".join(f"{o}→{d} on {dep}" for o, d, dep in legs)
+    region = _region_around(tree, "Where from", 0, 4, 24 * max(1, len(legs))) or _results_region(tree)
+    return _gate("fill_verified", region,
+                 f"We searched for: {want}. Which statement describes the results page header / first results?",
+                 _verify_fill(tree, legs))
+
+
 def _save_debug(tag: str, url: str, tree: str) -> None:
     with open(DEBUG_TREE_FILE, "w") as f:
         f.write(f"{tag}\nurl: {url}\n\n{tree}")
@@ -523,6 +766,7 @@ def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
     _search(snap)
     snap = _wait_for_results(stable_polls=2, ready=_has_more_button_or_full,
                              ready_cap_s=ONEWAY_READY_CAP_S)
+    snap = _judge_results_ready(snap, one_way=True)
     result_url = _url()
     snap = _expand_more(snap, stable_polls=2)
     tree = _get_tree(snap)
@@ -531,7 +775,7 @@ def _scrape_route_jev(origin: str, dest: str, depart: str) -> list:
     print(f"  Parsed {len(results)} flights")
     if 0 < len(results) < 8:
         _save_debug(f"THIN one-way {origin}->{dest} {depart}: {len(results)} flights", result_url, tree)
-    verified = _verify_fill(tree, [(origin, dest, depart)])
+    verified = _judge_fill(tree, [(origin, dest, depart)])
     if not results:
         _save_debug(f"route: {origin}->{dest} {depart} (one-way)", result_url, tree)
         if not verified:
@@ -587,13 +831,14 @@ def _scrape_multicity_jev(legs: list, parse_fn, tag: str) -> list:
     print("  Searching...")
     _search(snap)
     snap = _wait_for_results(stable_polls=2, min_wait=8.0)
+    snap = _judge_results_ready(snap, one_way=False)
     result_url = _url()
     snap = _expand_more(snap, stable_polls=2)
     tree = _get_tree(snap)
 
     results = parse_fn(tree, result_url)
     print(f"  Parsed {len(results)} multi-city options")
-    verified = _verify_fill(tree, legs)
+    verified = _judge_fill(tree, legs)
     if not results:
         _save_debug(tag, result_url, tree)
         if not verified:

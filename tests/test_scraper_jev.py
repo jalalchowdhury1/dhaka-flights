@@ -20,6 +20,13 @@ def _snap_with(tree_text: str) -> str:
     return json.dumps({"tree": tree_text})
 
 
+@pytest.fixture(autouse=True)
+def _judge_dir_isolated(monkeypatch, tmp_path):
+    """Never let a test write into the real bench/judge calibration log."""
+    monkeypatch.setattr(sjev, "JUDGE_DIR", str(tmp_path / "judge"))
+    monkeypatch.setitem(sjev.DIAG, "gates", {})
+
+
 def _reset_diag(monkeypatch):
     """Zero the counters that tests mutate."""
     for k in ("jev_calls", "jev_fallbacks", "jev_ms", "wait_timeouts"):
@@ -431,5 +438,209 @@ def test_jev_unsure_falls_back_to_rule(monkeypatch):
     """Below the p floor Jev's verdict is ignored and the rule decides (open dropdown → retry)."""
     jev = _fake_jev_client(started=True, choice=sjev.PICK_VERDICTS["settled"], p=0.4)
     cmds, _ = _drive_fill_airport(monkeypatch, _fixture("dest_dropdown_open_bkk.txt"), jev=jev)
-    assert sjev.DIAG["pick_retries"] == 1
-    assert sjev.DIAG["judge_disagreements"] == 0
+    assert sjev.DIAG["pick_retries"] == 1                 # the rule decided
+    assert sjev.DIAG["gates"]["airports"]["by_jev"] == 0
+    assert sjev.DIAG["gates"]["airports"]["disagreed"] == 2   # still recorded for calibration
+
+
+# ── _judge: one helper for every gate; shadow unless the gate is in JEV_DECIDES ──
+
+_V = {"good": "the step landed", "open": "a menu is still open", "bad": "wrong value"}
+
+
+def _judge_env(monkeypatch, tmp_path, decides, verdict_key, p=0.9):
+    monkeypatch.setattr(sjev, "JEV_DECIDES", set(decides))
+    monkeypatch.setattr(sjev, "JUDGE_DIR", str(tmp_path))
+    monkeypatch.setitem(sjev.DIAG, "gates", {})
+    monkeypatch.setitem(sjev.DIAG, "judge_disagreements", 0)
+    monkeypatch.setattr(jev_client, "get_client",
+                        lambda: _fake_jev_client(started=True, choice=_V[verdict_key], p=p))
+
+
+def test_judge_shadow_gate_returns_rule_and_logs(monkeypatch, tmp_path):
+    _judge_env(monkeypatch, tmp_path, decides=[], verdict_key="open")
+    assert sjev._judge("passengers", "region text", "q?", _V, rule=True, good="good") is True
+    g = sjev.DIAG["gates"]["passengers"]
+    assert g["judged"] == 1 and g["disagreed"] == 1 and g["by_jev"] == 0
+    rows = [json.loads(l) for l in open(tmp_path / "log.jsonl")]
+    assert rows[0]["gate"] == "passengers" and rows[0]["verdict"] == "open" and rows[0]["p"] == 0.9
+    assert rows[0]["rule"] is True and rows[0]["decided_by"] == "rule"
+    saved = [f for f in os.listdir(tmp_path) if f.startswith("passengers-")]
+    assert len(saved) == 1 and "region text" in open(tmp_path / saved[0]).read()
+
+
+def test_judge_deciding_gate_uses_jev_verdict(monkeypatch, tmp_path):
+    _judge_env(monkeypatch, tmp_path, decides=["passengers"], verdict_key="open")
+    assert sjev._judge("passengers", "region", "q?", _V, rule=True, good="good") is False
+    g = sjev.DIAG["gates"]["passengers"]
+    assert g["by_jev"] == 1 and g["disagreed"] == 1
+
+
+def test_judge_deciding_gate_unsure_falls_back_to_rule(monkeypatch, tmp_path):
+    _judge_env(monkeypatch, tmp_path, decides=["passengers"], verdict_key="open", p=0.4)
+    assert sjev._judge("passengers", "region", "q?", _V, rule=True, good="good") is True
+    rows = [json.loads(l) for l in open(tmp_path / "log.jsonl")]
+    assert rows[0]["p"] == 0.4 and rows[0]["decided_by"] == "rule"
+
+
+def test_judge_agreement_saves_nothing(monkeypatch, tmp_path):
+    _judge_env(monkeypatch, tmp_path, decides=["passengers"], verdict_key="good")
+    assert sjev._judge("passengers", "region", "q?", _V, rule=True, good="good") is True
+    assert sjev.DIAG["gates"]["passengers"]["disagreed"] == 0
+    assert [f for f in os.listdir(tmp_path) if f.endswith(".txt")] == []
+
+
+def test_judge_jev_off_returns_rule_without_logging_a_verdict(monkeypatch, tmp_path):
+    _judge_env(monkeypatch, tmp_path, decides=["passengers"], verdict_key="open")
+    monkeypatch.setattr(jev_client, "get_client", lambda: _fake_jev_client(started=False))
+    assert sjev._judge("passengers", "region", "q?", _V, rule=False, good="good") is False
+    assert sjev.DIAG["gates"]["passengers"]["unavailable"] == 1
+    assert not os.path.exists(tmp_path / "log.jsonl")
+
+
+def test_jev_decides_env_parsing(monkeypatch):
+    assert sjev._parse_decides("airports, date ,") == {"airports", "date"}
+    assert sjev._parse_decides("") == set()
+    assert sjev._parse_decides(None) == {"landing", "ticket_type", "passengers", "airports"}
+    assert "date" not in sjev.DEFAULT_DECIDES and "results_ready" not in sjev.DEFAULT_DECIDES
+
+
+# ── the six shadow gates (landing / ticket_type / passengers / date /
+#    results_ready / fill_verified): rule decides unless the gate is in
+#    JEV_DECIDES; every judgment is logged under the gate name ─────────────────
+
+TT_OPEN = "combobox: Change ticket type. Round trip\noption: Round trip\noption: One way\noption: Multi-city"
+TT_SET = "combobox: Change ticket type. One way\nbutton: 1 passenger"
+PAX_FRESH = ("button: 1 passenger\ndialog: Number of passengers\nStaticText: Adults\nbutton: Remove adult\nStaticText: 1\n"
+             "button: Add adult\nStaticText: Children\nbutton: Remove child\nStaticText: 0\nbutton: Add child\nbutton: Done")
+PAX_OPEN = ("button: 1 passenger\ndialog: Number of passengers\nStaticText: Adults\nbutton: Remove adult\nStaticText: 2\n"
+            "button: Add adult\nStaticText: Children\nbutton: Remove child\nStaticText: 1\nbutton: Add child\nbutton: Done")
+PAX_SET = "button: 3 passengers\ncombobox: Where from?"
+CAL_OPEN = "textbox: Departure\nbutton: Done\ngridcell: February 1"
+DATE_SET = "textbox: Departure Feb 1\ncombobox: Where to?"
+FORM = "main\ncombobox: Where from?\ncombobox: Where to?\ntextbox: Departure"
+
+
+def _drive(monkeypatch, tmp_path, trees, decides=(), jev=None, p=0.9):
+    """Stub the browser: each wait_for/_snap pops the next tree (last one repeats)."""
+    it = iter(trees); last = [trees[-1]]
+    def nxt():
+        try: last[0] = next(it)
+        except StopIteration: pass
+        return last[0]
+    calls = []
+    monkeypatch.setattr(sjev, "JEV_DECIDES", set(decides))
+    monkeypatch.setattr(sjev, "JUDGE_DIR", str(tmp_path))
+    monkeypatch.setitem(sjev.DIAG, "gates", {})
+    monkeypatch.setitem(sjev.DIAG, "blank_pages", 0)
+    client = _fake_jev_client(started=jev is not None, choice=jev or "", p=p)
+    monkeypatch.setattr(jev_client, "get_client", lambda: client)
+    monkeypatch.setattr(sjev, "_run", lambda cmd: calls.append(cmd) or "")
+    monkeypatch.setattr(sjev.time, "sleep", lambda s: None)
+    monkeypatch.setattr(sjev, "_get_tree", lambda snap: snap)
+    monkeypatch.setattr(sjev, "wait_for", lambda pred, timeout=5.0, **k: nxt())
+    monkeypatch.setattr(sjev, "_snap", nxt)
+    monkeypatch.setattr(sjev, "_find_ref",
+                        lambda snap, *kw: "@1" if " ".join(kw).lower() in snap.lower() else "")
+    monkeypatch.setattr(sjev, "_box_ref", lambda label, row: "@1")
+    monkeypatch.setattr(sjev, "_url", lambda: "https://www.google.com/travel/flights")
+    monkeypatch.setattr(sjev._legacy, "_ensure_session", lambda: None)
+    monkeypatch.setattr(sjev._legacy, "_session_dirty", lambda: None)
+    return calls
+
+
+def _logged(tmp_path):
+    return [json.loads(l) for l in open(tmp_path / "log.jsonl")]
+
+
+def test_gate_rules_read_the_tree():
+    assert sjev._ticket_type_set(TT_SET, "One way") and not sjev._ticket_type_set(TT_OPEN, "One way")
+    assert sjev._passengers_set(PAX_SET) and not sjev._passengers_set(PAX_OPEN)
+    assert sjev._date_set(DATE_SET, "February 1, 2027", 0) and not sjev._date_set(CAL_OPEN, "February 1, 2027", 0)
+
+
+def test_region_helpers():
+    tree = "\n".join(f"  line {i}" for i in range(20))
+    assert sjev._region_around(tree, "line 5", 0, 1, 3).splitlines() == ["line 4", "line 5", "line 6", "line 7"]
+    assert sjev._region_around(tree, "nope") == ""
+    assert sjev._region_head(tree, 2) == "line 0\nline 1"
+
+
+def test_gate_passes_placeholder_for_missing_region(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(sjev, "_judge", lambda gate, region, q, verdicts, rule, good: seen.update(region=region, good=good) or rule)
+    assert sjev._gate("date", "", "q?", True) is True
+    assert "region not found" in seen["region"] and seen["good"] == "date-shown"
+
+
+def test_ticket_type_shadow_redoes_once_when_rule_fails(monkeypatch, tmp_path):
+    calls = _drive(monkeypatch, tmp_path, [TT_OPEN, TT_OPEN, TT_OPEN, TT_OPEN, TT_SET, TT_SET],
+                   jev=sjev.GATE_VERDICTS["ticket_type"]["menu-still-open"])
+    sjev._set_ticket_type(TT_OPEN, "One way")
+    assert calls.count("browse click @1") >= 3          # opened + option, then redo
+    rows = _logged(tmp_path)
+    assert [r["gate"] for r in rows] == ["ticket_type", "ticket_type"]
+    assert rows[0]["rule"] is False and rows[0]["decided_by"] == "rule"
+    assert sjev.DIAG["gates"]["ticket_type"]["by_jev"] == 0
+
+
+def test_ticket_type_jev_deciding_overrules_rule(monkeypatch, tmp_path, capsys):
+    _drive(monkeypatch, tmp_path, [TT_SET], decides=["ticket_type"],
+           jev=sjev.GATE_VERDICTS["ticket_type"]["menu-still-open"])
+    sjev._set_ticket_type(TT_SET, "One way")
+    assert "redoing ticket type" in capsys.readouterr().out
+    assert sjev.DIAG["gates"]["ticket_type"]["by_jev"] == 2
+
+
+def test_dialog_counts_reads_the_steppers():
+    assert sjev._dialog_counts(PAX_FRESH) == (1, 0)
+    assert sjev._dialog_counts(PAX_OPEN) == (2, 1)
+    assert sjev._dialog_counts("no dialog here") == (-1, -1)
+
+
+def test_passengers_redo_adds_only_what_is_missing(monkeypatch, tmp_path):
+    # attempt 1: fresh dialog (1/0) -> add adult + child, Done hidden -> gate fails
+    # attempt 2: dialog already 2/1 -> Done only (19 Sep calibration ended at 5 passengers)
+    trees = [PAX_FRESH, PAX_FRESH, PAX_FRESH, PAX_FRESH, PAX_FRESH,   # attempt 1 (no Done -> stays open)
+             PAX_OPEN, PAX_OPEN, PAX_SET, PAX_SET]                    # attempt 2
+    calls = _drive(monkeypatch, tmp_path, trees, jev=sjev.GATE_VERDICTS["passengers"]["dialog-still-open"])
+    monkeypatch.setattr(sjev, "_find_ref",
+                        lambda snap, *kw: "" if (" ".join(kw) == "button: Done" and snap is PAX_FRESH)
+                        else ("@1" if " ".join(kw).lower() in snap.lower() else ""))
+    sjev._set_passengers(PAX_FRESH)
+    assert calls.count("browse click @1") == 5           # pax, adult, child | pax, done
+    assert [r["gate"] for r in _logged(tmp_path)] == ["passengers", "passengers"]
+
+
+def test_fill_date_redoes_once(monkeypatch, tmp_path):
+    calls = _drive(monkeypatch, tmp_path, [CAL_OPEN, CAL_OPEN, CAL_OPEN, DATE_SET],
+                   jev=sjev.GATE_VERDICTS["date"]["calendar-still-open"])
+    sjev._fill_date("February 1, 2027")
+    assert calls.count('browse type "February 1, 2027"') == 2
+    rows = _logged(tmp_path)
+    assert [r["rule"] for r in rows] == [False, True]
+
+
+def test_results_ready_shadow_waits_once_more_when_rule_fails(monkeypatch, tmp_path):
+    _drive(monkeypatch, tmp_path, ["loading"], jev=sjev.GATE_VERDICTS["results_ready"]["still-loading"])
+    waited = []
+    monkeypatch.setattr(sjev, "_wait_for_results", lambda **k: waited.append(k) or "results US dollars")
+    assert sjev._judge_results_ready("loading", one_way=True) == "results US dollars"
+    assert waited and waited[0]["stable_polls"] == 2
+    assert _logged(tmp_path)[0]["gate"] == "results_ready"
+
+
+def test_fill_verified_shadow_returns_rule(monkeypatch, tmp_path):
+    _drive(monkeypatch, tmp_path, ["x"], jev=sjev.GATE_VERDICTS["fill_verified"]["different-route-or-date"])
+    monkeypatch.setattr(sjev, "_verify_fill", lambda tree, legs: True)
+    assert sjev._judge_fill("Where from DAC to SIN", [("DAC", "SIN", "January 28, 2027")]) is True
+    row = _logged(tmp_path)[0]
+    assert row["gate"] == "fill_verified" and row["verdict"] == "different-route-or-date" and row["rule"] is True
+
+
+def test_open_form_reopens_once_when_landing_fails(monkeypatch, tmp_path):
+    calls = _drive(monkeypatch, tmp_path, ["blank", "blank", FORM], jev=sjev.GATE_VERDICTS["landing"]["form-visible"])
+    assert sjev._open_form() == FORM
+    assert sum(c.startswith("browse open") for c in calls) == 3   # first, pre-gate reopen, post-gate reopen
+    assert [r["gate"] for r in _logged(tmp_path)] == ["landing", "landing"]
+    assert sjev.DIAG["blank_pages"] == 0

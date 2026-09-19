@@ -725,6 +725,39 @@ protection story when buying in September.
   form differently, read the printed verdict lines. Fixtures
   `tests/fixtures/dest_dropdown_open_bkk.txt` / `dest_picked_bkk.txt` are the two
   real trees.
+  🧑‍⚖️ **Jev judges every gate; it DECIDES only where it proved itself (2026-09-19):**
+  seven gates go through `_gate(...)` → `_judge(...)` (landing, ticket_type,
+  passengers, airports, date, results_ready, fill_verified): Jev sees a stripped
+  page region and picks one of `GATE_VERDICTS[gate]`; its verdict decides the
+  step (redo once / extra wait / reopen) only when the gate is in `JEV_DECIDES`
+  AND p ≥ `JEV_P_FLOOR`, otherwise the deterministic rule decides and Jev's
+  verdict is only logged ("shadow"). Every judgment goes to `bench/judge/log.jsonl`
+  (gitignored) and every disagreement saves its region as `bench/judge/<gate>-<ts>.txt`.
+  `judge_calibrate.py` is the proving ground: live searches with ONE injected
+  failure per gate (blank page, hidden option/Done button, dropped suggestion
+  click, judging 1 s after Search, asking about the wrong route) plus normal
+  searches, scored against ground truth. Two rounds on 19 Sep (18 searches, 167
+  Jev judgments, ~$0):
+  | gate | Jev right | confident (p≥0.6) & right | verdict |
+  |---|---|---|---|
+  | airports | 43/44 | 42/42 | DECIDES (the 1 "miss" was a real stale pick the retry then fixed) |
+  | landing | 18/18 | 16/16 | DECIDES (unsure p≈0.55 on the blank page, rule agrees there) |
+  | ticket_type | 17/17 | 15/15 | DECIDES |
+  | passengers | 18/18 | 16/16 | DECIDES — it caught the 5-passenger bug below |
+  | date | 22/22 | 4/4 | RULE — right but never confident (p≈0.56, "Mon, Feb 1" has no year) |
+  | results_ready | 2/16 | 2/16 | RULE — Jev's limit: it cannot judge whether a long list is *complete*; says "still-loading" at p=0.98 on whole lists, "complete" 1 s after Search |
+  | fill_verified | 5/16 | 2/9 | RULE — Jev's limit: "cannot-tell" on the route/date header even with the date in view |
+  `DEFAULT_DECIDES` in `scraper_jev.py` = the four proven gates; `JEV_DECIDES="airports"`
+  (or `""`) in the environment narrows it. **Do not add date / results_ready /
+  fill_verified without a new calibration round that shows them ≥ 95 % right at
+  p ≥ 0.6.** Bug the calibration exposed and fixed: the passengers redo blindly
+  clicked Add adult/Add child again and ended at **5 passengers** (prices wrong,
+  search "succeeded"); `_set_passengers` now reads the dialog steppers
+  (`_dialog_counts`) and adds only what is missing. Also seen, not a Jev issue:
+  repeating the identical one-way search 2-3× within minutes made Google return
+  "No results returned." (the thin-result state from RESULTS.md) — the nightly
+  runs each search once. `end_session` prints `jev gates: <gate>=judged/disagreed/by_jev`
+  into `cron.log`.
   Interactive use has no deadline (`begin_run` is opt-in)
 - `combo.py` — trip rules, `ORDERS`, `order_trip`, `main_trip`, `budget_trip`,
   `ticket1_options`, `ticket2_options`, `sin_night_flight_totals` (+ retired
