@@ -711,6 +711,20 @@ protection story when buying in September.
   back to it per search on any failure. Needs `AI_GATEWAY_API_KEY` in `.env` (missing = Jev off,
   still works) and `npm ci` in `jev/`. Evidence + limits:
   `docs/superpowers/plans/2026-09-18-jev-fast-RESULTS.md`.
+  🧑‍⚖️ **Jev judges every airport pick (2026-09-19):** after the suggestion click,
+  `_judge_pick` hands Jev the form region around the box (`_form_region`) and asks
+  which of `PICK_VERDICTS` describes it (settled / dropdown-open / wrong-or-empty);
+  Jev's verdict decides whether the fill is redone. The deterministic rule
+  `_pick_settled` (name shown AND no `option:` lines) answers only when Jev is off
+  or under `JEV_P_FLOOR`. Why: the 19 Sep nightly clicked a stale suggestion ref,
+  the old "does the box show the name" check was satisfied by the *typed* text
+  while the list stayed open, the retry never fired, and the hidden Departure box
+  crashed the search into the legacy fallback. ~2 Jev calls (~0.4 s each) per
+  search; `end_session` prints `jev diag: … pick_retries=… judge_disagreements=…`
+  into `cron.log` — a rising `judge_disagreements` means the rule and Jev see the
+  form differently, read the printed verdict lines. Fixtures
+  `tests/fixtures/dest_dropdown_open_bkk.txt` / `dest_picked_bkk.txt` are the two
+  real trees.
   Interactive use has no deadline (`begin_run` is opt-in)
 - `combo.py` — trip rules, `ORDERS`, `order_trip`, `main_trip`, `budget_trip`,
   `ticket1_options`, `ticket2_options`, `sin_night_flight_totals` (+ retired

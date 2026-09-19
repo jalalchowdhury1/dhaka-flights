@@ -73,6 +73,10 @@ def _past_deadline() -> bool:
 
 def end_session() -> None:
     _legacy.end_session()
+    print("jev diag: " + " ".join(
+        f"{k}={DIAG.get(k, 0)}" for k in (
+            "jev_calls", "jev_ms", "jev_fallbacks", "pick_retries",
+            "judge_disagreements", "engine_fallbacks", "wait_timeouts")))
 
 
 # ── browse plumbing ─────────────────────────────────────────────────────────
@@ -300,6 +304,52 @@ def _box_shows(tree: str, label: str, row: int, names: list) -> bool:
     return any(n.lower() in text for n in names)
 
 
+def _pick_settled(tree: str, label: str, row: int, names: list) -> bool:
+    """The box shows the airport AND the suggestion list has closed. While the
+    dropdown is still open the typed text alone already satisfies _box_shows,
+    and the open list hides the Departure box (19 Sep 2026 nightly)."""
+    return _box_shows(tree, label, row, names) and "option:" not in tree.lower()
+
+
+def _form_region(tree: str, label: str, row: int, before: int = 6, after: int = 40) -> str:
+    """The lines around the row-th `label` box: the box, its value and any open
+    suggestion list beneath it — the state Jev judges a pick from."""
+    lines = tree.splitlines()
+    idx = [i for i, l in enumerate(lines) if label.lower() in l.lower()]
+    if row >= len(idx):
+        return tree[:4000]
+    i = idx[row]
+    return "\n".join(l.strip() for l in lines[max(0, i - before):i + after])
+
+
+PICK_VERDICTS = {
+    "settled": "The box shows the wanted airport/city and NO suggestion list "
+               "(no 'option:' lines) is open beneath it — the pick has landed",
+    "dropdown-open": "A suggestion list with 'option:' lines is still open under "
+                     "the box — the pick did not land yet",
+    "wrong-or-empty": "The box is empty or shows a different city/airport",
+}
+
+
+def _judge_pick(tree: str, label: str, row: int, code: str, names: list) -> bool:
+    """Jev decides whether the airport pick landed, from the live form region.
+    The deterministic rule answers only when Jev is unavailable or unsure, and
+    every disagreement between the two is counted in DIAG."""
+    rule = _pick_settled(tree, label, row, names)
+    instr = (f"Google Flights search form. We typed into the '{label}' box (row {row + 1}) "
+             f"to select {names[0]} ({code}) and clicked a suggestion. "
+             f"Which statement describes the current state of that box?")
+    choice = _pick_element(instr, list(PICK_VERDICTS.values()), state=_form_region(tree, label, row))
+    if choice is None:
+        return rule
+    verdict = next(k for k, v in PICK_VERDICTS.items() if v == choice)
+    settled = verdict == "settled"
+    if settled != rule:
+        DIAG["judge_disagreements"] = DIAG.get("judge_disagreements", 0) + 1
+        print(f"  jev judged '{label}' {code} as {verdict} (rule said {'settled' if rule else 'not settled'})")
+    return settled
+
+
 def _fill_airport(label: str, code: str, row: int = 0) -> str:
     """Type into the row-th 'Where from?'/'Where to?' box and pick the suggestion.
 
@@ -331,8 +381,8 @@ def _fill_airport(label: str, code: str, row: int = 0) -> str:
             _run(f"browse click {pick}")
         else:
             _run("browse press Enter")
-        snap = wait_for(lambda t: _box_shows(t, label, row, names), timeout=4.0)
-        if _box_shows(_get_tree(snap), label, row, names):
+        snap = wait_for(lambda t: _pick_settled(t, label, row, names), timeout=4.0)
+        if _judge_pick(_get_tree(snap), label, row, code, names):
             return snap
         if attempt == 1:
             print(f"  retrying '{label}' {code} once (the pick did not stick)")

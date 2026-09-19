@@ -1,0 +1,37 @@
+[0-1] RootWebArea: Find Cheap Flights Worldwide & Book Your Ticket - Google Flights
+  [0-41] scrollable, html
+    [0-529] search: Flight
+      [0-938] dialog: Enter your destination
+        [0-940] div
+          [0-947] div
+            [0-6] combobox: Where to?
+              [0-7434] StaticText: Bangkok
+            [0-954] image
+          [0-963] button: Destination, Select multiple airports
+            [0-966] image
+        [0-8681] listbox
+          [0-8682] option: Bangkok, Thailand
+            [0-8684] image
+            [0-8687] div
+              [0-8755] StaticText: Bangkok, Thailand
+              [0-8756] StaticText: Capital of Thailand
+          [0-8695] button: Toggle nearby airports for Bangkok, Thailand
+            [0-8698] image
+          [0-8700] option: Suvarnabhumi Airport (BKK)
+            [0-8702] image
+            [0-8706] div
+              [0-8707] div
+                [0-8757] StaticText: Suvarnabhumi Airport
+                [0-8758] StaticText: BKK
+              [0-8759] StaticText: 17 mi to destination
+          [0-8713] option: Don Mueang International Airport (DMK)
+            [0-8715] image
+            [0-8719] div
+              [0-8720] div
+                [0-8760] StaticText: Don Mueang International Airport
+                [0-8761] StaticText: DMK
+              [0-8762] StaticText: 12 mi to destination
+          [0-8726] option: Bangkok Yai, Thailand
+            [0-8728] image
+          [0-8733] option: Bangkok Noi, Thailand
+            [0-8735] image

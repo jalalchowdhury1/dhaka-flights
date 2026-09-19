@@ -313,6 +313,9 @@ def _stub_fill_airport(monkeypatch, shows):
     calls = []
     answers = iter(shows)
     monkeypatch.setitem(sjev.DIAG, "pick_retries", 0)
+    # another test module imports run_daily, which starts the real Jev server;
+    # these tests exercise the rule path, so pin a not-started client
+    monkeypatch.setattr(jev_client, "get_client", lambda: _fake_jev_client(started=False))
     monkeypatch.setattr(sjev, "_run", lambda cmd: calls.append(cmd) or "")
     monkeypatch.setattr(sjev.time, "sleep", lambda s: None)
     monkeypatch.setattr(sjev, "_box_ref", lambda label, row: "@0-1")
@@ -344,3 +347,89 @@ def test_fill_airport_happy_path_does_not_retry(monkeypatch):
     sjev._fill_airport("Where to?", "DAC")
     assert sjev.DIAG["pick_retries"] == 0
     assert calls.count("browse type DAC") == 1
+
+
+# ── airport pick must be *settled*, not just typed (19 Sep 2026 nightly) ────────
+#
+# Real trees captured live 19 Sep: with the dropdown still open and "Bangkok"
+# typed, the box already shows the name, so a "does the box show it" check is
+# fooled and the Departure box is hidden behind the list (tonight's
+# "no 'Departure' box on the form" fallback). The pick counts only once the
+# dropdown has closed.
+
+def _fixture(name: str) -> str:
+    with open(os.path.join(os.path.dirname(__file__), "fixtures", name)) as f:
+        return f.read()
+
+
+def _drive_fill_airport(monkeypatch, tree: str, jev=None):
+    """Run _fill_airport against a page frozen at `tree`; return the browse commands.
+    `jev` = a fake client (default: not started, so the deterministic rule decides)."""
+    cmds = []
+    monkeypatch.setattr(jev_client, "get_client",
+                        lambda: jev if jev is not None else _fake_jev_client(started=False))
+    monkeypatch.setitem(sjev.DIAG, "judge_disagreements", 0)
+    monkeypatch.setattr(sjev, "_snap", lambda: _snap_with(tree))
+    monkeypatch.setattr(sjev, "_run", lambda cmd: (cmds.append(cmd), "")[1])
+    monkeypatch.setattr(sjev.time, "sleep", lambda s: None)
+    monkeypatch.setattr(sjev, "wait_for",
+                        lambda pred, timeout, step=0.25, count_timeout=True: _snap_with(tree))
+    monkeypatch.setitem(sjev.DIAG, "pick_retries", 0)
+    snap = sjev._fill_airport("Where to?", "BKK")
+    return cmds, snap
+
+
+def test_pick_settled_distinguishes_open_dropdown_from_real_pick():
+    names = sjev._airport_keywords("BKK")
+    open_tree = _fixture("dest_dropdown_open_bkk.txt")
+    picked_tree = _fixture("dest_picked_bkk.txt")
+    assert sjev._box_shows(open_tree, "Where to?", 0, names)      # the trap: typed text passes
+    assert not sjev._pick_settled(open_tree, "Where to?", 0, names)
+    assert sjev._pick_settled(picked_tree, "Where to?", 0, names)
+
+
+def test_fill_airport_retries_when_dropdown_stays_open(monkeypatch):
+    cmds, _ = _drive_fill_airport(monkeypatch, _fixture("dest_dropdown_open_bkk.txt"))
+    assert sjev.DIAG["pick_retries"] == 1
+    assert sum(1 for c in cmds if c.startswith("browse type ")) == 2
+
+
+def test_fill_airport_returns_once_pick_settled(monkeypatch):
+    cmds, _ = _drive_fill_airport(monkeypatch, _fixture("dest_picked_bkk.txt"))
+    assert sjev.DIAG["pick_retries"] == 0
+    assert sum(1 for c in cmds if c.startswith("browse type ")) == 1
+
+
+# ── Jev makes the pick determination; the rule is only the fallback ─────────────
+
+def test_jev_judges_pick_from_form_region(monkeypatch):
+    """Jev sees only the region around the box, and its verdict is returned."""
+    seen = {}
+    class Fake:
+        started = True
+        def pick(self, instructions, candidates, state=""):
+            seen["state"] = state; seen["candidates"] = candidates
+            return sjev.PICK_VERDICTS["settled"], 0.95
+    monkeypatch.setattr(jev_client, "get_client", lambda: Fake())
+    monkeypatch.setitem(sjev.DIAG, "judge_disagreements", 0)
+    tree = _fixture("dest_picked_bkk.txt")
+    assert sjev._judge_pick(tree, "Where to?", 0, "BKK", sjev._airport_keywords("BKK"))
+    assert "Where to?" in seen["state"] and len(seen["state"]) < len(tree)
+    assert set(seen["candidates"]) == set(sjev.PICK_VERDICTS.values())
+    assert sjev.DIAG["judge_disagreements"] == 0
+
+
+def test_jev_overrules_rule_and_forces_retry(monkeypatch):
+    """Jev says the dropdown is still open although the rule is satisfied → retry, and the disagreement is counted."""
+    jev = _fake_jev_client(started=True, choice=sjev.PICK_VERDICTS["dropdown-open"], p=0.9)
+    cmds, _ = _drive_fill_airport(monkeypatch, _fixture("dest_picked_bkk.txt"), jev=jev)
+    assert sjev.DIAG["pick_retries"] == 1
+    assert sjev.DIAG["judge_disagreements"] == 2      # once per attempt
+
+
+def test_jev_unsure_falls_back_to_rule(monkeypatch):
+    """Below the p floor Jev's verdict is ignored and the rule decides (open dropdown → retry)."""
+    jev = _fake_jev_client(started=True, choice=sjev.PICK_VERDICTS["settled"], p=0.4)
+    cmds, _ = _drive_fill_airport(monkeypatch, _fixture("dest_dropdown_open_bkk.txt"), jev=jev)
+    assert sjev.DIAG["pick_retries"] == 1
+    assert sjev.DIAG["judge_disagreements"] == 0

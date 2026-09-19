@@ -1,0 +1,252 @@
+[0-1] RootWebArea: Find Cheap Flights Worldwide & Book Your Ticket - Google Flights
+  [0-41] scrollable, html
+    [0-206] body
+      [0-216] banner
+        [0-226] div
+          [0-227] div
+            [0-228] button: Main menu
+              [0-229] image
+            [0-239] link: Google
+          [0-244] div
+            [0-246] div
+              [0-247] div
+                [0-248] button: Skip to main content
+                [0-257] button: Accessibility feedback
+              [0-267] navigation
+                [0-270] link: Explore
+                  [0-277] image
+                [0-284] link: Flights
+                  [0-291] image
+                [0-298] link: Hotels
+                  [0-305] image
+                [0-315] link: Vacation rentals
+                  [0-322] image
+            [0-340] button: Change appearance
+              [0-346] image
+          [0-357] div
+            [0-361] button: Google apps
+            [0-367] link: Sign in
+      [0-522] div
+        [0-526] heading: Flights
+        [0-527] div
+          [0-529] search: Flight
+            [0-531] div
+              [0-532] div
+                [0-537] combobox: Change ticket type. One way
+                [0-602] button: 1 passenger
+                  [0-609] span
+                    [0-610] image
+                    [0-7443] StaticText: 1
+                  [0-614] image
+                [0-772] combobox: Change seating class. Economy
+              [0-835] div
+                [0-836] div
+                  [0-842] div
+                    [0-3] combobox: Where from? Dhaka DAC
+                      [0-6666] StaticText: Dhaka
+                    [0-850] image
+                  [0-913] button: Swap origin and destination.
+                    [0-918] image
+                  [0-925] div
+                    [0-5] combobox: Where to?
+                      [0-7414] StaticText: Bangkok
+                    [0-933] image
+                [0-993] div
+                  [0-995] image
+                  [0-7] textbox: Departure
+            [0-1196] button: Search
+          [0-1208] main
+            [0-1209] div
+              [0-1211] div
+                [0-1219] div
+                  [0-1221] heading: Flexible? Discover the best flight deals with AI
+                  [0-1223] StaticText: Describe your ideal trip, and let Google Flights find the best deals for you
+                [0-35] button: Explore deals with AI
+              [0-1233] heading: Find and book cheap flights worldwide and track prices
+              [0-1235] section
+                [0-1236] div
+                  [0-1237] heading: Find cheap flights from United States to anywhere
+                  [0-1241] button: Learn more about this section
+                [0-1272] div
+                  [0-1276] tablist
+                    [0-1277] tab: Providence
+                    [0-1280] tab: Chicago
+                    [0-1283] tab: Dallas
+                    [0-1286] tab: Atlanta
+                  [0-1317] list
+                    [0-1318] listitem
+                      [0-1319] button: Find flights from Providence (PVD) to Tampa (TPA) from $182. Operated by Breeze. Oct 31 to Nov 7. 1 stop
+                        [0-1320] div
+                          [0-1322] StaticText: Providence
+                          [0-1323] image
+                          [0-1326] StaticText: Tampa
+                        [0-1327] div
+                          [0-1330] StaticText: Oct 31 — Nov 7
+                          [0-1334] StaticText: 1 stop
+                        [0-1336] div
+                          [0-1337] StaticText: from
+                          [0-1339] StaticText: $182
+                    [0-1343] listitem
+                      [0-1344] button: Find flights from Providence (PVD) to Orlando (MCO) from $178. Operated by Breeze. Dec 14 to Dec 23. Nonstop
+                        [0-1345] div
+                          [0-1347] StaticText: Providence
+                          [0-1348] image
+                          [0-1351] StaticText: Orlando
+                        [0-1352] div
+                          [0-1355] StaticText: Dec 14 — Dec 23
+                          [0-1359] StaticText: Nonstop
+                        [0-1361] div
+                          [0-1362] StaticText: from
+                          [0-1364] StaticText: $178
+                    [0-1368] listitem
+                      [0-1369] button: Find flights from Providence (PVD) to Nashville (BNA) from $314. Operated by Southwest. Dec 3 to Dec 9. Nonstop
+                        [0-1370] div
+                          [0-1372] StaticText: Providence
+                          [0-1373] image
+                          [0-1376] StaticText: Nashville
+                        [0-1377] div
+                          [0-1380] StaticText: Dec 3 — Dec 9
+                          [0-1384] StaticText: Nonstop
+                        [0-1386] div
+                          [0-1387] StaticText: from
+                          [0-1389] StaticText: $314
+                  [0-1610] button: Explore more destinations from Providence
+              [0-1621] section
+                [0-1622] heading: Useful tools to help you find the best airline tickets
+                [0-1624] div
+                  [0-1625] tablist
+                    [0-1626] tab: Find the cheapest days to fly The Date grid and Price graph make it easy to find the best flight deals
+                      [0-1627] div
+                        [0-1628] image
+                        [0-1630] div
+                          [0-1632] StaticText: Find the cheapest days to fly
+                          [0-1634] StaticText: The Date grid and Price graph make it easy to find the best flight deals
+                    [0-1635] tab: Know when to book with price insights Price history and trend data show you the best time to book your airline ticket to get the cheapest price for your flight
+                      [0-1636] div
+                        [0-1637] image
+                        [0-1639] div
+                          [0-1641] StaticText: Know when to book with price insights
+                          [0-1643] StaticText: Price history and trend data show you the best time to book your airline ticket to get the cheapest price for your flight
+                    [0-1644] tab: Track flight prices for a trip Not ready to book yet? Observe price changes for a route or flight and get notified when prices drop.
+                      [0-1645] div
+                        [0-1646] image
+                        [0-1652] div
+                          [0-1654] StaticText: Track flight prices for a trip
+                          [0-1656] StaticText: Not ready to book yet? Observe price changes for a route or flight and get notified when prices drop.
+                    [0-1657] tab: Explore the best flight deals with AI Describe your ideal trip and let Google Flights find you the best deals
+                      [0-1658] div
+                        [0-1659] image
+                        [0-1666] div
+                          [0-1668] StaticText: Explore the best flight deals with AI
+                          [0-1670] StaticText: Describe your ideal trip and let Google Flights find you the best deals
+                  [0-1671] tabpanel: Find the cheapest days to fly The Date grid and Price graph make it easy to find the best flight deals
+                    [0-1673] StaticText: Insightful tools help you choose your trip dates
+                    [0-1674] div
+                      [0-1675] StaticText: If your travel plans are flexible, use the form above to start searching for a specific trip. Then, play around with the
+                      [0-1677] StaticText: Date grid
+                      [0-1678] StaticText: and
+                      [0-1680] StaticText: Price graph
+                      [0-1681] StaticText: options on the
+                      [0-1682] StaticText: Search
+                      [0-1683] StaticText: page to find the cheapest days to fly and book your tickets.
+              [0-1709] section
+                [0-1710] heading: Popular flight destinations from United States
+                [0-1714] scrollable, div
+                  [0-1716] link: City image for Washington Washington
+                    [0-1720] image: City image for Washington
+                    [0-1723] StaticText: Washington
+                  [0-1725] link: City image for Chicago Chicago
+                    [0-1729] image: City image for Chicago
+                    [0-1732] StaticText: Chicago
+                  [0-1734] link: City image for New York New York
+                    [0-1738] image: City image for New York
+                    [0-1741] StaticText: New York
+                  [0-1743] link: City image for Dallas Dallas
+                    [0-1747] image: City image for Dallas
+                    [0-1750] StaticText: Dallas
+                  [0-1752] link: City image for Houston Houston
+                    [0-1756] image: City image for Houston
+                    [0-1759] StaticText: Houston
+                  [0-1761] link: City image for Las Vegas Las Vegas
+                    [0-1765] image: City image for Las Vegas
+                    [0-1768] StaticText: Las Vegas
+                  [0-1770] link: City image for Phoenix Phoenix
+                    [0-1774] image: City image for Phoenix
+                    [0-1777] StaticText: Phoenix
+                  [0-1779] link: City image for Denver Denver
+                    [0-1783] image: City image for Denver
+                    [0-1786] StaticText: Denver
+                  [0-1788] link: City image for Orlando Orlando
+                    [0-1792] image: City image for Orlando
+                    [0-1795] StaticText: Orlando
+                  [0-1797] link: City image for Los Angeles Los Angeles
+                    [0-1801] image: City image for Los Angeles
+                    [0-1804] StaticText: Los Angeles
+              [0-1833] section
+                [0-1835] heading: Frequently asked questions
+                [0-1839] group: Frequently asked questions
+                  [0-1847] button: What are some good flight destinations from United States?
+                    [0-1853] image
+                  [0-1916] button: How can I find last-minute flight deals?
+                    [0-1922] image
+                  [0-1949] button: How can I find cheap flights for a weekend getaway?
+                    [0-1955] image
+                  [0-1984] button: How can I find flight deals if my travel plans are flexible?
+                    [0-1990] image
+                  [0-2022] button: How can I find cheap flights to anywhere?
+                    [0-2028] image
+                  [0-2056] button: How can I get flight alerts for my trip?
+                    [0-2062] image
+              [0-2071] heading: Search more flights
+              [0-2073] section
+                [0-2074] heading: Find cheap flights on popular routes
+                [0-2077] div
+                  [0-2078] tablist
+                    [0-2082] span
+                      [0-2084] tab: Flights from cities in United States
+                      [0-2096] tab: Domestic flights in United States
+                  [0-2108] tabpanel: Flights from cities in United States
+                    [0-2110] div
+                      [0-2111] link: Flights from New York
+                      [0-2114] link: Flights from Washington
+                      [0-2117] link: Flights from Los Angeles
+                      [0-2120] link: Flights from Chicago
+                      [0-2123] link: Flights from Houston
+                      [0-2126] link: Flights from San Francisco
+          [0-2175] contentinfo
+            [0-2177] div
+              [0-2178] button: Language​·English (United States)
+                [0-2184] image
+                [0-2186] span
+                  [0-2188] StaticText: Language
+                  [0-2189] StaticText: ​
+                  [0-2192] StaticText: English (United States)
+              [0-2193] button: Location​·United States
+                [0-2199] image
+                [0-2202] span
+                  [0-2204] StaticText: Location
+                  [0-2205] StaticText: ​
+                  [0-2208] StaticText: United States
+              [0-2209] button: Currency USD
+                [0-2215] image
+            [0-2230] div
+              [0-2231] paragraph
+                [0-2232] StaticText: Current language and currency options applied: English (United States) - United States - USD
+              [0-2233] paragraph
+                [0-2234] StaticText: Displayed currencies may differ from the currencies used to purchase flights.
+                [0-2235] link: Learn more about currencies
+                  [0-2237] StaticText: Learn more
+            [0-2238] div
+              [0-2239] link: About Google Travel
+                [0-2240] StaticText: About
+              [0-2241] link: Privacy
+              [0-2243] link: Terms
+              [0-2245] link: Join user studies
+              [0-2247] link: Feedback
+              [0-2249] link: Help Center
+            [0-2252] div
+              [0-2261] button: International sites
+                [0-2267] image
+              [0-2299] button: Explore flights
+                [0-2305] image
+      [0-7437] StaticText: Use left or right arrow to toggle nearby location suggestions.
