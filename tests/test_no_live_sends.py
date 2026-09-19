@@ -15,7 +15,6 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import notify_telegram  # noqa: E402
-from conftest import REAL_DIGEST_POST  # noqa: E402
 
 
 def _trap(monkeypatch):
@@ -41,7 +40,7 @@ def test_real_digest_post_refuses_under_pytest_even_with_keys(monkeypatch):
     monkeypatch.setenv("DIGEST_KEY", "k")
     hits = _trap(monkeypatch)
     assert os.environ.get("PYTEST_CURRENT_TEST")
-    assert REAL_DIGEST_POST("flights", "<b>x</b>") is False
+    assert notify_telegram._real_digest_post("flights", "<b>x</b>") is False
     assert hits == []
 
 
