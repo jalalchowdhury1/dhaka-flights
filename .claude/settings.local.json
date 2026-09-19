@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(log show *)",
+      "Bash(launchctl unload *)",
+      "Bash(launchctl load *)",
+      "Bash(launchctl list *)",
+      "Bash(crontab -)",
+      "Bash(date -v+5M \"+%H %M\")",
+      "Bash(chmod +x \"/Users/jalalchowdhury/PycharmProjects/Dhaka flights/run_daily.sh\")",
+      "Bash(date -v+3M \"+%H %M\")",
+      "Bash(kill 1110 1109)",
+      "Bash(crontab -r)"
+    ]
+  }
+}
