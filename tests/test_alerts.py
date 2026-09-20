@@ -1,6 +1,7 @@
 """The buy-signal rule: BEFORE the book-by date price decides, AFTER it the
 date decides. These tests pin that behavior + the change-diff."""
 import sys, os, datetime
+import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import alerts
 from alerts import (headlines, price_context, countdown, changes_since, stage,
@@ -26,6 +27,27 @@ HIST = [
     {"date": "2026-08-02", "main_total": 4709},
     {"date": "2026-08-04", "main_total": 4665},
 ]
+
+
+@pytest.fixture(autouse=True)
+def _not_booked(monkeypatch):
+    """The legacy buy-signal tests describe the pre-purchase world."""
+    monkeypatch.setattr(alerts, "TICKET1_BOOKED", None)
+    monkeypatch.setattr(alerts, "TICKET2_BOOKED", None)
+
+
+def test_booked_state_retires_price_nags_and_repeats_ticket2(monkeypatch):
+    monkeypatch.setattr(alerts, "TICKET1_BOOKED", datetime.date(2026, 9, 20))
+    entry = {"date": "2026-09-21", "main_total": 4000, "ticket1_total": 3000}
+    hist = [{"date": "2026-09-19", "main_total": 4793}, entry]
+    lines = alerts.headlines(entry, hist, datetime.date(2026, 9, 22))
+    assert any("Ticket ① booked Sep 20" in l for l in lines)
+    assert any("Ticket ② open" in l for l in lines)
+    assert not any("BUY ZONE" in l or "PAST YOUR" in l or "all-time low" in l for l in lines)
+    monkeypatch.setattr(alerts, "TICKET2_BOOKED", datetime.date(2026, 9, 21))
+    lines = alerts.headlines(entry, hist, datetime.date(2026, 9, 22))
+    assert any("Ticket ② booked Sep 21" in l for l in lines)
+    assert not any("Ticket ② open" in l for l in lines)
 
 
 def test_stages():
@@ -69,7 +91,8 @@ def test_ticket1_low_fires_even_when_trip_total_does_not():
     assert any("Ticket ① new low: $3,500" in l for l in lines)
 
 
-def test_past_book_by_leads_and_retires_the_price_threshold():
+def test_past_book_by_leads_and_retires_the_price_threshold(monkeypatch):
+    monkeypatch.setattr(alerts, "REMINDERS", [])   # a dated reminder also lands on Sep 21
     e = _entry("2026-09-21", 4700, t1=3647)
     lines = headlines(e, HIST + [e], SEP_21)
     assert len(lines) == 1 and "PAST YOUR USUAL BOOKING WINDOW" in lines[0]

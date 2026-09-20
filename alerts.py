@@ -24,6 +24,15 @@ WINDOW_OPENS = datetime.date(2026, 9, 1)
 BOOK_BY = datetime.date(2026, 9, 20)
 BOOKED_HISTORY = "booked Sep 18 '24 · Sep 23 '25"
 
+# Bought-state (2026-09-20). Once a ticket is booked the buy-signal lines for
+# it retire: the nightly total keeps pricing the OLD plan (IST→DAC Jan 7), so
+# "BUY ZONE" / "PAST YOUR WINDOW" would nag about flights already in hand.
+# Set TICKET2_BOOKED the day Ticket ② is bought; the ⏰ line repeats until then.
+TICKET1_BOOKED = datetime.date(2026, 9, 20)   # Turkish via Chase Travel, IST→DAC moved to Jan 8
+TICKET2_BOOKED = None                          # US-Bangla + Scoot, cash direct
+TICKET2_PLAN = ("US-Bangla DAC→BKK Jan 28 9:35 AM (usbair.com) + Scoot BKK→SIN "
+                "Feb 2 morning (flyscoot.com, prepay 20 kg bags) — cash direct")
+
 # History entries before this date describe RETIRED trips — their totals
 # aren't comparable to the tracked trip. Moved 2026-07-18 → 2026-08-01 when
 # Bali was swapped for Bangkok: the Bali-era totals are a different trip and
@@ -77,6 +86,17 @@ REMINDERS = [
       "morning; flyscoot.com BKK→SIN Feb 2 morning — add a checked bag on Scoot.",
       "Send me the ticket numbers and I stamp them on the site, Notion and the "
       "calendar."]),
+    (datetime.date(2026, 9, 21), 0,
+     "buy Ticket ② today — US-Bangla DAC→BKK Jan 28 9:35 AM + Scoot BKK→SIN "
+     "Feb 2 morning, cash direct on each airline (Ticket ① is done)",
+     ["usbair.com → one-way DAC→BKK Thu Jan 28, 2027, 2 adults + 1 child: the "
+      "9:35 AM nonstop (~$588 for 3, 30 kg checked per person included). Pay on "
+      "the Sapphire Reserve; names exactly as on the passports.",
+      "flyscoot.com → one-way BKK→SIN Tue Feb 2, 2027, 2 adults + 1 child: the "
+      "9:15 or 11:50 AM (~$318 for 3). ADD 20 kg checked bags per person in the "
+      "same checkout — Scoot fares include no bags and airport rates are ~2×.",
+      "Send the two PNRs to the concierge: it stamps them on the Confirmed tab, "
+      "Notion and the calendar and switches this reminder off."]),
     (datetime.date(2026, 9, 15), 0,
      "email the Athenee for suite + Club-lounge supplement quotes "
      "(conf #88518376)",
@@ -89,8 +109,8 @@ REMINDERS = [
       "Tell me the quote — I update the money table."]),
     (datetime.date(2026, 12, 28), 3,
      "book the Ritz-Carlton Istanbul prepaid via Chase Travel / The Edit by "
-     "Dec 31 (Jan 5–7, 3 guests, ~$1,285) to use the 2026 $250 credit",
-     ["chase.com/travel → Hotels → Istanbul, Jan 5–7, 2 adults + 1 child (5) "
+     "Dec 31 (Jan 5–8 — 3 NIGHTS since the flight moved to Jan 8 — 3 guests) to use the 2026 $250 credit",
+     ["chase.com/travel → Hotels → Istanbul, Jan 5–8 (3 nights), 2 adults + 1 child (5) "
       "→ The Ritz-Carlton, Istanbul (The Edit badge).",
       "Pick the cheapest REFUNDABLE Guest Room that sleeps 3 (~$1,285 at the "
       "Aug read) — NOT the non-refundable Bosphorus-view rate the cart "
@@ -162,6 +182,15 @@ def headlines(entry, history, today: datetime.date) -> list:
     cur = _main(entry)
     pts = _mains(history)
     prior = [(d, v) for d, v in pts if d != entry.get("date")]
+
+    if TICKET1_BOOKED:
+        # Short on purpose: every core line must fit a phone (≤48 chars).
+        lines.append(f"✅ Ticket ① booked {TICKET1_BOOKED:%b %-d} — price nags off")
+        if not TICKET2_BOOKED:
+            lines.append("⏰ Ticket ② open — say 'ticket 2' to book")
+        else:
+            lines.append(f"✅ Ticket ② booked {TICKET2_BOOKED:%b %-d} — flights done")
+        return lines          # price nags retired: the flights are bought
 
     st = stage(today)
     if st == "past" and isinstance(cur, (int, float)) and pts:

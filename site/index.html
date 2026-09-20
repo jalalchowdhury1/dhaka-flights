@@ -359,8 +359,10 @@ const el = (html, cls) => { const d = document.createElement("div");
 const LS_KEY = "dhaka-flights:last-good";
 const RATES_RAW = "https://raw.githubusercontent.com/jalalchowdhury1/dhaka-flights/main/site/hotel_rates.json";
 const RATES_LS = "dhaka-flights:rates-last-good";
+const BOOKED_RAW = "https://raw.githubusercontent.com/jalalchowdhury1/dhaka-flights/main/site/booked.json";
 let DATA = null, DATA_SOURCE = "live";   // live | local | cache
 let RATES = null;                        // hotel_rates.json (own nightly job)
+let BOOKED = null;                       // booked.json (hand-stamped once a ticket is bought)
 let CLIENT_FINDINGS = [];
 
 /* Hotel rates ride in their own file written by a separate nightly job, so a
@@ -379,6 +381,19 @@ async function loadRates() {
     } catch (e) { console.warn("rates fetch failed", url, e); }
   }
   try { RATES = JSON.parse(localStorage.getItem(RATES_LS)); } catch (e) { RATES = null; }
+}
+
+/* booked.json is stamped by hand the day a ticket is bought. It never comes
+   from the scraper, so the nightly job can neither overwrite nor lose it. */
+async function loadBooked() {
+  for (const url of [BOOKED_RAW, "./booked.json"]) {
+    try {
+      const r = await fetch(url, {cache: "no-store"});
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      BOOKED = await r.json();
+      return;
+    } catch (e) { console.warn("booked fetch failed", url, e); }
+  }
 }
 
 const daysSince = (iso) => {
@@ -575,6 +590,7 @@ const ROUTES = {
   "stays":    () => renderStays(DATA),
   "history":  () => renderHistory(DATA),
   "total":    () => renderTotal(DATA),
+  "confirmed": () => renderConfirmed(BOOKED),
 };
 function route() {
   const name = location.hash.replace(/^#\/?/, "");
@@ -694,7 +710,7 @@ function tonightTiles(d) {
     : baliDelta >= 0
       ? `tonight: <b style="display:inline">${usd(b.total)}</b> · <span style="color:var(--good);font-weight:650">+${usd(baliDelta)} vs yours</span>`
       : `tonight: <b style="display:inline">${usd(b.total)}</b> · <span style="color:var(--warn);font-weight:650">−${usd(-baliDelta)} cheaper than yours</span>`;
-  return el(`
+  return el(`${confirmedTile()}
     <a class="tile" href="#/flights"><span style="font-size:1.15rem">✈️</span>
       <b>Flights →</b><span class="small">both tickets · bags · alternatives · playbook</span></a>
     <a class="tile" href="#/stays"><span style="font-size:1.15rem">🏨</span>
@@ -959,6 +975,8 @@ function renderFlights(d) {
   const oi = orderInfo(m);
   const bag = {};
   (m.baggage || []).forEach(b => { bag[b.route] = b; });
+
+  add(root, bookedNotice);
 
   add(root, () => {
     const badge = m.valid ? `<span class="badge good">home ${esc(m.home)} ✓</span>`
@@ -1736,6 +1754,68 @@ function baliWatchCard(d) {
     ${line ? `<div style="margin-top:8px">${line}</div>` : ""}${obLine}</div>`);
 }
 
+/* ====================== Confirmed (booked.json) =========================== */
+const isBooked = (t) => !!(t && t.status === "booked");
+
+function confirmedTile() {
+  const b = BOOKED;
+  if (!b || !isBooked(b.ticket1)) return "";
+  const t2 = b.ticket2 && b.ticket2.status === "open" ? " · Ticket ② still open" : (b.ticket2 && isBooked(b.ticket2) ? " · Ticket ② booked" : "");
+  return `<a class="tile" href="#/confirmed" style="border-color:var(--good)"><span style="font-size:1.15rem">✅</span>
+      <b>Confirmed →</b><span class="small">Ticket ① booked ${esc(b.ticket1.booked_on)}${t2}</span></a>`;
+}
+
+function bookedNotice() {
+  const b = BOOKED;
+  if (!b || !isBooked(b.ticket1)) return null;
+  return el(`<span class="badge good">✅ Ticket ① booked ${esc(b.ticket1.booked_on)}</span>
+    <div class="muted" style="margin-top:6px">The rows below still price the pre-booking plan every night —
+    only the <b>Ticket ②</b> rows matter now. Flights, times and what was paid are on the
+    <a href="#/confirmed"><b>Confirmed</b> tab</a>.</div>`, "pass");
+}
+
+function bookedLeg(l) {
+  return `<div class="leg"><span class="em">🛫</span>
+    <span><b>${esc(l.flight)}</b> <span class="mono-route">${esc(l.route)}</span>
+      <div class="small" style="margin-top:2px">${esc(l.depart)} → ${esc(l.arrive)} · ${esc(l.duration)} · ${esc(l.stops)}</div>
+      ${l.note ? `<div class="muted" style="margin-top:2px">💡 ${esc(l.note)}</div>` : ""}
+    </span></div>`;
+}
+
+function renderConfirmed(b) {
+  const root = el("");
+  if (!b || !b.ticket1) {
+    root.appendChild(el(`<b>Nothing confirmed yet.</b>
+      <div class="muted" style="margin-top:4px">This tab fills in the day a ticket is bought (booked.json).</div>`, "pass"));
+    return root;
+  }
+  const t = b.ticket1;
+  if (isBooked(t)) {
+    add(root, () => el(`<span class="micro">Ticket ① — ${esc(t.airline)} open-jaw, one ticket</span>
+      <span class="badge good">BOOKED ${esc(t.booked_on)}</span>
+      <div style="font-size:1.7rem;font-weight:750;letter-spacing:-.02em;color:var(--ink);margin-top:6px">${usd(t.price)}</div>
+      <div class="muted" style="margin:2px 0 8px">${t.points.toLocaleString("en-US")} pts at ${esc(t.points_rate)} (worth ${usd(t.points_value)}) + ${usd(t.cash)} on the ${esc(t.card)} · via ${esc(t.channel)}</div>
+      ${(t.legs || []).map(bookedLeg).join("")}
+      <div class="small" style="margin-top:8px">${esc(t.travelers)} · ${esc(t.fare)}</div>
+      ${t.google_same_day ? `<div class="muted" style="margin-top:6px">Same itinerary on Google/Turkish the same day: ${usd(t.google_same_day)} — the difference bought the 1.5× point value.</div>` : ""}`, "pass"));
+    add(root, () => el(sec("🗺️ The trip as booked",
+      `<div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:10px 0 4px">` +
+      (t.stays || []).map((s, i) => `${i ? '<span style="color:var(--ink-3)">→</span>' : ""}<span class="chip">${s.em} <b>${esc(s.city)}</b> <span style="color:var(--ink-2)">${esc(s.when)}</span></span>`).join("") +
+      `</div>` + (t.stays || []).map(s => `<div class="muted" style="margin-top:4px">${s.em} <b>${esc(s.city)}</b> — ${esc(s.status)}</div>`).join(""),
+      true)));
+    add(root, () => el(sec("🧾 Cancellation & references",
+      `<div class="muted" style="margin-top:8px">${esc(t.cancellation)}</div>
+       <div class="muted" style="margin-top:6px">${esc(t.references)}</div>`, true)));
+  }
+  const t2 = b.ticket2;
+  if (t2) add(root, () => el(`<span class="micro">Ticket ② — the middle hops</span>
+    ${isBooked(t2) ? `<span class="badge good">BOOKED ${esc(t2.booked_on || "")}</span>` : `<span class="badge warn">⏳ still to buy</span>`}
+    <div class="muted" style="margin-top:6px">${esc(t2.plan || "")}</div>
+    ${t2.reminder ? `<div class="small" style="margin-top:6px">${esc(t2.reminder)}</div>` : ""}
+    ${(t2.legs || []).map(bookedLeg).join("")}`, "pass"));
+  return root;
+}
+
 function renderHistory(d) {
   const root = el("");
   const hRows = flattenHistory(d.history);
@@ -1776,7 +1856,7 @@ modal.onclick = (e) => { if (e.target === modal) modal.close(); };
 
 (async function boot() {
   applyTheme(localStorage.getItem(THEME_KEY) || "auto");
-  await Promise.all([loadData(), loadRates().catch(() => {})]);
+  await Promise.all([loadData(), loadRates().catch(() => {}), loadBooked().catch(() => {})]);
   renderTopbar();
   if (DATA === null) { renderNoDataScreen(); renderSelfcheck(); return; }
   CLIENT_FINDINGS = [

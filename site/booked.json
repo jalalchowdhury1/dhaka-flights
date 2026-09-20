@@ -1,0 +1,37 @@
+{
+  "updated": "2026-09-20",
+  "ticket1": {
+    "status": "booked",
+    "booked_on": "Sep 20, 2026",
+    "channel": "Chase Travel (Ultimate Rewards portal)",
+    "airline": "Turkish Airlines",
+    "fare": "Ecofly — checked + carry-on bags included · no refund after the 24-h window · no miles · seats free at online check-in, 24 h before each flight",
+    "travelers": "2 adults + Aoife (5)",
+    "price": 4084.19,
+    "points": 127000,
+    "points_rate": "1.5×",
+    "points_value": 1905,
+    "cash": 2179.19,
+    "card": "Sapphire Reserve",
+    "google_same_day": 3885,
+    "legs": [
+      {"flight": "TK 82", "route": "BOS → IST", "depart": "Mon Jan 4, 2027 · 8:00 PM", "arrive": "Tue Jan 5 · 1:20 PM", "duration": "9h 20m", "stops": "Nonstop"},
+      {"flight": "TK 712", "route": "IST → DAC", "depart": "Fri Jan 8, 2027 · 7:30 PM", "arrive": "Sat Jan 9 · 5:50 AM", "duration": "7h 20m", "stops": "Nonstop",
+       "note": "Jan 7 was not available on Chase, so Istanbul is 3 nights (Jan 5, 6, 7) and Dhaka starts Jan 9"},
+      {"flight": "TK 55 + TK 81", "route": "SIN → IST → BOS", "depart": "Sat Feb 6, 2027 · 11:15 PM", "arrive": "Sun Feb 7 · 6:05 PM", "duration": "31h 50m", "stops": "1 stop · 9h 45m in Istanbul"}
+    ],
+    "stays": [
+      {"em": "🕌", "city": "Istanbul", "when": "Jan 5–8 · 3 nights", "status": "Ritz-Carlton via The Edit — not booked yet (book Oct–Dec, 3 nights now)"},
+      {"em": "🇧🇩", "city": "Dhaka", "when": "Jan 9–28", "status": "family"},
+      {"em": "🇹🇭", "city": "Bangkok", "when": "Jan 28–Feb 2 · 5 nights", "status": "The Athenee — booked on Marriott points"},
+      {"em": "🇸🇬", "city": "Singapore", "when": "Feb 2–6 · 4 nights", "status": "Capitol Kempinski — refundable hold on Amex"}
+    ],
+    "cancellation": "Online cancellation is unavailable — call Chase Travel 1-855-234-2542.",
+    "references": "Chase Trip ID and the Turkish PNR live in Notion → Dhaka Trip 2027 → Tickets. Not published here: this page is public."
+  },
+  "ticket2": {
+    "status": "open",
+    "plan": "DAC → BKK Jan 28 (US-Bangla 9:35 AM, 30 kg included) + BKK → SIN Feb 2 (Scoot morning, prepay 20 kg bags) — cash, booked direct on each airline",
+    "reminder": "Telegram reminder Sep 21, 2026"
+  }
+}
