@@ -1,0 +1,47 @@
+{
+  "updated": "2026-09-25",
+  "note": "Hand-kept ledger of every trip payment still ahead. Amounts come from booking confirmations, the booked tickets, and tonight's live prices. An item with no real number says unknown and is left out of the totals. Public file: no confirmation numbers or card digits.",
+  "fx_note": "Kempinski is billed in SGD 1,900.43; the USD figure is the booking-day rate and will move a little.",
+  "items": [
+    {"id": "ticket2", "what": "Ticket ② flights: Dhaka → Bangkok Jan 28 + Bangkok → Singapore Feb 2", "status": "not_booked",
+     "usd": 903, "live": "ticket2", "due": "2026-10-01", "due_label": "Buy now (the buy window is open)",
+     "pay": "Cash, direct with US-Bangla and Scoot", "cancel": "check fare rules at purchase",
+     "basis": "Tonight's live Google price for all 3 people"},
+    {"id": "scoot_bags", "what": "Scoot checked bags (Bangkok → Singapore)", "status": "not_booked",
+     "usd": 125, "range": "$100–150", "due": "2026-10-01", "due_label": "Add when Ticket ② is bought",
+     "pay": "Card on scoot.com", "cancel": "n/a", "basis": "Estimate. The Fly fare includes no checked bag"},
+    {"id": "accu_chek", "what": "Things to buy: Accu-Chek strips ×2", "status": "not_booked",
+     "usd": 34, "due": "2026-12-04", "due_label": "By Fri Dec 4", "pay": "Card", "cancel": "n/a",
+     "basis": "About $17 a pack"},
+    {"id": "ritz_ist", "what": "Istanbul: Ritz-Carlton, Jan 5–8 (3 nights) via Chase The Edit", "status": "not_booked",
+     "usd": 300, "due": "2026-12-31", "due_label": "Book Oct–Dec, before Dec 31",
+     "pay": "Split: ~$300 on Sapphire Reserve + the rest in Chase points (Boost)",
+     "points": "3-night price not quoted yet (the 2-night quote was $1,285 ≈ 60K pts)",
+     "cancel": "choose a refundable room", "basis": "Card portion of the agreed split-pay plan. The $250 Edit credit comes back against it"},
+    {"id": "kempinski", "what": "Singapore: Capitol Kempinski, Feb 2–6 (4 nights)", "status": "reserved",
+     "usd": 1497, "due": "2027-01-02", "due_label": "Prepay Jan 2 (to use the 2027 Amex $300), else at the hotel Feb 6",
+     "pay": "Amex Platinum (Fine Hotels + Resorts)", "cancel": "Free until Jan 31, 2027",
+     "basis": "Amex confirmation: SGD 1,585.00 + SGD 315.43 tax"},
+    {"id": "bd_visa", "what": "Bangladesh visa on arrival ×3", "status": "not_booked",
+     "usd": 150, "cash_only": true, "due": "2027-01-09", "due_label": "At Dhaka airport, Jan 9",
+     "pay": "US dollar BILLS: bring $150 in cash", "cancel": "n/a", "basis": "$50 per person, child included"},
+    {"id": "athenee_upgrade", "what": "Athenee Bangkok suite / Club supplement (optional)", "status": "optional",
+     "usd": null, "range": "$400–750 if you take it", "due": "2027-02-02", "due_label": "At the hotel, only if you ask for it",
+     "pay": "Card at the hotel", "cancel": "n/a", "basis": "Ballpark $80–150 a night. Never requested, so not counted"}
+  ],
+  "unknown": [
+    "Travel insurance: never priced",
+    "Airport transfers / limo: never priced",
+    "Dhaka costs (driver, phone top-up, internet)",
+    "Rug (9 × 13 ft), rice cooker, LMNT, Brita filters, floss, saffron gifts"
+  ],
+  "credits_back": [
+    {"what": "Chase The Edit credit", "usd": 250, "when": "≤8 weeks after the Ritz charge (book by Dec 31)"},
+    {"what": "Amex Platinum hotel credit (Jan–Jun 2027)", "usd": 300, "when": "After the Jan 2 Kempinski prepay"}
+  ],
+  "perks_not_cash": "Ritz $100 + Kempinski $125 on-property credits and the breakfasts: real value, but only if you spend it there. Not counted as cash back.",
+  "paid": [
+    {"what": "Ticket ①: Turkish, Boston ⇄ Istanbul ⇄ Dhaka", "usd": 2179.19, "points": "127,000 Chase", "when": "Sep 20, 2026"},
+    {"what": "Bangkok: The Athenee, 5 nights", "usd": 0, "points": "177,000 Marriott (taxes included)", "when": "Aug 23, 2026 · free cancel to Jan 26"}
+  ]
+}

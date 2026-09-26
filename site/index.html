@@ -359,9 +359,11 @@ const el = (html, cls) => { const d = document.createElement("div");
 const LS_KEY = "dhaka-flights:last-good";
 const RATES_RAW = "https://raw.githubusercontent.com/jalalchowdhury1/dhaka-flights/main/site/hotel_rates.json";
 const RATES_LS = "dhaka-flights:rates-last-good";
+const CASH_RAW = "https://raw.githubusercontent.com/jalalchowdhury1/dhaka-flights/main/site/cash_plan.json";
 const BOOKED_RAW = "https://raw.githubusercontent.com/jalalchowdhury1/dhaka-flights/main/site/booked.json";
 let DATA = null, DATA_SOURCE = "live";   // live | local | cache
 let RATES = null;                        // hotel_rates.json (own nightly job)
+let CASH = null;                         // cash_plan.json (hand-kept ledger of payments still ahead)
 let BOOKED = null;                       // booked.json (hand-stamped once a ticket is bought)
 let CLIENT_FINDINGS = [];
 
@@ -385,6 +387,18 @@ async function loadRates() {
 
 /* booked.json is stamped by hand the day a ticket is bought. It never comes
    from the scraper, so the nightly job can neither overwrite nor lose it. */
+async function loadCash() {
+  const qa = new URLSearchParams(location.search).get("qa");
+  for (const url of qa ? ["./cash_plan.json"] : [CASH_RAW, "./cash_plan.json"]) {
+    try {
+      const r = await fetch(url, {cache: "no-store"});
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      CASH = await r.json();
+      return;
+    } catch (e) { console.warn("cash plan fetch failed", url, e); }
+  }
+}
+
 async function loadBooked() {
   for (const url of [BOOKED_RAW, "./booked.json"]) {
     try {
@@ -591,6 +605,7 @@ const ROUTES = {
   "history":  () => renderHistory(DATA),
   "total":    () => renderTotal(DATA),
   "confirmed": () => renderConfirmed(BOOKED),
+  "cash":     () => renderCash(CASH, DATA),
 };
 function route() {
   const name = location.hash.replace(/^#\/?/, "");
@@ -715,7 +730,7 @@ function tonightTiles(d) {
     : baliDelta >= 0
       ? `tonight: <b style="display:inline">${usd(b.total)}</b> · <span style="color:var(--good);font-weight:650">+${usd(baliDelta)} vs yours</span>`
       : `tonight: <b style="display:inline">${usd(b.total)}</b> · <span style="color:var(--warn);font-weight:650">−${usd(-baliDelta)} cheaper than yours</span>`;
-  return el(`${confirmedTile()}
+  return el(`${confirmedTile()}${cashTile()}
     <a class="tile" href="#/flights"><span style="font-size:1.15rem">✈️</span>
       <b>Flights →</b><span class="small">both tickets · bags · alternatives · playbook</span></a>
     <a class="tile" href="#/stays"><span style="font-size:1.15rem">🏨</span>
@@ -1380,7 +1395,11 @@ function renderTotal(d) {
   const t2Legs = legs.filter(l => typeof l.price_total === "number");
   const t2Total = sg.price_total != null ? sg.price_total
     : t2Legs.reduce((a, l) => a + l.price_total, 0);
-  const flightsTotal = m.total != null ? m.total : (oj.price_total || 0) + t2Total;
+  // Ticket ① is BOUGHT (booked.json): budget with what was paid, never with
+  // tonight's live scrape (25 Sep: a degraded $18,914 read inflated this tab).
+  const bt1 = BOOKED && BOOKED.ticket1 && BOOKED.ticket1.status === "booked" ? BOOKED.ticket1 : null;
+  const flightsTotal = bt1 ? bt1.price + t2Total
+    : m.total != null ? m.total : (oj.price_total || 0) + t2Total;
   const t2Rows = sg.price_total != null
     ? line(`Ticket ② · ${esc(sg.airline || "?")}`, usd2(sg.price_total), "", esc(sg.desc || `${sg.out_date || ""} → ${sg.ret_date || ""}`))
     : t2Legs.map(l => line(`Ticket ② · ${esc(l.route)} · ${esc(l.airline)}`, usd2(l.price_total), "",
@@ -1390,9 +1409,11 @@ function renderTotal(d) {
     ? `<div class="small" style="margin-top:4px">⚠️ ${esc(m.baggage_warnings[0])}</div>` : "";
   add(root, () => el(`<span class="micro">✈️ Flights — tonight's cheapest · ${esc(m.order_label || "")} · 2 adults + 1 child</span>
     <div class="pass"><div class="scroll-x"><table>
-      ${line(`Ticket ① · ${esc(oj.airline || "?")}`, usd2(oj.price_total), "", esc(oj.desc || oj.route || ""))}
+      ${bt1 ? line(`Ticket ① · ${esc(bt1.airline)} · <span class="badge good">booked ${esc(bt1.booked_on)}</span>`, usd2(bt1.price), "",
+                   `what you paid: ${usd2(bt1.cash)} card + ${bt1.points.toLocaleString()} pts (${usd2(bt1.points_value)}) · tonight's live search: ${usd2(oj.price_total)}${oj.suspect ? " ⚠️ suspect read" : ""}`)
+            : line(`Ticket ① · ${esc(oj.airline || "?")}`, usd2(oj.price_total), "", esc(oj.desc || oj.route || ""))}
       ${t2Rows}
-      ${line("<b>Flights total</b>", `<b>${usd2(flightsTotal)}</b>`, "", "not booked yet — the buy window is mid/late September")}
+      ${line("<b>Flights total</b>", `<b>${usd2(flightsTotal)}</b>`, "", bt1 ? "① paid · ② still to buy at tonight's price" : "not booked yet — the buy window is mid/late September")}
     </table></div>
     <div class="small" style="margin-top:6px">Checked bags included: ${bags || "—"}.${bagWarn ? "" : ""}</div>${bagWarn}
     ${RATES && RATES.flight_plan ? `<div class="small" style="margin-top:6px"><b>How to pay (Chase Travel read 2026-08-23):</b>
@@ -1508,9 +1529,11 @@ function renderTotal(d) {
 
   /* ── Totals ── */
   const fp = (RATES && RATES.flight_plan) || {};
-  const t1Price = m.ticket1_total != null ? m.ticket1_total : (oj.price_total || 0);
-  const premium = typeof fp.chase_premium === "number" ? fp.chase_premium : 0;
-  const ptsValue = typeof fp.points_1_5x === "number" ? Math.min(fp.points_1_5x * ((fp.cents_1_5x || 1.5) / 100), t1Price + premium) : 0;
+  const bT1 = BOOKED && BOOKED.ticket1 && BOOKED.ticket1.status === "booked" ? BOOKED.ticket1 : null;
+  const t1Price = bT1 ? bT1.price : m.ticket1_total != null ? m.ticket1_total : (oj.price_total || 0);
+  const premium = bT1 ? 0 : typeof fp.chase_premium === "number" ? fp.chase_premium : 0;
+  const ptsValue = bT1 ? bT1.points_value
+    : typeof fp.points_1_5x === "number" ? Math.min(fp.points_1_5x * ((fp.cents_1_5x || 1.5) / 100), t1Price + premium) : 0;
   const ist = stayFor("IST"), sin = stayFor("SIN");
   // Istanbul's decided payment is split-pay (points_routes.split): ~$300 on
   // the card with the $250 posting against it, the rest in ordinary points at
@@ -1519,7 +1542,7 @@ function renderTotal(d) {
   // headline. Singapore keeps the established value basis ($1,497 − credits).
   const istSplit = ist && !ist.bk && ist.pr && ist.pr.split ? ist.pr.split : null;
   const istPts = istSplit ? Math.round(Math.max(0, ist.total - istSplit.card) / (istSplit.cents / 100)) : 0;
-  const chasePtsTotal = (typeof fp.points_1_5x === "number" ? fp.points_1_5x : 0) + istPts;
+  const chasePtsTotal = (bT1 ? bT1.points : typeof fp.points_1_5x === "number" ? fp.points_1_5x : 0) + istPts;
   const days = (() => { const a = Date.parse(oj.out_date || ""), b = Date.parse(oj.ret_date || ""); return isNaN(a) || isNaN(b) ? null : Math.round((b - a) / 86400000); })();
   // "Show me the whole payment, then take off the breakfast and credits"
   // (2026-08-23): section 1 = every charge as it actually lands; section 2 =
@@ -1536,7 +1559,8 @@ function renderTotal(d) {
   add(root, () => el(`<span class="micro">🧾 The whole trip — three of you</span>
     <div class="pass"><div class="small" style="margin-bottom:4px"><b>1 · What you actually pay</b></div>
     <div class="scroll-x"><table>
-      ${line("Ticket ① — Chase Travel, card portion", usd2(t1Charge), "", `${usd2(t1Price + premium)} portal price − ${usd2(ptsValue)} covered by the 127,825 pts at 1.5¢`)}
+      ${bT1 ? line("Ticket ① — Chase Travel, card portion (paid)", usd2(bT1.cash), "", `${usd2(bT1.price)} paid ${esc(bT1.booked_on)} − ${usd2(bT1.points_value)} covered by ${bT1.points.toLocaleString()} pts at 1.5¢`)
+            : line("Ticket ① — Chase Travel, card portion", usd2(t1Charge), "", `${usd2(t1Price + premium)} portal price − ${usd2(ptsValue)} covered by the 127,825 pts at 1.5¢`)}
       ${line("Ticket ② — US-Bangla + Scoot, direct", usd2(t2Total), "", "cash, both carriers")}
       ${ist ? line("Istanbul — Ritz-Carlton", usd2(istCharge), "", istSplit ? `card portion of the split; ~${istPts.toLocaleString()} ordinary pts at ${istSplit.cents}¢ Boost pay the other ${usd2(Math.max(0, ist.total - istSplit.card))} (all-in ${usd2(ist.total)})` : `all-in ${usd2(ist.total)}`) : ""}
       ${sin ? line("Singapore — Kempinski", usd2(sinCharge), "", sin.bk ? "due at the property (SGD), $0 today" : "all-in") : ""}
@@ -1550,7 +1574,7 @@ function renderTotal(d) {
       ${line("− property credits", "− " + usd2((ist ? ist.prop : 0) + (sin ? sin.prop : 0)), "", `$${ist ? ist.prop : 0} Ritz + $${sin ? sin.prop : 0} Kempinski F&B — spend them, they're use-or-lose`)}
       ${line("− breakfasts included for two", "− " + usd2(breakfasts), "", `${usd2(ist ? ist.breakfast : 0)} Istanbul + ${usd2(sin ? sin.breakfast : 0)} Singapore ($60/day; Aoife eats free at the Kempinski)`)}
       ${line("<b>True cost after credits & breakfasts</b>", `<b style="font-size:1.1rem">${usd2(trueCost)}</b>`, "", days ? `${usd2(trueCost / days)}/day over ${days} days (${esc(oj.out_date || "")} → ${esc(oj.ret_date || "")})` : "")}
-      ${line("+ points spent", `${typeof fp.marriott_points === "number" ? fp.marriott_points.toLocaleString() + " Marriott" : ptsLabel} + ${chasePtsTotal.toLocaleString()} Chase`, "", istPts ? "Chase = 127,825 legacy on Ticket ① + ~" + istPts.toLocaleString() + " ordinary on the Ritz" : "not cash")}
+      ${line("+ points spent", `${typeof fp.marriott_points === "number" ? fp.marriott_points.toLocaleString() + " Marriott" : ptsLabel} + ${chasePtsTotal.toLocaleString()} Chase`, "", istPts ? `Chase = ${(bT1 ? bT1.points : 127825).toLocaleString()} legacy on Ticket ① + ~` + istPts.toLocaleString() + " ordinary on the Ritz" : "not cash")}
     </table></div>
     <div class="small" style="margin-top:8px">What is firm vs estimated: ${[bookings.BKK ? "Bangkok is booked on points (refundable)" : null, sin && sin.bk ? "Singapore is booked (Pay-at-Check-in hold, refundable to Jan 31)" : null].filter(Boolean).join("; ") || "nothing is booked yet"}; flights re-price every night until you buy (~mid/late September); Istanbul is tonight's best-value pick, not a booking. Amex's $300 hotel credit can be earned once per half-year, so only one of the two card stays gets it.</div></div>`));
   return root;
@@ -1786,6 +1810,88 @@ function baliWatchCard(d) {
 /* ====================== Confirmed (booked.json) =========================== */
 const isBooked = (t) => !!(t && t.status === "booked");
 
+/* ---- Cash plan (#/cash) — every payment still ahead (2026-09-25) ---------
+   "how much cash do I need to keep on hand": the hand-kept ledger in
+   cash_plan.json, with Ticket ② re-priced from tonight's live search. Only
+   real numbers are summed; unknowns are listed, never guessed. */
+function cashRows(c, d) {
+  const hist = (d && d.history) || [];
+  const t2live = hist.length ? hist[hist.length - 1].ticket2_total : null;
+  const t2done = BOOKED && BOOKED.ticket2 && isBooked(BOOKED.ticket2);
+  return (c.items || []).map(it => {
+    const r = Object.assign({}, it);
+    if (it.live === "ticket2") {
+      if (t2done) { r.status = "paid"; r.usd = BOOKED.ticket2.cash ?? BOOKED.ticket2.price ?? it.usd; }
+      else if (typeof t2live === "number") { r.usd = t2live; r.basis = `Tonight's live Google price for all 3 (${d.updated || ""})`; }
+    }
+    return r;
+  }).sort((a, b) => String(a.due).localeCompare(String(b.due)));
+}
+function cashSums(c, d) {
+  const rows = cashRows(c, d);
+  const due = rows.filter(r => typeof r.usd === "number" && (r.status === "not_booked" || r.status === "reserved"));
+  const total = due.reduce((a, r) => a + r.usd, 0);
+  const back = (c.credits_back || []).reduce((a, x) => a + (x.usd || 0), 0);
+  return {rows, due, total, back, net: total - back};
+}
+function cashTile() {
+  if (!CASH || !DATA) return "";
+  const s = cashSums(CASH, DATA);
+  return `<a class="tile" href="#/cash"><span style="font-size:1.15rem">💵</span>
+      <b>Cash plan →</b><span class="small">${usd(s.total)} still to pay · ${usd(s.back)} comes back · keep ${usd(s.net)} ready</span></a>`;
+}
+function renderCash(c, d) {
+  const root = el("");
+  if (!c) { root.appendChild(el(`<b>Cash plan not loaded.</b><div class="muted">cash_plan.json could not be fetched — try again.</div>`, "pass")); return root; }
+  const s = cashSums(c, d);
+  const bills = s.rows.filter(r => r.cash_only && r.status !== "paid").reduce((a, r) => a + (r.usd || 0), 0);
+  add(root, () => el(`<div class="pass-head"><span>Cash to keep ready</span><span>updated ${esc(c.updated)}</span></div>
+    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+      <span class="price-lg">${usd(s.total)}</span><span class="muted">still to pay, known items</span></div>
+    <div style="margin-top:6px">− ${usd(s.back)} card credits come back later → <b>${usd(s.net)} net</b></div>
+    ${bills ? `<div class="small" style="margin-top:6px">💵 Of that, <b>${usd(bills)} must be US dollar bills</b> (Dhaka visa on arrival).</div>` : ""}
+    <div class="small muted" style="margin-top:6px">${s.rows.filter(r => r.usd == null && r.status !== "paid").length + (c.unknown || []).length} more items have no price yet — listed at the bottom, not guessed.</div>`, "pass"));
+
+  // by month: what leaves the account when
+  const months = {};
+  s.due.forEach(r => { const k = String(r.due).slice(0, 7); months[k] = (months[k] || 0) + r.usd; });
+  const mName = k => new Date(k + "-15T12:00").toLocaleString("en-US", {month: "short", year: "numeric"});
+  const maxM = Math.max(1, ...Object.values(months));
+  add(root, () => el(sec("📅 When the money goes out", `<div class="pass">` +
+    Object.keys(months).sort().map(k => `<div style="display:flex;align-items:center;gap:8px;margin:4px 0">
+      <span style="width:72px" class="small">${mName(k)}</span>
+      <span style="flex:1;background:var(--line,#ddd);border-radius:4px;height:10px;position:relative">
+        <span style="position:absolute;left:0;top:0;bottom:0;width:${Math.round(100 * months[k] / maxM)}%;background:var(--ink,#333);border-radius:4px"></span></span>
+      <b style="width:64px;text-align:right">${usd(months[k])}</b></div>`).join("") + `</div>`, true)));
+
+  const badge = r => r.status === "reserved" ? `<span class="badge warn">held · not charged</span>`
+    : r.status === "optional" ? `<span class="badge">optional</span>`
+    : r.status === "paid" ? `<span class="badge good">paid</span>`
+    : `<span class="badge warn">to book</span>`;
+  add(root, () => el(sec("🧾 Every payment still ahead", `<div class="pass scroll-x"><table>
+    <tr><th>When</th><th>What</th><th class="num">Amount</th></tr>` +
+    s.rows.map(r => `<tr><td class="small">${esc(r.due_label || r.due)}</td>
+      <td class="wrap">${esc(r.what)} ${badge(r)}
+        <div class="small muted">${esc(r.pay || "")}${r.points ? " · " + esc(r.points) : ""}${r.cancel && r.cancel !== "n/a" ? " · cancel: " + esc(r.cancel) : ""}</div>
+        <div class="small muted">${esc(r.basis || "")}</div></td>
+      <td class="num"><b>${r.usd == null ? esc(r.range || "unknown") : usd(r.usd)}</b>${r.range && r.usd != null ? `<div class="small muted">${esc(r.range)}</div>` : ""}</td></tr>`).join("") +
+    `<tr><td></td><td><b>Known total</b></td><td class="num"><b>${usd(s.total)}</b></td></tr></table>
+    ${c.fx_note ? `<div class="small muted" style="margin-top:6px">${esc(c.fx_note)}</div>` : ""}</div>`, true)));
+
+  add(root, () => el(sec("↩️ Comes back later (statement credits)", `<div class="pass scroll-x"><table>` +
+    (c.credits_back || []).map(x => `<tr><td class="wrap">${esc(x.what)}<div class="small muted">${esc(x.when)}</div></td>
+      <td class="num">− ${usd(x.usd)}</td></tr>`).join("") +
+    `</table>${c.perks_not_cash ? `<div class="small muted" style="margin-top:6px">${esc(c.perks_not_cash)}</div>` : ""}</div>`, false)));
+
+  add(root, () => el(sec("❓ No price yet", `<div class="pass"><ul style="margin:0;padding-left:18px">` +
+    (c.unknown || []).map(u => `<li class="small">${esc(u)}</li>`).join("") + `</ul></div>`, false)));
+
+  add(root, () => el(sec("✅ Already paid", `<div class="pass scroll-x"><table>` +
+    (c.paid || []).map(p => `<tr><td class="wrap">${esc(p.what)}<div class="small muted">${esc(p.when)} · ${esc(p.points || "")}</div></td>
+      <td class="num">${usd(p.usd)}</td></tr>`).join("") + `</table></div>`, false)));
+  return root;
+}
+
 function confirmedTile() {
   const b = BOOKED;
   if (!b || !isBooked(b.ticket1)) return "";
@@ -1885,7 +1991,7 @@ modal.onclick = (e) => { if (e.target === modal) modal.close(); };
 
 (async function boot() {
   applyTheme(localStorage.getItem(THEME_KEY) || "auto");
-  await Promise.all([loadData(), loadRates().catch(() => {}), loadBooked().catch(() => {})]);
+  await Promise.all([loadData(), loadRates().catch(() => {}), loadBooked().catch(() => {}), loadCash().catch(() => {})]);
   renderTopbar();
   if (DATA === null) { renderNoDataScreen(); renderSelfcheck(); return; }
   CLIENT_FINDINGS = [
