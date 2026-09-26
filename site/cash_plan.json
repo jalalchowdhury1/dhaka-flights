@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-25",
+  "updated": "2026-09-26",
   "note": "Hand-kept ledger of every trip payment still ahead. Amounts come from booking confirmations, the booked tickets, and tonight's live prices. An item with no real number says unknown and is left out of the totals. Public file: no confirmation numbers or card digits.",
   "fx_note": "Kempinski is billed in SGD 1,900.43; the USD figure is the booking-day rate and will move a little.",
   "items": [
@@ -26,8 +26,8 @@
      "usd": 150, "cash_only": true, "due": "2027-01-09", "due_label": "At Dhaka airport, Jan 9",
      "pay": "US dollar BILLS: bring $150 in cash", "cancel": "n/a", "basis": "$50 per person, child included"},
     {"id": "athenee_upgrade", "what": "Athenee Bangkok suite / Club supplement (optional)", "status": "optional",
-     "usd": null, "range": "$400–750 if you take it", "due": "2027-02-02", "due_label": "At the hotel, only if you ask for it",
-     "pay": "Card at the hotel", "cancel": "n/a", "basis": "Ballpark $80–150 a night. Never requested, so not counted"}
+     "usd": null, "range": "$400–750 if you take it", "due": "2027-02-02", "due_label": "Quote asked Sep 26 (email sent); pay at the hotel only if you take it",
+     "pay": "Card at the hotel", "cancel": "n/a", "basis": "Ballpark $80–150 a night until the hotel replies. Optional, so not counted"}
   ],
   "unknown": [
     "Travel insurance: never priced",
