@@ -26,3 +26,17 @@ def _no_live_sends(monkeypatch):
                         lambda *a, **k: False)
     monkeypatch.setattr(notify_telegram, "TELEGRAM_TOKEN", "")
     monkeypatch.setattr(notify_telegram, "TELEGRAM_CHAT_ID", "")
+
+
+@pytest.fixture(autouse=True)
+def _no_live_browser(monkeypatch):
+    """2026-09-25: the Ticket ① guard's direct-URL read drove the real browser
+    from test_scraper's thin-list test. No test may open Google; tests that
+    exercise the guard stub _scrape_ticket1_direct themselves. History reads
+    are pinned too so a bad night in site/data.json can't flip a test."""
+    import scraper
+    if not hasattr(scraper, "_real_ticket1_baseline"):
+        scraper._real_ticket1_baseline = scraper.ticket1_baseline   # for test_ticket1_guard
+    monkeypatch.setattr(scraper, "_scrape_ticket1_direct", lambda cfg: [])
+    monkeypatch.setattr(scraper, "ticket1_baseline", lambda history=None: 3885)
+    scraper.T1_PENDING.clear()

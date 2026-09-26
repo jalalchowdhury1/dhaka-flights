@@ -75,6 +75,41 @@ def should_stamp(payload: dict, notify_status: str) -> bool:
     return bool(payload.get("main")) and notify_status not in ("minimal", "broken")
 
 
+T1_RERUN_FILE = os.path.join(os.path.dirname(__file__), ".t1_rerun_date")
+
+
+def ticket1_suspect_warnings(tickets1: list) -> list:
+    """One loud line per Ticket ① order whose price never looked real."""
+    seen, out = set(), []
+    for r in tickets1 or []:
+        why = r.get("suspect")
+        key = r.get("ret_city") or r.get("label")
+        if why and key not in seen:
+            seen.add(key)
+            out.append(f"🎫 Ticket ① ({key} return) price NOT trustworthy tonight — {why}. "
+                       "Four reads (form ×2, direct URL ×2) all came back degraded.")
+    return out
+
+
+def ticket1_rerun_wanted(payload: dict) -> bool:
+    """The trip's Ticket ① is still suspect → skip the stamp ONCE per day so
+    the 2:00 slot re-runs the whole search (Google's degraded lists have
+    cleared within hours every time so far)."""
+    t1 = ((payload.get("main") or {}).get("openjaw")) or {}
+    if not t1.get("suspect"):
+        return False
+    today = datetime.date.today().isoformat()
+    try:
+        with open(T1_RERUN_FILE) as f:
+            if f.read().strip() == today:
+                return False                   # already had its re-run
+    except FileNotFoundError:
+        pass
+    with open(T1_RERUN_FILE, "w") as f:
+        f.write(today)
+    return True
+
+
 def _check(label, fn):
     """A check layer must never kill the run — a crash becomes a finding."""
     try:
@@ -116,6 +151,9 @@ def main():
     tickets1 = scrape_tickets_all()
     sg_tickets = scrape_sg_tickets_all()      # Ticket ② as one multi-city ticket
     flights = scrape_all()                    # Ticket ② as two one-ways
+    # Ticket ① price guard, late pass: a suspect read gets one more direct-URL
+    # try now that ~15 min have passed (25 Sep: BA $18,914 vs a real $3,884).
+    tickets1 = scraper.rescue_tickets1(tickets1)
     # 🌴 comparison watch: the retired Bali trip, scraped LAST so a throttled
     # night hurts the benchmark before it hurts the product.
     bali_t1, bali_fwd, bali_rev = scrape_bali_watch()
@@ -172,6 +210,7 @@ def main():
     # ⏱ Deadline skips ride along as warnings — they also explain any
     # "no fares for leg×date" sanity warnings from the same night.
     warnings += [f"⏱ {s}" for s in SCRAPER_DIAG.get("deadline_skips", [])]
+    warnings += ticket1_suspect_warnings(tickets1)
 
     # Build the payload BEFORE notifying, so Telegram and the dashboard quote
     # the same numbers, alternatives and baggage rules.
@@ -222,7 +261,10 @@ def main():
     except Exception as e:                     # noqa: BLE001 — never kill the run
         print(f"WARN: history-sheet append failed (run continues): {e}")
 
-    if should_stamp(payload, notify_status):
+    if should_stamp(payload, notify_status) and ticket1_rerun_wanted(payload):
+        print("NOT marking success — Ticket ① price still suspect; the next "
+              "retry slot re-runs the search once")
+    elif should_stamp(payload, notify_status):
         mark_ran_today()
     elif not payload["main"]:
         # Catastrophic day (fares but no priceable trip): DON'T stamp, so the

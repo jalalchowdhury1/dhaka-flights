@@ -140,6 +140,9 @@ def build_payload(flights: list, openjaws: list, history: list, today: str,
         "ticket1_total": t1_total,
         "ticket2_total": t2_total if main else None,
         "ticket1_airline": t1.get("airline") if t1 else None,
+        # Scraper price guard: truthy = Google served a degraded list on every
+        # read tonight; ticket1_baseline() skips these rows.
+        "ticket1_suspect": (t1 or {}).get("suspect") or None,
         "ticket2_airline": (main or {}).get("sg_airlines"),
         "order": (main or {}).get("order_label"),
         "ist_nights": (main or {}).get("ist_nights"),

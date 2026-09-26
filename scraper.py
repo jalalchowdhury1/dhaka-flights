@@ -795,10 +795,9 @@ TICKET1_ATTEMPTS = 3
 THIN_TICKET1_OPTIONS = 4
 
 
-def scrape_stopover(cfg=None) -> list:
-    cfg = cfg or STOPOVER_SEARCH
-    legs_str = " / ".join(f"{o}→{d} {dep}" for o, d, dep in cfg["legs"])
-
+def stopover_parser(cfg):
+    """The Ticket ① result parser for one config — shared by the form path,
+    the direct-URL path and the jev engine so all three shape rows the same."""
     def parse(tree, url):
         out = []
         for f in _parse_openjaw_results(tree, cfg["out_date"], cfg["ret_date"], url):
@@ -813,8 +812,192 @@ def scrape_stopover(cfg=None) -> list:
                          route=f"BOS→IST→DAC + {cfg['ret_city']}→BOS")
             out.append(f)
         return out
+    return parse
 
-    return _scrape_multicity(cfg["legs"], parse, f"{cfg['kind']}: {legs_str}")
+
+def scrape_stopover(cfg=None) -> list:
+    cfg = cfg or STOPOVER_SEARCH
+    legs_str = " / ".join(f"{o}→{d} {dep}" for o, d, dep in cfg["legs"])
+    return _scrape_multicity(cfg["legs"], stopover_parser(cfg), f"{cfg['kind']}: {legs_str}")
+
+
+# ── Ticket ① price guard (2026-09-25) ───────────────────────────────────────
+# 25 Sep 00:30: Ticket ① came back as British Airways $18,914 again — both
+# order searches parsed 2-3 premium-only rows on BOTH attempts, the immediate
+# thin-retry got the same degraded list, and nothing compared the price with
+# the $3,885 of every night before. The same search loaded at 21:10 showed
+# BA $3,681 / Turkish nonstop $3,884. The other order had quietly shown
+# ~$19.9k on 20, 22 and 24 Sep. So a read is now SUSPECT when it is thin OR
+# its cheapest fare is far above the recent norm, and a suspect read gets two
+# more chances on a DIFFERENT path (the exact search URL, no form filling):
+# once straight away, once after the one-way legs (~15 min later). Lists are
+# MERGED — every row is a real observed fare, so the cheapest real one wins.
+# Still suspect after that → rows carry suspect=True and the site says so.
+T1_SUSPECT_RATIO = 1.6        # cheapest > 1.6 × recent median = not a real economy read
+T1_BASELINE_NIGHTS = 14
+T1_BASELINE_FLOOR = 2500      # a baseline below this is itself nonsense
+_MONTHS = {m: i for i, m in enumerate(
+    ["January", "February", "March", "April", "May", "June", "July", "August",
+     "September", "October", "November", "December"], 1)}
+
+
+def _iso(date_words: str) -> str:
+    month, day, year = date_words.replace(",", "").split()
+    return f"{int(year):04d}-{_MONTHS[month]:02d}-{int(day):02d}"
+
+
+def _varint(n: int) -> bytes:
+    out = bytearray()
+    while True:
+        b = n & 0x7F
+        n >>= 7
+        if n:
+            out.append(b | 0x80)
+        else:
+            out.append(b)
+            return bytes(out)
+
+
+def _field(num: int, payload) -> bytes:
+    if isinstance(payload, int):
+        return _varint(num << 3) + _varint(payload)
+    return _varint((num << 3) | 2) + _varint(len(payload)) + payload
+
+
+def _airport(num: int, code: str) -> bytes:
+    return _field(num, _field(1, 1) + _field(2, code.encode()))
+
+
+def ticket1_search_url(cfg) -> str:
+    """The Google Flights results URL for a multi-city config — the same `tfs`
+    the form produces (2 adults + 1 child, economy, USD). Decoded from a real
+    results URL on 2026-09-25; tests pin it byte-for-byte."""
+    import base64
+    msg = _field(1, 28) + _field(2, 2)
+    for o, d, dep in cfg["legs"]:
+        msg += _field(3, _field(2, _iso(dep).encode()) + _airport(13, o) + _airport(14, d))
+    msg += _field(8, 1) + _field(8, 1) + _field(8, 2)     # adult, adult, child
+    msg += _field(9, 1)                                    # economy
+    msg += _field(14, 1)
+    msg += _field(16, _field(1, (1 << 64) - 1))
+    msg += _field(19, 3)                                   # multi-city
+    tfs = base64.urlsafe_b64encode(msg).decode().rstrip("=")
+    return f"https://www.google.com/travel/flights/search?tfs={tfs}&hl=en&curr=USD&gl=us"
+
+
+def ticket1_baseline(history=None):
+    """Median Ticket ① total over recent PLAUSIBLE nights (None if too few)."""
+    if history is None:
+        try:
+            import publish
+            history = publish._load_history()
+        except Exception:
+            history = []
+    vals = [h.get("ticket1_total") for h in (history or [])[-T1_BASELINE_NIGHTS:]
+            if isinstance(h.get("ticket1_total"), (int, float))
+            and not h.get("ticket1_suspect")]
+    if len(vals) < 3:
+        return None
+    vals.sort()
+    mid = vals[len(vals) // 2] if len(vals) % 2 else (vals[len(vals) // 2 - 1] + vals[len(vals) // 2]) / 2
+    return mid if mid >= T1_BASELINE_FLOOR else None
+
+
+def ticket1_suspect_reason(results: list, baseline) -> str:
+    """'' when the read looks whole; otherwise a plain-English reason."""
+    if not results:
+        return "no fares came back"
+    cheapest = min(r["price_total"] for r in results)
+    if baseline and cheapest > T1_SUSPECT_RATIO * baseline:
+        return (f"cheapest fare ${cheapest:,} is {cheapest / baseline:.1f}× the recent "
+                f"${baseline:,.0f} — Google served a degraded (premium-only) list")
+    if len(results) < THIN_TICKET1_OPTIONS:
+        return f"only {len(results)} fares on the page (normally 5-9)"
+    return ""
+
+
+def merge_ticket1(a: list, b: list) -> list:
+    """Union of two reads of the same search, de-duplicated, cheapest first."""
+    seen, out = set(), []
+    for r in sorted(list(a or []) + list(b or []), key=lambda r: r["price_total"]):
+        key = (r.get("airline"), r["price_total"], r.get("out_depart_time"), r.get("stops"))
+        if key not in seen:
+            seen.add(key)
+            out.append(r)
+    return out
+
+
+def _scrape_ticket1_direct(cfg) -> list:
+    """Ticket ① by opening the exact results URL — no form, fresh browser."""
+    url = ticket1_search_url(cfg)
+    try:
+        _ensure_session(fresh=True)
+        _run(f'browse open "{url}"')
+        time.sleep(8)
+        snap = _wait_for_results(_snap())
+        time.sleep(4)                          # multi-city lists land in slow bursts
+        snap = _wait_for_results(_snap())
+        more_ref = _find_ref(snap, "View more flights")
+        if more_ref:
+            _run(f"browse click {more_ref}")
+            time.sleep(4)
+            snap = _wait_for_results(_snap())
+        tree = _get_tree(snap)
+        rows = stopover_parser(cfg)(tree, url)
+        print(f"  direct-URL read: {len(rows)} options"
+              + (f", cheapest ${min(r['price_total'] for r in rows):,}" if rows else ""))
+        return rows
+    except Exception as e:
+        _session_dirty()
+        print(f"  direct-URL read failed: {e}")
+        return []
+
+
+# ret_city → reason, for Ticket ① searches still suspect after the in-place
+# retry; rescue_tickets1() gives them their late second chance.
+T1_PENDING = {}
+
+
+def guard_ticket1(cfg, results: list, baseline) -> list:
+    """Called right after a config's form attempts. Suspect → one direct-URL
+    read now; still suspect → queued for rescue_tickets1()."""
+    reason = ticket1_suspect_reason(results, baseline)
+    if not reason:
+        return results
+    print(f"  ⚠ Ticket ① read looks wrong ({reason}) — re-reading via the direct search URL...")
+    results = merge_ticket1(results, _scrape_ticket1_direct(cfg))
+    reason = ticket1_suspect_reason(results, baseline)
+    if reason:
+        T1_PENDING[cfg.get("ret_city") or cfg["label"]] = (cfg, reason)
+        print(f"  still suspect ({reason}) — one more try after the one-way legs")
+    else:
+        print(f"  ✓ direct-URL read fixed it: cheapest ${results[0]['price_total']:,}")
+    return results
+
+
+def rescue_tickets1(tickets1: list, baseline="auto") -> list:
+    """Late second chance for suspect Ticket ① searches (~15 min after the
+    first read). Whatever is STILL suspect gets suspect=True on every row and
+    a DIAG line so the brief and the site can say so instead of stating it."""
+    if baseline == "auto":
+        baseline = ticket1_baseline()
+    DIAG["ticket1_suspect"] = []
+    for key, (cfg, _why) in list(T1_PENDING.items()):
+        mine = [r for r in tickets1 if (r.get("ret_city") or r.get("label")) == key]
+        rest = [r for r in tickets1 if (r.get("ret_city") or r.get("label")) != key]
+        print(f"[ticket1-rescue] {cfg['label']}")
+        mine = merge_ticket1(mine, _scrape_ticket1_direct(cfg))
+        reason = ticket1_suspect_reason(mine, baseline)
+        if reason:
+            for r in mine:
+                r["suspect"] = reason
+            DIAG["ticket1_suspect"].append(f"{cfg['label']}: {reason}")
+            print(f"  STILL SUSPECT after 4 reads: {reason}")
+        else:
+            print(f"  ✓ rescued: cheapest ${mine[0]['price_total']:,}")
+        tickets1 = rest + mine
+    T1_PENDING.clear()
+    return tickets1
 
 
 # Ticket ② as a single multi-city ticket, one route pair PER ORDER
@@ -972,6 +1155,8 @@ def scrape_tickets_all() -> list:
     """Ticket ① searches: BOS→IST + IST→DAC + DPS→BOS on one multi-city ticket.
     (Was scrape_openjaw_all; the plain open-jaw searches retired 2026-07-25.)"""
     all_results = []
+    baseline = ticket1_baseline()
+    T1_PENDING.clear()
     for cfg in STOPOVER_SEARCHES:
         print(f"[{cfg['kind']}] {cfg['label']}")
         results, thin_retried = [], False
@@ -993,6 +1178,7 @@ def scrape_tickets_all() -> list:
                 print(f"  0 results (attempt {attempt}/{TICKET1_ATTEMPTS}) — "
                       f"retrying with a fresh session...")
             time.sleep(5)
+        results = guard_ticket1(cfg, results, baseline)
         all_results += results
         print(f"  Got {len(results)} options")
     return all_results

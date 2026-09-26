@@ -638,6 +638,11 @@ function verdictPass(d) {
     chips.push(`<span class="chip chip-warn">👀 ${plain(String(d.countdown).replace(/📅 /, ""))}</span>`);
   if (d.price_context) chips.push(`<span class="chip">${plain(d.price_context)}</span>`);
   if (!m.valid) chips.push(`<span class="badge warn">⚠️ ${esc(m.flag || "check dates")}</span>`);
+  const t1Bad = (m.openjaw || {}).suspect;
+  if (t1Bad) {
+    const g = lastGoodTicket1(hist);
+    chips.unshift(`<span class="chip chip-bad">⚠️ Ticket ① read looks wrong tonight${g ? ` — last real ${usd(g.ticket1_total)}` : ""}</span>`);
+  }
   const svc = d.stay_value;
   if (svc && svc.mode === "steering" && typeof m.sg_nights === "number" && m.sg_nights > 2)
     chips.push(`<span class="chip chip-good">🛏️ ${m.sg_nights}N SIN · hotel math</span>`);
@@ -651,7 +656,7 @@ function verdictPass(d) {
     ${chips.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">${chips.join("")}</div>` : ""}
     <div class="perf"></div>
     <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:.84rem">
-      <span>① ${esc(h.ticket1_airline || "?")} <b>${usd(h.ticket1_total)}</b></span>
+      <span>① ${esc(h.ticket1_airline || "?")} <b>${usd(h.ticket1_total)}</b>${t1Bad ? ` <span class="badge warn">suspect</span>` : ""}</span>
       <span>② ${esc(h.ticket2_airline || "?")} <b>${usd(h.ticket2_total)}</b></span>
     </div>`, "pass");
 }
@@ -809,6 +814,29 @@ function sec(title, body, open, noRule) {
 }
 
 /* Ticket ① as a boarding pass: the three flights that live on one booking. */
+/* Ticket ① price guard (2026-09-25): the scraper marks a Ticket ① read
+   "suspect" when Google served a degraded premium-only list on every retry
+   (25 Sep: BA $18,914 vs a real $3,884). Say so next to the number and show
+   the last price that looked real, instead of stating the bad one as fact. */
+function lastGoodTicket1(hist) {
+  const h = (hist || []).filter(r => typeof r.ticket1_total === "number" && !r.ticket1_suspect);
+  const vals = h.slice(-14).map(r => r.ticket1_total).sort((a, b) => a - b);
+  if (vals.length < 3) return null;
+  const med = vals[Math.floor(vals.length / 2)];
+  for (let i = h.length - 1; i >= 0; i--)
+    if (h[i].ticket1_total <= 1.6 * med) return h[i];
+  return null;
+}
+function suspectBanner(why, hist) {
+  if (!why) return "";
+  const g = lastGoodTicket1(hist);
+  return `<div class="pass" style="border:1px solid var(--warn,#c80);margin-bottom:8px">
+    <span class="badge warn">⚠️ suspect price</span> <b>Tonight's Ticket ① read looks wrong.</b>
+    <div class="muted" style="margin-top:4px">${esc(why)}. Every re-read came back just as degraded.` +
+    (g ? ` Last price that looked real: <b>${usd(g.ticket1_total)}</b> (${esc(g.ticket1_airline || "?")}, ${esc(g.date)}).` : "") +
+    ` Tap the Google link below to see the live fare yourself.</div></div>`;
+}
+
 function ticket1Pass(s, bag) {
   const oj = s.openjaw || {};
   const o = orderInfo(s);
@@ -899,7 +927,8 @@ function ticket2Pass(s, bag) {
 function otherOrderCard(o) {
   if (!o) return "";
   const gap = o.delta > 0 ? `+${usd(o.delta)}` : o.delta === 0 ? "same price" : `−${usd(-o.delta)}`;
-  const badge = o.valid ? "" : ` <span class="badge warn">⚠️ ${esc(o.flag || "check dates")}</span>`;
+  const badge = (o.valid ? "" : ` <span class="badge warn">⚠️ ${esc(o.flag || "check dates")}</span>`) +
+    (o.ticket1_suspect ? ` <span class="badge warn" title="${esc(o.ticket1_suspect)}">⚠️ ① suspect read — not a real price</span>` : "");
   return `<div class="pass"><b style="font-size:.95rem">🔁 ${esc(o.order_label)} instead: ${usd(o.total)}</b>
     <span class="muted">(${gap})</span>${badge}
     <div class="muted" style="margin-top:4px">① ${esc(o.ticket1_airline || "?")} ${usd(o.ticket1_total)}
@@ -951,7 +980,7 @@ function altTable(options, note, legRoutes) {
     return `<tr class="${o.chosen ? "chosen" : ""}">
       <td class="wrap">${esc(o.airline)}</td>
       <td>${esc(o.kind)}</td>
-      <td class="num"><b>${usd(o.price)}</b></td>
+      <td class="num"><b>${usd(o.price)}</b>${o.suspect ? ` <span class="badge warn" title="${esc(o.suspect)}">⚠️ suspect</span>` : ""}</td>
       <td class="num">${gap}</td>
       <td class="wrap">${esc(bagTxt)}</td>
       <td class="num">${books}</td></tr>`;
@@ -981,7 +1010,7 @@ function renderFlights(d) {
   add(root, () => {
     const badge = m.valid ? `<span class="badge good">home ${esc(m.home)} ✓</span>`
                           : `<span class="badge warn">⚠️ ${esc(m.flag || "check dates")}</span>`;
-    return el(`<span class="micro">The trip you'd book — two purchases</span> ${badge}
+    return el(`${suspectBanner((m.openjaw || {}).suspect, d.history)}<span class="micro">The trip you'd book — two purchases</span> ${badge}
       ${timeline(m)}
       ${ticket1Pass(m, bag)}
       ${ticket2Pass(m, bag)}

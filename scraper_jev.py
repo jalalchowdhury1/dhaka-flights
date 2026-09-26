@@ -852,28 +852,15 @@ def _scrape_multicity_jev(legs: list, parse_fn, tag: str) -> list:
 
 def scrape_stopover(cfg=None) -> list:
     cfg = cfg or _legacy.STOPOVER_SEARCH
-
-    def parse(tree, url):
-        out = []
-        for f in _legacy._parse_openjaw_results(tree, cfg["out_date"], cfg["ret_date"], url):
-            filt = cfg.get("airline_filter")
-            if filt and filt.lower() not in f["airline"].lower():
-                continue
-            f.update(kind=cfg["kind"], label=cfg["label"], desc=cfg["desc"],
-                     note=cfg["note"], out_arrive=cfg["out_arrive"],
-                     ist_nights=cfg.get("ist_nights"))
-            if cfg.get("ret_city"):
-                f.update(ret_city=cfg["ret_city"],
-                         route=f"BOS→IST→DAC + {cfg['ret_city']}→BOS")
-            out.append(f)
-        return out
-
+    parse = _legacy.stopover_parser(cfg)
     legs_str = " / ".join(f"{o}→{d} {dep}" for o, d, dep in cfg["legs"])
     return _scrape_multicity(cfg["legs"], parse, f'{cfg["kind"]}: {legs_str}')
 
 
 def scrape_tickets_all() -> list:
     all_results = []
+    baseline = _legacy.ticket1_baseline()
+    _legacy.T1_PENDING.clear()
     for cfg in STOPOVER_SEARCHES:
         print(f"[{cfg['kind']}] {cfg['label']}")
         results, thin_retried = [], False
@@ -893,9 +880,13 @@ def scrape_tickets_all() -> list:
             else:
                 print(f"  0 results (attempt {attempt}/{_legacy.TICKET1_ATTEMPTS}) — retrying with a fresh session...")
             time.sleep(5)
+        results = _legacy.guard_ticket1(cfg, results, baseline)
         all_results += results
         print(f"  Got {len(results)} options")
     return all_results
+
+
+rescue_tickets1 = _legacy.rescue_tickets1
 
 
 def scrape_sg_tickets_all() -> list:

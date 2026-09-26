@@ -85,7 +85,8 @@
    "note": "2 full Istanbul nights (US passports visa-free). On Turkish, the 20h\u20137d connection still qualifies for ONE free 4-star hotel night via their Stopover Booker (\u226572h before; not on N/R fares) \u2014 night 2 is on you.",
    "ist_nights": 2,
    "ret_city": "SIN",
-   "route": "BOS\u2192IST\u2192DAC + SIN\u2192BOS"
+   "route": "BOS\u2192IST\u2192DAC + SIN\u2192BOS",
+   "suspect": "Google served a degraded premium-only list at 00:30 (the same search showed $3,681-$3,884 at 21:10 on 25 Sep)"
   },
   "other_order": {
    "order": "SIN-first",
@@ -101,7 +102,8 @@
    "ticket1_airline": "British Airways",
    "ticket2_total": 1120,
    "ticket2_airlines": "US-Bangla Airlines + Thai AirAsia",
-   "ticket2_kind": "2 one-ways"
+   "ticket2_kind": "2 one-ways",
+   "ticket1_suspect": "Google served a degraded premium-only list at 00:30 (the same search showed $3,681-$3,884 at 21:10 on 25 Sep)"
   },
   "baggage": [
    {
@@ -552,7 +554,8 @@
     "confidence": "typical",
     "others": [],
     "summary": "1 \u00d7 23 kg (Economy)"
-   }
+   },
+   "suspect": "Google served a degraded premium-only list at 00:30 (the same search showed $3,681-$3,884 at 21:10 on 25 Sep)"
   },
   {
    "kind": "1 ticket",
@@ -582,7 +585,8 @@
      }
     ],
     "summary": "Lufthansa: 1 \u00d7 23 kg (Economy Classic) \u00b7 Turkish Airlines: 2 \u00d7 23 kg per person"
-   }
+   },
+   "suspect": "Google served a degraded premium-only list at 00:30 (the same search showed $3,681-$3,884 at 21:10 on 25 Sep)"
   }
  ],
  "ticket2_options": [
@@ -16877,7 +16881,8 @@
      "Allowance is per person and the child with a seat normally gets the adult allowance \u2014 infants on a lap do not."
     ],
     "baggage_checked": "2026-07-25"
-   }
+   },
+   "ticket1_suspect": "degraded premium-only Google list (BA $18,914; the same search showed $3,681-$3,884 at 21:10) - flagged after the fact"
   }
  ],
  "verified": "independent re-check \u2713 (recompute \u00b7 arithmetic \u00b7 trip contract)"

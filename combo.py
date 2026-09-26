@@ -618,6 +618,7 @@ def main_trip(flights, openjaws, sg_tickets, hotel_cost=None):
             "dhaka_days": o["dhaka_days"],
             "ticket1_total": o["openjaw"]["price_total"],
             "ticket1_airline": o["openjaw"].get("airline"),
+            "ticket1_suspect": o["openjaw"].get("suspect") or None,
             "ticket2_total": t2_total,
             "ticket2_airlines": o.get("sg_airlines"),
             "ticket2_kind": "1 ticket" if o.get("sg_ticket") else "2 one-ways",
@@ -854,6 +855,8 @@ def ticket1_options(openjaws, chosen=None, top_n=8) -> list:
             "delta": (oj["price_total"] - base) if isinstance(base, (int, float)) else None,
             "chosen": isinstance(base, (int, float)) and oj["price_total"] == base,
         })
+        if oj.get("suspect"):              # scraper's Ticket ① price guard
+            opts[-1]["suspect"] = oj["suspect"]
     opts.sort(key=lambda o: o["price"])
     return _dedupe_options(opts)[:top_n]
 
