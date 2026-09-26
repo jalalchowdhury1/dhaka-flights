@@ -149,13 +149,59 @@
   }
 
   /* ---- tables ---- */
-  table { width: 100%; border-collapse: collapse; font-size: .84rem; }
-  th, td { text-align: left; padding: 7px 10px 7px 0; border-top: 1px solid var(--rule);
-           white-space: nowrap; }
-  th { color: var(--ink-3); font-weight: 650; border-top: none; font-size: .72rem;
-       text-transform: uppercase; letter-spacing: .06em; }
-  td.num, th.num { text-align: right; padding-right: 10px; }
-  td.wrap { white-space: normal; min-width: 150px; }
+  /* Text cells wrap; numbers and headers never do (26 Sep: nowrap on every
+     cell let a long "when" label squeeze the description and push the table
+     past the card edge). */
+  table { width: 100%; border-collapse: collapse; font-size: .84rem; line-height: 1.4; }
+  th, td { text-align: left; padding: 9px 12px 9px 0; border-top: 1px solid var(--rule);
+           vertical-align: top; }
+  th { color: var(--ink-3); font-weight: 650; border-top: none; font-size: .7rem;
+       text-transform: uppercase; letter-spacing: .06em; white-space: nowrap;
+       padding-top: 2px; padding-bottom: 7px; border-bottom: 1.5px solid var(--rule); }
+  tr:has(th) + tr td { border-top: none; }
+  td:last-child, th:last-child { padding-right: 0; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  td.wrap { min-width: 180px; }
+
+  /* Card layout (class set by stackTables()): one small card per row, each
+     value labelled from its column header. Phones: any table with 4+
+     columns. Every width: tables with 7+ columns (they never fit a card). */
+  table.cards, table.cards tbody, table.cards tr, table.cards td { display: block; width: 100%; }
+  table.cards tr:has(th) { display: none; }
+  table.cards tr:has(th.sortable) { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 8px; }
+  table.cards th.sortable { display: inline-block; border: 1px solid var(--rule); border-radius: 99px;
+                            padding: 3px 9px; background: var(--chip-bg); }
+  table.cards th.sortable:empty { display: none; }
+  table.cards tr { border-top: 1px solid var(--rule); padding: 12px 0; display: grid;
+                   grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+  table.cards tr:has(th) + tr, table.cards tr:first-child { border-top: none; }
+  table.cards tr.chosen { background: color-mix(in srgb, var(--ink) 6%, transparent);
+                          border-radius: 10px; padding: 12px 10px; margin: 4px -10px; }
+  table.cards tr.chosen td { background: none; }
+  table.cards td { border: 0; padding: 0; text-align: left; min-width: 0; }
+  table.cards td::before { content: attr(data-label); display: block; color: var(--ink-3);
+                           font-size: .66rem; font-weight: 650; text-transform: uppercase;
+                           letter-spacing: .05em; margin-bottom: 1px; }
+  table.cards td:first-child, table.cards td.wrap, table.cards td[data-label=""] { grid-column: 1 / -1; }
+  table.cards td:first-child { font-size: .95rem; }
+  table.cards td:first-child::before, table.cards td[data-label=""]::before { content: none; }
+  table.cards td:empty { display: none; }
+  table.cards td.num { white-space: normal; }
+  .scroll-x:has(> table.cards) { overflow-x: visible; }
+  @media (min-width: 641px) { table.cards tr { grid-template-columns: repeat(4, 1fr); } }
+
+  /* Cash plan: a list, not a table: item + amount on top, when + details under. */
+  .pay-item { display: grid; grid-template-columns: 1fr auto; gap: 3px 14px; padding: 12px 0;
+              border-top: 1px solid var(--rule); }
+  .pay-item:first-child { border-top: none; padding-top: 2px; }
+  .pay-item .what { color: var(--ink); font-weight: 650; }
+  .pay-item .amt { text-align: right; font-weight: 750; color: var(--ink); white-space: nowrap; }
+  .pay-item .amt .small { display: block; font-weight: 500; }
+  .pay-item .when { grid-column: 1 / -1; font-size: .8rem; color: var(--ink-2); }
+  .pay-item .when b { color: var(--ink); font-weight: 650; }
+  .pay-item .how { grid-column: 1 / -1; font-size: .78rem; color: var(--ink-3); }
+  .pay-total { display: flex; justify-content: space-between; padding-top: 10px; margin-top: 2px;
+               border-top: 1.5px solid var(--ink-3); font-weight: 750; color: var(--ink); }
   tr.chosen td { background: color-mix(in srgb, var(--ink) 8%, transparent); }
   .scroll-x { overflow-x: auto; }
 
@@ -616,8 +662,31 @@ function route() {
   window.scrollTo(0, 0);
   renderTopbar();                              // back link shows on drill-ins
   bindChartHover(screen);
+  stackTables(screen);
 }
 window.addEventListener("hashchange", route);
+
+/* Label every cell with its column header so wide tables can stack into
+   cards (CSS: table.cards). Re-runs when a table re-renders
+   (sorting rebuilds it). */
+function stackTables(root) {
+  if (!root) return;
+  const phone = matchMedia("(max-width: 640px)").matches;
+  root.querySelectorAll("table").forEach(t => {
+    const head = [...t.rows].find(r => r.querySelector("th"));
+    if (!head || head.cells.length < 4) return;
+    if (!t.dataset.labelled) {
+      const labels = [...head.cells].map(c => c.textContent.replace(/[▲▼↑↓]/g, "").trim());
+      [...t.rows].forEach(r => { if (r !== head) [...r.cells].forEach((c, i) => { c.dataset.label = labels[i] || ""; }); });
+      t.dataset.labelled = "1";
+    }
+    const want = head.cells.length >= 7 || phone;
+    if (t.classList.contains("cards") !== want) t.classList.toggle("cards", want);
+  });
+}
+matchMedia("(max-width: 640px)").addEventListener("change", () => stackTables(document.getElementById("screen")));
+new MutationObserver(() => stackTables(document.getElementById("screen")))
+  .observe(document.getElementById("screen"), {childList: true, subtree: true});
 
 /* ======================= screens (Tasks 6–9 fill these) =================== */
 const add = (root, fn) => { const n = renderSafe(fn); if (n) root.appendChild(n); };
@@ -1574,7 +1643,7 @@ function renderTotal(d) {
       ${line("− property credits", "− " + usd2((ist ? ist.prop : 0) + (sin ? sin.prop : 0)), "", `$${ist ? ist.prop : 0} Ritz + $${sin ? sin.prop : 0} Kempinski F&B — spend them, they're use-or-lose`)}
       ${line("− breakfasts included for two", "− " + usd2(breakfasts), "", `${usd2(ist ? ist.breakfast : 0)} Istanbul + ${usd2(sin ? sin.breakfast : 0)} Singapore ($60/day; Aoife eats free at the Kempinski)`)}
       ${line("<b>True cost after credits & breakfasts</b>", `<b style="font-size:1.1rem">${usd2(trueCost)}</b>`, "", days ? `${usd2(trueCost / days)}/day over ${days} days (${esc(oj.out_date || "")} → ${esc(oj.ret_date || "")})` : "")}
-      ${line("+ points spent", `${typeof fp.marriott_points === "number" ? fp.marriott_points.toLocaleString() + " Marriott" : ptsLabel} + ${chasePtsTotal.toLocaleString()} Chase`, "", istPts ? `Chase = ${(bT1 ? bT1.points : 127825).toLocaleString()} legacy on Ticket ① + ~` + istPts.toLocaleString() + " ordinary on the Ritz" : "not cash")}
+      ${line("+ points spent", `${typeof fp.marriott_points === "number" ? fp.marriott_points.toLocaleString() + " Marriott" : ptsLabel}<br>+ ${chasePtsTotal.toLocaleString()} Chase`, "", istPts ? `Chase = ${(bT1 ? bT1.points : 127825).toLocaleString()} legacy on Ticket ① + ~` + istPts.toLocaleString() + " ordinary on the Ritz" : "not cash")}
     </table></div>
     <div class="small" style="margin-top:8px">What is firm vs estimated: ${[bookings.BKK ? "Bangkok is booked on points (refundable)" : null, sin && sin.bk ? "Singapore is booked (Pay-at-Check-in hold, refundable to Jan 31)" : null].filter(Boolean).join("; ") || "nothing is booked yet"}; flights re-price every night until you buy (~mid/late September); Istanbul is tonight's best-value pick, not a booking. Amex's $300 hotel credit can be earned once per half-year, so only one of the two card stays gets it.</div></div>`));
   return root;
@@ -1868,27 +1937,28 @@ function renderCash(c, d) {
     : r.status === "optional" ? `<span class="badge">optional</span>`
     : r.status === "paid" ? `<span class="badge good">paid</span>`
     : `<span class="badge warn">to book</span>`;
-  add(root, () => el(sec("🧾 Every payment still ahead", `<div class="pass scroll-x"><table>
-    <tr><th>When</th><th>What</th><th class="num">Amount</th></tr>` +
-    s.rows.map(r => `<tr><td class="small">${esc(r.due_label || r.due)}</td>
-      <td class="wrap">${esc(r.what)} ${badge(r)}
-        <div class="small muted">${esc(r.pay || "")}${r.points ? " · " + esc(r.points) : ""}${r.cancel && r.cancel !== "n/a" ? " · cancel: " + esc(r.cancel) : ""}</div>
-        <div class="small muted">${esc(r.basis || "")}</div></td>
-      <td class="num"><b>${r.usd == null ? esc(r.range || "unknown") : usd(r.usd)}</b>${r.range && r.usd != null ? `<div class="small muted">${esc(r.range)}</div>` : ""}</td></tr>`).join("") +
-    `<tr><td></td><td><b>Known total</b></td><td class="num"><b>${usd(s.total)}</b></td></tr></table>
-    ${c.fx_note ? `<div class="small muted" style="margin-top:6px">${esc(c.fx_note)}</div>` : ""}</div>`, true)));
+  const amt = r => r.usd == null ? `<span class="small">${esc(r.range || "unknown")}</span>`
+    : usd(r.usd) + (r.range ? `<span class="small">${esc(r.range)}</span>` : "");
+  add(root, () => el(sec("🧾 Every payment still ahead", `<div class="pass">` +
+    s.rows.map(r => `<div class="pay-item">
+      <div class="what">${esc(r.what)} ${badge(r)}</div><div class="amt">${amt(r)}</div>
+      <div class="when">🗓️ <b>${esc(r.due_label || r.due)}</b></div>
+      <div class="how">${esc(r.pay || "")}${r.points ? " · " + esc(r.points) : ""}${r.cancel && r.cancel !== "n/a" ? " · cancel: " + esc(r.cancel) : ""}${r.basis ? "<br>" + esc(r.basis) : ""}</div>
+    </div>`).join("") +
+    `<div class="pay-total"><span>Known total</span><span>${usd(s.total)}</span></div>
+    ${c.fx_note ? `<div class="small muted" style="margin-top:8px">${esc(c.fx_note)}</div>` : ""}</div>`, true)));
 
-  add(root, () => el(sec("↩️ Comes back later (statement credits)", `<div class="pass scroll-x"><table>` +
-    (c.credits_back || []).map(x => `<tr><td class="wrap">${esc(x.what)}<div class="small muted">${esc(x.when)}</div></td>
-      <td class="num">− ${usd(x.usd)}</td></tr>`).join("") +
-    `</table>${c.perks_not_cash ? `<div class="small muted" style="margin-top:6px">${esc(c.perks_not_cash)}</div>` : ""}</div>`, false)));
+  add(root, () => el(sec("↩️ Comes back later (statement credits)", `<div class="pass">` +
+    (c.credits_back || []).map(x => `<div class="pay-item"><div class="what">${esc(x.what)}</div>
+      <div class="amt" style="color:var(--good)">− ${usd(x.usd)}</div><div class="how">${esc(x.when)}</div></div>`).join("") +
+    `${c.perks_not_cash ? `<div class="small muted" style="margin-top:8px">${esc(c.perks_not_cash)}</div>` : ""}</div>`, false)));
 
   add(root, () => el(sec("❓ No price yet", `<div class="pass"><ul style="margin:0;padding-left:18px">` +
     (c.unknown || []).map(u => `<li class="small">${esc(u)}</li>`).join("") + `</ul></div>`, false)));
 
-  add(root, () => el(sec("✅ Already paid", `<div class="pass scroll-x"><table>` +
-    (c.paid || []).map(p => `<tr><td class="wrap">${esc(p.what)}<div class="small muted">${esc(p.when)} · ${esc(p.points || "")}</div></td>
-      <td class="num">${usd(p.usd)}</td></tr>`).join("") + `</table></div>`, false)));
+  add(root, () => el(sec("✅ Already paid", `<div class="pass">` +
+    (c.paid || []).map(p => `<div class="pay-item"><div class="what">${esc(p.what)}</div>
+      <div class="amt">${p.usd ? usd(p.usd) : "$0"}</div><div class="how">${esc(p.when)}${p.points ? " · " + esc(p.points) : ""}</div></div>`).join("") + `</div>`, false)));
   return root;
 }
 
